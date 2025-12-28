@@ -15,6 +15,8 @@ import { useTranslation } from 'react-i18next'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CreationJobsProvider } from '@/components/providers/CreationJobsProvider'
+import { PermissionGuard } from '@/components/auth/PermissionGuard'
+import { PERMISSIONS } from '@/lib/config/permissions'
 
 export default function AdminLayout({
     children,
@@ -130,26 +132,31 @@ export default function AdminLayout({
             <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
                 <QueryClientProvider client={queryClient}>
                     <CreationJobsProvider>
-                        {/* Header with Redux-managed features */}
-                        <DashboardHeader
-                            showNotifications={showNotifications}
-                            onToggleNotifications={handleToggleNotifications}
-                            onToggleSidebar={handleToggleSidebar}
-                        />
+                        <PermissionGuard
+                            permission={PERMISSIONS.SYSTEM.FULL_ACCESS}
+                            redirectTo="/dashboard"
+                        >
+                            {/* Header with Redux-managed features */}
+                            <DashboardHeader
+                                showNotifications={showNotifications}
+                                onToggleNotifications={handleToggleNotifications}
+                                onToggleSidebar={handleToggleSidebar}
+                            />
 
-                        <div className={cn(
-                            "flex-1 relative min-h-0 bg-secondary/5",
-                            isSpecialPage ? "overflow-hidden" : "overflow-y-auto"
-                        )}>
                             <div className={cn(
-                                !isSpecialPage && "page-container min-h-full",
-                                isSpecialPage && "h-full"
+                                "flex-1 relative min-h-0 bg-secondary/5",
+                                isSpecialPage ? "overflow-hidden" : "overflow-y-auto"
                             )}>
-                                <ErrorBoundary>
-                                    {children}
-                                </ErrorBoundary>
+                                <div className={cn(
+                                    !isSpecialPage && "page-container min-h-full",
+                                    isSpecialPage && "h-full"
+                                )}>
+                                    <ErrorBoundary>
+                                        {children}
+                                    </ErrorBoundary>
+                                </div>
                             </div>
-                        </div>
+                        </PermissionGuard>
                     </CreationJobsProvider>
                 </QueryClientProvider>
             </main>
