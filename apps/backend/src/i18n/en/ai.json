@@ -1,0 +1,13 @@
+{
+    "unsupportedProvider": "Unsupported provider: {provider}",
+    "apiKeyRequired": "API key required for provider \"{provider}\". Please configure it in workspace or system settings.",
+    "azureNotImplemented": "Azure provider not yet implemented.",
+    "customNotImplemented": "Custom provider not yet implemented.",
+    "configNotFound": "Provider configuration not found.",
+    "ollamaNotConfigured": "Ollama embeddings not properly configured. Consider using OpenAI or Google for embeddings.",
+    "defaultWelcome": "Hello! How can I help you today?",
+    "defaultPlaceholder": "Type a message...",
+    "ragNoInfo": "I don't have enough information to answer that question.",
+    "ragPromptPrefix": "Based on the following context, answer the question. If the context doesn't contain relevant information, say so.",
+    "ragContextPrefix": "You have access to the following information from the knowledge base:"
+}

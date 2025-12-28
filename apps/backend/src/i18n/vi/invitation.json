@@ -1,0 +1,8 @@
+{
+    "subject": "Lời mời tham gia không gian làm việc {workspaceName}",
+    "title": "Bạn đã được mời tham gia {workspaceName} trên {appName}",
+    "text1": "Bạn đã được mời tham gia không gian làm việc {workspaceName}.",
+    "text2": "Nhấn vào nút bên dưới để chấp nhận lời mời và bắt đầu làm việc.",
+    "text3": "Nếu bạn không có tài khoản, bạn sẽ cần đăng ký trước.",
+    "actionBtn": "Chấp nhận lời mời"
+}

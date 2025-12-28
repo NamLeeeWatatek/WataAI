@@ -2,14 +2,19 @@ version: '3.8'
 
 services:
   backend:
-    image: wataomi-backend:latest
-    container_name: wataomi-backend
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    image: aiwata-backend:latest
+    container_name: aiwata-backend
     restart: unless-stopped
     env_file:
       - apps/backend/.env
     environment:
       # Override hostnames to match docker service names in wata-network
       # Using host.docker.internal to access host services (Postgres on Windows host)
+      # On Linux/VPS: If DB is on host, use host.docker.internal (requires extra_hosts).
+      # If DB is in docker, change this to the service name (e.g. 'postgres').
       - DATABASE_HOST=host.docker.internal
       - DATABASE_PORT=5432
       - REDIS_HOST=redis
@@ -27,8 +32,11 @@ services:
           memory: 1G
 
   web:
-    image: wataomi-web:latest
-    container_name: wataomi-web
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    image: aiwata-web:latest
+    container_name: aiwata-web
     restart: unless-stopped
     env_file:
       - apps/web/.env
