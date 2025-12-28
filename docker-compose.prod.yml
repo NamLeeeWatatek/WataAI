@@ -11,15 +11,9 @@ services:
     env_file:
       - apps/backend/.env
     environment:
-      # Override hostnames to match docker service names in wata-network
-      # Using host.docker.internal to access host services (Postgres on Windows host)
-      # On Linux/VPS: If DB is on host, use host.docker.internal (requires extra_hosts).
-      # If DB is in docker, change this to the service name (e.g. 'postgres').
-      - DATABASE_HOST=host.docker.internal
-      - DATABASE_PORT=5432
-      - REDIS_HOST=redis
-      - MINIO_ENDPOINT=minio
-      - WORKER_HOST=redis://redis:6379/1
+      # If you want to run DB on Host, uncomment extra_hosts below and set DATABASE_HOST=host.docker.internal in .env
+      # If you want to run DB in Docker (infra-shared), set DATABASE_HOST=postgres in .env
+      - NODE_ENV=production
     ports:
       - "8000:8000"
     networks:
