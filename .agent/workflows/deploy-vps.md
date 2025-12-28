@@ -66,8 +66,8 @@ docker-compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## 6. Kiểm tra
-- **Backend logs:** `docker logs -f wataomi-backend`
-- **Frontend logs:** `docker logs -f wataomi-web`
+- **Backend logs:** `docker logs -f aiwata-backend`
+- **Frontend logs:** `docker logs -f aiwata-web`
 - Truy cập trình duyệt: `http://<IP-VPS>:3000`
 
 ## 7. Cập nhật mới (Update Flow)

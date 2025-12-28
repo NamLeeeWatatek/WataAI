@@ -5,8 +5,8 @@ services:
     build:
       context: ./apps/backend
       dockerfile: Dockerfile
-    image: wataomi-backend:latest
-    container_name: wataomi-backend
+    image: aiwata-backend:latest
+    container_name: aiwata-backend
     restart: unless-stopped
     env_file:
       - apps/backend/.env
@@ -35,8 +35,8 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    image: wataomi-web:latest
-    container_name: wataomi-web
+    image: aiwata-web:latest
+    container_name: aiwata-web
     restart: unless-stopped
     env_file:
       - apps/web/.env
