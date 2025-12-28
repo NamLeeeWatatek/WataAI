@@ -28,6 +28,10 @@ RUN npm install --only=production --ignore-scripts && npm install env-cmd
 
 # Copy built assets from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
+# Copy i18n files
+COPY --from=builder /usr/src/app/src/i18n ./i18n
+# Copy mail templates if they exist (handling potential path issues)
+COPY --from=builder /usr/src/app/src/mail/mail-templates ./src/mail/mail-templates
 
 # Copy necessary scripts
 COPY ./wait-for-it.sh /opt/wait-for-it.sh
