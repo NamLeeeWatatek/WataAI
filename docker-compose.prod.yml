@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    image: wataomi-backend:latest
+    container_name: wataomi-backend
+    restart: unless-stopped
+    env_file:
+      - apps/backend/.env
+    environment:
+      # Override hostnames to match docker service names in wata-network
+      # Using host.docker.internal to access host services (Postgres on Windows host)
+      - DATABASE_HOST=host.docker.internal
+      - DATABASE_PORT=5432
+      - REDIS_HOST=redis
+      - MINIO_ENDPOINT=minio
+      - WORKER_HOST=redis://redis:6379/1
+    ports:
+      - "8000:8000"
+    networks:
+      - wata-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  web:
+    image: wataomi-web:latest
+    container_name: wataomi-web
+    restart: unless-stopped
+    env_file:
+      - apps/web/.env
+    ports:
+      - "3000:3000"
+    networks:
+      - wata-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+networks:
+  wata-network:
+    external: true
