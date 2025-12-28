@@ -1,0 +1,8 @@
+{
+    "subject": "You have been invited to join {{workspaceName}}",
+    "title": "Join {{workspaceName}} on {{appName}}",
+    "text1": "You have been invited to join the workspace \"{{workspaceName}}\".",
+    "text2": "Collaborate with your team, access shared resources, and more.",
+    "text3": "Click the button below to accept the invitation and get started.",
+    "actionBtn": "Join Workspace"
+}

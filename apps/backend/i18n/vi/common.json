@@ -1,0 +1,15 @@
+{
+    "welcome": "Welcome",
+    "hello": "Hello",
+    "error": {
+        "general": "An error occurred",
+        "notFound": "Not found",
+        "unauthorized": "Unauthorized",
+        "forbidden": "Forbidden"
+    },
+    "success": {
+        "saved": "Saved successfully",
+        "deleted": "Deleted successfully",
+        "updated": "Updated successfully"
+    }
+}

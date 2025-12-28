@@ -1,0 +1,130 @@
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
+import { JOB_QUEUE } from './execution-queue.module';
+import { CreationToolsService } from '../../creation-tools/creation-tools.service';
+import { ExecutionStrategyResolver } from '../execution-strategy.resolver';
+import { ExecutionFlow } from '../../creation-tools/domain/creation-tool';
+import { GenerationJob } from '../../generation-jobs/domain/generation-job';
+import {
+  CreationJob,
+  CreationJobStatus,
+} from '../../creation-jobs/domain/creation-jobs';
+import { ExecutionValidationService } from '../validation/execution-validation.service';
+import { CreationJobsService } from '../../creation-jobs/creation-jobs.service';
+
+import { OnModuleInit } from '@nestjs/common';
+
+@Processor(JOB_QUEUE)
+export class JobProcessor extends WorkerHost implements OnModuleInit {
+  private readonly logger = new Logger(JobProcessor.name);
+
+  constructor(
+    private readonly creationToolsService: CreationToolsService,
+    private readonly validationService: ExecutionValidationService,
+    private readonly strategyResolver: ExecutionStrategyResolver,
+    private readonly creationJobsService: CreationJobsService,
+  ) {
+    super();
+  }
+
+  onModuleInit() {
+    this.logger.log(`JobProcessor initialized for queue: ${JOB_QUEUE}`);
+    this.logger.log('Worker is ready to process jobs.');
+  }
+
+  async process(
+    job: Job<{ generationJob?: GenerationJob; creationJob?: CreationJob }>,
+  ): Promise<any> {
+    const jobEntity = job.data.creationJob || job.data.generationJob;
+
+    if (!jobEntity) {
+      throw new Error('Job data missing creationJob or generationJob');
+    }
+
+    this.logger.log(`Processing Job ID: ${jobEntity.id}`);
+
+    try {
+      // Update Status to PROCESSING
+      if (job.data.creationJob && jobEntity.workspaceId) {
+        await this.creationJobsService.update(
+          jobEntity.id,
+          jobEntity.workspaceId,
+          {
+            status: CreationJobStatus.PROCESSING,
+            progress: 10,
+          },
+        );
+      }
+
+      if (!jobEntity.creationToolId) {
+        throw new Error('Missing Creation Tool ID');
+      }
+
+      // 1. Fetch Tool Configuration
+      const tool = await this.creationToolsService.findById(
+        jobEntity.creationToolId,
+      );
+      if (!tool) {
+        throw new Error(`Creation Tool not found: ${jobEntity.creationToolId}`);
+      }
+
+      // 1.5 Validate Inputs
+      try {
+        this.validationService.validateInputs(
+          tool.formConfig,
+          jobEntity.inputData,
+        );
+      } catch (validationError) {
+        this.logger.error(
+          `Validation Failed for Job ${jobEntity.id}: ${validationError.message}`,
+        );
+        throw new Error(`Input Validation Failed: ${validationError.message}`);
+      }
+
+      const config = tool.executionFlow as ExecutionFlow;
+
+      // 2. Dispatch
+      this.logger.log(
+        `Dispatching execution via Strategy Resolver for type: ${config.type}`,
+      );
+      const strategy = this.strategyResolver.resolve(config.type);
+      const result = await strategy.execute(config, jobEntity.inputData);
+
+      // Update Status to COMPLETED
+      if (job.data.creationJob && jobEntity.workspaceId) {
+        await this.creationJobsService.update(
+          jobEntity.id,
+          jobEntity.workspaceId,
+          {
+            status: CreationJobStatus.COMPLETED,
+            progress: 100,
+            outputData: result,
+          },
+        );
+      }
+
+      this.logger.log(`Job ${jobEntity.id} Completed Successfully`);
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `Job ${jobEntity.id} Failed: ${error.message}`,
+        error.stack,
+      );
+
+      // Update Status to FAILED
+      if (job.data.creationJob && jobEntity.workspaceId) {
+        await this.creationJobsService.update(
+          jobEntity.id,
+          jobEntity.workspaceId,
+          {
+            status: CreationJobStatus.FAILED,
+            error: error.message,
+          },
+        );
+      }
+
+      throw error; // Let BullMQ handle retries
+    }
+  }
+}

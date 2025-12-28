@@ -1,0 +1,13 @@
+{
+    "unsupportedProvider": "Nhà cung cấp không được hỗ trợ: {provider}",
+    "apiKeyRequired": "Yêu cầu API key cho nhà cung cấp \"{provider}\". Vui lòng cấu hình trong cài đặt không gian làm việc hoặc hệ thống.",
+    "azureNotImplemented": "Nhà cung cấp Azure chưa được triển khai.",
+    "customNotImplemented": "Nhà cung cấp tùy chỉnh chưa được triển khai.",
+    "configNotFound": "Không tìm thấy cấu hình nhà cung cấp.",
+    "ollamaNotConfigured": "Ollama embeddings chưa được cấu hình đúng. Hãy cân nhắc sử dụng OpenAI hoặc Google cho embeddings.",
+    "defaultWelcome": "Xin chào! Tôi có thể giúp gì cho bạn?",
+    "defaultPlaceholder": "Nhập tin nhắn...",
+    "ragNoInfo": "Tôi không có đủ thông tin để trả lời câu hỏi đó.",
+    "ragPromptPrefix": "Dựa trên ngữ cảnh sau đây, hãy trả lời câu hỏi. Nếu ngữ cảnh không chứa thông tin liên quan, hãy nói như vậy.",
+    "ragContextPrefix": "Bạn có quyền truy cập vào các thông tin sau từ cơ sở kiến thức:"
+}
