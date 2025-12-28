@@ -1,0 +1,45 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies
+**/node_modules
+**/npm-debug.log
+**/yarn-error.log
+**/pnpm-debug.log
+
+# Build outputs
+**/dist
+**/.next
+**/.turbo
+**/build
+
+# Heavy Data & Services (Crucial for speed)
+**/*.sql
+**/*.db
+**/*.sock
+infra-shared/services/
+infra-shared/data/
+apps/backend/files/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+!infra-shared/.env
+!apps/backend/.env
+!apps/web/.env
+
+# IDEs
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
