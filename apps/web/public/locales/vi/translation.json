@@ -1,0 +1,321 @@
+{
+  "language": "Ngôn ngữ",
+  "english": "Tiếng Anh",
+  "vietnamese": "Tiếng Việt",
+  "selectLanguage": "Chọn ngôn ngữ",
+  "settings": "Cài đặt",
+  "general": "Tổng quan",
+  "appearance": "Giao diện",
+  "notifications": "Thông báo",
+  "welcome": "Chào mừng",
+  "hello": "Xin chào",
+  "navigation": {
+    "features": "Tính năng",
+    "pricing": "Giá cả",
+    "documentation": "Tài liệu",
+    "login": "Đăng nhập",
+    "start": "Bắt đầu"
+  },
+  "hero": {
+    "title": "Nền tảng chatbot AI đa kênh thông minh",
+    "description": "Kết nối tất cả kênh liên lạc của bạn - WhatsApp, Facebook, Instagram, Telegram - trên một nền tảng duy nhất. Tự động hóa chăm sóc khách hàng với AI và tăng doanh thu bán hàng.",
+    "startForFree": "Bắt đầu miễn phí",
+    "contactSales": "Liên hệ bán hàng"
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển",
+    "welcomeBack": "Chào mừng trở lại! Đây là tổng quan của bạn.",
+    "downloadReport": "Tải báo cáo",
+    "ugcFactory": "Nhà máy UGC",
+    "conversations": "Cuộc hội thoại",
+    "workflows": "Workflow",
+    "allWorkflows": "Tất cả workflow",
+    "createNew": "Tạo mới",
+    "channels": "Kênh",
+    "knowledgeBase": "Cơ sở kiến thức",
+    "bots": "Bot",
+    "chatAI": "Chat AI",
+    "signOut": "Đăng xuất",
+    "confirm": {
+      "signOut": "Bạn có chắc chắn muốn đăng xuất?",
+      "deleteBot": "Bạn có chắc chắn muốn xóa bot này? Hành động này không thể hoàn tác.",
+      "deleteChannel": "Bạn có chắc chắn muốn xóa kênh này?",
+      "disconnectChannel": "Bạn có chắc chắn muốn ngắt kết nối kênh này? Hành động này không thể hoàn tác.",
+      "deleteConversation": "Bạn có chắc chắn muốn xóa cuộc hội thoại này? Hành động này không thể hoàn tác và tất cả tin nhắn sẽ bị xóa vĩnh viễn.",
+      "deleteCollection": "Bạn có chắc chắn muốn xóa bộ sưu tập này? Tất cả thư mục, tài liệu và embeddings sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.",
+      "deleteItems": "Bạn có chắc chắn muốn xóa {count} mục? Hành động này không thể hoàn tác.",
+      "deleteChannels": "Bạn có chắc chắn muốn xóa {count} kênh?",
+      "unsavedChanges": "Bạn có thay đổi chưa lưu. Bạn có chắc chắn muốn thoát chế độ chỉnh sửa?",
+      "unlinkKnowledgeBase": "Bạn có chắc chắn muốn hủy liên kết \"{name}\" khỏi bot này?",
+      "deleteKnowledgeBase": "Bạn có chắc chắn muốn xóa bộ sưu tập cơ sở kiến thức này?"
+    },
+    "stats": {
+      "totalUsers": "Tổng người dùng",
+      "members": "Thành viên",
+      "totalBots": "Tổng bot",
+      "conversations": "Cuộc hội thoại",
+      "flowExecutions": "Lần thực thi workflow",
+      "workspaceOverview": "Tổng quan không gian làm việc",
+      "totalWorkspaces": "Tổng không gian làm việc",
+      "activeWorkspaces": "Không gian làm việc hoạt động",
+      "growthRate": "Tỷ lệ tăng trưởng",
+      "topPerformingBots": "Bot hoạt động tốt nhất",
+      "botsMostConversations": "Bot có nhiều cuộc hội thoại nhất",
+      "mostUsedFlows": "Workflow được sử dụng nhiều nhất",
+      "flowsMostExecutions": "Workflow có nhiều lần thực thi nhất",
+      "noDataAvailable": "Không có dữ liệu",
+      "active": "đang hoạt động",
+      "new": "mới",
+      "success": "thành công",
+      "conversationsLabel": "cuộc hội thoại",
+      "executions": "lần thực thi",
+      "avgMsgs": "tb tin nhắn",
+      "avgTime": "tb"
+    },
+    "admin": {
+      "stats": {
+        "creationTools": "Công cụ AI",
+        "generationJobs": "Tiến trình xử lý"
+      }
+    }
+  },
+  "features": {
+    "unifiedPlatform": "Nền tảng thống nhất",
+    "comprehensiveSolution": "Giải pháp toàn diện cho chăm sóc khách hàng tự động",
+    "solutionDescription": "Giảm chi phí, tăng doanh thu và điều hành doanh nghiệp của bạn hiệu quả hơn với nền tảng AI được tích hợp đầy đủ. Sử dụng Wata AI để quản lý tất cả kênh liên lạc, tự động hóa quy trình bán hàng và chăm sóc khách hàng 24/7.",
+    "items": {
+      "unifiedMultiChannel": "Đa kênh thống nhất",
+      "unifiedMultiChannelDesc": "Kết nối WhatsApp, Messenger, Instagram, Telegram và các kênh khác trong một nền tảng duy nhất.",
+      "noCodeFlowBuilder": "Trình tạo luồng không cần code",
+      "noCodeFlowBuilderDesc": "Tạo luồng hội thoại phức tạp với công cụ WataFlow kéo thả trực quan.",
+      "aiPoweredAutoResponse": "Phản hồi tự động được hỗ trợ bởi AI",
+      "aiPoweredAutoResponseDesc": "Để AI thông minh xử lý câu hỏi của khách hàng với sự hiểu biết theo ngữ cảnh.",
+      "n8nIntegration": "Tích hợp n8n",
+      "n8nIntegrationDesc": "Kết nối liền mạch với workflow n8n để mở rộng khả năng tự động hóa không giới hạn.",
+      "analyticsReporting": "Phân tích & Báo cáo",
+      "analyticsReportingDesc": "Theo dõi hiệu suất, đo lường tương tác và tối ưu hóa trải nghiệm khách hàng.",
+      "enterpriseSecurity": "Bảo mật doanh nghiệp",
+      "enterpriseSecurityDesc": "Mã hóa cấp ngân hàng và tuân thủ với GDPR, SOC 2, tiêu chuẩn ISO.",
+      "mobileOptimized": "Tối ưu mobile",
+      "mobileOptimizedDesc": "Quản lý doanh nghiệp của bạn bất cứ lúc nào, ở bất kỳ đâu với bảng điều khiển hoàn toàn đáp ứng.",
+      "globalInfrastructure": "Cơ sở hạ tầng toàn cầu",
+      "globalInfrastructureDesc": "Triển khai trên mạng edge toàn cầu để đảm bảo thời gian phản hồi nhanh."
+    }
+  },
+  "ai": {
+    "providers": "Nhà cung cấp AI",
+    "models": "Mô hình",
+    "settings": "Cài đặt AI",
+    "configuration": "Cấu hình",
+    "selectModel": "Chọn mô hình AI"
+  },
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Chỉnh sửa",
+    "add": "Thêm",
+    "create": "Tạo",
+    "update": "Cập nhật",
+    "loading": "Đang tải",
+    "error": "Lỗi",
+    "success": "Thành công",
+    "recommended": "Khuyến nghị",
+    "notAvailable": "Không khả dụng",
+    "loadingText": "Đang tải"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc",
+    "invalid": "Giá trị không hợp lệ",
+    "tooLong": "Quá dài",
+    "tooShort": "Quá ngắn"
+  },
+  "buttons": {
+    "switchLanguage": "Chuyển ngôn ngữ"
+  },
+  "error": {
+    "general": "Đã xảy ra lỗi",
+    "notFound": "Không tìm thấy",
+    "unauthorized": "Không được ủy quyền",
+    "forbidden": "Bị cấm",
+    "apiKeyRequired": "Cần API key cho nhà cung cấp này",
+    "providerNotSupported": "Nhà cung cấp không được hỗ trợ",
+    "modelNotSupported": "Mô hình không hỗ trợ hoạt động trò chuyện"
+  },
+  "success": {
+    "saved": "Đã lưu thành công",
+    "deleted": "Đã xóa thành công",
+    "updated": "Đã cập nhật thành công"
+  },
+  "login": {
+    "welcomeBack": "Chào mừng trở lại",
+    "subtitle": "Nhập thông tin đăng nhập của bạn để truy cập tài khoản",
+    "signIn": "Đăng nhập",
+    "email": "Email",
+    "emailPlaceholder": "name@example.com",
+    "password": "Mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "noAccount": "Chưa có tài khoản?",
+    "signUp": "Đăng ký",
+    "or": "HOẶC",
+    "title": "Nền tảng đa kênh được hỗ trợ bởi AI",
+    "signInWithCasdoor": "Đăng nhập với Casdoor",
+    "termsAgreement": "Bằng việc đăng nhập, bạn đồng ý với",
+    "termsOfService": "Điều khoản dịch vụ",
+    "and": "và",
+    "privacyPolicy": "Chính sách bảo mật",
+    "backToHome": "Quay lại trang chủ",
+    "pleaseWait": "Vui lòng đợi",
+    "redirecting": "Đang chuyển hướng",
+    "loading": "Đang tải",
+    "features": {
+      "aiWorkflow": "Tự động hóa workflow được hỗ trợ bởi AI",
+      "omnichannel": "Nhắn đa kênh",
+      "analytics": "Phân tích và hiểu biết nâng cao"
+    },
+    "errors": {
+      "noCode": "Không nhận được mã ủy quyền từ Casdoor",
+      "signinFailed": "Đăng nhập thất bại. Vui lòng thử lại.",
+      "authFailed": "Xác thực thất bại. Vui lòng thử lại.",
+      "envMissing": "Thiếu biến môi trường:",
+      "backendConnection": "Không thể kết nối với backend tại {url}. Vui lòng kiểm tra backend có đang chạy không.",
+      "backendError": "Backend trả về lỗi {status}: {message}",
+      "casdoorConfig": "Casdoor chưa được cấu hình đúng. Vui lòng kiểm tra biến môi trường.",
+      "loginInitFailed": "Không thể khởi tạo đăng nhập Casdoor. Vui lòng kiểm tra console để biết chi tiết.",
+      "invalidCredentials": "Email hoặc mật khẩu không chính xác",
+      "accountNotLinked": "Email chưa được liên kết với tài khoản nào",
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    }
+  },
+  "register": {
+    "title": "Tạo tài khoản",
+    "subtitle": "Tham gia cộng đồng của chúng tôi và bắt đầu xây dựng những điều tuyệt vời ngay hôm nay.",
+    "firstName": "Tên",
+    "lastName": "Họ",
+    "email": "Địa chỉ email",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "signUp": "Bắt đầu miễn phí",
+    "alreadyHaveAccount": "Đã có tài khoản?",
+    "signIn": "Đăng nhập",
+    "backToHome": "Quay lại trang chủ",
+    "preparing": "Đang chuẩn bị...",
+    "success": {
+      "title": "Đã gửi xác thực",
+      "description": "Chúng tôi đã gửi một liên kết xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư đến và xác nhận tài khoản để bắt đầu.",
+      "returnToLogin": "Quay lại đăng nhập"
+    },
+    "errors": {
+      "generic": "Đăng ký thất bại. Email có thể đã được sử dụng."
+    }
+  },
+  "globalScale": {
+    "title": "Quy mô toàn cầu",
+    "description": "Wata AI vận hành trên quy mô toàn cầu, xử lý hàng triệu cuộc hội thoại một cách an toàn và đáng tin cậy.",
+    "messagesPerDay": "Tin nhắn mỗi ngày",
+    "uptime": "Thời gian hoạt động",
+    "integratedChannels": "Kênh tích hợp",
+    "countries": "Quốc gia"
+  },
+  "pricing": {
+    "title": "Giá cả đơn giản, minh bạch",
+    "subtitle": "Không phí thiết lập, không chi phí ẩn",
+    "mostPopular": "Phổ biến nhất",
+    "perMonth": "/tháng",
+    "tryForFree": "Dùng thử miễn phí",
+    "tryPro": "Dùng thử Pro",
+    "contactSales": "Liên hệ bán hàng",
+    "plans": {
+      "starter": {
+        "name": "Cơ bản",
+        "description": "Hoàn hảo để thử nghiệm Wata AI",
+        "features": [
+          "1 bot",
+          "100 cuộc hội thoại/tháng",
+          "2 kênh",
+          "Phân tích cơ bản",
+          "Hỗ trợ cộng đồng"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Cho doanh nghiệp đang phát triển",
+        "features": [
+          "10 bot",
+          "10.000 cuộc hội thoại/tháng",
+          "Kênh không giới hạn",
+          "Phân tích nâng cao",
+          "Tích hợp n8n",
+          "Hỗ trợ ưu tiên",
+          "Tùy chỉnh thương hiệu"
+        ]
+      },
+      "enterprise": {
+        "name": "Doanh nghiệp",
+        "description": "Cho tổ chức lớn",
+        "features": [
+          "Bot không giới hạn",
+          "Cuộc hội thoại không giới hạn",
+          "Kênh không giới hạn",
+          "Tính năng AI nâng cao",
+          "Quản lý tài khoản chuyên dụng",
+          "Đảm bảo SLA",
+          "Tích hợp tùy chỉnh",
+          "Triển khai tại chỗ"
+        ]
+      }
+    }
+  },
+  "forgotPassword": {
+    "title": "Đặt lại mật khẩu",
+    "subtitle": "Nhập email của bạn và chúng tôi sẽ gửi cho bạn một liên kết để lấy lại quyền truy cập vào tài khoản.",
+    "email": "Địa chỉ email",
+    "emailPlaceholder": "name@example.com",
+    "sendLink": "Gửi liên kết đặt lại",
+    "backToLogin": "Quay lại Đăng nhập",
+    "securing": "Liên kết an toàn...",
+    "success": {
+      "title": "Kiểm tra Email của bạn",
+      "description": "Hướng dẫn đặt lại mật khẩu của bạn đã được gửi đến địa chỉ email nếu nó tồn tại trong hệ thống của chúng tôi.",
+      "backToLogin": "Quay lại Đăng nhập"
+    },
+    "errors": {
+      "generic": "Đã xảy ra lỗi. Vui lòng thử lại."
+    }
+  },
+  "resetPassword": {
+    "title": "Mật khẩu mới",
+    "subtitle": "Hoàn tất cập nhật bảo mật bằng cách chọn một mật khẩu mới mạnh mẽ.",
+    "newPassword": "Mật khẩu mới",
+    "confirmNewPassword": "Xác nhận mật khẩu mới",
+    "updatePassword": "Cập nhật mật khẩu",
+    "backToLogin": "Quay lại Đăng nhập",
+    "securing": "Đang bảo mật quyền truy cập...",
+    "success": {
+      "title": "Đã cập nhật mật khẩu",
+      "description": "Mật khẩu của bạn đã được đặt lại thành công. Bây giờ bạn có thể sử dụng mật khẩu mới để đăng nhập vào tài khoản của mình.",
+      "returnToLogin": "Quay lại Đăng nhập"
+    },
+    "errors": {
+      "generic": "Liên kết đặt lại không hợp lệ hoặc đã hết hạn.",
+      "passwordsDontMatch": "Mật khẩu không khớp"
+    }
+  },
+  "confirmEmail": {
+    "verifying": "Đang xác thực tài khoản",
+    "pleaseWait": "Vui lòng đợi trong khi chúng tôi bảo mật hồ sơ của bạn...",
+    "authenticating": "Đang xác thực...",
+    "success": {
+      "title": "Đã xác thực!",
+      "description": "Email của bạn đã được xác thực thành công. Chào mừng bạn đến với cộng đồng của chúng tôi!",
+      "continueToLogin": "Tiếp tục đăng nhập"
+    },
+    "error": {
+      "title": "Xác thực thất bại",
+      "missingToken": "Thiếu mã xác thực.",
+      "generic": "Xác thực thất bại. Liên kết có thể đã hết hạn.",
+      "createNewAccount": "Tạo tài khoản mới",
+      "returnHome": "Quay lại Trang chủ"
+    }
+  }
+}

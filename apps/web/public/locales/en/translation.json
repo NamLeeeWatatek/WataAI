@@ -1,0 +1,321 @@
+{
+  "language": "Language",
+  "english": "English",
+  "vietnamese": "Vietnamese",
+  "selectLanguage": "Select Language",
+  "settings": "Settings",
+  "general": "General",
+  "appearance": "Appearance",
+  "notifications": "Notifications",
+  "welcome": "Welcome",
+  "hello": "Hello",
+  "navigation": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "documentation": "Documentation",
+    "login": "Login",
+    "start": "Start"
+  },
+  "hero": {
+    "title": "Smart Multi-Channel AI Chatbot Platform",
+    "description": "Connect all your communication channels - WhatsApp, Facebook, Instagram, Telegram - in one single platform. Automate customer care with AI and increase sales revenue.",
+    "startForFree": "Start for free",
+    "contactSales": "Contact sales"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeBack": "Welcome back! Here's your overview.",
+    "downloadReport": "Download Report",
+    "ugcFactory": "UGC Factory",
+    "conversations": "Conversations",
+    "workflows": "Workflows",
+    "allWorkflows": "All Workflows",
+    "createNew": "Create New",
+    "channels": "Channels",
+    "knowledgeBase": "Knowledge Base",
+    "bots": "Bots",
+    "chatAI": "Chat AI",
+    "signOut": "Sign Out",
+    "confirm": {
+      "signOut": "Are you sure you want to sign out?",
+      "deleteBot": "Are you sure you want to delete this bot? This action cannot be undone.",
+      "deleteChannel": "Are you sure you want to delete this channel?",
+      "disconnectChannel": "Are you sure you want to disconnect this channel? This action cannot be undone.",
+      "deleteConversation": "Are you sure you want to delete this conversation? This action cannot be undone and all messages will be permanently deleted.",
+      "deleteCollection": "Are you sure you want to delete this collection? All folders, documents, and embeddings will be permanently deleted. This action cannot be undone.",
+      "deleteItems": "Are you sure you want to delete {count} item(s)? This action cannot be undone.",
+      "deleteChannels": "Are you sure you want to delete {count} channel(s)?",
+      "unsavedChanges": "You have unsaved changes. Are you sure you want to exit edit mode?",
+      "unlinkKnowledgeBase": "Are you sure you want to unlink \"{name}\" from this bot?",
+      "deleteKnowledgeBase": "Are you sure you want to delete this knowledge base collection?"
+    },
+    "stats": {
+      "totalUsers": "Total Users",
+      "members": "Members",
+      "totalBots": "Total Bots",
+      "conversations": "Conversations",
+      "flowExecutions": "Flow Executions",
+      "workspaceOverview": "Workspace Overview",
+      "totalWorkspaces": "Total Workspaces",
+      "activeWorkspaces": "Active Workspaces",
+      "growthRate": "Growth Rate",
+      "topPerformingBots": "Top Performing Bots",
+      "botsMostConversations": "Bots with most conversations",
+      "mostUsedFlows": "Most Used Flows",
+      "flowsMostExecutions": "Flows with most executions",
+      "noDataAvailable": "No data available",
+      "active": "active",
+      "new": "new",
+      "success": "success",
+      "conversationsLabel": "conversations",
+      "executions": "executions",
+      "avgMsgs": "avg msgs",
+      "avgTime": "avg"
+    },
+    "admin": {
+      "stats": {
+        "creationTools": "Creation Tools",
+        "generationJobs": "Generation Jobs"
+      }
+    }
+  },
+  "features": {
+    "unifiedPlatform": "Unified Platform",
+    "comprehensiveSolution": "Comprehensive solution for automated customer care",
+    "solutionDescription": "Reduce costs, increase revenue and operate your business more efficiently with the fully integrated AI platform. Use Wata AI to manage all communication channels, automate sales processes and customer care 24/7.",
+    "items": {
+      "unifiedMultiChannel": "Unified Multi-Channel",
+      "unifiedMultiChannelDesc": "Connect WhatsApp, Messenger, Instagram, Telegram and other channels in a single platform.",
+      "noCodeFlowBuilder": "No-Code Flow Builder",
+      "noCodeFlowBuilderDesc": "Create complex conversation flows with the visual drag-and-drop WataFlow tool.",
+      "aiPoweredAutoResponse": "AI-Powered Auto Response",
+      "aiPoweredAutoResponseDesc": "Let AI intelligently handle customer questions with contextual understanding.",
+      "n8nIntegration": "n8n Integration",
+      "n8nIntegrationDesc": "Seamlessly connect with n8n workflows to expand unlimited automation capabilities.",
+      "analyticsReporting": "Analytics & Reporting",
+      "analyticsReportingDesc": "Track performance, measure interactions and optimize customer experience.",
+      "enterpriseSecurity": "Enterprise Security",
+      "enterpriseSecurityDesc": "Bank-level encryption and compliance with GDPR, SOC 2, ISO standards.",
+      "mobileOptimized": "Mobile Optimized",
+      "mobileOptimizedDesc": "Manage your business anytime, anywhere with fully responsive dashboard.",
+      "globalInfrastructure": "Global Infrastructure",
+      "globalInfrastructureDesc": "Deploy on global edge network to ensure fast response times."
+    }
+  },
+  "ai": {
+    "providers": "AI Providers",
+    "models": "Models",
+    "settings": "AI Settings",
+    "configuration": "Configuration",
+    "selectModel": "Select a model"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "recommended": "Recommended",
+    "notAvailable": "Not Available",
+    "loadingText": "Loading"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalid": "Invalid value",
+    "tooLong": "Too long",
+    "tooShort": "Too short"
+  },
+  "buttons": {
+    "switchLanguage": "Switch Language"
+  },
+  "error": {
+    "general": "An error occurred",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "apiKeyRequired": "API key is required for this provider",
+    "providerNotSupported": "Provider not supported",
+    "modelNotSupported": "Model does not support chat operations"
+  },
+  "success": {
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "updated": "Updated successfully"
+  },
+  "login": {
+    "welcomeBack": "Welcome Back",
+    "subtitle": "Enter your credentials to access your account",
+    "signIn": "Sign In",
+    "email": "Email",
+    "emailPlaceholder": "name@example.com",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up",
+    "or": "OR",
+    "title": "AI-Powered Omnichannel Platform",
+    "signInWithCasdoor": "Sign in with Casdoor",
+    "termsAgreement": "By signing in, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "backToHome": "Back to home",
+    "pleaseWait": "Please wait",
+    "redirecting": "Redirecting",
+    "loading": "Loading",
+    "features": {
+      "aiWorkflow": "AI-powered workflow automation",
+      "omnichannel": "Omnichannel messaging",
+      "analytics": "Advanced analytics & insights"
+    },
+    "errors": {
+      "noCode": "No authorization code received from Casdoor",
+      "signinFailed": "Failed to sign in. Please try again.",
+      "authFailed": "Authentication failed. Please try again.",
+      "envMissing": "Missing environment variables:",
+      "backendConnection": "Cannot connect to backend at {url}. Please check if backend is running.",
+      "backendError": "Backend returned error {status}: {message}",
+      "casdoorConfig": "Casdoor is not properly configured. Please check your environment variables.",
+      "loginInitFailed": "Failed to initialize Casdoor login. Please check the console for details.",
+      "invalidCredentials": "Invalid email or password",
+      "accountNotLinked": "Email not linked to any account",
+      "generic": "An error occurred. Please try again."
+    }
+  },
+  "register": {
+    "title": "Create Account",
+    "subtitle": "Join our community and start building amazing things today.",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "signUp": "Get Started Free",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "backToHome": "Return to Homepage",
+    "preparing": "Preparing setup...",
+    "success": {
+      "title": "Verification Sent",
+      "description": "We've sent a verification link to your email address. Please check your inbox and confirm your account to get started.",
+      "returnToLogin": "Return to Login"
+    },
+    "errors": {
+      "generic": "Registration failed. Email might already be in use."
+    }
+  },
+  "globalScale": {
+    "title": "Global Scale",
+    "description": "Wata AI operates on a global scale, handling millions of conversations safely and reliably.",
+    "messagesPerDay": "Messages per day",
+    "uptime": "Uptime",
+    "integratedChannels": "Integrated channels",
+    "countries": "Countries"
+  },
+  "pricing": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "No setup fees, no hidden costs",
+    "mostPopular": "Most Popular",
+    "perMonth": "/month",
+    "tryForFree": "Try for free",
+    "tryPro": "Try Pro",
+    "contactSales": "Contact sales",
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Perfect for trying out Wata AI",
+        "features": [
+          "1 bot",
+          "100 conversations/month",
+          "2 channels",
+          "Basic analytics",
+          "Community support"
+        ]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For growing businesses",
+        "features": [
+          "10 bots",
+          "10,000 conversations/month",
+          "Unlimited channels",
+          "Advanced analytics",
+          "n8n integration",
+          "Priority support",
+          "Brand customization"
+        ]
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "For large organizations",
+        "features": [
+          "Unlimited bots",
+          "Unlimited conversations",
+          "Unlimited channels",
+          "Advanced AI features",
+          "Dedicated account management",
+          "SLA guarantee",
+          "Custom integrations",
+          "On-premise deployment"
+        ]
+      }
+    }
+  },
+  "forgotPassword": {
+    "title": "Reset Password",
+    "subtitle": "Enter your email and we'll send you a link to get back into your account.",
+    "email": "Email Address",
+    "emailPlaceholder": "name@example.com",
+    "sendLink": "Send Reset Link",
+    "backToLogin": "Back to Sign In",
+    "securing": "Secure link...",
+    "success": {
+      "title": "Check Your Email",
+      "description": "Instructions to reset your password have been sent to your email address if it exists in our system.",
+      "backToLogin": "Back to Login"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "resetPassword": {
+    "title": "New Password",
+    "subtitle": "Complete your security update by choosing a strong new password.",
+    "newPassword": "New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "updatePassword": "Update Password",
+    "backToLogin": "Return to Login",
+    "securing": "Securing access...",
+    "success": {
+      "title": "Password Updated",
+      "description": "Your password has been successfully reset. You can now use your new password to sign in to your account.",
+      "returnToLogin": "Return to Sign In"
+    },
+    "errors": {
+      "generic": "Invalid or expired reset link.",
+      "passwordsDontMatch": "Passwords don't match"
+    }
+  },
+  "confirmEmail": {
+    "verifying": "Verifying Account",
+    "pleaseWait": "Please wait while we secure your profile...",
+    "authenticating": "Authenticating...",
+    "success": {
+      "title": "Verified!",
+      "description": "Your email has been successfully verified. Welcome to our community!",
+      "continueToLogin": "Continue to Login"
+    },
+    "error": {
+      "title": "Verification Failed",
+      "missingToken": "Missing verification token.",
+      "generic": "Verification failed. Link may be expired.",
+      "createNewAccount": "Create New Account",
+      "returnHome": "Return to Home"
+    }
+  }
+}

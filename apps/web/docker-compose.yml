@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "${FRONTEND_PORT:-3003}:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    env_file:
+      - .env
+    networks:
+      - wata-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+networks:
+  wata-network:
+    external: true
