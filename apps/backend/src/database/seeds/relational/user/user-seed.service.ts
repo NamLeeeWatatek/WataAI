@@ -21,24 +21,36 @@ export class UserSeedService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) {}
+  ) { }
 
   async run() {
+    // Delete legacy/default admins if they exist
+    try {
+      const usersToDelete = ['admin@example.com', 'admin2@example.com'];
+      for (const email of usersToDelete) {
+        const user = await this.repository.findOne({ where: { email } });
+        if (user) {
+          // Delete workspace memberships first
+          await this.workspaceMemberRepository.delete({ userId: user.id });
+          // Delete workspaces owned by user
+          await this.workspaceRepository.delete({ ownerId: user.id });
+          // Delete user
+          await this.repository.delete({ id: user.id });
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up old admins:', error);
+    }
+
     const users = [
       // Admin users
       {
-        name: 'Super Admin',
-        email: 'admin@example.com',
+        name: 'Wata Admin',
+        email: 'wataai@gmail.com',
         role: 'admin' as const,
         isActive: true,
+        password: 'secret2026@wata',
       },
-      {
-        name: 'System Administrator',
-        email: 'admin2@example.com',
-        role: 'admin' as const,
-        isActive: true,
-      },
-
       // Regular users with different roles
       {
         name: 'John Smith',
@@ -165,13 +177,17 @@ export class UserSeedService {
     ];
 
     const salt = await bcrypt.genSalt();
-    const password = await bcrypt.hash('secret', salt);
+    const defaultPassword = await bcrypt.hash('secret', salt);
 
     const daysAgo = 365; // Spread user creation over the last year
     const now = new Date();
 
     for (let i = 0; i < users.length; i++) {
       const userData = users[i];
+
+      const userPassword = (userData as any).password
+        ? await bcrypt.hash((userData as any).password, salt)
+        : defaultPassword;
 
       const existingUser = await this.repository.findOne({
         where: { email: userData.email },
@@ -201,9 +217,15 @@ export class UserSeedService {
           });
         }
 
-        // Update password to ensure it matches default
-        existingUser.password = password;
+        // Update password and info
+        existingUser.password = userPassword;
         existingUser.provider = 'email';
+        // Ensure role is correct
+        const roleId = userData.role === 'admin' ? RoleEnum.admin : RoleEnum.user;
+        const role = await this.roleRepository.findOne({ where: { id: roleId } });
+        if (role) {
+          existingUser.role = role;
+        }
         await this.repository.save(existingUser);
 
         continue;
@@ -228,7 +250,7 @@ export class UserSeedService {
         name: userData.name,
         email: userData.email,
         isActive: userData.isActive,
-        password,
+        password: userPassword,
         role: role,
         provider: 'email',
         createdAt,
