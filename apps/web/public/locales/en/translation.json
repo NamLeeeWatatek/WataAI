@@ -317,5 +317,11 @@
       "createNewAccount": "Create New Account",
       "returnHome": "Return to Home"
     }
+  },
+  "job": {
+    "startedTitle": "Job Started",
+    "startedMessage": "Your AI generation job has been queued.",
+    "updateTitle": "Job Update",
+    "progressUpdate": "Progress: {{progress}}% "
   }
 }

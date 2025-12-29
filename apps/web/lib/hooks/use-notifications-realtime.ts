@@ -17,9 +17,10 @@ interface Notification {
   workspaceId: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: 'info' | 'success' | 'warning' | 'error' | 'job_progress' | 'job_created';
   isRead: boolean;
   createdAt: string;
+  data?: any;
 }
 
 interface UseNotificationsRealtimeConfig {
@@ -174,16 +175,51 @@ export function useNotificationsRealtime({
       // Add to notifications list
       setNotifications(prev => [notification, ...prev]);
 
-      // Show toast notification
-      toast(notification.title, {
+      // Suppress 'job_created' toasts as requested - they should just run in background
+      if (notification.type === 'job_created') {
+        return;
+      }
+
+      // Skip toast for background job progress updates to avoid spam
+      if (notification.type === 'job_progress') {
+
+        if (notification.data?.status === 'PROCESSING' || notification.data?.status === 'PENDING') {
+          return;
+        }
+      }
+
+      // Show toast notification using standard Sonner methods for better UI
+      const toastOptions = {
         description: notification.message,
         duration: 5000,
-        style: {
-          background: getToastBackground(notification.type),
-          color: '#fff',
-        },
-        icon: getToastIcon(notification.type),
-      });
+      };
+
+      switch (notification.type) {
+        case 'success':
+          toast.success(notification.title, toastOptions);
+          break;
+        case 'error':
+          toast.error(notification.title, toastOptions);
+          break;
+        case 'warning':
+          toast.warning(notification.title, toastOptions);
+          break;
+        case 'info':
+          toast.info(notification.title, toastOptions);
+          break;
+        case 'job_progress':
+          // Handle job progress final states if they weren't filtered above
+          if (notification.data?.status === 'FAILED') {
+            toast.error(notification.title, toastOptions);
+          } else if (notification.data?.status === 'COMPLETED') {
+            toast.success(notification.title, toastOptions);
+          } else {
+            toast.info(notification.title, toastOptions);
+          }
+          break;
+        default:
+          toast(notification.title, toastOptions);
+      }
 
       // Play sound if enabled
       if (preferences.sound) {
@@ -247,23 +283,7 @@ export function useNotificationsRealtime({
   ]);
 
   // Helper functions
-  const getToastBackground = (type: Notification['type']) => {
-    switch (type) {
-      case 'success': return '#10b981'; // green-500
-      case 'error': return '#ef4444';   // red-500
-      case 'warning': return '#f59e0b'; // amber-500
-      case 'info': default: return '#3b82f6'; // blue-500
-    }
-  };
 
-  const getToastIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'success': return '✅';
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': default: return 'ℹ️';
-    }
-  };
 
   const playNotificationSound = (type: Notification['type']) => {
     try {

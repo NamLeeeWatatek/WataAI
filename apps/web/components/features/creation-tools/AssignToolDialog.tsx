@@ -88,13 +88,6 @@ export function AssignToolDialog({
                                 {tools.map((tool) => (
                                     <SelectItem key={tool.id} value={tool.id}>
                                         <div className="flex items-center gap-2">
-                                            {tool.icon ? (
-                                                <span className="text-lg">{tool.icon}</span>
-                                            ) : (
-                                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <span className="text-[10px] font-bold text-primary">{tool.name.substring(0, 1)}</span>
-                                                </div>
-                                            )}
                                             <span>{tool.name}</span>
                                         </div>
                                     </SelectItem>

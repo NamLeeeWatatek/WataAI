@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button';
 import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { getKnowledgeBase } from '@/lib/api/knowledge-base';
+import { useState, useEffect } from 'react';
+
 interface ProductDetailsDialogProps {
     job: CreationJob | null;
     open: boolean;
@@ -15,6 +18,28 @@ interface ProductDetailsDialogProps {
 }
 
 export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetailsDialogProps) {
+    const [kbName, setKbName] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (open && job && job.inputData && typeof job.inputData === 'object') {
+            const input = job.inputData as any;
+            if (input.knowledgeBaseId && typeof input.knowledgeBaseId === 'string') {
+                getKnowledgeBase(input.knowledgeBaseId)
+                    .then(res => {
+                        // Res might be the KB object directly or wrapped in data property depending on axios interceptor
+                        // Based on api file: return axiosClient.get(...)
+                        // Usually returns data directly if interceptor is set up, or { data: ... }
+                        // For safety, let's assume standard response structure or check properties
+                        const name = (res as any).name || (res as any).data?.name;
+                        if (name) setKbName(name);
+                    })
+                    .catch(err => console.error("Failed to fetch KB name", err));
+            } else {
+                setKbName(null);
+            }
+        }
+    }, [open, job]);
+
     if (!job) return null;
 
     const statusConfig = {
@@ -48,7 +73,16 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                 {entries.map(([key, value]) => (
                     <div key={key} className="space-y-1">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
-                        <div className="text-sm font-medium leading-tight">{String(value)}</div>
+                        <div className="text-sm font-medium leading-tight">
+                            {key === 'knowledgeBaseId' && kbName ? (
+                                <div className="flex flex-col">
+                                    <span>{kbName}</span>
+                                    <span className="text-[10px] text-muted-foreground font-mono">{String(value)}</span>
+                                </div>
+                            ) : (
+                                String(value)
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>

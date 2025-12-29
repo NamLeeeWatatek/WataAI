@@ -73,5 +73,14 @@ export const aiProvidersApi = {
 
   // Models
   getAvailableModels: () =>
-    axiosClient.get('/ai-providers/models') as unknown as any,
+    axiosClient.get('/ai-providers/user/models') as unknown as Promise<any[]>,
+
+  getWorkspaceModels: (workspaceId: string) =>
+    axiosClient.get(`/ai-providers/workspace/${workspaceId}/models`) as unknown as Promise<any[]>,
+
+  verifyModels: (providerId: string, config: Record<string, any>) =>
+    axiosClient.post<string[]>('/ai-providers/verify-models', { providerId, config }) as unknown as Promise<string[]>,
+
+  syncModels: (id: string) =>
+    axiosClient.get<string[]>(`/ai-providers/fetch-models/${id}/user`) as unknown as Promise<string[]>,
 };

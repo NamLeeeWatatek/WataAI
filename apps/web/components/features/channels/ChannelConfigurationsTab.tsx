@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -41,9 +41,11 @@ import {
   TrendingUp,
   ExternalLink,
   ShieldCheck,
-  Key
+  Key,
+  Copy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface IntegrationConfig {
   id?: number;
@@ -82,6 +84,11 @@ export function ChannelConfigurationsTab({
   });
 
   const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [origin, setOrigin] = useState('');
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   const getIcon = (type: string) => {
     const icons: Record<string, JSX.Element> = {
@@ -392,9 +399,9 @@ export function ChannelConfigurationsTab({
       {/* Configuration Dialog */}
       {showConfigDialog && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <Card variant="premium" rounded="2xl" className="w-full max-w-md shadow-2xl border-white/10 ring-1 ring-white/10 overflow-hidden animate-in zoom-in-95 duration-300">
+          <Card variant="premium" rounded="2xl" className="w-full max-w-3xl shadow-2xl border-white/10 ring-1 ring-white/10 overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
             <div className="p-8">
-              <div className="flex items-center gap-5 mb-8">
+              <div className="flex items-center gap-5 mb-8 border-b border-white/5 pb-6">
                 <div className={cn("p-4 rounded-2xl shadow-inner transform rotate-3", getColor(configForm.provider))}>
                   {getIcon(configForm.provider)}
                 </div>
@@ -421,91 +428,130 @@ export function ChannelConfigurationsTab({
               </AlertBanner>
 
               <div className="space-y-6">
-                <div>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1">
-                    Label <span className="text-muted-foreground font-normal">(Friendly Name)</span>
-                  </Label>
-                  <Input
-                    type="text"
-                    rounded="xl"
-                    value={configForm.name}
-                    onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
-                    placeholder="e.g. Primary Facebook Portal"
-                    className="h-12 glass border-white/5 focus:ring-primary/40 pl-4 font-bold"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1">
-                    Access Identification <span className="text-destructive font-black">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Label className="mb-2 block">
+                      Label <span className="text-muted-foreground font-normal">(Friendly Name)</span>
+                    </Label>
                     <Input
                       type="text"
-                      rounded="xl"
+                      value={configForm.name}
+                      onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
+                      placeholder="e.g. Primary Facebook Portal"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="mb-2 block">
+                      Access Identification <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      type="text"
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
                       placeholder="Client / App ID"
-                      className="h-12 glass border-white/5 focus:ring-primary/40 pl-11 font-mono font-bold text-sm"
+                      className="font-mono"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1">
-                    Authorization Secret <span className="text-destructive font-black">*</span>
-                  </Label>
-                  <div className="relative">
-                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                  <div>
+                    <Label className="mb-2 block">
+                      Authorization Secret <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       type="password"
-                      rounded="xl"
                       value={configForm.client_secret}
                       onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
                       placeholder="Secret Key"
-                      className="h-12 glass border-white/5 focus:ring-primary/40 pl-11 font-mono font-bold text-sm"
+                      className="font-mono"
                     />
                   </div>
                 </div>
 
                 {(configForm.provider === 'facebook' || configForm.provider === 'messenger' || configForm.provider === 'instagram') && (
-                  <div>
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1">
-                      Webhook Verification
-                    </Label>
-                    <Input
-                      type="text"
-                      rounded="xl"
-                      value={configForm.verify_token}
-                      onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
-                      placeholder="Security Token"
-                      className="h-12 glass border-white/5 focus:ring-primary/40 pl-4 font-bold"
-                      required
-                    />
-                    <p className="text-[10px] font-bold text-muted-foreground/50 mt-2 ml-1">
-                      Target this token within your external developer dashboard.
-                    </p>
+                  <div className="space-y-6 border-t border-white/5 pt-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-white/5 h-full">
+                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">OAuth Redirect URI</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            readOnly
+                            value={`${origin}/channels/callback`}
+                            className="bg-background/50 font-mono text-[10px] h-8 truncate"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${origin}/channels/callback`);
+                              toast.success("Copied OAuth URL");
+                            }}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-white/5 h-full">
+                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">Webhook Callback URL</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            readOnly
+                            value={`${(process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com').replace(/\/$/, '')}/webhooks/facebook`}
+                            className="bg-background/50 font-mono text-[10px] h-8 truncate"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 shrink-0"
+                            onClick={() => {
+                              const url = `${(process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com').replace(/\/$/, '')}/webhooks/facebook`;
+                              navigator.clipboard.writeText(url);
+                              toast.success("Copied Webhook URL");
+                            }}
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-1">
+                        <Label className="mb-2 block">
+                          Webhook Verification
+                        </Label>
+                        <Input
+                          type="text"
+                          value={configForm.verify_token}
+                          onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
+                          placeholder="Security Token"
+                          required
+                        />
+                        <p className="text-[10px] font-bold text-muted-foreground/50 mt-2 ml-1">
+                          Target this token within your external developer dashboard.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {configForm.provider !== 'facebook' && configForm.provider !== 'messenger' && configForm.provider !== 'instagram' && (
                   <div>
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1">
+                    <Label className="mb-2 block">
                       Permission Scopes
                     </Label>
                     <Input
                       type="text"
-                      rounded="xl"
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
                       placeholder="e.g. read_messages, write_post"
-                      className="h-12 glass border-white/5 focus:ring-primary/40 pl-4 font-bold"
                     />
                   </div>
                 )}
 
-                <div className="flex gap-4 mt-10 pt-4 border-t border-white/5">
+                <div className="flex gap-4 mt-8 pt-6 border-t border-white/5">
                   <Button
                     variant="ghost"
                     rounded="xl"

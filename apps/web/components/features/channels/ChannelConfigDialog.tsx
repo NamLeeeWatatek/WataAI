@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Switch } from '@/components/ui/Switch'
 import {
@@ -17,8 +17,8 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { handleFormError } from '@/lib/utils/form-errors'
-import { Settings, ShieldCheck, Key, Globe, Layout, CheckCircle2, AlertCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Settings, Copy, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 const channelConfigSchema = z.object({
     provider: z.string().min(1, 'Provider is required'),
@@ -45,6 +45,16 @@ export function ChannelConfigDialog({
     providers,
     onSubmit
 }: ChannelConfigDialogProps) {
+    const [origin, setOrigin] = useState('')
+    const [copied, setCopied] = useState(false)
+
+    // Construct simplified callback URL (assuming standard API structure)
+    // In a real app, this might come from configuration
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com';
+    // Remove trailing slash if present
+    const cleanApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+    const callbackUrl = `${cleanApiUrl}/webhooks/facebook`;
+
     const form = useForm<z.infer<typeof channelConfigSchema>>({
         resolver: zodResolver(channelConfigSchema),
         defaultValues: {
@@ -57,6 +67,10 @@ export function ChannelConfigDialog({
             isActive: true,
         },
     })
+
+    useEffect(() => {
+        setOrigin(window.location.origin)
+    }, [])
 
     useEffect(() => {
         if (channel && open) {
@@ -84,173 +98,190 @@ export function ChannelConfigDialog({
         }
     }
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text)
+        setCopied(true)
+        toast.success("Copied to clipboard")
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    // Redirect URL for OAuth
+    const redirectUrl = `${origin}/channels/callback`
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] overflow-hidden p-0 bg-background border-white/5 shadow-2xl rounded-2xl flex flex-col">
-                <div className="bg-gradient-to-br from-primary/10 via-background to-background p-8 border-b border-white/5">
-                    <DialogHeader>
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner transform -rotate-3">
-                                <Settings className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <DialogTitle className="text-2xl font-black tracking-tight">{channel ? 'Modify Connection' : 'Register New Channel'}</DialogTitle>
-                                <p className="text-sm font-medium opacity-70">Configure your cryptographic access points</p>
-                            </div>
-                        </div>
-                    </DialogHeader>
-                </div>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>{channel ? 'Edit Channel' : 'New Channel'}</DialogTitle>
+                    <DialogDescription>
+                        Configure your messaging channel connection settings.
+                    </DialogDescription>
+                </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto p-8">
-
-                    <div className="max-w-3xl mx-auto w-full">
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-                                {form.formState.errors.root && (
-                                    <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex items-center gap-3 text-sm text-destructive font-bold animate-pulse">
-                                        <AlertCircle className="w-5 h-5" />
-                                        {form.formState.errors.root.message}
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <FormField
-                                        control={form.control}
-                                        name="provider"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">Protocol Provider</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger className="h-12 glass rounded-xl border-white/5 font-bold pl-4">
-                                                            <SelectValue placeholder="Select provider" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent className="glass border-white/10 rounded-xl">
-                                                        {providers.map((p) => (
-                                                            <SelectItem key={p.value} value={p.value} className="font-bold">
-                                                                {p.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage className="text-[10px] font-bold" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="name"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">Friendly Label</FormLabel>
-                                                <FormControl>
-                                                    <Input className="h-12 glass rounded-xl border-white/5 font-bold pl-4" placeholder="e.g. Master Facebook Hub" {...field} />
-                                                </FormControl>
-                                                <FormMessage className="text-[10px] font-bold" />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-                                <div className="space-y-6 bg-muted/5 p-6 rounded-2xl border border-white/5 backdrop-blur-sm">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Key className="w-3.5 h-3.5 text-primary" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Credentials & Keys</span>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <FormField
-                                            control={form.control}
-                                            name="pageId"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">Target ID</FormLabel>
-                                                    <FormControl>
-                                                        <Input className="h-12 glass rounded-xl border-white/5 font-mono font-bold text-sm" placeholder="123456789" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="pageAccessToken"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">System Token</FormLabel>
-                                                    <FormControl>
-                                                        <Input className="h-12 glass rounded-xl border-white/5 font-mono font-bold text-sm" type="password" placeholder="EAAxxxx..." {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <FormField
-                                            control={form.control}
-                                            name="verifyToken"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">Webhook Secret</FormLabel>
-                                                    <FormControl>
-                                                        <Input className="h-12 glass rounded-xl border-white/5 font-mono font-bold text-sm" placeholder="my_verify_token" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="appSecret"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1 mb-2 block">Developer Secret</FormLabel>
-                                                    <FormControl>
-                                                        <Input className="h-12 glass rounded-xl border-white/5 font-mono font-bold text-sm" type="password" placeholder="abc123..." {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                                <FormField
-                                    control={form.control}
-                                    name="isActive"
-                                    render={({ field }) => (
-                                        <FormItem className="flex items-center justify-between rounded-2xl border border-white/5 p-6 bg-muted/10">
-                                            <div className="space-y-1">
-                                                <FormLabel className="text-sm font-black tracking-tight flex items-center gap-2">
-                                                    <div className={cn("w-2 h-2 rounded-full", field.value ? "bg-success animate-pulse" : "bg-muted")} />
-                                                    Connection Status
-                                                </FormLabel>
-                                                <FormDescription className="text-xs font-medium opacity-60">
-                                                    Activate this link to begin processing real-time traffic
-                                                </FormDescription>
-                                            </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormField
+                                control={form.control}
+                                name="provider"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Provider</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                             <FormControl>
-                                                <Switch
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
-                                                />
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select provider" />
+                                                </SelectTrigger>
                                             </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                                <DialogFooter className="pt-10 sticky bottom-0 bg-background/80 backdrop-blur-xl pb-4 flex gap-4">
-                                    <Button type="button" variant="outline" rounded="xl" className="h-12 flex-1 font-black uppercase tracking-widest text-xs glass border-white/10" onClick={() => onOpenChange(false)}>
-                                        Discard
-                                    </Button>
-                                    <Button type="submit" rounded="xl" className="h-12 flex-[2] font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20" loading={form.formState.isSubmitting}>
-                                        {channel ? 'Push Update' : 'Initialize Connection'}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </Form>
-                    </div>
-                </div>
+                                            <SelectContent>
+                                                {providers.map((p) => (
+                                                    <SelectItem key={p.value} value={p.value}>
+                                                        {p.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="My Facebook Page" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {/* Facebook Specific Config Section */}
+                        {form.watch('provider') === 'facebook' && (
+                            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                                <div className="flex items-center gap-2 mb-2 font-semibold text-sm">
+                                    <Settings className="w-4 h-4" />
+                                    Facebook Configuration
+                                </div>
+
+                                {/* URLs Section - 2 Columns */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">OAuth Redirect URI</FormLabel>
+                                        <div className="flex items-center gap-2">
+                                            <Input readOnly value={redirectUrl} className="bg-muted text-muted-foreground font-mono text-xs truncate" />
+                                            <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(redirectUrl)} className="shrink-0">
+                                                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Paste into Facebook Login settings.</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">Webhook Callback URL</FormLabel>
+                                        <div className="flex items-center gap-2">
+                                            <Input readOnly value={callbackUrl} className="bg-muted text-muted-foreground font-mono text-xs truncate" />
+                                            <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(callbackUrl)} className="shrink-0">
+                                                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                            </Button>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">Paste into Webhooks product settings.</p>
+                                    </div>
+                                </div>
+
+                                {/* Credentials Grid - 2 Columns */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="pageId"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Page ID</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="1234567890" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="verifyToken"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Verify Token</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="my_secure_token" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="appSecret"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>App Secret</FormLabel>
+                                                <FormControl>
+                                                    <Input type="password" placeholder="App Secret" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="pageAccessToken"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Page Access Token</FormLabel>
+                                                <FormControl>
+                                                    <Input type="password" placeholder="EAA..." {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <FormField
+                            control={form.control}
+                            name="isActive"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <FormLabel className="text-base">Active Status</FormLabel>
+                                        <FormDescription>
+                                            Enable or disable this channel connection.
+                                        </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                        <Switch
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                </FormItem>
+                            )}
+                        />
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" loading={form.formState.isSubmitting}>
+                                {channel ? 'Save Changes' : 'Create Channel'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
     )
 }
-

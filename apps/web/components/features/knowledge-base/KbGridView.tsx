@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Folder, FileText, MoreVertical, Eye, Download, Edit2, Trash2, Database } from 'lucide-react';
+import { Folder, FileText, MoreVertical, Eye, Download, Edit2, Trash2, Database, Video, Music } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +36,7 @@ interface KbGridViewProps {
   onDeleteItem: (item: KbItem) => void;
   onPreviewDocument?: (documentId: string) => void;
   onDownloadDocument?: (documentId: string, filename: string) => void;
+  onToggleSelectAll?: (checked: boolean) => void;
 }
 
 export function KbGridView({
@@ -52,7 +53,8 @@ export function KbGridView({
   onEditItem,
   onDeleteItem,
   onPreviewDocument,
-  onDownloadDocument
+  onDownloadDocument,
+  onToggleSelectAll
 }: KbGridViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -97,7 +99,19 @@ export function KbGridView({
   }
 
   return (
-    <div className="flex-1 space-y-6">
+    <div className="flex-1 space-y-4">
+      <div className="flex justify-end px-1">
+        <label className="flex items-center gap-2 cursor-pointer group">
+          <Checkbox
+            checked={items.length > 0 && items.every(item => selectedIds.includes(item.id))}
+            onCheckedChange={(checked) => {
+              // Note: KbGridView doesn't have onToggleSelectAll prop yet, adding it to props below
+              (onToggleSelectAll as any)?.(!!checked);
+            }}
+          />
+          <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">Select All Current</span>
+        </label>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {items.map((item) => (
           <Card
@@ -130,11 +144,15 @@ export function KbGridView({
             )}
             onClick={() => onItemClick(item)}
           >
-            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <div className={cn(
+              "absolute top-3 right-3 z-10 transition-opacity",
+              selectedIds.includes(item.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            )}>
               <Checkbox
                 checked={selectedIds.includes(item.id)}
                 onCheckedChange={() => onToggleSelection(item.id)}
                 onClick={(e) => e.stopPropagation()}
+                className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50"
               />
             </div>
 
@@ -143,7 +161,20 @@ export function KbGridView({
                 "w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg border border-white/5",
                 item.type === 'folder' ? "bg-blue-500/10 text-blue-500" : "bg-muted/50 text-muted-foreground"
               )}>
-                {item.type === 'folder' ? <Folder className="w-8 h-8" /> : <FileText className="w-8 h-8" />}
+                {item.type === 'folder' ? (
+                  <Folder className="w-8 h-8" />
+                ) : (
+                  (() => {
+                    const ext = item.name.split('.').pop()?.toLowerCase();
+                    if (['mp4', 'mpeg', 'mov', 'avi', 'webm', 'mkv', 'wmv'].includes(ext || '')) {
+                      return <Video className="w-8 h-8" />;
+                    }
+                    if (['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext || '')) {
+                      return <Music className="w-8 h-8" />;
+                    }
+                    return <FileText className="w-8 h-8" />;
+                  })()
+                )}
               </div>
 
               <h3 className="font-bold text-sm truncate w-full px-2">{item.name}</h3>

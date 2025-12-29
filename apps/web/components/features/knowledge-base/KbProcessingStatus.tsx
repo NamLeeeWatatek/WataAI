@@ -14,6 +14,7 @@ interface ProcessingJob {
     progress: number
     totalChunks: number
     processedChunks: number
+    type?: 'embedding' | 'crawl'
     error?: string
 }
 
@@ -103,7 +104,7 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
                                 {job.status === 'processing' && (
                                     <Badge variant="default" className="gap-1 shrink-0">
                                         <FiLoader className="w-3 h-3 animate-spin" />
-                                        Processing
+                                        {job.type === 'crawl' ? 'Crawling' : 'Processing'}
                                     </Badge>
                                 )}
                                 <span className="text-muted-foreground truncate">
@@ -111,7 +112,7 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
                                 </span>
                                 {job.totalChunks > 0 && (
                                     <span className="text-xs text-muted-foreground shrink-0">
-                                        {job.processedChunks}/{job.totalChunks}
+                                        {job.processedChunks}/{job.totalChunks} {job.type === 'crawl' ? 'pages' : 'chunks'}
                                     </span>
                                 )}
                             </div>

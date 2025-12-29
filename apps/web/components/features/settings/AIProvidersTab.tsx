@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import axiosClient from '@/lib/axios-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Plus, Edit2, Trash2, Check, Grid, List, Search, Key, Activity, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Terminal, Shield, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, Grid, List, Search, Key, Activity, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Terminal, Shield, RefreshCw, Loader2 } from 'lucide-react';
+import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
@@ -12,19 +13,26 @@ import { DataTable } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { toast } from 'sonner';
 import { AIProviderDialog } from './AIProviderDialog';
+import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 
 // Icon mapping utility
 const getProviderIcon = (iconName?: string) => {
   const icons: Record<string, any> = {
+    openai: Sparkles,
+    anthropic: Bot,
+    google: Stars,
+    gemini: Stars,
+    azure: Cloud,
+    ollama: Cpu,
+    custom: Settings,
     AiOutlineOpenAI: Sparkles,
     SiClaude: Bot,
     RiGeminiLine: Stars,
-    VscAzure: Cloud,
     SiOllama: Cpu,
     MdDashboardCustomize: Settings,
   };
 
-  return icons[iconName as string] || Settings;
+  return icons[(iconName || '').toLowerCase()] || icons[iconName as string] || Settings;
 };
 
 interface AiProvider {
@@ -122,6 +130,21 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
     setDeleteDialogOpen(true);
   };
 
+  const [isSyncing, setIsSyncing] = useState<string | null>(null);
+  const handleSyncModels = async (id: string) => {
+    setIsSyncing(id);
+    try {
+      const models = await aiProvidersApi.syncModels(id);
+      await aiProvidersApi.updateUserConfig(id, { modelList: models });
+      toast.success(`Synchronized ${models.length} models`);
+      onDataChange();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to synchronize models');
+    } finally {
+      setIsSyncing(null);
+    }
+  };
+
   const handleToggleActive = async (provider: { id: string; isActive: boolean }) => {
     const originalUserConfig = userConfigs.find(c => c.id === provider.id);
     if (!originalUserConfig) {
@@ -197,7 +220,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           <CardContent className="pt-2">
             <Button onClick={() => handleOpenDialog()} className="w-full shadow-2xl shadow-primary/30 font-black rounded-2xl h-14 active:scale-[0.98] transition-all bg-primary hover:bg-primary text-sm tracking-tight group/btn overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
-              <Plus className="mr-2 size-5 transition-transform group-hover/btn:rotate-90" />
+              <Plus className="mr-2 size-5" />
               Add Provider
             </Button>
           </CardContent>
@@ -303,32 +326,64 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               {provider.isActive ? 'Active' : 'Offline'}
                             </div>
                           </div>
+                          <p className="text-xs text-muted-foreground font-medium line-clamp-1 mt-1 opacity-60">
+                            {providerData?.description || `Integration for ${provider.displayName}`}
+                          </p>
                         </CardHeader>
 
                         <CardContent className="p-6 pt-0 space-y-6 flex-1 flex flex-col">
                           {provider.modelList && provider.modelList.length > 0 ? (
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Available Models</p>
-                                <span className="text-[10px] font-bold text-muted-foreground/40">{provider.modelList.length} Models</span>
+                                <div className="flex items-center gap-2">
+                                  <Stars className="size-3 text-primary/60" />
+                                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Current Models</p>
+                                </div>
+                                <button
+                                  onClick={() => handleSyncModels(provider.id)}
+                                  disabled={isSyncing === provider.id}
+                                  className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1 group/sync disabled:opacity-50"
+                                >
+                                  {isSyncing === provider.id ? (
+                                    <Loader2 className="size-2.5 animate-spin" />
+                                  ) : (
+                                    <RefreshCw className="size-2.5" />
+                                  )}
+                                  Sync
+                                </button>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                {provider.modelList.slice(0, 4).map((model) => (
-                                  <Badge key={model} variant="secondary" className="font-mono text-[10px] px-2 py-1 bg-muted/10 border-border/20 text-muted-foreground hover:bg-muted/20 hover:text-foreground transition-colors rounded-lg">
+                                {provider.modelList.slice(0, 5).map((model) => (
+                                  <Badge key={model} variant="secondary" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors rounded-md">
                                     {model}
                                   </Badge>
                                 ))}
-                                {provider.modelList.length > 4 && (
-                                  <Badge variant="secondary" className="text-[10px] px-2 py-1 bg-muted/5 border-border/10 opacity-60 rounded-lg">
-                                    +{provider.modelList.length - 4} More
+                                {provider.modelList.length > 5 && (
+                                  <Badge variant="secondary" className="text-[9px] px-2 py-0.5 bg-muted/5 border-border/10 opacity-60 rounded-md">
+                                    +{provider.modelList.length - 5}
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           ) : (
-                            <div className="py-6 flex flex-col items-center justify-center border border-dashed border-border/30 rounded-2xl bg-muted/5 group-hover:bg-muted/10 transition-colors">
-                              <Terminal className="size-5 text-muted-foreground/20 mb-2" />
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">No Models Found</p>
+                            <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed border-primary/10 rounded-2xl bg-primary/[0.02] group-hover:bg-primary/[0.04] transition-all relative overflow-hidden">
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                              <Cpu className="size-6 text-primary/20 mb-3" />
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-4">No Models Detected</p>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleSyncModels(provider.id)}
+                                disabled={isSyncing === provider.id}
+                                className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all px-4"
+                              >
+                                {isSyncing === provider.id ? (
+                                  <Loader2 className="size-3 mr-2 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="size-3 mr-2" />
+                                )}
+                                Initial Discovery
+                              </Button>
                             </div>
                           )}
 
@@ -355,7 +410,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                                   onClick={() => handleVerify(provider.id)}
                                   className="flex-1 h-11 rounded-xl border-orange-500/20 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 hover:text-orange-700 font-bold text-xs group/verify"
                                 >
-                                  <RefreshCw className="mr-2 size-3.5 group-hover/verify:rotate-180 transition-transform duration-500" />
+                                  <RefreshCw className="mr-2 size-3.5" />
                                   Validate
                                 </Button>
                               )}
@@ -518,6 +573,16 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
         onOpenChange={setDialogOpen}
         availableProviders={availableProviders}
         config={selectedConfig}
+      />
+
+      <AlertDialogConfirm
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete AI Provider"
+        description="Are you sure you want to remove this AI provider? This will disable any bots or tools using this configuration."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={handleDelete}
       />
     </div>
   );

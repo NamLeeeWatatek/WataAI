@@ -1,6 +1,7 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -30,9 +31,32 @@ interface BotFormData {
 interface BotConfigurationTabProps {
   formData: BotFormData;
   onChange: (updates: Partial<BotFormData>) => void;
+  workspaceId?: string;
 }
 
-export function BotConfigurationTab({ formData, onChange }: BotConfigurationTabProps) {
+export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConfigurationTabProps) {
+  const [providers, setProviders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProviders = async () => {
+      try {
+        const data = workspaceId
+          ? await aiProvidersApi.getWorkspaceModels(workspaceId)
+          : await aiProvidersApi.getAvailableModels();
+        setProviders(data);
+      } catch (error) {
+        console.error('Failed to load AI providers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProviders();
+  }, []);
+
+  // Find models for selected provider
+  const selectedProviderData = providers.find(p => p.providerKey === formData.aiProviderId || p.providerId === formData.aiProviderId);
+  const availableModels = selectedProviderData?.models || [];
   return (
     <div className="space-y-6">
 
@@ -142,14 +166,16 @@ export function BotConfigurationTab({ formData, onChange }: BotConfigurationTabP
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">AI Provider</Label>
-                    <Select value={formData.aiProviderId} onValueChange={(value) => onChange({ aiProviderId: value })}>
+                    <Select value={formData.aiProviderId} onValueChange={(value) => onChange({ aiProviderId: value, aiModelName: '' })}>
                       <SelectTrigger className="rounded-xl border-border/60 bg-muted/20 h-11 transition-all focus:ring-purple-500/20">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="openai">OpenAI</SelectItem>
-                        <SelectItem value="anthropic">Anthropic</SelectItem>
-                        <SelectItem value="google">Google</SelectItem>
+                        {providers.map((p) => (
+                          <SelectItem key={p.providerId + (p.configId || '')} value={p.providerKey}>
+                            {p.providerName} {p.displayName ? `(${p.displayName})` : ''}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -157,13 +183,14 @@ export function BotConfigurationTab({ formData, onChange }: BotConfigurationTabP
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model</Label>
                     <Select value={formData.aiModelName} onValueChange={(value) => onChange({ aiModelName: value })}>
                       <SelectTrigger className="rounded-xl border-border/60 bg-muted/20 h-11 transition-all focus:ring-purple-500/20">
-                        <SelectValue placeholder="Select model" />
+                        <SelectValue placeholder={!formData.aiProviderId ? "Select provider first" : "Select model"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        <SelectItem value="gpt-4">GPT-4 Turbo</SelectItem>
-                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                        <SelectItem value="claude-3">Claude 3 Opus</SelectItem>
-                        <SelectItem value="gemini-pro">Gemini Pro</SelectItem>
+                        {availableModels.map((model: string) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

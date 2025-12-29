@@ -35,10 +35,17 @@ export const setAxiosToken = (token: string | null) => {
 axiosClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     // 1. Get token from cache or session
-    if (!cachedToken) {
+    // We also use this opportunity to hydrate workspaceId if missing
+    if (!cachedToken || !activeWorkspaceId) {
       const session = await getSession();
-      if (session?.accessToken) {
+
+      if (session?.accessToken && !cachedToken) {
         cachedToken = session.accessToken;
+      }
+
+      if (session?.workspace?.id && !activeWorkspaceId) {
+        activeWorkspaceId = session.workspace.id;
+        lastValidWorkspaceId = session.workspace.id;
       }
     }
 
@@ -51,6 +58,7 @@ axiosClient.interceptors.request.use(
     const workspaceIdToUse = activeWorkspaceId || lastValidWorkspaceId;
 
     if (workspaceIdToUse) {
+      // Use lowercase for consistency across client/server axios
       config.headers['x-workspace-id'] = workspaceIdToUse;
     }
 

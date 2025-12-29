@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Search, Sparkles, Filter, icons, Folder } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Search, Sparkles, Filter, icons, Folder, X } from 'lucide-react';
 import { AssignToolDialog } from '@/components/features/creation-tools/AssignToolDialog';
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
 import toast from '@/lib/toast';
@@ -20,7 +20,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { X } from 'lucide-react';
+import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -282,48 +282,28 @@ export default function TemplatesPage() {
                     </div>
                 </div>
 
-                {/* Bulk Actions Toolbar */}
-                {selectedIds.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 p-2 rounded-full bg-foreground text-background shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200">
-                        <div className="pl-4 pr-2 font-medium text-sm whitespace-nowrap">
-                            {selectedIds.size} selected
-                        </div>
-                        <div className="h-4 w-px bg-background/20 mx-1" />
-                        <Button
-                            size="sm"
-                            variant="secondary"
-                            className="h-8 rounded-full px-3 text-xs hover:bg-white/90"
-                            onClick={() => setAssignDialogOpen(true)}
-                        >
-                            Assign to Tool
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 rounded-full px-3 text-xs bg-white/10 hover:bg-white/20 border-white/20 text-background hover:text-background"
-                            onClick={handleBulkUnassign}
-                        >
-                            Unassign
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            className="h-8 rounded-full px-3 text-xs"
-                            onClick={() => setBulkDeleteAlertOpen(true)}
-                        >
-                            Delete
-                        </Button>
-                        <div className="h-4 w-px bg-background/20 mx-1" />
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 rounded-full hover:bg-white/20 text-background hover:text-background"
-                            onClick={() => setSelectedIds(new Set())}
-                        >
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-                )}
+                <BulkActionsToolbar
+                    selectedCount={selectedIds.size}
+                    onClearSelection={() => setSelectedIds(new Set())}
+                    actions={[
+                        {
+                            label: 'Assign to Tool',
+                            icon: Folder,
+                            onClick: () => setAssignDialogOpen(true),
+                        },
+                        {
+                            label: 'Unassign',
+                            icon: X,
+                            onClick: handleBulkUnassign,
+                        },
+                        {
+                            label: 'Delete',
+                            icon: Trash2,
+                            onClick: () => setBulkDeleteAlertOpen(true),
+                            variant: 'destructive'
+                        }
+                    ]}
+                />
 
                 {/* Templates Grid */}
                 {templates.length === 0 ? (
@@ -396,13 +376,32 @@ export default function TemplatesPage() {
 
                                     <div className="aspect-video w-full bg-muted relative overflow-hidden shrink-0">
                                         {template.thumbnailUrl ? (
-                                            <img
-                                                src={template.thumbnailUrl}
-                                                alt={template.name}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                loading="lazy"
-                                                decoding="async"
-                                            />
+                                            (() => {
+                                                const isVideo = template.thumbnailUrl?.match(/\.(mp4|webm|mov)$/i);
+                                                return isVideo ? (
+                                                    <video
+                                                        src={template.thumbnailUrl}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        muted
+                                                        loop
+                                                        playsInline
+                                                        // Auto-play on hover could be a nice touch, but let's keep it simple or auto-play
+                                                        onMouseOver={(e) => e.currentTarget.play()}
+                                                        onMouseOut={(e) => {
+                                                            e.currentTarget.pause();
+                                                            e.currentTarget.currentTime = 0;
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={template.thumbnailUrl}
+                                                        alt={template.name}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                    />
+                                                );
+                                            })()
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-secondary/30 text-muted-foreground/50">
                                                 {template.icon && (icons as any)[template.icon] ? (

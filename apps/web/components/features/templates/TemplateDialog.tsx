@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
+import { FileDropzone } from '@/components/ui/FileUpload'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -9,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/Switch'
 import { Label } from '@/components/ui/Label'
 import type { Template } from '@/lib/types/template'
-import { FileUploader } from '@/components/shared/FileUploader'
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools'
 
 interface TemplateDialogProps {
@@ -158,13 +159,14 @@ export function TemplateDialog({
                     <div className="space-y-2">
                         <Label htmlFor="creationToolId">Assign to Creation Tool</Label>
                         <Select
-                            value={formData.creationToolId}
-                            onValueChange={(value) => updateField('creationToolId', value)}
+                            value={formData.creationToolId || "unassigned"}
+                            onValueChange={(value) => updateField('creationToolId', value === "unassigned" ? "" : value)}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder={creationTools.length > 0 ? "Select a tool" : "No tools available"} />
+                                <SelectValue placeholder="Select a tool" />
                             </SelectTrigger>
                             <SelectContent>
+                                <SelectItem value="unassigned">None (Standalone Template)</SelectItem>
                                 {creationTools.map((tool) => (
                                     <SelectItem key={tool.id} value={tool.id}>
                                         {tool.name}
@@ -204,12 +206,45 @@ export function TemplateDialog({
                     <div className="space-y-2">
                         <Label>Media Files</Label>
                         <div className="rounded-md border p-4 bg-muted/20">
-                            <FileUploader
-                                value={formData.mediaFiles}
-                                onChange={(urls) => updateField('mediaFiles', urls)}
-                                multiple={true}
-                                accept="image/*,video/*"
-                            />
+                            <div className="space-y-4">
+                                <FileDropzone
+                                    onUploadComplete={(url) => {
+                                        updateField('mediaFiles', [...formData.mediaFiles, url])
+                                    }}
+                                    onUploadError={(error) => {
+                                        console.error('Upload failed:', error)
+                                        alert(`Upload failed: ${error.message}`)
+                                    }}
+                                    accept="image/*,video/*"
+                                />
+
+                                {formData.mediaFiles.length > 0 && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {formData.mediaFiles.map((url, index) => (
+                                            <div key={index} className="relative group rounded-md overflow-hidden border bg-background aspect-video flex items-center justify-center">
+                                                {/* Simple detection of type based on extension or just show as media */}
+                                                {url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
+                                                    <video src={url} className="w-full h-full object-cover" controls />
+                                                ) : (
+                                                    <img src={url} alt={`Media ${index + 1}`} className="w-full h-full object-cover" />
+                                                )}
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newFiles = [...formData.mediaFiles]
+                                                        newFiles.splice(index, 1)
+                                                        updateField('mediaFiles', newFiles)
+                                                    }}
+                                                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-2">
                                 Upload images or videos to be used in this template
                             </p>

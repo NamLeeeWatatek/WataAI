@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/Select';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen } from 'lucide-react';
+import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen, Sparkles, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -30,6 +30,7 @@ import { templatesApi } from '@/lib/api/templates';
 import { Template } from '@/lib/types/template';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { aiProvidersApi } from '@/lib/api/ai-providers';
 
 interface ExecutionConfigProps {
     config: ExecutionFlow;
@@ -62,30 +63,56 @@ export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
 
     return (
         <div className="space-y-6 h-full overflow-y-auto px-1">
-            <div className="space-y-4">
-                <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-                    <Label className="mb-2 block text-base font-medium">Execution Type</Label>
-                    <Select
-                        value={config.type}
-                        onValueChange={(val) => handleTypeChange(val as ExecutionType)}
-                    >
-                        <SelectTrigger className="w-full h-11 bg-background">
-                            <SelectValue placeholder="Select Execution Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ai-generation">AI Generation (LLM)</SelectItem>
-                            <SelectItem value="http-webhook">HTTP Webhook (External API)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-                        <Info className="w-4 h-4" />
-                        {config.type === 'ai-generation'
-                            ? 'Generate content using internal AI providers (OpenAI, etc.)'
-                            : 'Call external APIs or workflows via HTTP requests'
-                        }
-                    </p>
-                </div>
+            <Card className="border-border/60 bg-card/40 shadow-sm">
+                <CardContent className="p-5 space-y-4">
+                    <div className="space-y-2">
+                        <Label className="text-base font-semibold tracking-tight">Execution Strategy</Label>
+                        <p className="text-sm text-muted-foreground">
+                            Define how this tool processes inputs to generate results.
+                        </p>
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                            onClick={() => handleTypeChange('ai-generation')}
+                            className={`
+                                cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent/50
+                                ${config.type === 'ai-generation' ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-muted bg-card'}
+                            `}
+                        >
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className={`p-2 rounded-lg ${config.type === 'ai-generation' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                    <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div className="font-semibold">AI Generation</div>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Use Large Language Models (LLMs) like GPT-4 or Claude to generate text content using prompt templates.
+                            </p>
+                        </div>
+
+                        <div
+                            onClick={() => handleTypeChange('http-webhook')}
+                            className={`
+                                cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent/50
+                                ${config.type === 'http-webhook' ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-muted bg-card'}
+                            `}
+                        >
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className={`p-2 rounded-lg ${config.type === 'http-webhook' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                    <Globe className="w-5 h-5" />
+                                </div>
+                                <div className="font-semibold">webhook / API</div>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Trigger external workflows (e.g., n8n, Zapier) or call custom APIs via HTTP requests.
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {config.type === 'ai-generation' && (
                     <AiConfigEditor
                         config={config as AiExecutionConfig}
@@ -105,6 +132,29 @@ export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
 }
 
 function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onChange: (c: AiExecutionConfig) => void }) {
+    const { workspaceId } = useWorkspace();
+    const [providers, setProviders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadProviders = async () => {
+            try {
+                const data = workspaceId
+                    ? await aiProvidersApi.getWorkspaceModels(workspaceId)
+                    : await aiProvidersApi.getAvailableModels();
+                setProviders(data);
+            } catch (error) {
+                console.error('Failed to load AI providers:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProviders();
+    }, []);
+
+    const selectedProviderData = providers.find(p => p.providerKey === config.provider || p.providerId === config.provider);
+    const availableModels = selectedProviderData?.models || [];
+
     return (
         <Card className="border-border/60 bg-card/40">
             <CardContent className="space-y-5 p-5">
@@ -113,23 +163,38 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
                         <Label>Provider</Label>
                         <Select
                             value={config.provider}
-                            onValueChange={(val) => onChange({ ...config, provider: val as any })}
+                            onValueChange={(val) => onChange({ ...config, provider: val as any, model: '' })}
                         >
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-10">
+                                <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
+                            </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="openai">OpenAI</SelectItem>
-                                <SelectItem value="anthropic">Anthropic</SelectItem>
-                                <SelectItem value="gemini">Gemini</SelectItem>
+                                {providers.map((p) => (
+                                    <SelectItem key={p.providerId + (p.configId || '')} value={p.providerKey}>
+                                        {p.providerName} {p.displayName ? `(${p.displayName})` : ''}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <Label>Model</Label>
-                        <Input
+                        <Select
                             value={config.model}
-                            onChange={(e) => onChange({ ...config, model: e.target.value })}
-                            placeholder="e.g. gpt-4o, claude-3-5-sonnet"
-                        />
+                            onValueChange={(val) => onChange({ ...config, model: val })}
+                            disabled={!config.provider}
+                        >
+                            <SelectTrigger className="h-10">
+                                <SelectValue placeholder={!config.provider ? "Select provider first" : "Select model"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableModels.map((model: string) => (
+                                    <SelectItem key={model} value={model}>
+                                        {model}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 

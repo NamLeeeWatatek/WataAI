@@ -17,7 +17,7 @@ export interface UploadResponse {
 
 export interface FileUploadOptions {
     onProgress?: (progress: number) => void
-    bucket?: 'images' | 'documents' | 'avatars'
+    bucket?: 'images' | 'documents' | 'avatars' | 'videos' | 'audios'
 }
 
 export const filesApi = {
@@ -86,10 +86,21 @@ export const filesApi = {
             }
         }
 
-        if (allowedTypes && !allowedTypes.includes(file.type)) {
-            return {
-                valid: false,
-                error: `File type ${file.type} is not allowed`,
+        if (allowedTypes && allowedTypes.length > 0) {
+            // Support 'image/*' wildcard or exact match
+            const isValidType = allowedTypes.some(type => {
+                if (type.endsWith('/*')) {
+                    const mainType = type.split('/')[0]
+                    return file.type.startsWith(`${mainType}/`)
+                }
+                return type === file.type
+            })
+
+            if (!isValidType) {
+                return {
+                    valid: false,
+                    error: `File type ${file.type} is not allowed. Allowed: ${allowedTypes.join(', ')}`,
+                }
             }
         }
 

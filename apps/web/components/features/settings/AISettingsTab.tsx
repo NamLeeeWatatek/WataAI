@@ -118,19 +118,6 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     {userConfigs.filter(config => config.isActive).map((config) => (
                       <SelectItem key={config.id} value={config.id}>
                         <div className="flex items-center gap-2">
-                          <span className="text-lg">
-                            {(() => {
-                              const icons = {
-                                'openai': 'AiOutlineOpenAI',
-                                'anthropic': 'SiClaude',
-                                'google': 'RiGeminiLine',
-                                'azure': 'VscAzure',
-                                'ollama': 'SiOllama',
-                              };
-                              return <span>{config.displayName}</span>;
-                            })()}
-                          </span>
-                          <span className="font-medium">{config.displayName}</span>
                           <span className="text-xs text-muted-foreground ml-auto">
                             {config.provider?.key || ''}
                           </span>

@@ -20,13 +20,21 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
     try {
+        if (!token.refreshToken) {
+            throw new Error("No refresh token available");
+        }
+
         const response = await fetch(`${apiUrl}/auth/refresh-token`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refreshToken: token.refreshToken }),
         })
 
-        if (!response.ok) throw new Error("RefreshAccessTokenError")
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("[Auth] Token refresh failed with status:", response.status, errorData);
+            throw new Error("RefreshAccessTokenError");
+        }
 
         const data = await response.json()
 
@@ -34,11 +42,12 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
             ...token,
             accessToken: data.token,
             refreshToken: data.refreshToken ?? token.refreshToken,
+            // Fallback to 1 hour if backend doesn't provide expiry
             accessTokenExpires: data.tokenExpires || (Date.now() + 60 * 60 * 1000),
             error: undefined
         }
     } catch (error) {
-        console.error("[Auth] Token refresh failed", error)
+        console.error("[Auth] Token refresh exception:", error)
         return { ...token, error: "RefreshAccessTokenError" }
     }
 }
@@ -118,11 +127,13 @@ export const authConfig = {
                 }
             }
 
+            // Refresh token 10 minutes before it expires
             if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 10 * 60 * 1000) {
                 return token
             }
 
-            // Access token has expired, try to update it
+            // Access token has expired or is about to expire, try to update it
+            console.log("[Auth] Token expiring soon, triggering refresh...");
             return refreshAccessToken(token)
         },
         async session({ session, token }: { session: Session; token: JWT }) {

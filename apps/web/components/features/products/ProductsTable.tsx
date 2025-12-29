@@ -22,8 +22,8 @@ import { Package } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PaginationInfo } from "@/components/ui/Pagination";
 
-import { BulkActionsToolbar } from "@/components/shared/BulkActionsToolbar";
 import { creationJobsApi } from "@/lib/api/creation-jobs";
+import { BulkActionsToolbar } from "@/components/ui/BulkActionsToolbar";
 
 interface ProductsTableProps {
     jobs: CreationJob[];
@@ -117,8 +117,8 @@ export function ProductsTable({
         },
         {
             key: 'creationToolId',
-            label: 'Tool Type',
-            render: (value) => <span className="text-sm font-medium">{value}</span>
+            label: 'Tool Name',
+            render: (value, row) => <span className="text-sm font-medium">{row.creationTool?.name || value}</span>
         },
         {
             key: 'status',
