@@ -251,7 +251,7 @@ export function ChannelConfigurationsTab({
               const channelInfo = [...MESSAGING_CHANNELS, ...BUSINESS_INTEGRATIONS].find(c => c.id === provider);
 
               return (
-                <Card key={config.id} variant="glass" rounded="xl" className="group h-full flex flex-col hover:shadow-2xl transition-all duration-500 border-white/5 bg-card/40 backdrop-blur-md">
+                <Card key={config.id} variant="glass" rounded="xl" className="group h-full flex flex-col hover:shadow-2xl transition-all duration-500 border-white/5">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 pt-6 px-6">
                     <div className={cn("p-4 rounded-xl shadow-inner transform group-hover:rotate-6 transition-transform duration-500", getColor(provider))}>
                       {getIcon(provider)}
@@ -283,17 +283,17 @@ export function ChannelConfigurationsTab({
                       {channelInfo?.description || 'API configured'}
                     </CardDescription>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-background/40 backdrop-blur rounded-xl border border-white/5">
+                      <Card variant="flat" className="bg-background/40 backdrop-blur rounded-xl border border-white/5 flex items-center justify-between p-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">ID Tag</span>
                         <span className="font-mono text-[10px] font-bold bg-muted px-2 py-0.5 rounded-lg">{config.client_id?.slice(0, 10) || 'N/A'}...</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-background/40 backdrop-blur rounded-xl border border-white/5">
+                      </Card>
+                      <Card variant="flat" className="bg-background/40 backdrop-blur rounded-xl border border-white/5 flex items-center justify-between p-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Registry</span>
                         <Badge variant="outline" rounded="lg" className={cn("text-[10px] font-black gap-1.5 py-0 px-2", config.is_active ? 'text-success border-success/30 bg-success/10' : 'text-destructive border-destructive/30 bg-destructive/10')}>
                           <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", config.is_active ? 'bg-success' : 'bg-destructive')}></span>
                           {config.is_active ? 'STABLE' : 'OFFLINE'}
                         </Badge>
-                      </div>
+                      </Card>
                     </div>
                   </CardContent>
                   <CardFooter className="flex gap-3 px-6 pb-6 pt-4">

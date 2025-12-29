@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
+import { Media } from '@/components/ui/Media';
 
 interface ImageGalleryProps {
   images: Array<{
@@ -41,10 +42,11 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
             onClick={() => setSelectedImage(image.url)}
           >
             <div className="aspect-square relative">
-              <img
+              <Media
                 src={image.url}
                 alt={image.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full"
+                objectFit="cover"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <Button
@@ -87,10 +89,11 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
           </DialogHeader>
           {selectedImage && (
             <div className="relative">
-              <img
+              <Media
                 src={selectedImage}
                 alt="Preview"
-                className="w-full h-auto max-h-[70vh] object-contain"
+                className="w-full h-auto max-h-[70vh]"
+                objectFit="contain"
               />
             </div>
           )}

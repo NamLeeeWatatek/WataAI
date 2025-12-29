@@ -112,7 +112,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                         </TabsTrigger>
                     </TabsList>
 
-                    <Card className="flex-1 flex flex-col overflow-hidden border border-border/40 shadow-xl shadow-primary/5 bg-card/40 backdrop-blur-md rounded-3xl group">
+                    <Card variant="glass" rounded="3xl" className="flex-1 flex flex-col overflow-hidden border-border/40 shadow-primary/5 group">
                         <div className="h-1.5 w-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 group-hover:via-primary/70 transition-all duration-500 shrink-0" />
                         <ScrollArea className="flex-1">
                             <div className="p-6 space-y-8">
@@ -202,7 +202,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-3">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Font Atmosphere</Label>
                                             <Select value={settings.fontFamily} onValueChange={(val) => updateSetting('fontFamily', val)}>
-                                                <SelectTrigger className="rounded-xl h-11 border-border/40 bg-muted/20 font-bold">
+                                                <SelectTrigger className="rounded-xl h-11 bg-muted/20">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-xl shadow-2xl p-1">
@@ -242,7 +242,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 value={settings.placeholderText}
                                                 onChange={(e) => updateSetting('placeholderText', e.target.value)}
                                                 placeholder="e.g. Transmit your query..."
-                                                className="rounded-xl h-11 border-border/40 bg-muted/20 focus:bg-background font-medium"
+                                                className="rounded-xl h-11 bg-muted/20"
                                             />
                                         </div>
                                     </div>
@@ -320,7 +320,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Trigger Scale</h3>
                                         </div>
                                         <Select value={settings.widgetButtonSize} onValueChange={(val) => updateSetting('widgetButtonSize', val)}>
-                                            <SelectTrigger className="h-12 rounded-xl border-border/40 bg-muted/20 font-bold">
+                                            <SelectTrigger className="h-12 rounded-xl bg-muted/20">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl p-1">
@@ -358,7 +358,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
             </div>
 
             {/* Right Column: Preview */}
-            <div className="lg:col-span-7 bg-muted/30 rounded-3xl border border-border/40 p-8 lg:p-12 relative overflow-hidden flex items-center justify-center group/preview">
+            <Card variant="flat" rounded="3xl" className="lg:col-span-7 p-8 lg:p-12 relative overflow-hidden flex items-center justify-center group/preview border-border/40">
                 {/* Visual Enhancers */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64 transition-all duration-1000 group-hover/preview:bg-primary/10" />
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] -ml-64 -mb-64 transition-all duration-1000 group-hover/preview:bg-blue-500/10" />
@@ -538,7 +538,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                         </button>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 }

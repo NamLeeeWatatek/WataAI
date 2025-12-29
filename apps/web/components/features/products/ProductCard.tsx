@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/AlertDialog';
 
 import { Checkbox } from '@/components/ui/Checkbox';
+import { Image } from '@/components/ui/Image';
 
 interface ProductCardProps {
     job: CreationJob;
@@ -70,10 +71,12 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
             return (
                 <div className="relative aspect-video w-full overflow-hidden rounded-md bg-muted mt-2 group cursor-pointer" onClick={() => setDetailsOpen(true)}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                         src={job.outputData}
                         alt="Product result"
-                        loading="lazy"
+                        width={400}
+                        height={225}
+                        unoptimized
                         className="object-cover w-full h-full transition-transform group-hover:scale-105"
                     />
                 </div>

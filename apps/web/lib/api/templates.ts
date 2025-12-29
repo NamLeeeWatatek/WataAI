@@ -17,11 +17,6 @@ export const templatesApi = {
         return response as unknown as Template[];
     },
 
-    findByCreationTool: async (creationToolId: string): Promise<Template[]> => {
-        const data: any = await axiosClient.get(`/templates/by-tool/${creationToolId}`);
-        return Array.isArray(data) ? data : [];
-    },
-
     create: async (template: Partial<Template>): Promise<Template> => {
         const data: any = await axiosClient.post('/templates', template);
         return data;

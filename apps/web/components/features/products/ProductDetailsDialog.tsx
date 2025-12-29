@@ -7,6 +7,8 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { Media } from '@/components/ui/Media';
+import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
 import { useState, useEffect } from 'react';
@@ -94,21 +96,26 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
 
         const data = job.outputData as any;
         const resultText = data.result || (typeof data === 'string' ? data : null);
-        const imageUrl = data.imageUrl;
-        const isDirectImage = typeof data === 'string' && (data.match(/\.(jpeg|jpg|gif|png|webp)/) != null || data.startsWith('http'));
-        const finalImageUrl = imageUrl || (isDirectImage ? data : null);
+        const mediaUrl = data.imageUrl || data.videoUrl || data.url;
+        const isDirectMedia = typeof data === 'string' && (isImageUrl(data) || isVideoUrl(data));
+        const finalMediaUrl = mediaUrl || (isDirectMedia ? data : null);
 
         return (
             <div className="space-y-6">
-                {finalImageUrl && (
+                {finalMediaUrl && (
                     <div className="rounded-2xl border border-border shadow-inner overflow-hidden bg-background">
-                        <img
-                            src={finalImageUrl}
+                        <Media
+                            src={finalMediaUrl}
                             alt="Result"
+                            width={800}
+                            height={600}
+                            controls
+                            autoPlay
+                            loop
                             className="w-full h-auto object-contain max-h-[500px] mx-auto transition-transform hover:scale-[1.02]"
                         />
                         <div className="p-3 flex justify-center bg-secondary/20 border-t border-border">
-                            <Button variant="secondary" size="sm" className="rounded-full shadow-sm" onClick={() => window.open(finalImageUrl, '_blank')}>
+                            <Button variant="secondary" size="sm" className="rounded-full shadow-sm" onClick={() => window.open(finalMediaUrl, '_blank')}>
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 Download / Open HD
                             </Button>
@@ -136,7 +143,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                     </div>
                 ) : (
                     // If it's a complex object but no explicit 'result' field, format its attributes
-                    !finalImageUrl && renderFormattedAttributes(data)
+                    !finalMediaUrl && renderFormattedAttributes(data)
                 )}
             </div>
         );

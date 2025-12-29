@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
-import { Folder, FileText, MoreVertical, Eye, Download, Edit2, Trash2, Database, Video, Music } from 'lucide-react';
+import { Folder, FileText, MoreVertical, Eye, Download, Edit2, Trash2, Database, Video, Music, Image as ImageIcon } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
+import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 
 interface KbItem {
   id: string;
@@ -88,7 +89,7 @@ export function KbGridView({
 
   if (items.length === 0) {
     return (
-      <Card className="py-20 text-center flex flex-col items-center rounded-3xl border-2 border-dashed border-border/40 bg-muted/5 glass">
+      <Card variant="flat" rounded="3xl" className="py-20 text-center flex flex-col items-center border-2 border-dashed border-border/40">
         <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
           <Folder className="w-10 h-10 text-primary opacity-40" />
         </div>
@@ -137,11 +138,13 @@ export function KbGridView({
               }
             }}
             className={cn(
-              "group p-4 cursor-pointer hover:shadow-xl transition-all duration-300 rounded-2xl border-border/50 relative overflow-hidden",
-              selectedIds.includes(item.id) ? "ring-2 ring-primary bg-primary/5" : "bg-card/40 backdrop-blur-sm",
+              "group p-4 cursor-pointer transition-all duration-300 relative overflow-hidden",
+              selectedIds.includes(item.id) ? "ring-2 ring-primary bg-primary/5" : "hover:shadow-xl",
               dragOverFolder === item.id && "ring-2 ring-blue-500 bg-blue-500/10",
               item.type === 'folder' && draggedItem && "border-blue-500/50 bg-blue-500/5"
             )}
+            variant={selectedIds.includes(item.id) ? "default" : "glass"}
+            rounded="2xl"
             onClick={() => onItemClick(item)}
           >
             <div className={cn(
@@ -165,10 +168,14 @@ export function KbGridView({
                   <Folder className="w-8 h-8" />
                 ) : (
                   (() => {
-                    const ext = item.name.split('.').pop()?.toLowerCase();
-                    if (['mp4', 'mpeg', 'mov', 'avi', 'webm', 'mkv', 'wmv'].includes(ext || '')) {
+                    if (isVideoUrl(item.name)) {
                       return <Video className="w-8 h-8" />;
                     }
+                    if (isImageUrl(item.name)) {
+                      return <ImageIcon className="w-8 h-8" />;
+                    }
+                    // Check for audio manually as it's not in general media.ts yet
+                    const ext = item.name.split('.').pop()?.toLowerCase();
                     if (['mp3', 'wav', 'ogg', 'm4a', 'flac'].includes(ext || '')) {
                       return <Music className="w-8 h-8" />;
                     }

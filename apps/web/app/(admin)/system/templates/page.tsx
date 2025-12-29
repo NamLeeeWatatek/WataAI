@@ -32,6 +32,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { Pagination } from '@/components/ui/Pagination';
+import { TemplateCardMedia } from '@/components/features/templates/TemplateCardMedia';
 
 export default function TemplatesPage() {
     const searchParams = useSearchParams();
@@ -231,7 +232,6 @@ export default function TemplatesPage() {
                         setEditingTemplate(null);
                         setTemplateDialogOpen(true);
                     }}
-                    className="shadow-sm"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     New Template
@@ -264,7 +264,7 @@ export default function TemplatesPage() {
                             setSelectedToolFilter(val);
                             setCurrentPage(1);
                         }}>
-                            <SelectTrigger className="bg-card/50">
+                            <SelectTrigger className="w-[180px] bg-card/50">
                                 <div className="flex items-center text-muted-foreground">
                                     <Filter className="w-3.5 h-3.5 mr-2" />
                                     <SelectValue placeholder="All Tools" />
@@ -375,45 +375,14 @@ export default function TemplatesPage() {
                                     </div>
 
                                     <div className="aspect-video w-full bg-muted relative overflow-hidden shrink-0">
-                                        {template.thumbnailUrl ? (
-                                            (() => {
-                                                const isVideo = template.thumbnailUrl?.match(/\.(mp4|webm|mov)$/i);
-                                                return isVideo ? (
-                                                    <video
-                                                        src={template.thumbnailUrl}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                        muted
-                                                        loop
-                                                        playsInline
-                                                        // Auto-play on hover could be a nice touch, but let's keep it simple or auto-play
-                                                        onMouseOver={(e) => e.currentTarget.play()}
-                                                        onMouseOut={(e) => {
-                                                            e.currentTarget.pause();
-                                                            e.currentTarget.currentTime = 0;
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <img
-                                                        src={template.thumbnailUrl}
-                                                        alt={template.name}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                                        loading="lazy"
-                                                        decoding="async"
-                                                    />
-                                                );
-                                            })()
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-secondary/30 text-muted-foreground/50">
-                                                {template.icon && (icons as any)[template.icon] ? (
-                                                    (() => {
-                                                        const IconComponent = (icons as any)[template.icon];
-                                                        return <IconComponent className="w-10 h-10 opacity-40 text-primary" />;
-                                                    })()
-                                                ) : (
-                                                    <Sparkles className="w-10 h-10 opacity-20" />
-                                                )}
-                                            </div>
-                                        )}
+                                        <TemplateCardMedia
+                                            thumbnailUrl={template.thumbnailUrl}
+                                            name={template.name}
+                                            aspectRatio="video"
+                                            className="w-full h-full"
+                                            autoPlayOnHover={true}
+                                            icon={template.icon}
+                                        />
                                         {/* Always visible badge */}
                                         <div className="absolute top-3 right-3 z-10">
                                             <Badge variant="secondary" className="backdrop-blur-md bg-black/40 text-white border-white/20 shadow-sm hover:bg-black/60">
@@ -558,6 +527,6 @@ export default function TemplatesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </PageShell>
+        </PageShell >
     );
 }

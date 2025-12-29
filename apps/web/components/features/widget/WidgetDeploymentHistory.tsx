@@ -142,7 +142,7 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                 )}
                             </div>
 
-                            <Card className="border border-border/40 shadow-xl group-hover:shadow-2xl transition-all duration-500 bg-card/40 backdrop-blur-md rounded-[2rem] overflow-hidden group-hover:-translate-y-1">
+                            <Card variant="glass" className="rounded-[2rem] overflow-hidden group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-1 border-border/40">
                                 <div className={cn(
                                     "h-1.5 w-full bg-gradient-to-r transition-all duration-500",
                                     deployment.status === 'deployed' ? "from-primary/60 to-primary/10" : "from-muted/40 to-transparent"

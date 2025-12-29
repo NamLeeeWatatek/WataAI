@@ -18,7 +18,7 @@ export class TemplatesRelationalRepository implements TemplateRepository {
   constructor(
     @InjectRepository(TemplateEntity)
     private readonly templatesRepository: Repository<TemplateEntity>,
-  ) {}
+  ) { }
 
   async create(data: DeepPartial<Template>): Promise<Template> {
     const persistenceModel = TemplateMapper.toPersistence(data as Template);
@@ -111,14 +111,6 @@ export class TemplatesRelationalRepository implements TemplateRepository {
   async findByWorkspace(workspaceId: string): Promise<Template[]> {
     const entities = await this.templatesRepository.find({
       where: { workspaceId },
-      order: { sortOrder: 'ASC', name: 'ASC' },
-    });
-    return entities.map((template) => TemplateMapper.toDomain(template));
-  }
-
-  async findByCreationTool(creationToolId: string): Promise<Template[]> {
-    const entities = await this.templatesRepository.find({
-      where: { creationToolId },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
     return entities.map((template) => TemplateMapper.toDomain(template));

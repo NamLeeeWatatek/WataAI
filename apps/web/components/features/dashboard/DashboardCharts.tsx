@@ -56,7 +56,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Activity Trend Chart */}
-      <Card className="glass">
+      <Card variant="glass" rounded="2xl" className="border-border/40">
         <CardHeader>
           <CardTitle>Activity Trend</CardTitle>
           <CardDescription>Conversation activity over the last 30 days</CardDescription>
@@ -85,7 +85,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Bots Status Chart */}
-      <Card className="glass">
+      <Card variant="glass" rounded="2xl" className="border-border/40">
         <CardHeader>
           <CardTitle>Bots Status</CardTitle>
           <CardDescription>Active vs Inactive bots</CardDescription>
@@ -112,7 +112,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Users Growth Chart */}
-      <Card className="glass md:col-span-2">
+      <Card variant="glass" rounded="2xl" className="glass md:col-span-2 border-border/40">
         <CardHeader>
           <CardTitle>User Growth</CardTitle>
           <CardDescription>New users over the last 30 days</CardDescription>

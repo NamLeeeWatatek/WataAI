@@ -184,7 +184,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="relative overflow-hidden group border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl">
+        <Card variant="glass" rounded="3xl" className="relative overflow-hidden group border-border/40 shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all duration-500" />
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Connected Providers</CardDescription>
@@ -198,7 +198,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl">
+        <Card variant="glass" rounded="3xl" className="relative overflow-hidden group border-border/40 shadow-xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all duration-500" />
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Usage</CardDescription>
@@ -212,7 +212,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden group border-primary/20 shadow-xl shadow-primary/5 bg-primary/5 backdrop-blur-md rounded-3xl border-2 border-dashed">
+        <Card variant="flat" rounded="3xl" className="relative overflow-hidden group border-primary/20 shadow-xl shadow-primary/5 bg-primary/5 backdrop-blur-md border-2 border-dashed">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
           <CardHeader className="pb-3">
             <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Add Capability</CardDescription>
@@ -265,7 +265,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
 
       {/* Content Area */}
       {allProviders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-border/40 rounded-3xl bg-muted/5 glass">
+        <Card variant="flat" rounded="3xl" className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-border/40">
           <div className="size-20 rounded-full bg-primary/5 flex items-center justify-center mb-6 ring-8 ring-primary/5">
             <Key className="size-10 text-primary opacity-40" />
           </div>
@@ -277,7 +277,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
             <Plus className="mr-2 size-5" />
             Connect Provider
           </Button>
-        </div>
+        </Card>
       ) : (
         <>
           {viewMode === 'grid' ? (
@@ -294,7 +294,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
 
                   return (
                     <div key={provider.id}>
-                      <Card className="group h-full flex flex-col border border-border/40 bg-card/40 backdrop-blur-md shadow-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 rounded-[32px] overflow-hidden hover:-translate-y-1">
+                      <Card variant="glass" rounded="4xl" className="group h-full flex flex-col border border-border/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 overflow-hidden hover:-translate-y-1">
                         <div className={cn(
                           "h-1.5 w-full bg-gradient-to-r transition-all duration-500",
                           provider.isActive ? "from-primary via-primary/80 to-primary/40" : "from-muted/40 via-muted/20 to-transparent"
@@ -454,7 +454,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                 })}
             </div>
           ) : (
-            <div className="bg-card/40 backdrop-blur-md rounded-[32px] overflow-hidden border border-border/40 shadow-xl">
+            <Card variant="glass" rounded="4xl" className="overflow-hidden border border-border/40 shadow-xl">
               <DataTable
                 data={allProviders
                   .filter(p =>
@@ -543,7 +543,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                 className="border-none"
                 tableClassName="border-none shadow-none bg-transparent"
               />
-            </div>
+            </Card>
           )}
 
           {/* Unified Pagination */}

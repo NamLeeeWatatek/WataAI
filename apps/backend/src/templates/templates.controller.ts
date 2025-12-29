@@ -36,7 +36,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
   version: '1',
 })
 export class TemplatesController {
-  constructor(private readonly templatesService: TemplatesService) {}
+  constructor(private readonly templatesService: TemplatesService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -74,16 +74,6 @@ export class TemplatesController {
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string): Promise<NullableType<Template>> {
     return this.templatesService.findById(id);
-  }
-
-  // Get all templates associated with a specific creation tool
-  @Get('by-tool/:creationToolId')
-  @Permissions('template:List')
-  @HttpCode(HttpStatus.OK)
-  async findByCreationTool(
-    @Param('creationToolId') creationToolId: string,
-  ): Promise<Template[]> {
-    return this.templatesService.findByCreationTool(creationToolId);
   }
 
   @Patch(':id')

@@ -4,6 +4,7 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Media } from "@/components/ui/Media"
 
 interface ImagePreviewProps {
     src: string
@@ -27,15 +28,18 @@ export function ImagePreview({ src, alt, children }: ImagePreviewProps) {
                     )}
                 >
                     <div className="relative w-full h-full flex items-center justify-center group">
-                        {/* Image Container */}
+                        {/* Media Container */}
                         <div className="relative max-w-full max-h-full transition-transform duration-500 ease-out group-hover:scale-[1.01]">
-                            <img
+                            <Media
                                 src={src}
                                 alt={alt || "Preview"}
+                                controls
+                                autoPlay
+                                loop
+                                muted={false}
+                                playsInline
                                 className="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10"
                             />
-
-                            {/* Floating labels / Metadata if needed can go here */}
                         </div>
 
                         {/* Top Right Controls */}

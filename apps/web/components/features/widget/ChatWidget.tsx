@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { MessageCircle, X, Send } from 'lucide-react'
 import { MessageRole } from '@/lib/types/conversations'
+import { Media } from '@/components/ui/Media'
 
 interface Message {
     role: MessageRole
@@ -184,7 +185,12 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                         {config.theme.showAvatar && (
                             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                                 {config.avatarUrl ? (
-                                    <img src={config.avatarUrl} alt={config.name} className="w-full h-full rounded-full" />
+                                    <Media
+                                        src={config.avatarUrl}
+                                        alt={config.name}
+                                        className="w-full h-full rounded-full"
+                                        objectFit="cover"
+                                    />
                                 ) : (
                                     <MessageCircle className="w-5 h-5" />
                                 )}

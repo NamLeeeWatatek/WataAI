@@ -28,7 +28,6 @@ export abstract class TemplateRepository {
     workspaceId: string,
   ): Promise<NullableType<Template>>;
   abstract findByWorkspace(workspaceId: string): Promise<Template[]>;
-  abstract findByCreationTool(creationToolId: string): Promise<Template[]>;
 
   abstract update(
     id: Template['id'],

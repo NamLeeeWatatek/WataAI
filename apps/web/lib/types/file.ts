@@ -40,11 +40,5 @@ export interface ImageGalleryProps {
   onDelete?: (id: string) => void
 }
 
-export interface MediaUploaderProps {
-  value?: string
-  onChange: (url: string) => void
-  accept?: string
-  maxSize?: number
-  bucket?: 'images' | 'documents' | 'avatars'
-}
+
 

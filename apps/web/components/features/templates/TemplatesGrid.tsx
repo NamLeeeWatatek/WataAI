@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { MoreVertical, Edit, Trash2, Zap } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,7 +53,7 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
 
     if (templates.length === 0) {
         return (
-            <Card className="p-8 text-center bg-muted/20 border-dashed">
+            <Card variant="flat" className="p-8 text-center border-dashed">
                 <CardTitle className="mb-2">No Templates Found</CardTitle>
                 <CardDescription>
                     Create your first template to get started with standardized UGC content creation.
@@ -66,10 +67,12 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
             {templates.map((template) => (
                 <Card
                     key={template.id}
-                    className={`
-                        group relative overflow-hidden transition-all duration-300 hover:shadow-lg
-                        ${selectionMode ? 'cursor-pointer ring-2 ring-transparent hover:ring-primary' : ''}
-                    `}
+                    variant="glass"
+                    rounded="xl"
+                    className={cn(
+                        "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
+                        selectionMode ? "cursor-pointer ring-2 ring-transparent hover:ring-primary" : ""
+                    )}
                     onClick={() => selectionMode && onTemplateSelect ? onTemplateSelect(template) : undefined}
                 >
                     <div className="relative p-5 flex flex-col h-full">

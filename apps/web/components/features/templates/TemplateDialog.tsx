@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
+import { Media } from '@/components/ui/Media'
 import { FileDropzone } from '@/components/ui/FileUpload'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -222,12 +223,15 @@ export function TemplateDialog({
                                     <div className="grid grid-cols-2 gap-4">
                                         {formData.mediaFiles.map((url, index) => (
                                             <div key={index} className="relative group rounded-md overflow-hidden border bg-background aspect-video flex items-center justify-center">
-                                                {/* Simple detection of type based on extension or just show as media */}
-                                                {url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                                                    <video src={url} className="w-full h-full object-cover" controls />
-                                                ) : (
-                                                    <img src={url} alt={`Media ${index + 1}`} className="w-full h-full object-cover" />
-                                                )}
+                                                <Media
+                                                    src={url}
+                                                    alt={`Media ${index + 1}`}
+                                                    className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                                    containerClassName="w-full h-full"
+                                                    objectFit="cover"
+                                                    controls
+                                                    playsInline
+                                                />
 
                                                 <button
                                                     type="button"

@@ -20,6 +20,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Upload, X, Loader2, Image as ImageIcon, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { creationToolsApi } from '@/lib/api/creation-tools';
+import { Media } from '@/components/ui/Media';
+import { isVideoUrl } from '@/lib/utils/media';
 import { IconPicker } from '@/components/ui/IconPicker';
 
 interface TemplateDialogProps {
@@ -174,7 +176,7 @@ export function TemplateDialog({
         resetForm();
     };
 
-    const isVideo = previewUrl && (previewUrl.includes('.mp4') || previewUrl.includes('.webm') || previewFile?.type.startsWith('video/'));
+    const isVideo = isVideoUrl(previewUrl);
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -246,24 +248,16 @@ export function TemplateDialog({
                                         >
                                             {previewUrl ? (
                                                 <div className="relative w-full h-full group">
-                                                    {isVideo ? (
-                                                        <video
-                                                            src={previewUrl}
-                                                            className="w-full h-full object-cover"
-                                                            autoPlay
-                                                            loop
-                                                            muted
-                                                            playsInline
-                                                        />
-                                                    ) : (
-                                                        <img
-                                                            src={previewUrl}
-                                                            alt="Preview"
-                                                            className="w-full h-full object-cover"
-                                                            loading="lazy"
-                                                            decoding="async"
-                                                        />
-                                                    )}
+                                                    <Media
+                                                        src={previewUrl}
+                                                        alt="Preview"
+                                                        containerClassName="w-full h-full"
+                                                        className="w-full h-full object-cover"
+                                                        autoPlay
+                                                        loop
+                                                        muted
+                                                        playsInline
+                                                    />
                                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                                         <Upload className="w-6 h-6 text-white" />
                                                         <span className="text-white font-medium text-sm">Change</span>

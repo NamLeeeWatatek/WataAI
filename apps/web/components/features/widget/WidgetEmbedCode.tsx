@@ -57,7 +57,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
 
     if (!activeVersion) {
         return (
-            <Card className="border border-dashed border-border/60 bg-muted/5 rounded-[2rem]">
+            <Card variant="flat" rounded="4xl" className="border-dashed border-border/60">
                 <CardHeader className="p-12 text-center">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 border border-primary/20">
                         <Code className="w-8 h-8 text-primary/60" />
@@ -74,7 +74,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Deployment Status Header */}
-            <Card className="relative overflow-hidden border border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-[2.5rem] group">
+            <Card variant="glass" rounded="5xl" className="relative overflow-hidden group border-border/40">
                 <div className="h-1.5 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
                 <CardHeader className="p-8">
                     <div className="flex items-center justify-between">
@@ -173,7 +173,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                 </TabsContent>
             </Tabs>
 
-            <Card className="border border-border/40 shadow-xl bg-muted/20 backdrop-blur-md rounded-[2.5rem] overflow-hidden group">
+            <Card variant="flat" rounded="5xl" className="backdrop-blur-md overflow-hidden group border-border/40">
                 <CardHeader className="pb-4">
                     <CardTitle className="text-lg font-black tracking-tight">Simulator Laboratory</CardTitle>
                     <CardDescription className="font-medium">
