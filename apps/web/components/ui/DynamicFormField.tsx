@@ -16,6 +16,7 @@ import {
 import { Input } from './Input'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
+import { Progress } from './Progress'
 import { useFileUpload } from '@/lib/hooks/use-file-upload'
 import { cn } from '@/lib/utils'
 import { KeyValueEditor } from './KeyValueEditor'
@@ -66,10 +67,10 @@ export const DynamicFormField = memo(function DynamicFormField({
     const [optionsConfig, setOptionsConfig] = useState<string>('')
     const [previewFiles, setPreviewFiles] = useState<any[]>([])
 
-    const { uploadFile, uploadMultipleFiles, uploading: uploadLoading, error: uploadHookError } = useFileUpload({
+    const { uploadFile, uploadMultipleFiles, uploading: uploadLoading, progress: uploadProgress, error: uploadHookError } = useFileUpload({
         bucket: 'images',
         onProgress: (progress) => {
-            // Could add progress tracking here if needed
+            // Internal progress tracking
         },
         onSuccess: (fileUrl, fileData) => {
             // Handle successful upload
@@ -393,9 +394,9 @@ export const DynamicFormField = memo(function DynamicFormField({
                 const filesToShow = previewFiles.length > 0 ? previewFiles : currentValue
 
                 return (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {/* Upload Zone */}
-                        <div className="relative">
+                        <div className="relative group">
                             <input
                                 type="file"
                                 id={`file-${field.name}`}
@@ -424,25 +425,38 @@ export const DynamicFormField = memo(function DynamicFormField({
                             <label
                                 htmlFor={`file-${field.name}`}
                                 className={cn(
-                                    "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all",
+                                    "flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300",
+                                    "bg-gradient-to-br from-card/30 to-card/5 hover:from-primary/5 hover:to-primary/10",
                                     uploadLoading
-                                        ? 'border-muted bg-muted/50 cursor-not-allowed'
-                                        : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30 bg-card/30'
+                                        ? 'border-primary/30 bg-primary/5 cursor-wait'
+                                        : 'border-muted-foreground/20 hover:border-primary/50 shadow-sm hover:shadow-md'
                                 )}
                             >
                                 {uploadLoading ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-5 h-5 text-primary" />
-                                        <span className="text-xs text-muted-foreground">Processing</span>
+                                    <div className="flex flex-col items-center gap-4 w-full px-8 animate-in fade-in zoom-in-95">
+                                        <div className="flex justify-between w-full text-xs font-semibold text-primary uppercase tracking-wider">
+                                            <span>Uploading...</span>
+                                            <span>{uploadProgress || 0}%</span>
+                                        </div>
+                                        <Progress
+                                            value={uploadProgress || 0}
+                                            className="h-2.5 w-full bg-primary/10 shadow-inner"
+                                            indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                                        />
+                                        <p className="text-[10px] text-muted-foreground animate-pulse">Processing your file, please wait...</p>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col items-center text-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                                            <Upload className="w-4 h-4 text-muted-foreground" />
+                                    <div className="flex flex-col items-center text-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-inner border border-primary/10">
+                                            <Upload className="w-6 h-6 text-primary" />
                                         </div>
                                         <div>
-                                            <span className="text-sm font-medium text-foreground">Click to upload</span>
-                                            <span className="text-xs text-muted-foreground block mt-0.5">or drag and drop</span>
+                                            <p className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                                                Click to upload
+                                            </p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                or drag and drop your files here
+                                            </p>
                                         </div>
                                     </div>
                                 )}
@@ -450,9 +464,10 @@ export const DynamicFormField = memo(function DynamicFormField({
                         </div>
 
                         {uploadHookError && (
-                            <p className="text-xs text-destructive flex items-center gap-1">
-                                <X className="w-3 h-3" /> {uploadHookError.message}
-                            </p>
+                            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-in slide-in-from-top-1">
+                                <X className="w-3.5 h-3.5" />
+                                <span className="font-medium">{uploadHookError.message}</span>
+                            </div>
                         )}
 
                         {/* File List / Previews */}
@@ -462,70 +477,44 @@ export const DynamicFormField = memo(function DynamicFormField({
                             if (items.length === 0) return null
 
                             return (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 gap-3">
                                     {items.map((item: any, idx: number) => {
                                         const fileObj = typeof item === 'object' && item.url ? item : { url: item, fileId: null, fileKey: null }
-                                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileObj.url)
-                                        const canDelete = true // Allow delete
+                                        // Better image detection ignoring query params
+                                        const cleanUrl = fileObj.url.split('?')[0]
+                                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(cleanUrl) || fileObj.url.startsWith('data:image/')
 
                                         return (
-                                            <div key={idx} className="relative group rounded-lg border border-border/50 bg-card overflow-hidden hover:shadow-sm transition-all">
+                                            <div
+                                                key={idx}
+                                                className="group relative flex items-center gap-4 p-4 rounded-2xl bg-card/40 border border-border/50 backdrop-blur-sm hover:bg-card/60 hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
+                                            >
                                                 {isImage ? (
-                                                    <div className="aspect-square relative">
+                                                    <div className="w-16 h-16 rounded-xl overflow-hidden border border-border/50 bg-muted shrink-0 shadow-inner">
                                                         <img
                                                             src={fileObj.url}
                                                             alt={`File ${idx}`}
-                                                            className="w-full h-full object-cover"
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                         />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            {canDelete && (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="destructive"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 rounded-full"
-                                                                    onClick={async () => {
-                                                                        if (fileObj.fileId) {
-                                                                            try {
-                                                                                await handleFileDelete(fileObj.fileId)
-                                                                            } catch (error) {
-                                                                                console.error('Failed to delete file:', error)
-                                                                            }
-                                                                        }
-                                                                        // Update parent
-                                                                        if (Array.isArray(currentValue)) {
-                                                                            const newFiles = items.filter((_, i) => i !== idx)
-                                                                            onChange(field.name, newFiles.length > 0 ? newFiles : null)
-                                                                        } else {
-                                                                            onChange(field.name, null)
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </Button>
-                                                            )}
-                                                        </div>
                                                     </div>
                                                 ) : (
-                                                    <div className="p-3 flex items-center justify-between gap-2">
-                                                        <div className="flex items-center gap-2 overflow-hidden">
-                                                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                                                                <FileText className="w-4 h-4 text-primary" />
-                                                            </div>
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="text-xs font-medium truncate">
-                                                                    {fileObj.name || fileObj.url.split('/').pop() || 'File'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        {canDelete && (
+                                                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-transparent flex items-center justify-center shrink-0 border border-primary/10 shadow-inner">
+                                                        <FileText className="w-7 h-7 text-primary" />
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-sm font-bold truncate pr-8">
+                                                            {fileObj.name || (typeof fileObj.url === 'string' ? fileObj.url.split('/').pop()?.split('?')[0] : 'File')}
+                                                        </span>
+                                                        <div className="flex gap-1">
                                                             <Button
                                                                 type="button"
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                                className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
                                                                 onClick={async () => {
-                                                                    // Same delete logic
                                                                     if (fileObj.fileId) {
                                                                         try {
                                                                             await handleFileDelete(fileObj.fileId)
@@ -543,9 +532,17 @@ export const DynamicFormField = memo(function DynamicFormField({
                                                             >
                                                                 <X className="w-4 h-4" />
                                                             </Button>
-                                                        )}
+                                                        </div>
                                                     </div>
-                                                )}
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="px-2 py-0.5 rounded-full bg-primary/10 text-[10px] font-bold text-primary uppercase tracking-tighter">
+                                                            {isImage ? 'Image' : 'Document'}
+                                                        </div>
+                                                        <span className="text-[10px] text-muted-foreground font-medium italic">
+                                                            {fileObj.isPreview ? 'Pending save...' : 'Uploaded successfully'}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )
                                     })}

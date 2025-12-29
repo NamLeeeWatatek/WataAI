@@ -15,13 +15,14 @@ import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { Loader2, ArrowLeft, Sparkles, Check, Search, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles, Check, Search, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X, Eye } from 'lucide-react';
 import { useToast } from '@/lib/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { ImagePreview } from '@/components/ui/ImagePreview';
 
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -35,7 +36,6 @@ import {
     FormMessage,
 } from '@/components/ui/Form';
 
-import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { FileDropzone } from '@/components/ui/FileUpload';
 
@@ -46,7 +46,7 @@ export default function CreationToolDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
-    const { addJob } = useCreationJobs(); // Use global context
+    const { addJob } = useCreationJobs();
     const [tool, setTool] = useState<CreationTool | null>(null);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [channels, setChannels] = useState<Channel[]>([]);
@@ -56,11 +56,7 @@ export default function CreationToolDetailPage() {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [categories, setCategories] = useState<string[]>([]);
-
-    // Debounce search query to 500ms
     const debouncedSearch = useDebounce(searchQuery, 500);
-
-    // Initialize React Hook Form
     const form = useForm<z.infer<any>>({
         defaultValues: {},
     });
@@ -71,9 +67,6 @@ export default function CreationToolDetailPage() {
     useEffect(() => {
         if (params.slug) {
             loadTool(params.slug as string);
-            // Since slug is unique, we can use it as key, or use tool ID if URL has it. 
-            // Here URL has slug, so DashboardBreadcrumb sees slug.
-            // We want to map slug -> tool.name
         }
         return () => {
             if (params.slug) removeBreadcrumbName(params.slug as string)
@@ -86,13 +79,10 @@ export default function CreationToolDetailPage() {
         }
     }, [tool, params.slug, setBreadcrumbName])
 
-    // Handle Search and Filter via SERVER-SIDE API
     useEffect(() => {
         const fetchTemplates = async () => {
             if (!tool?.id) return;
-
             try {
-                // Construct filter object
                 const filters: any = {
                     creationToolId: tool.id
                 };
@@ -104,8 +94,6 @@ export default function CreationToolDetailPage() {
                 if (selectedCategory && selectedCategory !== 'all') {
                     filters.category = selectedCategory;
                 }
-
-                // Call API
                 const result = await templatesApi.findAll({
                     filters: JSON.stringify(filters),
                     limit: 100
@@ -408,33 +396,59 @@ export default function CreationToolDetailPage() {
                                         return (
                                             <div className="mt-1">
                                                 {formField.value ? (
-                                                    <div className="relative group rounded-lg border border-border/50 bg-card overflow-hidden hover:shadow-sm transition-all p-4 flex items-center justify-between">
-                                                        <div className="flex items-center gap-3 overflow-hidden">
-                                                            {typeof formField.value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value) ? (
-                                                                <div className="w-10 h-10 rounded bg-muted flex-shrink-0 relative overflow-hidden">
-                                                                    <img src={formField.value} alt="Preview" className="w-full h-full object-cover" />
+                                                    <div className="relative group rounded-2xl border border-primary/20 bg-card/40 backdrop-blur-md overflow-hidden hover:shadow-xl transition-all duration-300 p-0 animate-in fade-in slide-in-from-bottom-2">
+                                                        <div className="flex items-center gap-4 p-4">
+                                                            {typeof formField.value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value.split('?')[0]) ? (
+                                                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-primary/10 bg-muted shrink-0 shadow-inner">
+                                                                    <img src={formField.value} alt="Preview" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                                                 </div>
                                                             ) : (
-                                                                <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                                                                    <FileText className="w-5 h-5 text-primary" />
+                                                                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-transparent flex items-center justify-center shrink-0 border border-primary/10 shadow-inner">
+                                                                    <FileText className="w-7 h-7 text-primary" />
                                                                 </div>
                                                             )}
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="text-sm font-medium truncate">
-                                                                    {typeof formField.value === 'string' ? formField.value.split('/').pop() : 'File uploaded'}
-                                                                </span>
-                                                                <span className="text-xs text-muted-foreground">Ready to submit</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <span className="text-sm font-black truncate pr-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 tracking-tight">
+                                                                        {typeof formField.value === 'string' ? formField.value.split('/').pop()?.split('?')[0] : 'File Ready'}
+                                                                    </span>
+                                                                    <div className="flex gap-1 shrink-0">
+                                                                        {typeof formField.value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value.split('?')[0]) && (
+                                                                            <ImagePreview src={formField.value}>
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="ghost"
+                                                                                    size="icon"
+                                                                                    className="h-8 w-8 rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                                                                                >
+                                                                                    <Eye className="w-4 h-4" />
+                                                                                </Button>
+                                                                            </ImagePreview>
+                                                                        )}
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-8 w-8 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all shrink-0"
+                                                                            onClick={() => formField.onChange(null)}
+                                                                        >
+                                                                            <X className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="px-2 py-0.5 rounded-full bg-primary/10 text-[10px] font-black text-primary uppercase tracking-tighter">
+                                                                        {typeof formField.value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value.split('?')[0]) ? 'Image' : 'Document'}
+                                                                    </div>
+                                                                    <span className="text-[10px] text-muted-foreground font-bold italic opacity-70">
+                                                                        System verified • Ready to sync
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                            onClick={() => formField.onChange(null)}
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </Button>
+                                                        <div className="h-1 w-full bg-primary/20">
+                                                            <div className="h-full w-full bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-gradient-x" />
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <FileDropzone

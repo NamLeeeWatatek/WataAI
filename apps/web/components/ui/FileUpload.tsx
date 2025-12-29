@@ -148,12 +148,16 @@ export function FileUpload({
       </div>
 
       {uploading && (
-        <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Uploading...</span>
-            <span>{progress}%</span>
+        <div className="mt-4 space-y-2 animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex justify-between text-[10px] items-center px-1">
+            <span className="font-bold text-primary uppercase tracking-tight">Uploading</span>
+            <span className="font-mono font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress
+            value={progress}
+            className="h-2 w-full bg-primary/10 shadow-inner rounded-full overflow-hidden"
+            indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+          />
         </div>
       )}
 
@@ -300,15 +304,33 @@ export function FileDropzone({
         />
 
         {uploading ? (
-          <div className="flex flex-col items-center justify-center p-6 w-full max-w-xs mx-auto space-y-4">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <div className="absolute inset-0 border-4 border-muted/30 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-              <span className="text-xs font-bold text-primary">{progress}%</span>
+          <div className="flex flex-col items-center justify-center p-8 w-full max-w-md mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-full space-y-4">
+              <div className="flex justify-between items-end">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 uppercase tracking-wider">
+                    Processing File
+                  </p>
+                  <p className="text-[10px] text-muted-foreground font-medium italic">
+                    Uploading to secure storage...
+                  </p>
+                </div>
+                <span className="text-sm font-black text-primary font-mono">{progress}%</span>
+              </div>
+
+              <div className="relative pt-1">
+                <Progress
+                  value={progress}
+                  className="h-3.5 w-full bg-primary/5 shadow-inner border border-primary/10 rounded-full"
+                  indicatorClassName="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 transition-all duration-500 ease-out hover:brightness-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30 pointer-events-none rounded-full" />
+              </div>
             </div>
-            <div className="text-center">
-              <p className="font-medium">Uploading...</p>
-              <p className="text-xs text-muted-foreground mt-1">Please wait while we process your file.</p>
+
+            <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
+              <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+              <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest">Encrypting Transfer</p>
             </div>
           </div>
         ) : (
