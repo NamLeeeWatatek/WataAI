@@ -23,8 +23,6 @@ export class FilesMinioService {
     private readonly fileRepository: FileRepository,
     private readonly configService: ConfigService<AllConfigType>,
   ) {
-    this.logger.debug('🟡 Initializing MinIO client');
-
     this.minioEndpoint = this.configService.getOrThrow('file.minioEndpoint', {
       infer: true,
     });
@@ -48,7 +46,7 @@ export class FilesMinioService {
       });
     } catch (clientError) {
       this.logger.error(
-        `❌ Failed to create MinIO client: ${clientError.message}`,
+        `Failed to create MinIO client: ${clientError.message}`,
       );
       throw clientError;
     }
@@ -140,10 +138,16 @@ export class FilesMinioService {
 
     const isImage = file.fileName.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
     const isDocument = file.fileName.match(
-      /\.(pdf|doc|docx|txt|csv|xls|xlsx)$/i,
+      /\.(pdf|doc|docx|txt|csv|xls|xlsx|pptx)$/i,
+    );
+    const isVideo = file.fileName.match(
+      /\.(mp4|mpeg|mov|avi|webm|mkv|wmv)$/i,
+    );
+    const isAudio = file.fileName.match(
+      /\.(mp3|wav|ogg|m4a|flac)$/i,
     );
 
-    if (!isImage && !isDocument) {
+    if (!isImage && !isDocument && !isVideo && !isAudio) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
         errors: {
@@ -175,7 +179,10 @@ export class FilesMinioService {
     // Auto-categorize bucket based on file type if not provided
     let bucket = file.bucket;
     if (!bucket) {
-      bucket = isImage ? 'images' : 'documents';
+      if (isImage) bucket = 'images';
+      else if (isVideo) bucket = 'videos';
+      else if (isAudio) bucket = 'audios';
+      else bucket = 'documents';
     }
 
     await this.ensureBucketExists(bucket);

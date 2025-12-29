@@ -11,6 +11,7 @@
   Request,
   UseInterceptors,
   UploadedFile,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -121,7 +122,7 @@ export class KnowledgeBaseDocumentsController {
   constructor(
     private readonly documentsService: KBDocumentsService,
     private readonly crawlerService: KBCrawlerService,
-  ) {}
+  ) { }
 
   @Post('documents')
   @ApiOperation({ summary: 'Create document' })
@@ -164,11 +165,11 @@ export class KnowledgeBaseDocumentsController {
       title: doc.title ? decodeFilename(doc.title) : doc.title,
       metadata: doc.metadata
         ? {
-            ...doc.metadata,
-            originalName: doc.metadata.originalName
-              ? decodeFilename(doc.metadata.originalName)
-              : doc.metadata.originalName,
-          }
+          ...doc.metadata,
+          originalName: doc.metadata.originalName
+            ? decodeFilename(doc.metadata.originalName)
+            : doc.metadata.originalName,
+        }
         : doc.metadata,
     }));
 
@@ -243,6 +244,18 @@ export class KnowledgeBaseDocumentsController {
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'text/csv',
           'application/json',
+          'video/mp4',
+          'video/mpeg',
+          'video/quicktime',
+          'video/x-msvideo',
+          'video/webm',
+          'audio/mpeg',
+          'audio/wav',
+          'audio/ogg',
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/webp',
         ];
 
         if (!allowedMimes.includes(file.mimetype)) {
@@ -376,11 +389,11 @@ export class KnowledgeBaseDocumentsController {
         : createdDoc.title,
       metadata: createdDoc.metadata
         ? {
-            ...createdDoc.metadata,
-            originalName: createdDoc.metadata.originalName
-              ? decodeFilename(createdDoc.metadata.originalName)
-              : createdDoc.metadata.originalName,
-          }
+          ...createdDoc.metadata,
+          originalName: createdDoc.metadata.originalName
+            ? decodeFilename(createdDoc.metadata.originalName)
+            : createdDoc.metadata.originalName,
+        }
         : createdDoc.metadata,
     };
   }
@@ -389,23 +402,25 @@ export class KnowledgeBaseDocumentsController {
   @ApiOperation({ summary: 'Crawl website and add to knowledge base' })
   async crawlWebsite(@Request() req, @Body() crawlDto: CrawlWebsiteDto) {
     const userId = req.user.id;
-    const result = await this.crawlerService.crawlWebsite(
-      crawlDto.url,
-      crawlDto.knowledgeBaseId,
-      userId,
-      {
+
+    // Start crawl in background and return success immediately
+    this.crawlerService
+      .crawlWebsite(crawlDto.url, crawlDto.knowledgeBaseId, userId, {
         maxPages: crawlDto.maxPages,
         maxDepth: crawlDto.maxDepth,
         followLinks: crawlDto.followLinks,
         includePatterns: crawlDto.includePatterns,
         excludePatterns: crawlDto.excludePatterns,
         folderId: crawlDto.folderId,
-      },
-    );
+      })
+      .catch((error) => {
+        const logger = new Logger('KbCrawlError');
+        logger.error(`Background crawl failed: ${error.message}`);
+      });
 
     return {
       success: true,
-      ...result,
+      message: 'Crawling started in the background',
     };
   }
 }

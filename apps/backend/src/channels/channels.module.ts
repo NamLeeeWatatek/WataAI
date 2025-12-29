@@ -21,10 +21,15 @@ import { BotsModule } from '../bots/bots.module';
 import { ConversationsModule } from '../conversations/conversations.module';
 import { ChannelEventListener } from './listeners/channel-event.listener';
 import { FacebookWebhookProcessor } from './webhooks/facebook-webhook.processor';
+import { InstagramWebhookProcessor } from './webhooks/instagram-webhook.processor';
+import { BullModule } from '@nestjs/bullmq';
+import { WEBHOOKS_QUEUE, WebhookQueueService } from './webhooks/webhook-queue.service';
+import { TelegramWebhookProcessor } from './webhooks/telegram-webhook.processor';
 import { WebhookLoggerInterceptor } from './interceptors/webhook-logger.interceptor';
 import { FacebookSyncService } from './services/facebook-sync.service';
 import { FacebookConversationSyncService } from './services/facebook-conversation-sync.service';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { WebhookQueueConsumer } from './webhooks/webhook.consumer';
 
 @Module({
   imports: [
@@ -36,6 +41,7 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
     ]),
     forwardRef(() => ConversationsModule),
     forwardRef(() => WorkspacesModule),
+    BullModule.registerQueue({ name: WEBHOOKS_QUEUE }),
   ],
   controllers: [
     ChannelsController,
@@ -53,6 +59,10 @@ import { WorkspacesModule } from '../workspaces/workspaces.module';
     FacebookConversationSyncService,
     ChannelEventListener,
     FacebookWebhookProcessor,
+    InstagramWebhookProcessor,
+    TelegramWebhookProcessor,
+    WebhookQueueService,
+    WebhookQueueConsumer,
     WebhookLoggerInterceptor,
   ],
   exports: [
@@ -68,7 +78,7 @@ export class ChannelsModule implements OnModuleInit {
     private readonly facebookProvider: FacebookProvider,
     private readonly googleProvider: GoogleProvider,
     private readonly omiProvider: OmiProvider,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.strategy.register('facebook', this.facebookProvider);

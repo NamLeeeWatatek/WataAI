@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
-import { JOB_QUEUE } from './execution-queue.module';
+import { JOB_QUEUE } from './execution-queue.constants';
 import { CreationToolsService } from '../../creation-tools/creation-tools.service';
 import { ExecutionStrategyResolver } from '../execution-strategy.resolver';
 import { ExecutionFlow } from '../../creation-tools/domain/creation-tool';
@@ -89,7 +89,10 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         `Dispatching execution via Strategy Resolver for type: ${config.type}`,
       );
       const strategy = this.strategyResolver.resolve(config.type);
-      const result = await strategy.execute(config, jobEntity.inputData);
+      const result = await strategy.execute(config, jobEntity.inputData, {
+        workspaceId: jobEntity.workspaceId,
+        userId: 'createdBy' in jobEntity ? jobEntity.createdBy : undefined,
+      });
 
       // Update Status to COMPLETED
       if (job.data.creationJob && jobEntity.workspaceId) {
