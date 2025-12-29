@@ -222,15 +222,16 @@ export function TemplateDialog({
                                 {formData.mediaFiles.length > 0 && (
                                     <div className="grid grid-cols-2 gap-4">
                                         {formData.mediaFiles.map((url, index) => (
-                                            <div key={index} className="relative group rounded-md overflow-hidden border bg-background aspect-video flex items-center justify-center">
+                                            <div key={index} className="relative group rounded-xl overflow-hidden border bg-muted/20 aspect-video">
                                                 <Media
                                                     src={url}
                                                     alt={`Media ${index + 1}`}
-                                                    className="w-full h-full transition-transform duration-500 group-hover:scale-105"
-                                                    containerClassName="w-full h-full"
-                                                    objectFit="cover"
+                                                    fill
+                                                    ambient
+                                                    objectFit="contain"
                                                     controls
                                                     playsInline
+                                                    className="transition-transform duration-500 group-hover:scale-[1.01]"
                                                 />
 
                                                 <button

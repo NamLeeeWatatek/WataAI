@@ -39,44 +39,24 @@ export function TemplateCardMedia({
             className
         )}>
             {!showFallback ? (
-                <>
-                    {/* 1. Blurred Background Layer - Fills space with ambiance */}
+                <div className="absolute inset-0 group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-1">
                     <Media
                         src={thumbnailUrl!}
-                        alt={`${name} background`}
+                        alt={name}
                         fill
-                        objectFit="cover"
-                        containerClassName="w-full h-full absolute inset-0 pointer-events-none"
-                        className="w-full h-full blur-xl scale-110 opacity-60 saturate-150 transition-transform duration-700 ease-out group-hover:scale-125"
-                        // Background shouldn't play video or have sound
-                        muted
+                        ambient
+                        objectFit="contain"
+                        autoPlayOnHover={autoPlayOnHover}
                         showPlayIcon={false}
+                        loop
+                        muted
+                        playsInline
                         onError={() => setHasError(true)}
                     />
 
-                    {/* Dark overlay to ensure text readability and focus */}
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500 pointer-events-none" />
-
-                    {/* 2. Main Content Layer - Perfectly contained, never cropped */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="relative w-full h-full rounded-lg overflow-hidden shadow-sm group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-1">
-                            <Media
-                                src={thumbnailUrl!}
-                                alt={name}
-                                fill
-                                autoPlayOnHover={autoPlayOnHover}
-                                showPlayIcon={false}
-                                loop
-                                muted
-                                playsInline
-                                objectFit="contain"
-                                containerClassName="w-full h-full"
-                                className="w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
-                                onError={() => setHasError(true)}
-                            />
-                        </div>
-                    </div>
-                </>
+                    {/* Subtle glass sheen effect on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                </div>
             ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/30 via-muted/10 to-muted/5 group-hover:from-primary/10 group-hover:to-primary/5 transition-all duration-500">
                     <div className="relative">

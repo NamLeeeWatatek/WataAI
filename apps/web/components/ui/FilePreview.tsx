@@ -27,20 +27,20 @@ export function ImagePreview({ src, alt, children }: ImagePreviewProps) {
                         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
                     )}
                 >
-                    <div className="relative w-full h-full flex items-center justify-center group">
-                        {/* Media Container */}
-                        <div className="relative max-w-full max-h-full transition-transform duration-500 ease-out group-hover:scale-[1.01]">
-                            <Media
-                                src={src}
-                                alt={alt || "Preview"}
-                                controls
-                                autoPlay
-                                loop
-                                muted={false}
-                                playsInline
-                                className="max-w-[95vw] max-h-[90vh] w-auto h-auto object-contain rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10"
-                            />
-                        </div>
+                    <div className="relative w-full h-full flex items-center justify-center p-4">
+                        <Media
+                            src={src}
+                            alt={alt || "Preview"}
+                            fill
+                            ambient
+                            objectFit="contain"
+                            controls
+                            autoPlay
+                            loop
+                            muted={false}
+                            playsInline
+                            className="transition-transform duration-700 hover:scale-[1.01]"
+                        />
 
                         {/* Top Right Controls */}
                         <div className="absolute top-4 right-4 flex items-center gap-2">

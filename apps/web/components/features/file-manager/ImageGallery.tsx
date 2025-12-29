@@ -38,20 +38,22 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
         {images.map((image, index) => (
           <div
             key={index}
-            className="group relative border rounded-lg overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+            className="group relative border rounded-xl overflow-hidden hover:shadow-2xl transition-all cursor-pointer bg-muted/20"
             onClick={() => setSelectedImage(image.url)}
           >
-            <div className="aspect-square relative">
+            <div className="aspect-video relative">
               <Media
                 src={image.url}
                 alt={image.name}
-                className="w-full h-full"
-                objectFit="cover"
+                fill
+                ambient
+                objectFit="contain"
               />
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                 <Button
                   size="icon"
                   variant="secondary"
+                  className="rounded-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDownload(image.url, image.name);
@@ -63,6 +65,7 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
                   <Button
                     size="icon"
                     variant="destructive"
+                    className="rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(image.id!);
@@ -73,8 +76,8 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
                 )}
               </div>
             </div>
-            <div className="p-2">
-              <p className="text-xs text-muted-foreground truncate">
+            <div className="p-3 bg-card border-t">
+              <p className="text-[10px] font-bold text-foreground/80 truncate">
                 {image.name}
               </p>
             </div>
@@ -83,17 +86,17 @@ export function ImageGallery({ images, onDelete }: ImageGalleryProps) {
       </div>
 
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Image Preview</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden border-0 gap-0 shadow-2xl">
           {selectedImage && (
-            <div className="relative">
+            <div className="relative aspect-video w-full bg-black">
               <Media
                 src={selectedImage}
                 alt="Preview"
-                className="w-full h-auto max-h-[70vh]"
+                fill
+                ambient
                 objectFit="contain"
+                controls
+                autoPlay
               />
             </div>
           )}

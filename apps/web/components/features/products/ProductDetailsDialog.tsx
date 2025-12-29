@@ -103,17 +103,20 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         return (
             <div className="space-y-6">
                 {finalMediaUrl && (
-                    <div className="rounded-2xl border border-border shadow-inner overflow-hidden bg-background">
-                        <Media
-                            src={finalMediaUrl}
-                            alt="Result"
-                            width={800}
-                            height={600}
-                            controls
-                            autoPlay
-                            loop
-                            className="w-full h-auto object-contain max-h-[500px] mx-auto transition-transform hover:scale-[1.02]"
-                        />
+                    <div className="rounded-2xl border border-border shadow-2xl overflow-hidden bg-background">
+                        <div className="relative w-full aspect-video">
+                            <Media
+                                src={finalMediaUrl}
+                                alt="Result"
+                                fill
+                                ambient
+                                objectFit="contain"
+                                controls
+                                autoPlay
+                                loop
+                                className="transition-transform hover:scale-[1.01]"
+                            />
+                        </div>
                         <div className="p-3 flex justify-center bg-secondary/20 border-t border-border">
                             <Button variant="secondary" size="sm" className="rounded-full shadow-sm" onClick={() => window.open(finalMediaUrl, '_blank')}>
                                 <ExternalLink className="w-4 h-4 mr-2" />

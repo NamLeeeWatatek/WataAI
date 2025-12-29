@@ -26,6 +26,7 @@ interface MediaProps {
     width?: number
     height?: number
     objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
+    ambient?: boolean
     onError?: () => void
 }
 
@@ -48,6 +49,7 @@ export function Media({
     width = 1920,
     height = 1080,
     objectFit = 'contain',
+    ambient,
     ...props
 }: MediaProps) {
     if (!src) {
@@ -60,55 +62,62 @@ export function Media({
 
     const type = getMediaType(src)
 
-    if (type === 'video') {
-        return (
-            <Video
-                src={src}
-                className={cn(
-                    objectFit === 'cover' ? "object-cover" : "object-contain",
-                    fill ? "absolute inset-0 w-full h-full" : "",
-                    className
-                )}
-                containerClassName={cn(fill ? "absolute inset-0 w-full h-full" : "", containerClassName)}
-                controls={controls}
-                autoPlay={autoPlay}
-                loop={loop}
-                muted={muted}
-                playsInline={playsInline}
-                showPlayIcon={showPlayIcon}
-                autoPlayOnHover={autoPlayOnHover}
-                {...(props as any)}
-            />
-        )
-    }
+    const renderMedia = (isBackground: boolean = false) => {
+        const commonProps = {
+            src,
+            className: cn(
+                isBackground ? "object-cover blur-xl opacity-40 scale-110" : (objectFit === 'cover' ? "object-cover" : "object-contain"),
+                fill ? "absolute inset-0 w-full h-full" : "",
+                !isBackground && className
+            ),
+            containerClassName: cn(fill ? "absolute inset-0 w-full h-full" : "", !isBackground && containerClassName),
+            ...props
+        }
 
-    if (type === 'image') {
+        if (type === 'video') {
+            return (
+                <Video
+                    {...commonProps}
+                    controls={!isBackground && controls}
+                    autoPlay={isBackground || autoPlay}
+                    loop={isBackground || loop}
+                    muted={isBackground || muted}
+                    playsInline={isBackground || playsInline}
+                    showPlayIcon={!isBackground && showPlayIcon}
+                    autoPlayOnHover={!isBackground && autoPlayOnHover}
+                />
+            )
+        }
+
         return (
             <Image
-                src={src}
-                alt={alt || "Media content"}
-                className={cn(
-                    objectFit === 'cover' ? "object-cover" : "object-contain",
-                    className
-                )}
-                containerClassName={cn(fill ? "absolute inset-0 w-full h-full" : "", containerClassName)}
-                priority={priority}
+                {...commonProps}
+                alt={isBackground ? "" : (alt || "Media content")}
+                priority={!isBackground && priority}
                 unoptimized={unoptimized}
                 width={!fill ? width : undefined}
                 height={!fill ? height : undefined}
                 fill={fill}
-                {...(props as any)}
             />
         )
     }
 
-    // Default fallback for unknown file types
-    return (
-        <div className={cn("flex flex-col items-center justify-center bg-muted/50 rounded-xl border border-primary/10", containerClassName)}>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent flex items-center justify-center shrink-0 border border-primary/10 shadow-inner">
-                {fallbackIcon || <FileText className="w-6 h-6 text-primary" />}
+    if (ambient && objectFit === 'contain' && fill) {
+        return (
+            <div className={cn("relative overflow-hidden w-full h-full", containerClassName)}>
+                {/* 1. Background Ambient Layer */}
+                {renderMedia(true)}
+
+                {/* Subtle overlay to soften the background */}
+                <div className="absolute inset-0 bg-black/10 pointer-events-none" />
+
+                {/* 2. Main Media Layer */}
+                <div className="absolute inset-0 flex items-center justify-center p-0.5">
+                    {renderMedia(false)}
+                </div>
             </div>
-            {alt && <span className="text-[10px] text-muted-foreground mt-2 font-medium truncate max-w-full px-2">{alt}</span>}
-        </div>
-    )
+        )
+    }
+
+    return renderMedia(false)
 }
