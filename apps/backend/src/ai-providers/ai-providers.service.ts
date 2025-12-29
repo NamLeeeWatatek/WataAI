@@ -43,7 +43,7 @@ export class AiProvidersService {
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
     private readonly encryptionService: EncryptionUtil,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   /**
    * Encrypts sensitive configuration fields like API keys and URLs.
@@ -426,7 +426,82 @@ export class AiProvidersService {
   }
 
   async verifyUserConfig(userId: string, id: string): Promise<boolean> {
+    const config = await this.getUserConfig(userId, id);
+    if (!config) {
+      throw new NotFoundException('Configuration not found');
+    }
+
+    if (!config.provider) {
+      throw new BadRequestException('Provider not linked to configuration');
+    }
+
+    // Perform actual verification
+    await this.verifyProviderConnection(config.provider, config.config);
+
     return this.aiProviderConfigRepository.verifyUserConfig(userId, id);
+  }
+
+  /**
+   * Verified provider connection.
+   * Supports dynamic/custom providers by falling back to OpenAI-compatible check
+   * if the specific provider SDK is not hardcoded.
+   */
+  private async verifyProviderConnection(
+    provider: AiProvider,
+    config: Record<string, any>,
+  ): Promise<void> {
+    try {
+      const providerKey = provider.key.toLowerCase();
+
+      // 1. Explicit handlers for proprietary APIs
+      if (providerKey === 'anthropic') {
+        const anthropic = new Anthropic({ apiKey: config.apiKey });
+        await anthropic.messages.create({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'Hi' }],
+        });
+        return;
+      }
+
+      if (providerKey === 'google') {
+        const genAI = new GoogleGenerativeAI(config.apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        await model.generateContent('Hi');
+        return;
+      }
+
+      // 2. Generic / OpenAI Compatible Handler
+      // This covers: 'openai', 'ollama', 'azure' (configured as custom),
+      // and ANY user-added provider (e.g. 'deepseek', 'groq', 'local')
+
+      let baseURL = config.baseUrl;
+      let apiKey = config.apiKey;
+
+      // Special defaults if not provided in config
+      if (providerKey === 'ollama' && !baseURL) {
+        baseURL = 'http://localhost:11434/v1';
+        apiKey = apiKey || 'ollama';
+      }
+
+      // Prepare OpenAI client configuration
+      const clientConfig: any = { apiKey: apiKey };
+
+      if (baseURL) {
+        // Ensure /v1 is handled if needed, though standard clients might expect user to provide it
+        // or we just trust the user's input.
+        clientConfig.baseURL = baseURL;
+      }
+
+      const client = new OpenAI(clientConfig);
+      await client.models.list();
+    } catch (error) {
+      const message = error.response?.data?.error?.message || error.message;
+      this.logger.error(`Validation failed for ${provider.key}: ${message}`);
+      throw new BadRequestException(
+        `Failed to connect to ${provider.label}: ${message}`,
+      );
+    }
   }
 
   // Workspace configuration methods
@@ -1588,11 +1663,11 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
       );
       const improvements = improvementsMatch
         ? improvementsMatch[1]
-          .trim()
-          .split('\n')
-          .map((line) => line.replace(/^[-•]/, '').trim())
-          .filter((line) => line && !line.match(/^\*\*/))
-          .slice(0, 5) // Limit to 5 improvements
+            .trim()
+            .split('\n')
+            .map((line) => line.replace(/^[-•]/, '').trim())
+            .filter((line) => line && !line.match(/^\*\*/))
+            .slice(0, 5) // Limit to 5 improvements
         : ['Professional prompt structure with clear guidelines'];
 
       // Extract suggestions section
@@ -1601,14 +1676,14 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
       );
       const suggestions = suggestionsMatch
         ? suggestionsMatch[1]
-          .trim()
-          .split('\n')
-          .map((line) => line.replace(/^[-•]/, '').trim())
-          .filter((line) => line && !line.match(/^\*\*/))
-          .slice(0, 5) // Limit to 5 suggestions
+            .trim()
+            .split('\n')
+            .map((line) => line.replace(/^[-•]/, '').trim())
+            .filter((line) => line && !line.match(/^\*\*/))
+            .slice(0, 5) // Limit to 5 suggestions
         : [
-          'Use this prompt as the system message when configuring your AI assistant',
-        ];
+            'Use this prompt as the system message when configuring your AI assistant',
+          ];
 
       return {
         prompt:
@@ -1767,10 +1842,10 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
       );
       const improvements = improvementsMatch
         ? improvementsMatch[1]
-          .trim()
-          .split('\n')
-          .map((line) => line.replace(/^[-•]/, '').trim())
-          .filter((line) => line)
+            .trim()
+            .split('\n')
+            .map((line) => line.replace(/^[-•]/, '').trim())
+            .filter((line) => line)
         : ['Enhanced prompt structure based on your description'];
 
       // Try to extract suggestions section
@@ -1779,13 +1854,13 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
       );
       const suggestions = suggestionsMatch
         ? suggestionsMatch[1]
-          .trim()
-          .split('\n')
-          .map((line) => line.replace(/^[-•]/, '').trim())
-          .filter((line) => line)
+            .trim()
+            .split('\n')
+            .map((line) => line.replace(/^[-•]/, '').trim())
+            .filter((line) => line)
         : [
-          'Use this prompt as the system message when configuring your AI assistant',
-        ];
+            'Use this prompt as the system message when configuring your AI assistant',
+          ];
 
       return {
         prompt:

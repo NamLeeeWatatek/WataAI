@@ -11,7 +11,7 @@ export class TemplatesSeedService {
     private readonly templateRepository: Repository<TemplateEntity>,
     @InjectRepository(CategoryEntity)
     private readonly categoryRepository: Repository<CategoryEntity>,
-  ) { }
+  ) {}
 
   async run() {
     const templates = [

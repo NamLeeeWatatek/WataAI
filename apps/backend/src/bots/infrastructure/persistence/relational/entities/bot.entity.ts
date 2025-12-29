@@ -91,7 +91,6 @@ export class BotEntity extends WorkspaceOwnedEntity {
   @JoinColumn({ name: 'active_version_id' })
   activeVersion?: WidgetVersionEntity;
 
-
   @OneToMany(() => BotKnowledgeBaseEntity, (bkb) => bkb.bot)
   knowledgeBases?: BotKnowledgeBaseEntity[];
 

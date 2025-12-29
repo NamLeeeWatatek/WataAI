@@ -20,6 +20,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Upload, X, Loader2, Image as ImageIcon, Film } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { creationToolsApi } from '@/lib/api/creation-tools';
+import { IconPicker } from '@/components/ui/IconPicker';
 
 interface TemplateDialogProps {
     open: boolean;
@@ -39,6 +40,7 @@ export function TemplateDialog({
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [icon, setIcon] = useState('');
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [previewFile, setPreviewFile] = useState<File | null>(null);
@@ -71,6 +73,7 @@ export function TemplateDialog({
             setDescription(template.description || '');
             setThumbnailUrl(template.thumbnailUrl || '');
             setPreviewUrl(template.thumbnailUrl || '');
+            setIcon(template.icon || '');
             setSelectedToolId(template.creationToolId || initialToolId || '');
         } else if (!open) {
             // Reset when dialog closes
@@ -141,6 +144,7 @@ export function TemplateDialog({
                 name,
                 description,
                 thumbnailUrl: finalThumbnailUrl,
+                icon,
                 creationToolId: selectedToolId,
                 prefilledData: template?.prefilledData || {},
                 isActive: true,
@@ -161,6 +165,7 @@ export function TemplateDialog({
         setThumbnailUrl('');
         setPreviewFile(null);
         setPreviewUrl('');
+        setIcon('');
         setSelectedToolId('');
     };
 
@@ -203,19 +208,22 @@ export function TemplateDialog({
                                         {tools.map((tool) => (
                                             <SelectItem key={tool.id} value={tool.id}>
                                                 <div className="flex items-center gap-2">
-                                                    {tool.icon ? (
-                                                        <span className="text-lg">{tool.icon}</span>
-                                                    ) : (
-                                                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                                            <span className="text-[10px] font-bold text-primary">{tool.name.substring(0, 1)}</span>
-                                                        </div>
-                                                    )}
                                                     <span>{tool.name}</span>
                                                 </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+                        </div>
+
+                        {/* Icon Selection */}
+                        <div className="space-y-4">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider block">Identity</Label>
+
+                            <div className="space-y-2">
+                                <Label>Template Icon</Label>
+                                <IconPicker value={icon} onChange={setIcon} />
                             </div>
                         </div>
 

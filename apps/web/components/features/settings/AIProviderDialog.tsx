@@ -126,10 +126,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 </div>
                                 <div>
                                     <DialogTitle className="text-2xl font-black tracking-tight">
-                                        {isEdit ? 'Reconfigure Cluster' : 'Initialize Intelligence'}
+                                        {isEdit ? 'Edit Provider' : 'Connect New Provider'}
                                     </DialogTitle>
                                     <DialogDescription className="text-sm font-medium">
-                                        Provision new AI capabilities to your global processing matrix
+                                        Connect an AI provider to enable smart features
                                     </DialogDescription>
                                 </div>
                             </div>
@@ -142,7 +142,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="providerId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Core Provider</FormLabel>
+                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Provider Service</FormLabel>
                                             <Select
                                                 onValueChange={(val) => {
                                                     field.onChange(val);
@@ -161,7 +161,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             >
                                                 <FormControl>
                                                     <SelectTrigger className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold">
-                                                        <SelectValue placeholder="Select Engine" />
+                                                        <SelectValue placeholder="Select Provider" />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent className="rounded-2xl border-border/40 bg-card/90 backdrop-blur-xl">
@@ -182,10 +182,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="displayName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Alias Identity</FormLabel>
+                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Display Name</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="e.g. Primary OpenAI"
+                                                    placeholder="e.g. My OpenAI"
                                                     {...field}
                                                     className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold"
                                                 />
@@ -200,7 +200,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 text-primary">
                                         <Shield className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Security Credentials</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Credentials</span>
                                     </div>
 
                                     {selectedProvider.requiredFields.map((fieldName) => (
@@ -265,7 +265,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 onClick={() => onOpenChange(false)}
                                 className="rounded-2xl h-14 font-bold text-muted-foreground hover:bg-muted/30"
                             >
-                                Cancel Process
+                                Cancel
                             </Button>
                             <Button
                                 type="submit"
@@ -277,7 +277,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 ) : (
                                     <Save className="w-5 h-5 mr-2" />
                                 )}
-                                {isEdit ? 'Synchronize Updates' : 'Initiate Provisioning'}
+                                {isEdit ? 'Save Changes' : 'Connect Provider'}
                             </Button>
                         </DialogFooter>
                     </form>

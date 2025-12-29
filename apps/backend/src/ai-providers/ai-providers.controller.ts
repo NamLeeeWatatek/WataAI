@@ -50,7 +50,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'ai-providers', version: '1' })
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   // Get all available AI providers (global list)
   @Get()

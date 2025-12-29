@@ -16,7 +16,7 @@ export class GenerationJobsService {
     private readonly generationJobRepository: GenerationJobRepository,
     @InjectQueue(JOB_QUEUE) private readonly jobQueue: Queue,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async create(
     data: Omit<GenerationJob, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,

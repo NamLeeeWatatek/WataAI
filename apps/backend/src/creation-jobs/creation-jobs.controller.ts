@@ -41,7 +41,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) { }
+  constructor(private readonly service: CreationJobsService) {}
 
   @Post()
   @Permissions('job:Create')

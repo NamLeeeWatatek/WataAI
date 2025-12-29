@@ -19,7 +19,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly filesService: FilesService,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const clonedPayload = {
@@ -62,9 +62,9 @@ export class UsersService {
       role: clonedPayload.role
         ? (clonedPayload.role as Role)
         : ({
-          id: RoleEnum.user,
-          name: 'user',
-        } as Role),
+            id: RoleEnum.user,
+            name: 'user',
+          } as Role),
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       socialId: createUserDto.socialId,
@@ -167,9 +167,9 @@ export class UsersService {
         updateUserDto.role !== undefined
           ? typeof updateUserDto.role === 'string'
             ? ({
-              id: RoleEnum[updateUserDto.role as keyof typeof RoleEnum],
-              name: updateUserDto.role,
-            } as Role)
+                id: RoleEnum[updateUserDto.role as keyof typeof RoleEnum],
+                name: updateUserDto.role,
+              } as Role)
             : (updateUserDto.role as Role | null)
           : undefined,
       roleId: updateUserDto.roleId,

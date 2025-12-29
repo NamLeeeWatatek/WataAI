@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Search, Sparkles, Filter } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Search, Sparkles, Filter, icons, Folder } from 'lucide-react';
 import { AssignToolDialog } from '@/components/features/creation-tools/AssignToolDialog';
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
 import toast from '@/lib/toast';
@@ -405,7 +405,14 @@ export default function TemplatesPage() {
                                             />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-secondary/30 text-muted-foreground/50">
-                                                <Sparkles className="w-10 h-10 opacity-20" />
+                                                {template.icon && (icons as any)[template.icon] ? (
+                                                    (() => {
+                                                        const IconComponent = (icons as any)[template.icon];
+                                                        return <IconComponent className="w-10 h-10 opacity-40 text-primary" />;
+                                                    })()
+                                                ) : (
+                                                    <Sparkles className="w-10 h-10 opacity-20" />
+                                                )}
                                             </div>
                                         )}
                                         {/* Always visible badge */}

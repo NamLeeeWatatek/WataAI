@@ -118,8 +118,7 @@ export const authConfig = {
                 }
             }
 
-            // Return previous token if the access token has not expired yet
-            if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 60 * 1000) {
+            if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 10 * 60 * 1000) {
                 return token
             }
 

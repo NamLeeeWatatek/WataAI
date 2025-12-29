@@ -164,13 +164,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
         <Card className="relative overflow-hidden group border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all duration-500" />
           <CardHeader className="pb-3 border-b border-border/10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Ecosystem Health</CardDescription>
+            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Connected Providers</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{allProviders.length}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
               <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-              <span>{activeProviders} Active Intelligence Nodes</span>
+              <span>{activeProviders} Active Providers</span>
             </div>
           </CardContent>
         </Card>
@@ -178,13 +178,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
         <Card className="relative overflow-hidden group border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all duration-500" />
           <CardHeader className="pb-3 border-b border-border/10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Cumulative Throughput</CardDescription>
+            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Usage</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{totalUsage.toLocaleString()}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
               <Activity className="size-3.5 text-blue-500" />
-              <span>Processed Tokens / Requests</span>
+              <span>Requests Processed</span>
             </div>
           </CardContent>
         </Card>
@@ -192,13 +192,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
         <Card className="relative overflow-hidden group border-primary/20 shadow-xl shadow-primary/5 bg-primary/5 backdrop-blur-md rounded-3xl border-2 border-dashed">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
           <CardHeader className="pb-3">
-            <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Scale Capability</CardDescription>
+            <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Add Capability</CardDescription>
           </CardHeader>
           <CardContent className="pt-2">
             <Button onClick={() => handleOpenDialog()} className="w-full shadow-2xl shadow-primary/30 font-black rounded-2xl h-14 active:scale-[0.98] transition-all bg-primary hover:bg-primary text-sm tracking-tight group/btn overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
               <Plus className="mr-2 size-5 transition-transform group-hover/btn:rotate-90" />
-              Integrate Intelligence
+              Add Provider
             </Button>
           </CardContent>
         </Card>
@@ -209,7 +209,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
         <div className="relative flex-1 w-full max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all group-focus-within:text-primary group-focus-within:scale-110 w-4 h-4" />
           <Input
-            placeholder="Search Intelligence Layers..."
+            placeholder="Search providers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 rounded-[20px] bg-muted/20 focus:bg-background border-border/40 focus:border-primary/40 focus:ring-primary/10 h-12 transition-all font-medium text-sm"
@@ -246,13 +246,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           <div className="size-20 rounded-full bg-primary/5 flex items-center justify-center mb-6 ring-8 ring-primary/5">
             <Key className="size-10 text-primary opacity-40" />
           </div>
-          <h3 className="text-xl font-black tracking-tight">Access Control Required</h3>
+          <h3 className="text-xl font-black tracking-tight">No Providers Configured</h3>
           <p className="text-muted-foreground text-center max-w-sm mt-2 mb-10 font-medium">
-            No intelligence engines are currently initialized. Secure your environment with an API provider to proceed.
+            You haven't connected any AI providers yet. Add a provider to start using AI features.
           </p>
           <Button onClick={() => handleOpenDialog()} size="lg" className="rounded-full font-bold px-10 shadow-xl shadow-primary/20 active:scale-95 transition-all">
             <Plus className="mr-2 size-5" />
-            Provision Intelligence
+            Connect Provider
           </Button>
         </div>
       ) : (
@@ -309,8 +309,8 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                           {provider.modelList && provider.modelList.length > 0 ? (
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Intelligence Matrix</p>
-                                <span className="text-[10px] font-bold text-muted-foreground/40">{provider.modelList.length} Nodes</span>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Available Models</p>
+                                <span className="text-[10px] font-bold text-muted-foreground/40">{provider.modelList.length} Models</span>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {provider.modelList.slice(0, 4).map((model) => (
@@ -328,7 +328,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                           ) : (
                             <div className="py-6 flex flex-col items-center justify-center border border-dashed border-border/30 rounded-2xl bg-muted/5 group-hover:bg-muted/10 transition-colors">
                               <Terminal className="size-5 text-muted-foreground/20 mb-2" />
-                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">Dynamic Model Discovery</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30">No Models Found</p>
                             </div>
                           )}
 
@@ -341,8 +341,8 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               </div>
                             </div>
                             <div className="space-y-1 text-right">
-                              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Pulse Check</p>
-                              <p className="text-xs font-bold">{provider.lastUsedAt ? new Date(provider.lastUsedAt).toLocaleDateString() : 'Initial State'}</p>
+                              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Last Active</p>
+                              <p className="text-xs font-bold">{provider.lastUsedAt ? new Date(provider.lastUsedAt).toLocaleDateString() : 'Never'}</p>
                             </div>
                           </div>
 
@@ -370,7 +370,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                                     : "bg-primary shadow-lg shadow-primary/20"
                                 )}
                               >
-                                {provider.isActive ? 'Decommission' : 'Synchronize'}
+                                {provider.isActive ? 'Deactivate' : 'Activate'}
                               </Button>
                             </div>
                             <div className="flex gap-2">
@@ -411,7 +411,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                 columns={[
                   {
                     key: 'displayName',
-                    label: 'Intelligence Node',
+                    label: 'Provider Name',
                     render: (value, row) => {
                       const providerData = row.provider || availableProviders.find(p => p.id === row.providerId);
                       const IconComponent = getProviderIcon(providerData?.icon);
@@ -445,7 +445,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                   },
                   {
                     key: 'models',
-                    label: 'Matrix Nodes',
+                    label: 'Models',
                     render: (_, row) => (
                       <div className="flex flex-wrap gap-1.5 max-w-[240px]">
                         {row.modelList?.slice(0, 3).map((m: string) => (
@@ -461,7 +461,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                   },
                   {
                     key: 'usage',
-                    label: 'Throughput',
+                    label: 'Usage',
                     render: (_, row) => (
                       <div className="flex items-center gap-2">
                         <Zap className="size-3 text-primary/40" />

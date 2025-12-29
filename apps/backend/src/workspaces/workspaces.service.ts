@@ -25,7 +25,7 @@ export class WorkspacesService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private memberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async create(createDto: CreateWorkspaceDto, ownerId: string) {
     const existing = await this.workspaceRepository.findOne({
@@ -261,7 +261,10 @@ export class WorkspacesService {
   async removeMember(workspaceId: string, userId: string, actorId: string) {
     const actorRole = await this.getMemberRole(workspaceId, actorId);
 
-    if (actorRole !== WorkspaceRole.OWNER && actorRole !== WorkspaceRole.ADMIN) {
+    if (
+      actorRole !== WorkspaceRole.OWNER &&
+      actorRole !== WorkspaceRole.ADMIN
+    ) {
       throw new ForbiddenException('Only admins and owners can remove members');
     }
 

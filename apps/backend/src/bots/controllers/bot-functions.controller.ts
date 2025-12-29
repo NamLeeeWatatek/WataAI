@@ -29,7 +29,7 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/functions', version: '1' })
 export class BotFunctionsController {
-  constructor(private readonly botFunctionsService: BotFunctionsService) { }
+  constructor(private readonly botFunctionsService: BotFunctionsService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create bot function' })

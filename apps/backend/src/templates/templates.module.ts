@@ -20,4 +20,4 @@ import { forwardRef } from '@nestjs/common';
   providers: [TemplatesService],
   exports: [TemplatesService, RelationalTemplatePersistenceModule],
 })
-export class TemplatesModule { }
+export class TemplatesModule {}

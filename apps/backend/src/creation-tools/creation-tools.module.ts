@@ -20,4 +20,4 @@ import { forwardRef } from '@nestjs/common';
   providers: [CreationToolsService],
   exports: [CreationToolsService, RelationalCreationToolPersistenceModule],
 })
-export class CreationToolsModule { }
+export class CreationToolsModule {}

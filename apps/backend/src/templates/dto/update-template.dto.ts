@@ -66,6 +66,14 @@ export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {
   thumbnailUrl?: string | null;
 
   @ApiPropertyOptional({
+    example: 'Sparkles',
+    description: 'Template icon name',
+  })
+  @IsOptional()
+  @IsString()
+  icon?: string | null;
+
+  @ApiPropertyOptional({
     type: Object,
     description: 'Optional execution parameter overrides',
   })

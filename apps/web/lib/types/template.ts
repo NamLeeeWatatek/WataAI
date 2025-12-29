@@ -6,6 +6,7 @@ export interface Template {
     category?: string;
     prefilledData?: Record<string, any>;
     thumbnailUrl?: string;
+    icon?: string;
     executionOverrides?: Record<string, any>;
     // Deprecated fields
     mediaFiles?: string[];

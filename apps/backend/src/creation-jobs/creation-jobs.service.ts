@@ -21,7 +21,7 @@ export class CreationJobsService {
     private readonly notificationsGateway: NotificationsGateway,
     private readonly auditService: AuditService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateCreationJobDto,

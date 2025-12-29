@@ -42,6 +42,11 @@ export class CreateTemplateDto {
   @IsString()
   thumbnailUrl?: string | null;
 
+  @ApiPropertyOptional({ example: 'Sparkles', type: String })
+  @IsOptional()
+  @IsString()
+  icon?: string | null;
+
   @ApiPropertyOptional({ type: Object })
   @IsOptional()
   @IsObject()

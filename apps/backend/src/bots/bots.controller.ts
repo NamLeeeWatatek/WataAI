@@ -49,7 +49,7 @@ export class BotsController {
   constructor(
     private readonly botsService: BotsService,
     private readonly botInteractionService: BotInteractionService,
-  ) { }
+  ) {}
 
   @Post()
   @Permissions('bot:Create')

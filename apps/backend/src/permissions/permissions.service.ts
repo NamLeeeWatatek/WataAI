@@ -20,7 +20,7 @@ export class PermissionsService {
     private readonly permissionRepository: Repository<PermissionEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private readonly workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async findAll(search?: string) {
     let where: any = {};

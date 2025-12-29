@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Search, Wrench, LayoutTemplate } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Search, Wrench, LayoutTemplate, icons, Folder } from 'lucide-react';
 import { ToolDialog } from '@/components/features/creation-tools/ToolDialog';
 import { PageLoading } from '@/components/ui/PageLoading';
 import toast from '@/lib/toast';
@@ -196,7 +196,14 @@ export default function CreationToolsPage() {
                                     <CardHeader className="pb-3">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="p-2.5 rounded-lg bg-primary/5 ring-1 ring-primary/10 group-hover:bg-primary/10 transition-colors">
-                                                <Wrench className="w-5 h-5 text-primary" />
+                                                {tool.icon && (icons as any)[tool.icon] ? (
+                                                    (() => {
+                                                        const IconComponent = (icons as any)[tool.icon];
+                                                        return <IconComponent className="w-5 h-5 text-primary" />;
+                                                    })()
+                                                ) : (
+                                                    <Wrench className="w-5 h-5 text-primary" />
+                                                )}
                                             </div>
                                             <Badge variant={tool.isActive ? 'default' : 'secondary'} className={tool.isActive ? 'bg-green-500/10 text-green-600 hover:bg-green-500/20 border-green-500/20' : ''}>
                                                 {tool.isActive ? 'Active' : 'Inactive'}

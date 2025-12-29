@@ -62,7 +62,6 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ name: 'external_id', type: String, unique: true, nullable: true })
   externalId?: string | null;
 
-
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date | null;
 

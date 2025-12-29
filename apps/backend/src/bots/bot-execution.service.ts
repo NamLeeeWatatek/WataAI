@@ -32,7 +32,7 @@ export class BotExecutionService {
     private instagramService: InstagramService,
     private telegramService: TelegramService,
     private kbRagService: KBRagService,
-  ) { }
+  ) {}
 
   async processMessage(incomingMessage: IncomingMessage): Promise<void> {
     try {
@@ -72,7 +72,6 @@ export class BotExecutionService {
 
     return null;
   }
-
 
   async sendResponse(
     channel: string,

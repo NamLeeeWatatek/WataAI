@@ -21,7 +21,7 @@ export class UserSeedService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async run() {
     // Delete legacy/default admins if they exist
@@ -221,8 +221,11 @@ export class UserSeedService {
         existingUser.password = userPassword;
         existingUser.provider = 'email';
         // Ensure role is correct
-        const roleId = userData.role === 'admin' ? RoleEnum.admin : RoleEnum.user;
-        const role = await this.roleRepository.findOne({ where: { id: roleId } });
+        const roleId =
+          userData.role === 'admin' ? RoleEnum.admin : RoleEnum.user;
+        const role = await this.roleRepository.findOne({
+          where: { id: roleId },
+        });
         if (role) {
           existingUser.role = role;
         }

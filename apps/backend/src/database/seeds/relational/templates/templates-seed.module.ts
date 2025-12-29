@@ -6,12 +6,8 @@ import { TemplateEntity } from '../../../../templates/infrastructure/persistence
 import { CategoryEntity } from '../../../../categories/infrastructure/persistence/relational/entities/category.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TemplateEntity, CategoryEntity]),
-  ],
-  providers: [
-    TemplatesSeedService,
-  ],
+  imports: [TypeOrmModule.forFeature([TemplateEntity, CategoryEntity])],
+  providers: [TemplatesSeedService],
   exports: [TemplatesSeedService],
 })
-export class TemplatesSeedModule { }
+export class TemplatesSeedModule {}

@@ -50,4 +50,4 @@ import { PermissionsModule } from '../permissions/permissions.module';
     ConversationEventListener,
   ],
 })
-export class ConversationsModule { }
+export class ConversationsModule {}

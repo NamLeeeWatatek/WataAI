@@ -51,7 +51,7 @@ export class PublicBotService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getBotConfig(
     botId: string,

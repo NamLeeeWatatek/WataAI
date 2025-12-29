@@ -58,7 +58,6 @@ export class User {
   @ApiPropertyOptional({ type: Number })
   roleId?: number;
 
-
   @ApiPropertyOptional({ type: Date, description: 'Last login timestamp' })
   lastLogin?: Date | null;
 

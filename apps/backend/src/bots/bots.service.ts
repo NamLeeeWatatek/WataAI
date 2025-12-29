@@ -18,10 +18,7 @@ import { WorkspaceMemberEntity } from '../workspaces/infrastructure/persistence/
 import { WorkspaceHelperService } from '../workspaces/workspace-helper.service';
 import { WidgetVersionService } from './services/widget-version.service';
 import { CreateBotDto } from './dto/create-bot.dto';
-import {
-  UpdateBotDto,
-  LinkKnowledgeBaseDto,
-} from './dto/update-bot.dto';
+import { UpdateBotDto, LinkKnowledgeBaseDto } from './dto/update-bot.dto';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
 
 @Injectable()
@@ -38,7 +35,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -79,9 +76,9 @@ export class BotsService {
               showTimestamp: createDto.showTimestamp ?? true,
             },
             messages: {
-              welcome:
-                createDto.welcomeMessage || 'chatbot.default_welcome',
-              placeholder: createDto.placeholderText || 'chatbot.default_placeholder',
+              welcome: createDto.welcomeMessage || 'chatbot.default_welcome',
+              placeholder:
+                createDto.placeholderText || 'chatbot.default_placeholder',
               offline: 'chatbot.default_offline',
               errorMessage: 'chatbot.default_error',
             },
@@ -113,7 +110,7 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-    } catch (error) { }
+    } catch (error) {}
 
     return savedBot;
   }
@@ -238,7 +235,6 @@ export class BotsService {
   async archive(id: string) {
     return this.update(id, { status: BotStatus.ARCHIVED });
   }
-
 
   async linkKnowledgeBase(botId: string, dto: LinkKnowledgeBaseDto) {
     await this.findOne(botId);

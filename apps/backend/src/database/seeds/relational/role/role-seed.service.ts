@@ -12,7 +12,7 @@ export class RoleSeedService {
     private roleRepository: Repository<RoleEntity>,
     @InjectRepository(PermissionEntity)
     private permissionRepository: Repository<PermissionEntity>,
-  ) { }
+  ) {}
 
   async run() {
     const allPermissions = await this.permissionRepository.find();
@@ -22,7 +22,10 @@ export class RoleSeedService {
     const systemResources = ['system', 'iam', 'workspace'];
     const ownerPermissions = allPermissions.filter((p) => {
       // Owner has full access to workspace resources but restricted system/iam access
-      if (systemResources.includes(p.resource) && !['Get', 'List', 'Update', 'Invite'].includes(p.action)) {
+      if (
+        systemResources.includes(p.resource) &&
+        !['Get', 'List', 'Update', 'Invite'].includes(p.action)
+      ) {
         return false;
       }
       if (p.name === '*') return false;
@@ -46,7 +49,15 @@ export class RoleSeedService {
       const systemResources = ['system', 'iam', 'workspace'];
       if (systemResources.includes(p.resource)) {
         // Managers can manage users/invitations in their workspace
-        return ['Get', 'List', 'Invite', 'AddMember', 'RemoveMember', 'UpdateMember', 'ListMembers'].includes(p.action);
+        return [
+          'Get',
+          'List',
+          'Invite',
+          'AddMember',
+          'RemoveMember',
+          'UpdateMember',
+          'ListMembers',
+        ].includes(p.action);
       }
       return true; // Full access to workspace resources
     });

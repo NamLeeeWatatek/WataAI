@@ -44,4 +44,4 @@ import appConfig from '../../../config/app.config';
     }),
   ],
 })
-export class SeedModule { }
+export class SeedModule {}

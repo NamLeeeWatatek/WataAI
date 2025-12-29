@@ -115,6 +115,20 @@ axiosClient.interceptors.response.use(
 
         if (session?.accessToken) {
           const newToken = session.accessToken;
+
+          // CRITICAL: Prevent infinite loop if NextAuth returns the same expired token
+          // This happens if client/server clocks are out of sync or if refresh logic skipped
+          if (newToken === cachedToken) {
+            console.error("[Axios] Helper: Token refresh returned distinct same token. Forcing logout/reload.");
+            processQueue(new Error("Token refresh loop detected"), null);
+            cachedToken = null;
+            // Optional: Force reload to reset application state
+            if (typeof window !== 'undefined') {
+              // window.location.reload(); 
+            }
+            return Promise.reject(error);
+          }
+
           setAxiosToken(newToken);
 
           // Re-send the original failed request
@@ -134,9 +148,6 @@ axiosClient.interceptors.response.use(
 
         // Clear cache
         cachedToken = null;
-
-        // Optional: Redirect to login or let the app handle the error
-        // window.location.href = '/login'; // Use with caution in library code
 
         return Promise.reject(err);
       } finally {
