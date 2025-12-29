@@ -326,19 +326,35 @@ const knowledgeBaseSlice = createSlice({
       }
     },
 
-    toggleSelectAll: (state, action: PayloadAction<boolean | undefined>) => {
-      const allIds = [...state.folders.map(f => f.id), ...state.documents.map(d => d.id)]
+    toggleSelectAll: (state, action: PayloadAction<boolean | string[] | undefined>) => {
+      if (Array.isArray(action.payload)) {
+        // For selecting specific lists (like tree branch)
+        const newIds = action.payload
+        const currentSelected = new Set(state.selectedIds)
+        newIds.forEach(id => currentSelected.add(id))
+        state.selectedIds = Array.from(currentSelected)
+        return
+      }
+
+      const allVisibleIds = [...state.folders.map(f => f.id), ...state.documents.map(d => d.id)]
       if (action.payload === true) {
-        state.selectedIds = allIds
+        const currentSelected = new Set(state.selectedIds)
+        allVisibleIds.forEach(id => currentSelected.add(id))
+        state.selectedIds = Array.from(currentSelected)
       } else if (action.payload === false) {
-        state.selectedIds = []
+        const currentSelected = new Set(state.selectedIds)
+        allVisibleIds.forEach(id => currentSelected.delete(id))
+        state.selectedIds = Array.from(currentSelected)
       } else {
-        // Toggle behavior if no payload
-        if (state.selectedIds.length === allIds.length) {
-          state.selectedIds = []
+        // Toggle behavior
+        const allSelected = allVisibleIds.every(id => state.selectedIds.includes(id))
+        const currentSelected = new Set(state.selectedIds)
+        if (allSelected) {
+          allVisibleIds.forEach(id => currentSelected.delete(id))
         } else {
-          state.selectedIds = allIds
+          allVisibleIds.forEach(id => currentSelected.add(id))
         }
+        state.selectedIds = Array.from(currentSelected)
       }
     },
 

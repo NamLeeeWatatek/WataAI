@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
-import { wsService } from '@/lib/services/websocket-service';
+import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { useToast } from '@/lib/hooks/use-toast';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 
@@ -79,15 +79,18 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
         }
     }, [toast]);
 
+    // Unified socket connection using the hook
+    const { on, isConnected } = useSocketConnection({
+        namespace: 'notifications',
+        enabled: !!session?.user?.id && !!(session as any)?.accessToken,
+        auth: { token: (session as any)?.accessToken },
+        query: { userId: session?.user?.id }
+    });
+
     useEffect(() => {
-        if (!session?.user?.id || !(session as any)?.accessToken) return;
+        if (!isConnected) return;
 
-        wsService.connect('notifications', {
-            token: (session as any).accessToken,
-            userId: session.user.id
-        });
-
-        const unsubscribe = wsService.on('notifications', 'new_notification', (notification: any) => {
+        const unsubscribe = on('new_notification', (notification: any) => {
             if (notification.type === 'job_progress') {
                 setActiveJobs(prev => {
                     const existingJobIndex = prev.findIndex(j => j.id === notification.data.jobId);
@@ -148,7 +151,7 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
         return () => {
             unsubscribe();
         };
-    }, [session?.user?.id, toast]);
+    }, [isConnected, on, toast]);
 
     return (
         <CreationJobsContext.Provider value={{ activeJobs, addJob, removeJob, refreshJobs: fetchActiveJobs, isLoading }}>

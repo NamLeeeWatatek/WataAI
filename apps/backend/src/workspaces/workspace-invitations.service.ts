@@ -26,7 +26,7 @@ export class WorkspaceInvitationsService {
     private workspacesService: WorkspacesService,
     private mailService: MailService,
     private usersService: UsersService,
-  ) { }
+  ) {}
 
   async create(
     workspaceId: string,

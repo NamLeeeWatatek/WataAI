@@ -39,7 +39,9 @@ export class AddMemberDto {
 }
 
 export class UpdateMemberRoleDto {
-  @ApiPropertyOptional({ enum: [WorkspaceRole.ADMIN, WorkspaceRole.MEMBER, WorkspaceRole.VIEWER] })
+  @ApiPropertyOptional({
+    enum: [WorkspaceRole.ADMIN, WorkspaceRole.MEMBER, WorkspaceRole.VIEWER],
+  })
   @IsEnum([WorkspaceRole.ADMIN, WorkspaceRole.MEMBER, WorkspaceRole.VIEWER])
   role: WorkspaceRole.ADMIN | WorkspaceRole.MEMBER | WorkspaceRole.VIEWER;
 }

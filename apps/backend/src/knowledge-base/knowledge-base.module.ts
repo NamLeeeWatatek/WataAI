@@ -13,6 +13,7 @@ import { KnowledgeBaseFoldersController } from './knowledge-base-folders.control
 import { KnowledgeBaseQueryController } from './knowledge-base-query.controller';
 import { KnowledgeBaseProcessingController } from './knowledge-base-processing.controller';
 import { KnowledgeBaseSyncController } from './knowledge-base-sync.controller';
+import { KnowledgeBaseGateway } from './knowledge-base.gateway';
 
 import { KBManagementService } from './services/kb-management.service';
 import { KBDocumentsService } from './services/kb-documents.service';
@@ -75,6 +76,7 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     KBProcessingQueueService,
     KBSyncService,
     KBCrawlerService,
+    KnowledgeBaseGateway,
   ],
   exports: [
     KBManagementService,

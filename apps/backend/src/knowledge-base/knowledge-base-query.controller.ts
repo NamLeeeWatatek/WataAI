@@ -14,7 +14,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseQueryController {
-  constructor(private readonly ragService: KBRagService) { }
+  constructor(private readonly ragService: KBRagService) {}
 
   @Post('query')
   @ApiOperation({ summary: 'Query knowledge base (vector search)' })

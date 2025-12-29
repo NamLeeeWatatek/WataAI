@@ -4,8 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   Index,
-  ManyToOne,
-  JoinColumn,
+  ManyToMany,
+  JoinTable,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -34,11 +34,15 @@ export class CreationToolEntity extends EntityRelationalHelper {
   @Column({ name: 'cover_image', type: String, nullable: true })
   coverImage?: string;
 
-  @ManyToOne(() => CategoryEntity, {
+  @ManyToMany(() => CategoryEntity, {
     eager: true,
   })
-  @JoinColumn({ name: 'category_id' })
-  category?: CategoryEntity;
+  @JoinTable({
+    name: 'creation_tool_categories',
+    joinColumn: { name: 'creation_tool_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'category_id', referencedColumnName: 'id' },
+  })
+  categories?: CategoryEntity[];
 
   @Column({ name: 'form_config', type: 'jsonb' })
   formConfig: any;

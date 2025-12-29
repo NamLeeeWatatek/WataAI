@@ -42,13 +42,15 @@ interface AdminSidebarProps {
     onCloseSidebar?: () => void
 }
 
+import { PERMISSIONS } from '@/lib/config/permissions'
+
 const getAdminNavigation = (t: any): NavigationItem[] => [
     { name: t('dashboard.title') || 'Dashboard', href: paths.system.root, icon: LayoutDashboard },
-    { name: 'Users', href: paths.system.users.root, icon: Users, permission: 'iam:ListUsers' },
-    { name: 'Roles & Permissions', href: paths.system.roles.root, icon: ShieldCheck, permission: 'iam:ListRoles' },
-    { name: 'Categories', href: paths.system.categories?.root, icon: Folder, permission: 'tools:ListTools' },
-    { name: 'Creation Tools', href: paths.system.creationTools.root, icon: Wrench, permission: 'tools:ListTools' },
-    { name: 'Templates', href: paths.system.templates.root, icon: Sparkles, permission: 'templates:ListTemplates' },
+    { name: 'Users', href: paths.system.users.root, icon: Users, permission: PERMISSIONS.IAM.LIST_USERS },
+    { name: 'Roles & Permissions', href: paths.system.roles.root, icon: ShieldCheck, permission: PERMISSIONS.IAM.LIST_ROLES },
+    { name: 'Categories', href: paths.system.categories?.root, icon: Folder, permission: PERMISSIONS.TOOLS.LIST }, // Assuming Categories uses Tool list permission for now, or add specific later
+    { name: 'Creation Tools', href: paths.system.creationTools.root, icon: Wrench, permission: PERMISSIONS.TOOLS.LIST },
+    { name: 'Templates', href: paths.system.templates.root, icon: Sparkles, permission: PERMISSIONS.TEMPLATES.LIST },
 ]
 
 export const AdminSidebar = React.memo<AdminSidebarProps>(({

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Badge } from '@/components/ui/Badge';
 
 export default function CreationToolsPage() {
     const router = useRouter();
@@ -66,6 +67,24 @@ export default function CreationToolsPage() {
                             <div className="flex items-start justify-between">
                                 <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 mb-4">
                                     <Sparkles className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex gap-2 flex-wrap justify-end max-w-[60%]">
+                                    {(tool.categories || [])
+                                        .slice(0, 3)
+                                        .map((cat) => (
+                                            <Badge
+                                                key={cat.id}
+                                                variant="secondary"
+                                                className="text-[10px] px-2 h-5 font-normal"
+                                            >
+                                                {cat.name}
+                                            </Badge>
+                                        ))}
+                                    {(tool.categories || []).length > 3 && (
+                                        <Badge variant="outline" className="text-[10px] px-1 h-5">
+                                            +{(tool.categories || []).length - 3}
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
                             <CardTitle className="text-xl group-hover:text-primary transition-colors">

@@ -26,6 +26,14 @@ export function WorkspaceInitializer() {
     useEffect(() => {
         // Prevent fetching if already loading, already has error, or not authenticated
         if (status !== 'authenticated' || !session?.user || !session?.accessToken) return;
+
+        // CRITICAL FIX: Set axios workspace ID immediately from session if available.
+        // This prevents race conditions where other components (e.g. ToolsList) fire requests
+        // before the full /workspaces API call below finishes.
+        if (session.workspace?.id) {
+            setActiveWorkspaceId(session.workspace.id);
+        }
+
         if (isWorkspaceLoading || workspaceError || workspaces.length > 0) return;
 
         const fetchWorkspaces = async () => {

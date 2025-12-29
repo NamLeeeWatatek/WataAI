@@ -56,7 +56,7 @@ export class CreationToolsRelationalRepository
     }
 
     if (filterOptions?.category) {
-      where.category = { slug: filterOptions.category };
+      where.categories = { slug: filterOptions.category };
     }
 
     if (filterOptions?.workspaceId) {

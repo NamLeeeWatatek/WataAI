@@ -1,5 +1,6 @@
 ﻿import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { WebhookQueueService } from './webhook-queue.service';
 
 /**
  * Webhook Processing Result
@@ -19,7 +20,7 @@ export interface WebhookProcessingResult {
  *
  * Benefits:
  * - Fast response to webhook sender (<200ms)
- * - Async processing prevents timeouts
+ * - Async processing prevents timeouts (via Redis Queue)
  * - Error handling and retry logic
  * - Easy to extend for new channels
  */
@@ -27,7 +28,10 @@ export abstract class BaseWebhookProcessor<TPayload = any> {
   protected abstract readonly logger: Logger;
   protected abstract readonly channelType: string;
 
-  constructor(protected readonly eventEmitter?: EventEmitter2) {}
+  constructor(
+    protected readonly eventEmitter: EventEmitter2,
+    protected readonly queueService: WebhookQueueService,
+  ) { }
 
   /**
    * Main entry point - validates and queues processing
@@ -44,16 +48,8 @@ export abstract class BaseWebhookProcessor<TPayload = any> {
       `[${this.channelType}] Webhook received, queuing for processing...`,
     );
 
-    // Queue async processing (don't await)
-    setImmediate(() => {
-      this.processAsync(payload, metadata).catch((error) => {
-        this.logger.error(
-          `[${this.channelType}] Async processing failed:`,
-          error.stack,
-        );
-        this.handleProcessingError(error, payload, metadata);
-      });
-    });
+    // Queue to Redis via Service
+    await this.queueService.queueWebhook(this.channelType, payload, metadata);
 
     // Return immediately to webhook sender
     return { success: true };
@@ -62,8 +58,10 @@ export abstract class BaseWebhookProcessor<TPayload = any> {
   /**
    * Async processing implementation
    * Override this in channel-specific processors
+   * 
+   * NOW PUBLIC to be called by Workers
    */
-  protected abstract processAsync(
+  public abstract processPayload(
     payload: TPayload,
     metadata?: Record<string, any>,
   ): Promise<WebhookProcessingResult>;
@@ -178,7 +176,7 @@ export abstract class BaseMessageProcessor<
   /**
    * Process webhook payload
    */
-  protected async processAsync(
+  public async processPayload(
     payload: TPayload,
     metadata?: Record<string, any>,
   ): Promise<WebhookProcessingResult> {

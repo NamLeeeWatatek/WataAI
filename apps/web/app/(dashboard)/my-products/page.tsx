@@ -9,8 +9,8 @@ import { Package, RefreshCw, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { wsService } from '@/lib/services/websocket-service';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -39,25 +39,36 @@ export default function MyProductsPage() {
 
 
     const { user, accessToken } = useAuth();
-    const session = { user: { id: user?.id, ...user }, accessToken };
+
+    // Use the custom hook for socket connection to ensure consistency with other components
+    // and automatic reconnection/auth handling
+    const { on, isConnected } = useSocketConnection({
+        namespace: 'notifications',
+        enabled: !!user?.id && !!accessToken,
+        auth: { token: accessToken },
+        query: { userId: user?.id },
+    });
 
     useEffect(() => {
-        if (!session?.user?.id || !(session as any)?.accessToken) return;
+        if (!isConnected) return;
 
-        wsService.connect('notifications', {
-            token: (session as any).accessToken,
-            userId: session.user.id
-        });
-
-        const unsubscribe = wsService.on('notifications', 'new_notification', (notification: any) => {
+        const handleNotification = (notification: any) => {
+            // We are interested in job_progress and also job_created (to add new item potentially)
+            // For now, focusing on job_progress as requested
             if (notification.type === 'job_progress') {
                 const updatedJobData = notification.data;
+                if (!updatedJobData || !updatedJobData.jobId) return;
+
+                console.log('Realtime update for job:', updatedJobData.jobId, updatedJobData.progress);
 
                 queryClient.setQueryData(['my-products', page, pageSize], (oldData: any) => {
                     if (!oldData || !oldData.data) return oldData;
 
                     const prevJobs = oldData.data as CreationJob[];
                     const jobIndex = prevJobs.findIndex(j => j.id === updatedJobData.jobId);
+
+                    // If job not found in current page, we might ideally want to invalidate queries 
+                    // or just ignore. For now, ignore.
                     if (jobIndex === -1) return oldData;
 
                     const newJobs = [...prevJobs];
@@ -75,13 +86,22 @@ export default function MyProductsPage() {
                         data: newJobs
                     };
                 });
+            } else if (notification.type === 'job_created') {
+                // Optional: Invalidate query to fetch new job if it belongs on page 1
+                // But simply refetching page 1 might disturb user if they are paginating
+                // For "My Products", if we are on page 1, we might want to see it.
+                if (page === 1) {
+                    refetch();
+                }
             }
-        });
+        };
+
+        const unsubscribe = on('new_notification', handleNotification);
 
         return () => {
             unsubscribe();
         };
-    }, [session, queryClient, page, pageSize]);
+    }, [isConnected, on, page, pageSize, queryClient, refetch]);
 
     const handleRefresh = () => {
         refetch();

@@ -255,7 +255,7 @@ export default function BotDetailPage() {
                     </TabsList>
 
                     <TabsContent value="configuration" className="mt-6">
-                        <BotConfigurationTab formData={formData} onChange={handleChange} />
+                        <BotConfigurationTab formData={formData} onChange={handleChange} workspaceId={bot?.workspaceId} />
                     </TabsContent>
 
                     <TabsContent value="knowledge-base" className="mt-6">

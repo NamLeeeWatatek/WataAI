@@ -239,13 +239,32 @@ export function NotificationDropdown({
                               {formatTimeAgo(notification.createdAt)}
                             </span>
                           </div>
+                          {notification.type === 'job_progress' && notification.data?.progress !== undefined && (
+                            <div className="mt-2 space-y-1">
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>Progress</span>
+                                <span>{notification.data.progress}%</span>
+                              </div>
+                              <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary transition-all duration-300 ease-out"
+                                  style={{ width: `${notification.data.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
                           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {notification.message}
                           </p>
                           {notification.workspaceId && (
-                            <div className="mt-2">
-                              <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                {notification.workspaceId.slice(0, 8)}...
+                            <div className="mt-2 flex items-center gap-2">
+                              {notification.data?.status && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-normal">
+                                  {notification.data.status}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-normal text-muted-foreground">
+                                WS: {notification.workspaceId.slice(0, 8)}
                               </Badge>
                             </div>
                           )}

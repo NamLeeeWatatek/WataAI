@@ -22,4 +22,4 @@ import { PermissionsGuard } from './guards/permissions.guard';
   providers: [PermissionsService, PermissionsGuard],
   exports: [PermissionsService, PermissionsGuard],
 })
-export class PermissionsModule { }
+export class PermissionsModule {}

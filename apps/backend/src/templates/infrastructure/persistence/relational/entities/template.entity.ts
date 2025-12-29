@@ -52,6 +52,9 @@ export class TemplateEntity extends EntityRelationalHelper {
   @Column({ name: 'thumbnail_url', type: String, nullable: true })
   thumbnailUrl?: string | null;
 
+  @Column({ name: 'icon', type: String, nullable: true })
+  icon?: string | null;
+
   @Column({ name: 'execution_overrides', type: 'jsonb', nullable: true })
   executionOverrides?: Record<string, any> | null;
 

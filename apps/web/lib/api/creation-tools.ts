@@ -8,8 +8,8 @@ export interface CreationTool {
     description?: string;
     icon?: string;
     coverImage?: string;
-    category?: Category;
-    categoryId?: string;
+    categories?: Category[];
+    categoryIds?: string[];
     formConfig: FormConfig;
     executionFlow: ExecutionFlow;
     isActive: boolean;

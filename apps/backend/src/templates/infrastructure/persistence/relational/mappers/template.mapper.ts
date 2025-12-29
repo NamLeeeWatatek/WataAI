@@ -15,6 +15,7 @@ export class TemplateMapper {
     domainEntity.description = raw.description;
     domainEntity.prefilledData = raw.prefilledData;
     domainEntity.thumbnailUrl = raw.thumbnailUrl;
+    domainEntity.icon = raw.icon;
     domainEntity.executionOverrides = raw.executionOverrides;
     domainEntity.prompt = raw.prompt;
     domainEntity.mediaFiles = raw.mediaFiles;
@@ -49,6 +50,7 @@ export class TemplateMapper {
     persistenceEntity.description = domainEntity.description;
     persistenceEntity.prefilledData = domainEntity.prefilledData;
     persistenceEntity.thumbnailUrl = domainEntity.thumbnailUrl;
+    persistenceEntity.icon = domainEntity.icon;
     persistenceEntity.executionOverrides = domainEntity.executionOverrides;
     persistenceEntity.prompt = domainEntity.prompt;
     persistenceEntity.mediaFiles = domainEntity.mediaFiles;

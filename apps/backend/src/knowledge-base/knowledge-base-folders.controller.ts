@@ -21,7 +21,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseFoldersController {
-  constructor(private readonly foldersService: KBFoldersService) { }
+  constructor(private readonly foldersService: KBFoldersService) {}
 
   @Post('folders')
   @ApiOperation({ summary: 'Create folder' })

@@ -10,11 +10,13 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
   private readonly logger = new Logger(HttpExecutionStrategy.name);
   private readonly engine = new Liquid();
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   async execute(
     config: HttpExecutionConfig,
     inputs: Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    context?: { workspaceId?: string; userId?: string },
   ): Promise<any> {
     this.logger.log(
       `Executing HTTP Strategy: ${config.method} ${config.urlTemplate}`,

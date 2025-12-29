@@ -7,10 +7,12 @@ import {
   IsObject,
   IsBoolean,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateTemplateDto {
   @ApiPropertyOptional({ example: 'creation-tool-id-123', type: String })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   creationToolId?: string | null;
 
@@ -26,6 +28,7 @@ export class CreateTemplateDto {
 
   @ApiPropertyOptional({ example: 'uuid-of-category' })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   categoryId?: string | null;
 
@@ -41,6 +44,11 @@ export class CreateTemplateDto {
   @IsOptional()
   @IsString()
   thumbnailUrl?: string | null;
+
+  @ApiPropertyOptional({ example: 'Sparkles', type: String })
+  @IsOptional()
+  @IsString()
+  icon?: string | null;
 
   @ApiPropertyOptional({ type: Object })
   @IsOptional()

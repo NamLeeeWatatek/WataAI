@@ -6,9 +6,7 @@ import { CreationJobsRepository } from './infrastructure/persistence/creation-jo
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreationJob, CreationJobStatus } from './domain/creation-jobs';
 import { NullableType } from '../utils/types/nullable.type';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { JOB_QUEUE } from '../execution/queue/execution-queue.module';
+import { ExecutionQueueService } from '../execution/queue/execution-queue.service';
 
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { AuditService } from '../audit/audit.service';
@@ -16,7 +14,7 @@ import { AuditService } from '../audit/audit.service';
 @Injectable()
 export class CreationJobsService {
   constructor(
-    @InjectQueue(JOB_QUEUE) private readonly jobQueue: Queue, // Renamed to avoid confusion, but simpler to use generic name
+    private readonly executionQueueService: ExecutionQueueService,
     private readonly creationJobsRepository: CreationJobsRepository,
     private readonly notificationsGateway: NotificationsGateway,
     private readonly auditService: AuditService,
@@ -64,9 +62,7 @@ export class CreationJobsService {
     }
 
     // Trigger async processing (Real Execution Engine)
-    await this.jobQueue.add('execute-creation-job', {
-      creationJob: createdJob,
-    });
+    await this.executionQueueService.addCreationJob(createdJob);
 
     return createdJob;
   }

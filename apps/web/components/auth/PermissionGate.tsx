@@ -1,139 +1,132 @@
 'use client'
 
-import { ReactNode } from 'react'
+import React from 'react'
 import { usePermissions } from '@/lib/hooks/usePermissions'
-import type { ResourceType, PermissionGateProps } from '@/lib/types'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip'
+import { cn } from '@/lib/utils'
 
-export function PermissionGate({
+export interface PermissionGateProps {
+  children: React.ReactNode
+
+  /**
+   * The fallback content to show if permission is denied.
+   * If not provided, children are simply not rendered.
+   */
+  fallback?: React.ReactNode
+
+  /**
+   * Single permission required
+   */
+  permission?: string
+
+  /**
+   * List of permissions required.
+   * By default, ANY of these will grant access.
+   * Use `requireAll` to enforce ALL.
+   */
+  permissions?: string[]
+
+  /**
+   * If true, user must have ALL listed permissions.
+   * If false (default), user needs only ONE of the listed.
+   */
+  requireAll?: boolean
+
+  /**
+   * If defined, renders children but disabled/greyed out if denied.
+   * Usually combined with a tooltip.
+   */
+  renderDisabled?: boolean
+
+  /**
+   * Tooltip message to show when renderDisabled is true and permission is denied.
+   */
+  disabledTooltip?: string
+
+  className?: string
+}
+
+/**
+ * A wrapper component that conditionally renders its children based on user permissions.
+ * 
+ * Usage:
+ * <PermissionGate permission={PERMISSIONS.TOOLS.CREATE}>
+ *   <CreateButton />
+ * </PermissionGate>
+ * 
+ * <PermissionGate 
+ *   permission={PERMISSIONS.TOOLS.DELETE} 
+ *   renderDisabled 
+ *   disabledTooltip="You do not have permission to delete"
+ * >
+ *   <DeleteButton />
+ * </PermissionGate>
+ */
+export const PermissionGate: React.FC<PermissionGateProps> = ({
   children,
   fallback = null,
   permission,
   permissions,
   requireAll = false,
-  resource,
-  action,
-  widget,
-  feature,
-  requireAdmin,
-  requireSuperAdmin,
-  showLoadingFallback = false,
-}: PermissionGateProps) {
-  const {
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    canCreate,
-    canRead,
-    canUpdate,
-    canDelete,
-    canAccessWidget,
-    canAccessFeature,
-    isAdmin,
-    isSuperAdmin,
-    isLoading,
-    capabilities,
-  } = usePermissions()
+  renderDisabled = false,
+  disabledTooltip = "You do not have permission to perform this action",
+  className
+}) => {
+  const { hasPermission, hasAllPermissions, hasAnyPermission, isLoading, isSuperAdmin } = usePermissions()
 
-  if (isLoading && showLoadingFallback) {
-    return <>{fallback}</>
+  // Always allow super admin (though hook handles this, explicit check here is cheap/safe)
+  if (isSuperAdmin()) {
+    return <>{children}</>
   }
 
-  if (isLoading || !capabilities) {
+  // Loading state handling could be added here if critical
+  if (isLoading) {
+    // Optionally return nothing or a skeleton
     return null
   }
 
-  if (requireSuperAdmin && !isSuperAdmin()) {
-    return <>{fallback}</>
-  }
+  let authorized = false
 
-  if (requireAdmin && !isAdmin()) {
-    return <>{fallback}</>
-  }
-
-  if (permission && !hasPermission(permission)) {
-    return <>{fallback}</>
-  }
-
-  if (permissions) {
-    const hasAccess = requireAll
-      ? hasAllPermissions(permissions)
-      : hasAnyPermission(permissions)
-
-    if (!hasAccess) {
-      return <>{fallback}</>
+  if (permission) {
+    authorized = hasPermission(permission)
+  } else if (permissions && permissions.length > 0) {
+    if (requireAll) {
+      authorized = hasAllPermissions(permissions)
+    } else {
+      authorized = hasAnyPermission(permissions)
     }
+  } else {
+    // No permission constraints defined -> Assume public/allowed
+    authorized = true
   }
 
-  if (resource && action) {
-    let hasAccess = false
-    switch (action) {
-      case 'create':
-        hasAccess = canCreate(resource)
-        break
-      case 'read':
-        hasAccess = canRead(resource)
-        break
-      case 'update':
-        hasAccess = canUpdate(resource)
-        break
-      case 'delete':
-        hasAccess = canDelete(resource)
-        break
-    }
-
-    if (!hasAccess) {
-      return <>{fallback}</>
-    }
+  if (authorized) {
+    return <>{children}</>
   }
 
-  if (widget && !canAccessWidget(widget as any)) {
-    return <>{fallback}</>
+  if (renderDisabled) {
+    // If we want to show the UI but disabled
+    // If children is a Button or interactive element, we might need to clone it to add disabled prop,
+    // or just wrap it in a div that captures events.
+    // However, cloning is React-specific and can be brittle.
+    // Better approach: User passes a disabled prop to child? No, PermissionGate shouldn't know child props.
+    // Wrapper approach: "pointer-events-none opacity-50"
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className={cn("inline-flex opacity-50 pointer-events-none cursor-not-allowed", className)} aria-disabled="true">
+              {children}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{disabledTooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
   }
 
-  if (feature && !canAccessFeature(feature as any)) {
-    return <>{fallback}</>
-  }
-
-  return <>{children}</>
+  return <>{fallback}</>
 }
-
-export function AdminOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
-  return (
-    <PermissionGate requireAdmin fallback={fallback}>
-      {children}
-    </PermissionGate>
-  )
-}
-
-export function SuperAdminOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
-  return (
-    <PermissionGate requireSuperAdmin fallback={fallback}>
-      {children}
-    </PermissionGate>
-  )
-}
-
-export function CanCreate({ resource, children, fallback }: { resource: ResourceType; children: ReactNode; fallback?: ReactNode }) {
-  return (
-    <PermissionGate resource={resource} action="create" fallback={fallback}>
-      {children}
-    </PermissionGate>
-  )
-}
-
-export function CanUpdate({ resource, children, fallback }: { resource: ResourceType; children: ReactNode; fallback?: ReactNode }) {
-  return (
-    <PermissionGate resource={resource} action="update" fallback={fallback}>
-      {children}
-    </PermissionGate>
-  )
-}
-
-export function CanDelete({ resource, children, fallback }: { resource: ResourceType; children: ReactNode; fallback?: ReactNode }) {
-  return (
-    <PermissionGate resource={resource} action="delete" fallback={fallback}>
-      {children}
-    </PermissionGate>
-  )
-}
-

@@ -103,7 +103,8 @@ export class AiProvidersService {
     if (
       decrypted.baseUrl &&
       typeof decrypted.baseUrl === 'string' &&
-      decrypted.baseUrl.includes(':')
+      decrypted.baseUrl.includes(':') &&
+      !decrypted.baseUrl.startsWith('http')
     ) {
       try {
         // Only try to decrypt if it looks like encrypted format (has :)
@@ -186,9 +187,16 @@ export class AiProvidersService {
     prompt: string,
     model: string,
     apiKey?: string | null,
+    baseURL?: string | null,
   ): Promise<string> {
     const key = apiKey || (await this.getApiKey('openai'));
-    const openai = new OpenAI({ apiKey: key });
+    const clientConfig: any = { apiKey: key };
+    if (baseURL) {
+      clientConfig.baseURL = baseURL.endsWith('/v1')
+        ? baseURL
+        : `${baseURL.replace(/\/$/, '')}/v1`;
+    }
+    const openai = new OpenAI(clientConfig);
     const response = await openai.chat.completions.create({
       model,
       messages: [{ role: 'user', content: prompt }],
@@ -200,9 +208,16 @@ export class AiProvidersService {
     messages: ChatMessage[],
     model: string,
     apiKey?: string | null,
+    baseURL?: string | null,
   ): Promise<string> {
     const key = apiKey || (await this.getApiKey('openai'));
-    const openai = new OpenAI({ apiKey: key });
+    const clientConfig: any = { apiKey: key };
+    if (baseURL) {
+      clientConfig.baseURL = baseURL.endsWith('/v1')
+        ? baseURL
+        : `${baseURL.replace(/\/$/, '')}/v1`;
+    }
+    const openai = new OpenAI(clientConfig);
     const response = await openai.chat.completions.create({
       model,
       messages: messages.map((m) => ({ role: m.role, content: m.content })),
@@ -271,9 +286,13 @@ export class AiProvidersService {
     model: string,
     baseURL?: string | null,
   ): Promise<string> {
-    const url = baseURL || 'http://localhost:11434/v1';
+    let url = baseURL || 'http://localhost:11434';
+    if (url && !url.endsWith('/v1') && !url.endsWith('/v1/')) {
+      url = url.endsWith('/') ? `${url}v1` : `${url}/v1`;
+    }
+
     const openai = new OpenAI({
-      apiKey: 'ollama', // Dummy key, Ollama doesn't need auth
+      apiKey: 'no-key-required',
       baseURL: url,
     });
     const response = await openai.chat.completions.create({
@@ -288,9 +307,13 @@ export class AiProvidersService {
     model: string,
     baseURL?: string | null,
   ): Promise<string> {
-    const url = baseURL || 'http://localhost:11434/v1';
+    let url = baseURL || 'http://localhost:11434';
+    if (url && !url.endsWith('/v1') && !url.endsWith('/v1/')) {
+      url = url.endsWith('/') ? `${url}v1` : `${url}/v1`;
+    }
+
     const openai = new OpenAI({
-      apiKey: 'ollama', // Dummy key, Ollama doesn't need auth
+      apiKey: 'no-key-required',
       baseURL: url,
     });
     const response = await openai.chat.completions.create({
@@ -426,7 +449,93 @@ export class AiProvidersService {
   }
 
   async verifyUserConfig(userId: string, id: string): Promise<boolean> {
+    const config = await this.getUserConfig(userId, id);
+    if (!config) {
+      throw new NotFoundException('Configuration not found');
+    }
+
+    if (!config.provider) {
+      throw new BadRequestException('Provider not linked to configuration');
+    }
+
+    // Perform actual verification
+    await this.verifyProviderConnection(config.provider, config.config);
+
     return this.aiProviderConfigRepository.verifyUserConfig(userId, id);
+  }
+
+  /**
+   * Verified provider connection.
+   * Supports dynamic/custom providers by falling back to OpenAI-compatible check
+   * if the specific provider SDK is not hardcoded.
+   */
+  private async verifyProviderConnection(
+    provider: AiProvider,
+    config: Record<string, any>,
+  ): Promise<void> {
+    try {
+      const providerKey = provider.key.toLowerCase();
+
+      // 1. Explicit handlers for proprietary APIs
+      if (providerKey === 'anthropic') {
+        const anthropic = new Anthropic({ apiKey: config.apiKey });
+        await anthropic.messages.create({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'Hi' }],
+        });
+        return;
+      }
+
+      if (providerKey === 'google') {
+        const genAI = new GoogleGenerativeAI(config.apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        await model.generateContent('Hi');
+        return;
+      }
+
+      // 2. Generic / OpenAI Compatible Handler
+      // This covers: 'openai', 'ollama', 'azure' (configured as custom),
+      // and ANY user-added provider (e.g. 'deepseek', 'groq', 'local')
+
+      let baseURL = config.baseUrl;
+      let apiKey = config.apiKey;
+
+      // Special defaults and normalization for Ollama
+      if (providerKey === 'ollama') {
+        baseURL = baseURL || 'http://localhost:11434';
+        // OpenAI compatibility layer in Ollama is under /v1
+        if (baseURL && !baseURL.endsWith('/v1') && !baseURL.endsWith('/v1/')) {
+          baseURL = baseURL.endsWith('/')
+            ? `${baseURL}v1`
+            : `${baseURL}/v1`;
+        }
+      }
+
+      // If we have a baseURL but no apiKey, use a dummy key
+      // Many local/custom providers (Ollama, LocalAI) don't need auth
+      if (baseURL && !apiKey) {
+        apiKey = 'no-key-required';
+      }
+
+      // Prepare OpenAI client configuration
+      const clientConfig: any = { apiKey: apiKey };
+
+      if (baseURL) {
+        // Ensure /v1 is handled if needed, though standard clients might expect user to provide it
+        // or we just trust the user's input.
+        clientConfig.baseURL = baseURL;
+      }
+
+      const client = new OpenAI(clientConfig);
+      await client.models.list();
+    } catch (error) {
+      const message = error.response?.data?.error?.message || error.message;
+      this.logger.error(`Validation failed for ${provider.key}: ${message}`);
+      throw new BadRequestException(
+        `Failed to connect to ${provider.label}: ${message}`,
+      );
+    }
   }
 
   // Workspace configuration methods
@@ -685,17 +794,30 @@ export class AiProvidersService {
     provider?: string,
     apiKey?: string | null,
     workspaceId?: string,
+    baseURL?: string | null,
   ): Promise<string> {
     const providerKey = provider || 'openai'; // default to openai
 
     switch (providerKey) {
       case 'openai':
-        return this.chatWithOpenAI(prompt, model, apiKey);
+        return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
       case 'anthropic':
         return this.chatWithAnthropic(prompt, model, apiKey);
       case 'ollama':
-        return this.chatWithOllama(prompt, model, null);
+        return this.chatWithOllama(prompt, model, baseURL);
+      case 'google':
+        return this.chatWithGoogleHistory(
+          [{ role: 'user', content: prompt }],
+          model,
+          apiKey,
+        );
+      case 'custom':
+        return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
       default:
+        // Try OpenAI compatible as fallback for unknown providers
+        if (baseURL) {
+          return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
+        }
         throw new BadRequestException(`Unsupported provider: ${providerKey}`);
     }
   }
@@ -733,7 +855,9 @@ export class AiProvidersService {
       case 'anthropic':
         return this.chatWithAnthropicHistory(messages, model, actualApiKey);
       case 'ollama':
-        return this.chatWithOllamaHistory(messages, model, actualApiKey); // actualApiKey can be baseUrl for Ollama
+        return this.chatWithOllamaHistory(messages, model, actualApiKey);
+      case 'google':
+        return this.chatWithGoogleHistory(messages, model, actualApiKey);
       default:
         throw new BadRequestException(`Unsupported provider: ${providerKey}`);
     }
@@ -920,18 +1044,28 @@ export class AiProvidersService {
       // Decrypt sensitive fields
       const decryptedConfig = this.decryptConfig(config);
 
+      // 3. Extract the actual credential values
+      const credentials = (decryptedConfig as any).config || decryptedConfig;
+      const apiKey = credentials.apiKey;
+      const baseUrl = credentials.baseUrl;
+
       // Fetch models based on provider
       switch (providerType) {
         case 'openai':
-          return await this.fetchOpenAIModels(decryptedConfig.apiKey);
+          return await this.fetchOpenAIModels(apiKey);
         case 'anthropic':
-          return await this.fetchAnthropicModels(decryptedConfig.apiKey);
+          return await this.fetchAnthropicModels(apiKey);
         case 'google':
-          return await this.fetchGoogleModels(decryptedConfig.apiKey);
+          return await this.fetchGoogleModels(apiKey);
         case 'ollama':
-          return await this.fetchOllamaModels(decryptedConfig.baseUrl);
+          return await this.fetchOllamaModels(baseUrl);
+        case 'custom':
         default:
-          return []; // Return empty array for unsupported providers
+          // Fallback to OpenAI compatible for custom or unknown providers
+          return await this.fetchOpenAIModels(
+            apiKey || 'no-key-required',
+            baseUrl,
+          );
       }
     } catch (error) {
       this.logger.error(
@@ -942,9 +1076,19 @@ export class AiProvidersService {
     }
   }
 
-  private async fetchOpenAIModels(apiKey: string): Promise<string[]> {
+  private async fetchOpenAIModels(
+    apiKey: string,
+    baseURL?: string,
+  ): Promise<string[]> {
     try {
-      const openai = new OpenAI({ apiKey });
+      const clientConfig: any = { apiKey };
+      if (baseURL) {
+        // Normalize baseURL for OpenAI client
+        clientConfig.baseURL = baseURL.endsWith('/v1')
+          ? baseURL
+          : `${baseURL.replace(/\/$/, '')}/v1`;
+      }
+      const openai = new OpenAI(clientConfig);
       const response = await openai.models.list();
 
       // Filter to commonly used models and return their IDs
@@ -1000,11 +1144,13 @@ export class AiProvidersService {
 
       // Return known models if API key works
       const knownModels = [
-        'gemini-2.0-flash-exp',
+        'gemini-3-pro-preview',
+        'gemini-3-flash-preview',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
         'gemini-1.5-pro',
         'gemini-1.5-flash',
-        'gemini-1.0-pro',
-        'gemini-pro',
       ];
 
       // Test additional models to see what works
@@ -1025,11 +1171,13 @@ export class AiProvidersService {
       );
       // Return basic static list as fallback for UX
       return [
-        'gemini-2.0-flash-exp',
+        'gemini-3-pro-preview',
+        'gemini-3-flash-preview',
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
         'gemini-1.5-pro',
         'gemini-1.5-flash',
-        'gemini-1.0-pro',
-        'gemini-pro',
       ];
     }
   }
@@ -1065,17 +1213,40 @@ export class AiProvidersService {
 
   private async fetchOllamaModels(baseURL?: string): Promise<string[]> {
     try {
-      const url = baseURL || 'http://localhost:11434';
+      // Robust URL normalization
+      let url = baseURL || 'http://localhost:11434';
+      if (typeof url === 'string') {
+        url = url.trim().replace(/\/$/, '');
+        // If protocol missing, assume http for local network ease
+        if (!url.startsWith('http')) {
+          url = `http://${url}`;
+        }
+      }
+
+      // Ollama's native API is at the root, strip /v1 if present for this native call
+      const nativeUrl = url.replace(/\/v1$/, '');
+
+      // Use Ollama's native API to get the list of tags/models
+      this.logger.log(`Fetching Ollama models from native API: ${nativeUrl}/api/tags`);
+      const response = await fetch(`${nativeUrl}/api/tags`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && Array.isArray(data.models)) {
+          return data.models.map((m: any) => m.name).sort();
+        }
+      }
+
+      // Fallback to OpenAI compatible list if /api/tags fails or returned non-expected data
+      this.logger.log(`Ollama native API failed or returned unexpected data, trying OpenAI compatible endpoint: ${url}/v1/models`);
       const openai = new OpenAI({
-        apiKey: 'ollama',
-        baseURL: `${url}/v1`,
+        apiKey: 'no-key-required',
+        baseURL: url.endsWith('/v1') ? url : `${url}/v1`,
       });
 
-      const response = await openai.models.list();
-      return response.data.map((model) => model.id).sort();
+      const openAiResponse = await openai.models.list();
+      return openAiResponse.data.map((model) => model.id).sort();
     } catch (error) {
       this.logger.warn(`Ollama model fetch failed: ${error.message}`);
-      // Return common Ollama models as fallback
       return [
         'llama3.1:8b',
         'llama3.1:70b',
@@ -1114,8 +1285,12 @@ export class AiProvidersService {
           return await this.fetchGoogleModels(decryptedConfig.apiKey);
         case 'ollama':
           return await this.fetchOllamaModels(decryptedConfig.baseUrl);
+        case 'custom':
         default:
-          return []; // Return empty array for unsupported providers
+          return await this.fetchOpenAIModels(
+            decryptedConfig.apiKey || 'no-key-required',
+            decryptedConfig.baseUrl,
+          );
       }
     } catch (error) {
       this.logger.error(
@@ -1158,6 +1333,7 @@ export class AiProvidersService {
         apiKey: string;
         providerKey: string;
         model: string;
+        baseUrl?: string;
       } = null;
       let configSource = 'fallback'; // Track where config came from
 
@@ -1179,6 +1355,7 @@ export class AiProvidersService {
               apiKey: systemProviderConfig.config.apiKey,
               providerKey: systemProviderConfig.provider?.key || 'openai',
               model: systemSettings.defaultModel,
+              baseUrl: systemProviderConfig.config.baseUrl,
             };
             configSource = 'system-defaults';
             this.logger.log(
@@ -1246,6 +1423,7 @@ export class AiProvidersService {
               apiKey: activeConfig.config.apiKey,
               providerKey: activeConfig.provider?.key || 'openai',
               model: chatModel,
+              baseUrl: activeConfig.config.baseUrl,
             };
             configSource = 'active-user-config';
             this.logger.log(
@@ -1300,6 +1478,7 @@ export class AiProvidersService {
               apiKey: botConfig.config.apiKey,
               providerKey: botConfig.provider?.key || 'openai',
               model: chatModel,
+              baseUrl: botConfig.config.baseUrl,
             };
             configSource = 'bot-config';
             this.logger.log(
@@ -1389,6 +1568,8 @@ Please structure your response as:
             aiConfig.model,
             aiConfig.providerKey,
             aiConfig.apiKey,
+            undefined,
+            aiConfig.baseUrl,
           );
           generationMethod = 'ai-powered';
           this.logger.log(

@@ -14,7 +14,6 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup';
-import { Slider } from '@/components/ui/Slider';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Loader2, ArrowLeft, Sparkles, Check, Search, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X } from 'lucide-react';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -22,14 +21,10 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
-import { Progress } from '@/components/ui/Progress';
-import { wsService } from '@/lib/services/websocket-service';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
     Form,
     FormControl,
@@ -45,6 +40,7 @@ import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { FileDropzone } from '@/components/ui/FileUpload';
 
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
+import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore';
 
 export default function CreationToolDetailPage() {
     const params = useParams();
@@ -69,11 +65,26 @@ export default function CreationToolDetailPage() {
         defaultValues: {},
     });
 
+    const setBreadcrumbName = useBreadcrumbStore(state => state.setBreadcrumbName)
+    const removeBreadcrumbName = useBreadcrumbStore(state => state.removeBreadcrumbName)
+
     useEffect(() => {
         if (params.slug) {
             loadTool(params.slug as string);
+            // Since slug is unique, we can use it as key, or use tool ID if URL has it. 
+            // Here URL has slug, so DashboardBreadcrumb sees slug.
+            // We want to map slug -> tool.name
+        }
+        return () => {
+            if (params.slug) removeBreadcrumbName(params.slug as string)
         }
     }, [params.slug]);
+
+    useEffect(() => {
+        if (tool && params.slug) {
+            setBreadcrumbName(params.slug as string, tool.name)
+        }
+    }, [tool, params.slug, setBreadcrumbName])
 
     // Handle Search and Filter via SERVER-SIDE API
     useEffect(() => {
@@ -399,9 +410,9 @@ export default function CreationToolDetailPage() {
                                                 {formField.value ? (
                                                     <div className="relative group rounded-lg border border-border/50 bg-card overflow-hidden hover:shadow-sm transition-all p-4 flex items-center justify-between">
                                                         <div className="flex items-center gap-3 overflow-hidden">
-                                                            {typeof formField.value === 'object' && formField.value.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value.url) ? (
+                                                            {typeof formField.value === 'string' && /\.(jpg|jpeg|png|gif|webp)$/i.test(formField.value) ? (
                                                                 <div className="w-10 h-10 rounded bg-muted flex-shrink-0 relative overflow-hidden">
-                                                                    <img src={formField.value.url} alt="Preview" className="w-full h-full object-cover" />
+                                                                    <img src={formField.value} alt="Preview" className="w-full h-full object-cover" />
                                                                 </div>
                                                             ) : (
                                                                 <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
@@ -410,7 +421,7 @@ export default function CreationToolDetailPage() {
                                                             )}
                                                             <div className="flex flex-col min-w-0">
                                                                 <span className="text-sm font-medium truncate">
-                                                                    {typeof formField.value === 'object' && formField.value.name ? formField.value.name : 'File uploaded'}
+                                                                    {typeof formField.value === 'string' ? formField.value.split('/').pop() : 'File uploaded'}
                                                                 </span>
                                                                 <span className="text-xs text-muted-foreground">Ready to submit</span>
                                                             </div>
@@ -430,11 +441,7 @@ export default function CreationToolDetailPage() {
                                                         height="h-32"
                                                         maxSize={50 * 1024 * 1024} // 50MB
                                                         onUploadComplete={(url, fileData) => {
-                                                            formField.onChange({
-                                                                url,
-                                                                name: fileData.name,
-                                                                id: fileData.id
-                                                            });
+                                                            formField.onChange(url);
                                                         }}
                                                         onUploadError={(error) => {
                                                             toast({

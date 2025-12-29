@@ -33,7 +33,12 @@ export class ChannelConnectionEntity extends WorkspaceOwnedEntity {
   @JoinColumn({ name: 'credential_id' })
   credential?: ChannelCredentialEntity;
 
-  @Column({ name: 'access_token', type: String, nullable: true })
+  @Column({
+    name: 'access_token',
+    type: String,
+    nullable: true,
+    transformer: new EncryptionTransformer(),
+  })
   accessToken?: string | null;
 
   @Column({ type: 'jsonb', nullable: true })

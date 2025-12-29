@@ -19,7 +19,7 @@ import { BotAppearanceService } from '../services/bot-appearance.service';
 @UseGuards(JwtAuthGuard, WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'bots/:botId/widget/appearance', version: '1' })
 export class WidgetAppearanceController {
-  constructor(private readonly appearanceService: BotAppearanceService) { }
+  constructor(private readonly appearanceService: BotAppearanceService) {}
 
   @Get()
   @Permissions('chatbot:ReadBot')
@@ -36,10 +36,6 @@ export class WidgetAppearanceController {
     @Body() body: any,
     @Request() req: any,
   ) {
-    return this.appearanceService.updateAppearance(
-      botId,
-      body,
-      req.user.id,
-    );
+    return this.appearanceService.updateAppearance(botId, body, req.user.id);
   }
 }

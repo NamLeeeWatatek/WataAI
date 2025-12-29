@@ -13,17 +13,20 @@ import { usePermissions } from '@/lib/hooks/usePermissions'
 import { GrSystem } from "react-icons/gr";
 
 import { usePathname } from 'next/navigation'
-
 import { paths } from '@/lib/routes'
+import { PERMISSIONS } from '@/lib/config/permissions'
 
 const AdminLink = () => {
-    const { capabilities } = usePermissions()
+    const { hasPermission } = usePermissions()
     const pathname = usePathname()
 
     // Hide if already in system admin
     if (pathname?.startsWith(paths.system.root)) return null
 
-    if (!capabilities?.features?.is_admin && !capabilities?.can_read?.settings) return null
+    // Strictly check for System Admin access using the same permission as the Layout Guard
+    const canAccessSystem = hasPermission(PERMISSIONS.SYSTEM.FULL_ACCESS)
+
+    if (!canAccessSystem) return null
 
     return (
         <Button

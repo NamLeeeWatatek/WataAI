@@ -42,6 +42,12 @@ export class Template {
   })
   thumbnailUrl?: string | null;
 
+  @ApiPropertyOptional({
+    type: String,
+    description: 'Template icon name',
+  })
+  icon?: string | null;
+
   // NEW: Optional execution overrides
   @ApiPropertyOptional({
     type: Object,

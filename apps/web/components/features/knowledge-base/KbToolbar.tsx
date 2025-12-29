@@ -34,38 +34,6 @@ export function KbToolbar({
   selectedCount = 0,
   onDeleteSelected
 }: KbToolbarProps) {
-  if (selectedCount > 0) {
-    return (
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 border-b animate-in fade-in slide-in-from-top-2 duration-300">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full border border-primary/20">
-            <span className="font-bold text-sm h-5 w-5 flex items-center justify-center bg-primary text-primary-foreground rounded-full text-xs">
-              {selectedCount}
-            </span>
-            <span className="font-medium text-sm">Selected</span>
-          </div>
-          <div className="w-px h-6 bg-border mx-2" />
-          <div className="flex items-center gap-2">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={onDeleteSelected}
-              className="shadow-sm font-semibold transition-all hover:shadow-md hover:scale-105 active:scale-95"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Selected
-            </Button>
-          </div>
-        </div>
-        {/* Push standard controls to right if needed or hide them? 
-             Actually, usually bulk actions replace the filter bar or sit alongside.
-             Let's keep it clean: only show bulk actions on the left, but maybe allow some standard actions? 
-             No, usually you want to focus on the bulk action.
-             But the user might want to cancel.
-         */}
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 border-b">

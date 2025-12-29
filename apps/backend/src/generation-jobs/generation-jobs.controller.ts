@@ -34,7 +34,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
   version: '1',
 })
 export class GenerationJobsController {
-  constructor(private readonly generationJobsService: GenerationJobsService) { }
+  constructor(private readonly generationJobsService: GenerationJobsService) {}
 
   @Post()
   @Permissions('job:Create')

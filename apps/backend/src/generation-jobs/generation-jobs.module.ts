@@ -18,4 +18,4 @@ import { PermissionsModule } from '../permissions/permissions.module';
   providers: [GenerationJobsService],
   exports: [GenerationJobsService, RelationalGenerationJobPersistenceModule],
 })
-export class GenerationJobsModule { }
+export class GenerationJobsModule {}

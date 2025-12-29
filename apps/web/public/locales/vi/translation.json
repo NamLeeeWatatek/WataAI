@@ -317,5 +317,11 @@
       "createNewAccount": "Tạo tài khoản mới",
       "returnHome": "Quay lại Trang chủ"
     }
+  },
+  "job": {
+    "startedTitle": "Bắt đầu xử lý",
+    "startedMessage": "Yêu cầu tạo nội dung của bạn đã được đưa vào hàng đợi.",
+    "updateTitle": "Cập nhật tiến trình",
+    "progressUpdate": "Tiến độ: {{progress}}% "
   }
 }

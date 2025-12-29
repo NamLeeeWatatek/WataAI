@@ -38,7 +38,7 @@ import { WorkspaceAccessGuard } from './guards/workspace-access.guard';
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
 @Controller({ path: 'workspaces', version: '1' })
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService) { }
+  constructor(private readonly workspacesService: WorkspacesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create workspace' })
@@ -126,7 +126,12 @@ export class WorkspacesController {
     @Body() body: AddMemberDto,
     @Request() req,
   ) {
-    return this.workspacesService.addMember(id, body.userId, body.role, req.user.id);
+    return this.workspacesService.addMember(
+      id,
+      body.userId,
+      body.role,
+      req.user.id,
+    );
   }
 
   @Permissions('iam:UpdateMember')

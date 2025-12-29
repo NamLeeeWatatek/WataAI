@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-
-export const JOB_QUEUE = 'generation-jobs';
+import { ExecutionQueueService } from './execution-queue.service';
+import { JOB_QUEUE } from './execution-queue.constants';
 
 @Module({
   imports: [
@@ -9,6 +9,7 @@ export const JOB_QUEUE = 'generation-jobs';
       name: JOB_QUEUE,
     }),
   ],
-  exports: [BullModule],
+  providers: [ExecutionQueueService],
+  exports: [BullModule, ExecutionQueueService],
 })
-export class ExecutionQueueModule {}
+export class ExecutionQueueModule { }

@@ -8,6 +8,7 @@ import {
   IsBoolean,
   IsNumber,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {
   @ApiPropertyOptional({
@@ -16,6 +17,7 @@ export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {
     description: 'Creation Tool ID this template belongs to',
   })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   creationToolId?: string | null;
 
@@ -64,6 +66,14 @@ export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {
   @IsOptional()
   @IsString()
   thumbnailUrl?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'Sparkles',
+    description: 'Template icon name',
+  })
+  @IsOptional()
+  @IsString()
+  icon?: string | null;
 
   @ApiPropertyOptional({
     type: Object,

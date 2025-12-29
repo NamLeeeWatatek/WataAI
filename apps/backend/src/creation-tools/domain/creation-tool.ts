@@ -117,8 +117,8 @@ export class CreationTool {
   @ApiPropertyOptional({ type: String })
   coverImage?: string;
 
-  @ApiPropertyOptional({ type: () => Category })
-  category?: Category;
+  @ApiPropertyOptional({ type: () => [Category] })
+  categories?: Category[];
 
   @ApiProperty({ type: Object, description: 'Dynamic form configuration' })
   formConfig: FormConfig;

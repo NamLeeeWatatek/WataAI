@@ -43,4 +43,4 @@ import { forwardRef } from '@nestjs/common';
   ],
   exports: [AiProvidersService],
 })
-export class AiProvidersModule { }
+export class AiProvidersModule {}

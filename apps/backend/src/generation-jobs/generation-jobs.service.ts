@@ -5,16 +5,13 @@ import { GenerationJob } from './domain/generation-job';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { NullableType } from '../utils/types/nullable.type';
 import { DeepPartial } from '../utils/types/deep-partial.type';
-
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { JOB_QUEUE } from '../execution/queue/execution-queue.module';
+import { ExecutionQueueService } from '../execution/queue/execution-queue.service';
 
 @Injectable()
 export class GenerationJobsService {
   constructor(
     private readonly generationJobRepository: GenerationJobRepository,
-    @InjectQueue(JOB_QUEUE) private readonly jobQueue: Queue,
+    private readonly executionQueueService: ExecutionQueueService,
     private readonly i18n: I18nService,
   ) { }
 
@@ -24,7 +21,7 @@ export class GenerationJobsService {
     const job = await this.generationJobRepository.create(data);
 
     // Push to Queue (Fire and forget, or await if critical)
-    await this.jobQueue.add('process-job', { generationJob: job });
+    await this.executionQueueService.addGenerationJob(job);
 
     return job;
   }

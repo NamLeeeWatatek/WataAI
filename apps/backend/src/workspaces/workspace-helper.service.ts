@@ -18,7 +18,7 @@ export class WorkspaceHelperService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private memberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     const membership = await this.memberRepository.findOne({

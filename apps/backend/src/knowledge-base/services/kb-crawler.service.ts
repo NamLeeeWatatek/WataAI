@@ -44,7 +44,7 @@ export class KBCrawlerService {
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async crawlUrl(url: string): Promise<CrawlResult> {
     try {
@@ -84,7 +84,7 @@ export class KBCrawlerService {
           try {
             const absoluteUrl = new URL(href, url).href;
             links.push(absoluteUrl);
-          } catch (e) {}
+          } catch (e) { }
         }
       });
 
@@ -144,6 +144,14 @@ export class KBCrawlerService {
     const urlsToCrawl: Array<{ url: string; depth: number }> = [
       { url: startUrl, depth: 0 },
     ];
+
+    const crawlJobId = this.processingQueue.addJob(
+      'crawl-' + Date.now(),
+      knowledgeBaseId,
+      'crawl',
+    );
+    this.processingQueue.setJobDocumentName(crawlJobId, `Crawl: ${startUrl}`);
+    this.processingQueue.startJob(crawlJobId);
 
     while (urlsToCrawl.length > 0 && documentsCreated < maxPages) {
       const { url, depth } = urlsToCrawl.shift()!;
@@ -242,7 +250,15 @@ export class KBCrawlerService {
         this.logger.error(`Error crawling ${url}: ${error.message}`);
         errors.push(`${url}: ${error.message}`);
       }
+
+      this.processingQueue.updateJobProgress(
+        crawlJobId,
+        documentsCreated,
+        maxPages,
+      );
     }
+
+    this.processingQueue.completeJob(crawlJobId);
 
     this.logger.log(
       `Crawling completed: ${documentsCreated} documents created, ${processingStarted} processing started, ${errors.length} errors`,

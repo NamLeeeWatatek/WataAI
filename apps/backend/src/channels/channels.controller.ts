@@ -22,7 +22,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'channels', version: '1' })
 export class ChannelsController {
-  constructor(private readonly channelsService: ChannelsService) { }
+  constructor(private readonly channelsService: ChannelsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })

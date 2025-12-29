@@ -242,7 +242,10 @@ export function DataTable<T = any>({
       const tableRow = (
         <TableRow
           key={id}
-          className={cn(onRowClick && "cursor-pointer")}
+          className={cn(
+            onRowClick && "cursor-pointer",
+            selectedIds.includes(id) && "bg-primary/5 hover:bg-primary/10"
+          )}
           onClick={() => onRowClick?.(row)}
           draggable={!!onRowDragStart}
           onDragStart={(e) => onRowDragStart?.(e, row)}
@@ -283,7 +286,7 @@ export function DataTable<T = any>({
                     </>
                   )}
                   <div className={cn(isSelection && "flex items-center justify-center w-full")}>
-                    {isSelection ? (
+                    {(isSelection && !column.render) ? (
                       <Checkbox
                         style={{ padding: '0 !important' }}
                         checked={selectedIds.includes(id)}
@@ -347,7 +350,7 @@ export function DataTable<T = any>({
                   )}
                   onClick={() => handleSort(column.key, column.sortable !== false)}
                 >
-                  {column.key === 'selection' ? (
+                  {(column.key === 'selection' && !column.label) ? (
                     <div className="flex justify-center items-center h-full w-full">
                       <Checkbox
                         checked={isAllPageSelected || (isSomePageSelected ? "indeterminate" : false)}

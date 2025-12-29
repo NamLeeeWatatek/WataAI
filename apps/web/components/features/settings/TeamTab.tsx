@@ -256,20 +256,6 @@ export function TeamTab() {
                 </div>
             )}
 
-            {/* Guide Box */}
-            <div className="bg-blue-50/50 border border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30 rounded-2xl p-5 text-sm text-muted-foreground flex items-start gap-4">
-                <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl shrink-0">
-                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="space-y-1 pt-1">
-                    <h4 className="font-bold text-foreground">How invitations work</h4>
-                    <p className="leading-relaxed">
-                        Invited members will receive an email with instructions to join.
-                        They will be automatically added to this workspace upon logging in or registering with their invited email address.
-                    </p>
-                </div>
-            </div>
-
             <InviteMemberDialog
                 workspaceId={workspace.id}
                 open={inviteOpen}

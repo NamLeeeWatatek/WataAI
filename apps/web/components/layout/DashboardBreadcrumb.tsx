@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -62,6 +63,8 @@ const navigation: NavigationItem[] = [
 export const DashboardBreadcrumb = React.memo(() => {
     const pathname = usePathname()
 
+    const breadcrumbNames = useBreadcrumbStore((state) => state.names)
+
     const breadcrumbItems = useMemo(() => {
         if (pathname === '/dashboard') return null
 
@@ -80,7 +83,16 @@ export const DashboardBreadcrumb = React.memo(() => {
             )
 
             const childItem = navItem?.children?.find(child => child.href === currentPath)
-            const label = childItem?.name || navItem?.name || segment.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+
+            // Priority: Store override > Navigation match > Auto formatted
+            let label = breadcrumbNames[segment] || childItem?.name || navItem?.name;
+
+            if (!label) {
+                // If it's a UUID-like string and no name in store, try to keep it shorter or formatting
+                // But for now, just auto-format
+                label = segment.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+            }
+
             const Icon = (index === 0 && navItem?.icon) ? navItem.icon : null
 
             items.push(
@@ -106,7 +118,7 @@ export const DashboardBreadcrumb = React.memo(() => {
         })
 
         return items
-    }, [pathname])
+    }, [pathname, breadcrumbNames])
 
     return (
         <Breadcrumb>

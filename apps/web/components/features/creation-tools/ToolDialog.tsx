@@ -16,13 +16,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { ExecutionConfig } from './ExecutionConfig';
 import { ExecutionFlow } from '@/lib/api/creation-tools';
 import { Label } from '@/components/ui/Label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/Select';
+
 import { useCategories } from '@/lib/hooks/useCategories';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -49,7 +43,7 @@ export function ToolDialog({
     const [slug, setSlug] = useState('');
     const [description, setDescription] = useState('');
     const [icon, setIcon] = useState('');
-    const [category, setCategory] = useState('');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [isActive, setIsActive] = useState(true);
     const [formConfig, setFormConfig] = useState<FormConfig>({ fields: [], submitLabel: 'Generate' });
     const [executionFlow, setExecutionFlow] = useState<ExecutionFlow>({ type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' });
@@ -65,7 +59,12 @@ export function ToolDialog({
             setSlug(tool.slug || '');
             setDescription(tool.description || '');
             setIcon(tool.icon || '');
-            setCategory(tool.category?.id || '');
+            // Handle both legacy single category and new multiple categories
+            const cats = tool.categories?.map(c => c.id) || [];
+            if (cats.length === 0 && (tool as any).category?.id) {
+                cats.push((tool as any).category.id);
+            }
+            setSelectedCategories(cats);
             setIsActive(tool.isActive ?? true);
             setFormConfig(tool.formConfig || { fields: [], submitLabel: 'Generate' });
             setExecutionFlow(tool.executionFlow || { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' });
@@ -79,7 +78,7 @@ export function ToolDialog({
         setSlug('');
         setDescription('');
         setIcon('');
-        setCategory('');
+        setSelectedCategories([]);
         setIsActive(true);
         setFormConfig({ fields: [], submitLabel: 'Generate' });
         setExecutionFlow({ type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' });
@@ -97,7 +96,7 @@ export function ToolDialog({
                 slug,
                 description,
                 icon,
-                categoryId: category,
+                categoryIds: selectedCategories,
                 isActive,
                 formConfig,
                 executionFlow,
@@ -162,13 +161,30 @@ export function ToolDialog({
                                         <Input value={slug} disabled className="bg-muted/50" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Category</Label>
-                                        <Select value={category} onValueChange={setCategory}>
-                                            <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                                            <SelectContent>
-                                                {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label>Categories</Label>
+                                        <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto bg-muted/20">
+                                            {categories.map(c => (
+                                                <div key={c.id} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`cat-${c.id}`}
+                                                        checked={selectedCategories.includes(c.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) {
+                                                                setSelectedCategories(prev => [...prev, c.id]);
+                                                            } else {
+                                                                setSelectedCategories(prev => prev.filter(id => id !== c.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`cat-${c.id}`} className="font-normal cursor-pointer text-sm mb-0">
+                                                        {c.name}
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                            {categories.length === 0 && (
+                                                <p className="text-sm text-muted-foreground italic p-2 text-center">No categories found</p>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Icon</Label>

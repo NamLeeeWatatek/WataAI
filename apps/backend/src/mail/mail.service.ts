@@ -14,7 +14,7 @@ export class MailService {
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
     const context = I18nContext.current();
@@ -160,7 +160,9 @@ export class MailService {
     });
   }
 
-  async sendWorkspaceInvitation(mailData: MailData<{ workspaceName: string }>): Promise<void> {
+  async sendWorkspaceInvitation(
+    mailData: MailData<{ workspaceName: string }>,
+  ): Promise<void> {
     const context = I18nContext.current();
     const lang =
       context?.lang ||
@@ -169,14 +171,19 @@ export class MailService {
     const appName = this.configService.get('app.name', { infer: true });
     const workspaceName = mailData.data.workspaceName;
 
-    const [subject, title, text1, text2, text3, actionBtn] = (await Promise.all([
-      this.i18n.t('invitation.subject', { lang, args: { workspaceName } }),
-      this.i18n.t('invitation.title', { lang, args: { workspaceName, appName } }),
-      this.i18n.t('invitation.text1', { lang, args: { workspaceName } }),
-      this.i18n.t('invitation.text2', { lang }),
-      this.i18n.t('invitation.text3', { lang }),
-      this.i18n.t('invitation.actionBtn', { lang }),
-    ])) as string[];
+    const [subject, title, text1, text2, text3, actionBtn] = (await Promise.all(
+      [
+        this.i18n.t('invitation.subject', { lang, args: { workspaceName } }),
+        this.i18n.t('invitation.title', {
+          lang,
+          args: { workspaceName, appName },
+        }),
+        this.i18n.t('invitation.text1', { lang, args: { workspaceName } }),
+        this.i18n.t('invitation.text2', { lang }),
+        this.i18n.t('invitation.text3', { lang }),
+        this.i18n.t('invitation.actionBtn', { lang }),
+      ],
+    )) as string[];
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {

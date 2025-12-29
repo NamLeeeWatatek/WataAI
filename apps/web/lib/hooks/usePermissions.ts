@@ -21,34 +21,42 @@ export function usePermissions() {
   })
 
   const hasPermission = (permission: string): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.permissions?.includes(permission) ?? false
   }
 
   const hasAnyPermission = (permissions: string[]): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return permissions.some(p => hasPermission(p))
   }
 
   const hasAllPermissions = (permissions: string[]): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return permissions.every(p => hasPermission(p))
   }
 
   const canCreate = (resource: ResourceType): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.can_create?.[resource] ?? false
   }
 
   const canRead = (resource: ResourceType): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.can_read?.[resource] ?? false
   }
 
   const canUpdate = (resource: ResourceType): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.can_update?.[resource] ?? false
   }
 
   const canDelete = (resource: ResourceType): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.can_delete?.[resource] ?? false
   }
 
   const canExecute = (resource: 'flow'): boolean => {
+    if (capabilities?.features?.is_super_admin) return true
     return capabilities?.can_execute?.[resource] ?? false
   }
 

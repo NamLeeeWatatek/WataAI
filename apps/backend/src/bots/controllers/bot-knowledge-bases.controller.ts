@@ -30,7 +30,7 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/knowledge-bases', version: '1' })
 export class BotKnowledgeBasesController {
-  constructor(private readonly botsService: BotsService) { }
+  constructor(private readonly botsService: BotsService) {}
 
   @Post()
   @ApiOperation({ summary: 'Link knowledge base to bot' })

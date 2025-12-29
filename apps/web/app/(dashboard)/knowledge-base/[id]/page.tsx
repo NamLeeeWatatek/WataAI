@@ -17,6 +17,7 @@ import {
     KbGridView,
     KbTableView,
 } from '@/components/features/knowledge-base'
+import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar'
 import { cn } from '@/lib/utils'
 
 import {
@@ -37,9 +38,9 @@ import {
     Search,
     FolderPlus,
     Upload,
-    Globe,
-    Eye,
     Download,
+    Eye,
+    Move,
 } from 'lucide-react'
 import toast from '@/lib/toast'
 
@@ -106,6 +107,7 @@ import {
 import { DataTable, type Column, type SortDirection } from '@/components/ui/DataTable'
 import { Pagination } from '@/components/ui/Pagination'
 import { PageLoading } from '@/components/ui/PageLoading'
+import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore'
 
 export default function KnowledgeBaseDetailPage() {
     const params = useParams()
@@ -162,6 +164,17 @@ export default function KnowledgeBaseDetailPage() {
             }
         }
     }, [folderParam, dispatch, currentFolderId])
+
+    // Update global breadcrumb name for this KB
+    const setBreadcrumbName = useBreadcrumbStore(state => state.setBreadcrumbName)
+    const removeBreadcrumbName = useBreadcrumbStore(state => state.removeBreadcrumbName)
+
+    useEffect(() => {
+        if (kb && kb.name) {
+            setBreadcrumbName(kbId, kb.name)
+        }
+        return () => removeBreadcrumbName(kbId)
+    }, [kb, kbId, setBreadcrumbName, removeBreadcrumbName])
 
     // Helper Functions
     const formatSize = (bytes: string | number) => {
@@ -651,6 +664,24 @@ export default function KnowledgeBaseDetailPage() {
                 onDeleteSelected={() => setShowBulkDelete(true)}
             />
 
+            <BulkActionsToolbar
+                selectedCount={selectedIds.length}
+                onClearSelection={() => dispatch(clearSelection())}
+                actions={[
+                    {
+                        label: 'Move',
+                        icon: Move,
+                        onClick: () => { /* Logic for bulk move if implemented */ },
+                    },
+                    {
+                        label: 'Delete',
+                        icon: Trash2,
+                        onClick: () => setShowBulkDelete(true),
+                        variant: 'destructive'
+                    }
+                ]}
+            />
+
             {viewMode === 'table' ? (
                 <KbTableView
                     items={tableData}
@@ -663,7 +694,14 @@ export default function KnowledgeBaseDetailPage() {
                     onPageSizeChange={(s) => dispatch(setPagination({ page: 1, pageSize: s }))}
                     onItemClick={(item) => item.type === 'folder' && handleNavigateToFolder(item.id, item.name)}
                     onToggleSelection={(id) => dispatch(toggleSelection(id))}
-                    onToggleSelectAll={(checked) => dispatch(toggleSelectAll(checked))}
+                    onToggleSelectAll={(checked) => {
+                        if (checked) {
+                            const allVisibleIds = tableData.map(item => item.id);
+                            dispatch(toggleSelectAll(allVisibleIds));
+                        } else {
+                            dispatch(toggleSelectAll(false));
+                        }
+                    }}
                     onSort={(column, direction) => {
                         setSortColumn(column);
                         setSortDirection(direction as SortDirection);
@@ -700,6 +738,7 @@ export default function KnowledgeBaseDetailPage() {
                     onDownloadDocument={(id, filename) => {
                         import('@/lib/utils/document-actions').then(({ downloadDocument }) => downloadDocument(id, filename));
                     }}
+                    onToggleSelectAll={(checked) => dispatch(toggleSelectAll(checked))}
                 />
             )}
             <KBFolderDialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen} onSubmit={handleCreateFolder} />

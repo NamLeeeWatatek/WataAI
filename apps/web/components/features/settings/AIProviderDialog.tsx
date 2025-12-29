@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
     Dialog,
     DialogContent,
@@ -26,7 +27,10 @@ import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { axiosClient } from '@/lib/axios-client';
 import { toast } from 'sonner';
-import { Loader2, Save, Cpu, Key, Globe, Shield } from 'lucide-react';
+import { Loader2, Save, Cpu, Key, Globe, Shield, RefreshCw, X, Stars } from 'lucide-react';
+import { aiProvidersApi } from '@/lib/api/ai-providers';
+import { Badge } from '@/components/ui/Badge';
+import { cn } from '@/lib/utils';
 
 interface AiProvider {
     id: string;
@@ -51,6 +55,7 @@ const configSchema = z.object({
     providerId: z.string().min(1, 'Provider is required'),
     displayName: z.string().min(1, 'Display name is required'),
     config: z.record(z.string(), z.any()),
+    modelList: z.array(z.string()),
     isActive: z.boolean(),
 });
 
@@ -66,9 +71,16 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
             providerId: '',
             displayName: '',
             config: {},
+            modelList: [],
             isActive: true,
         },
     });
+
+    const [isFetchingModels, setIsFetchingModels] = React.useState(false);
+    const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true);
+
+    const configWatch = form.watch('config');
+    const debouncedConfig = useDebounce(configWatch, 1000);
 
     useEffect(() => {
         if (config && open) {
@@ -76,6 +88,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                 providerId: config.providerId || '',
                 displayName: config.displayName || '',
                 config: config.config || {},
+                modelList: config.modelList || [],
                 isActive: !!config.isActive,
             } as ConfigFormValues);
         } else if (!config && open) {
@@ -83,6 +96,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                 providerId: '',
                 displayName: '',
                 config: {},
+                modelList: [],
                 isActive: true,
             });
         }
@@ -108,8 +122,55 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
     const selectedProviderId = form.watch('providerId');
     const selectedProvider = availableProviders.find(p => p.id === selectedProviderId);
 
-    const onSubmit = (data: ConfigFormValues) => {
+    const onSubmit: SubmitHandler<ConfigFormValues> = (data) => {
         saveMutation.mutate(data);
+    };
+
+    const handleFetchModels = async (silent = false) => {
+        const providerId = form.getValues('providerId');
+        const configData = form.getValues('config');
+
+        if (!providerId) return;
+
+        // Validation for auto-fetch
+        const hasKey = !!configData?.apiKey;
+        const hasBaseUrl = !!configData?.baseUrl;
+        const isOllama = providerId === 'ollama';
+        const isCustom = providerId === 'custom';
+
+        if (!hasKey && !isOllama && !isCustom) return;
+        if (isOllama && !hasBaseUrl && !configData?.baseUrl) {
+            // Ollama default is handled in service, but we check if user cleared it
+        }
+
+        if (!silent) setIsFetchingModels(true);
+        try {
+            const models = await aiProvidersApi.verifyModels(providerId, configData);
+            if (models && Array.isArray(models)) {
+                const currentModels = form.getValues('modelList') || [];
+                // Only update if different to avoid infinite loop or flickering
+                if (JSON.stringify(currentModels) !== JSON.stringify(models)) {
+                    form.setValue('modelList', models);
+                    if (!silent) toast.success(`Fetched ${models.length} models successfully`);
+                }
+            }
+        } catch (error: any) {
+            if (!silent) toast.error(error.response?.data?.message || 'Failed to fetch models');
+        } finally {
+            if (!silent) setIsFetchingModels(false);
+        }
+    };
+
+    // Auto-fetch effect
+    useEffect(() => {
+        if (open && autoRefreshEnabled) {
+            handleFetchModels(true);
+        }
+    }, [debouncedConfig, open, autoRefreshEnabled]);
+
+    const removeModel = (modelToRemove: string) => {
+        const currentModels = form.getValues('modelList') || [];
+        form.setValue('modelList', currentModels.filter(m => m !== modelToRemove));
     };
 
     return (
@@ -126,10 +187,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 </div>
                                 <div>
                                     <DialogTitle className="text-2xl font-black tracking-tight">
-                                        {isEdit ? 'Reconfigure Cluster' : 'Initialize Intelligence'}
+                                        {isEdit ? 'Edit Provider' : 'Connect New Provider'}
                                     </DialogTitle>
                                     <DialogDescription className="text-sm font-medium">
-                                        Provision new AI capabilities to your global processing matrix
+                                        Connect an AI provider to enable smart features
                                     </DialogDescription>
                                 </div>
                             </div>
@@ -142,7 +203,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="providerId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Core Provider</FormLabel>
+                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Provider Service</FormLabel>
                                             <Select
                                                 onValueChange={(val) => {
                                                     field.onChange(val);
@@ -161,7 +222,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             >
                                                 <FormControl>
                                                     <SelectTrigger className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold">
-                                                        <SelectValue placeholder="Select Engine" />
+                                                        <SelectValue placeholder="Select Provider" />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent className="rounded-2xl border-border/40 bg-card/90 backdrop-blur-xl">
@@ -182,10 +243,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="displayName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Alias Identity</FormLabel>
+                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Display Name</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="e.g. Primary OpenAI"
+                                                    placeholder="e.g. My OpenAI"
                                                     {...field}
                                                     className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold"
                                                 />
@@ -200,7 +261,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                     <div className="flex items-center gap-2 text-primary">
                                         <Shield className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Security Credentials</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Credentials</span>
                                     </div>
 
                                     {selectedProvider.requiredFields.map((fieldName) => (
@@ -254,6 +315,64 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             )}
                                         />
                                     ))}
+
+                                    <div className="pt-4 space-y-4 border-t border-border/40">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-primary">
+                                                <Stars className="w-4 h-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Available Models</span>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleFetchModels()}
+                                                disabled={isFetchingModels}
+                                                className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all"
+                                            >
+                                                {isFetchingModels ? (
+                                                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                                                ) : (
+                                                    <RefreshCw className="w-3 h-3 mr-1.5" />
+                                                )}
+                                                Fetch Models
+                                            </Button>
+                                        </div>
+
+                                        <FormField
+                                            control={form.control as any}
+                                            name="modelList"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl bg-muted/10 border border-border/10">
+                                                        {field.value && field.value.length > 0 ? (
+                                                            field.value.map((model: string) => (
+                                                                <Badge
+                                                                    key={model}
+                                                                    variant="secondary"
+                                                                    className="group font-mono text-[10px] px-2 py-1 bg-primary/5 border-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all rounded-lg cursor-default"
+                                                                >
+                                                                    {model}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeModel(model)}
+                                                                        className="ml-1.5 opacity-40 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        <X className="w-2.5 h-2.5" />
+                                                                    </button>
+                                                                </Badge>
+                                                            ))
+                                                        ) : (
+                                                            <div className="w-full flex flex-col items-center justify-center py-2 text-muted-foreground/40">
+                                                                <span className="text-[10px] font-black uppercase tracking-widest">No models fetched yet</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -265,7 +384,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 onClick={() => onOpenChange(false)}
                                 className="rounded-2xl h-14 font-bold text-muted-foreground hover:bg-muted/30"
                             >
-                                Cancel Process
+                                Cancel
                             </Button>
                             <Button
                                 type="submit"
@@ -277,7 +396,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 ) : (
                                     <Save className="w-5 h-5 mr-2" />
                                 )}
-                                {isEdit ? 'Synchronize Updates' : 'Initiate Provisioning'}
+                                {isEdit ? 'Save Changes' : 'Connect Provider'}
                             </Button>
                         </DialogFooter>
                     </form>

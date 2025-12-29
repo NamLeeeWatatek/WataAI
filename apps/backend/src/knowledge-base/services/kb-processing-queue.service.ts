@@ -9,6 +9,7 @@ export interface ProcessingJob {
   progress: number;
   totalChunks: number;
   processedChunks: number;
+  type: 'embedding' | 'crawl';
   error?: string;
   startedAt?: Date;
   completedAt?: Date;
@@ -23,10 +24,14 @@ export class KBProcessingQueueService {
   private readonly maxConcurrent = 3;
   private activeJobs = new Set<string>();
 
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(private readonly eventEmitter: EventEmitter2) { }
 
-  addJob(documentId: string, knowledgeBaseId: string): string {
-    const jobId = `job-${documentId}-${Date.now()}`;
+  addJob(
+    documentId: string,
+    knowledgeBaseId: string,
+    type: 'embedding' | 'crawl' = 'embedding',
+  ): string {
+    const jobId = `${type}-${documentId}-${Date.now()}`;
 
     const job: ProcessingJob = {
       id: jobId,
@@ -36,6 +41,7 @@ export class KBProcessingQueueService {
       progress: 0,
       totalChunks: 0,
       processedChunks: 0,
+      type,
     };
 
     this.jobs.set(jobId, job);
@@ -165,6 +171,7 @@ export class KBProcessingQueueService {
       progress: job.progress,
       totalChunks: job.totalChunks,
       processedChunks: job.processedChunks,
+      type: job.type,
       error: job.error,
     };
 

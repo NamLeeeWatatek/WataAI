@@ -11,8 +11,10 @@ export class CreationToolMapper {
     domainEntity.description = raw.description;
     domainEntity.icon = raw.icon;
     domainEntity.coverImage = raw.coverImage;
-    if (raw.category) {
-      domainEntity.category = CategoryMapper.toDomain(raw.category);
+    if (raw.categories) {
+      domainEntity.categories = raw.categories.map((c) =>
+        CategoryMapper.toDomain(c),
+      );
     }
     domainEntity.formConfig = raw.formConfig;
     domainEntity.executionFlow = raw.executionFlow;
@@ -36,9 +38,9 @@ export class CreationToolMapper {
     persistenceEntity.description = domainEntity.description;
     persistenceEntity.icon = domainEntity.icon;
     persistenceEntity.coverImage = domainEntity.coverImage;
-    if (domainEntity.category) {
-      persistenceEntity.category = CategoryMapper.toPersistence(
-        domainEntity.category,
+    if (domainEntity.categories) {
+      persistenceEntity.categories = domainEntity.categories.map((c) =>
+        CategoryMapper.toPersistence(c),
       );
     }
     persistenceEntity.formConfig = domainEntity.formConfig;

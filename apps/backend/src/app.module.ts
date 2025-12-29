@@ -119,7 +119,7 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
           infer: true,
         }),
         loaderOptions: {
-          path: path.join(__dirname, '../i18n/'),
+          path: path.join(__dirname, 'i18n/'),
           watch: true,
         },
       }),

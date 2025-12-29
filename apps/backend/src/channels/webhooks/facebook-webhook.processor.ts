@@ -5,6 +5,7 @@ import {
   MessageProcessingContext,
   WebhookProcessingResult,
 } from './webhook-processor.base';
+import { WebhookQueueService } from './webhook-queue.service';
 import { ChannelsService } from '../channels.service';
 import { FacebookOAuthService } from '../facebook-oauth.service';
 import { ConversationsService } from '../../conversations/conversations.service';
@@ -12,9 +13,6 @@ import { ConversationsGateway } from '../../conversations/conversations.gateway'
 import { MessageRole } from '../../conversations/conversations.enum';
 import { MessageReceivedEvent } from '../../shared/events';
 
-/**
- * Facebook Webhook Payload Structure
- */
 interface FacebookWebhookPayload {
   object: string;
   entry: Array<{
@@ -33,7 +31,6 @@ interface FacebookWebhookPayload {
         title: string;
         payload: string;
       };
-      // âœ… Add read and delivery events
       read?: {
         watermark: number;
         seq?: number;
@@ -47,12 +44,6 @@ interface FacebookWebhookPayload {
   }>;
 }
 
-/**
- * Facebook Webhook Processor
- *
- * Handles incoming webhooks from Facebook Messenger
- * Extends BaseMessageProcessor for scalability and consistency
- */
 @Injectable()
 export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebhookPayload> {
   protected readonly logger = new Logger(FacebookWebhookProcessor.name);
@@ -60,6 +51,7 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
 
   constructor(
     eventEmitter: EventEmitter2,
+    queueService: WebhookQueueService,
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
     @Inject(forwardRef(() => ConversationsService))
@@ -67,12 +59,9 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
     @Inject(forwardRef(() => ConversationsGateway))
     private readonly conversationsGateway: ConversationsGateway,
   ) {
-    super(eventEmitter);
+    super(eventEmitter, queueService);
   }
 
-  /**
-   * Validate Facebook webhook payload structure
-   */
   protected validatePayload(payload: FacebookWebhookPayload): boolean {
     return !!(
       payload &&
@@ -81,9 +70,6 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
     );
   }
 
-  /**
-   * Extract messages from Facebook webhook payload
-   */
   protected extractMessages(payload: FacebookWebhookPayload) {
     const messages: Array<{
       context: MessageProcessingContext;
@@ -99,7 +85,6 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
         const recipientId = messaging.recipient?.id;
         const message = messaging.message;
 
-        // ðŸ” DEBUG: Log what we received
         this.logger.debug(`[extractMessages] Event type check:`, {
           hasMessage: !!message,
           hasText: !!message?.text,
@@ -110,20 +95,14 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
           recipientId,
         });
 
-        // Skip read receipts and delivery confirmations
         if (messaging.read || messaging.delivery) {
-          this.logger.debug(`[extractMessages] Skipping read/delivery event`);
           continue;
         }
 
-        // Only process text messages for now
         if (message?.text) {
-          this.logger.log(
-            `[extractMessages] âœ… Found text message: "${message.text}"`,
-          );
           messages.push({
             context: {
-              channelId: '', // Will be resolved in processSingleMessage
+              channelId: '',
               channelType: this.channelType,
               externalId: pageId,
               senderId,
@@ -139,11 +118,7 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
           });
         }
 
-        // Handle postbacks
         if (messaging.postback) {
-          this.logger.log(
-            `[extractMessages] âœ… Found postback: "${messaging.postback.payload}"`,
-          );
           messages.push({
             context: {
               channelId: '',
@@ -163,60 +138,34 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
       }
     }
 
-    this.logger.log(
-      `[extractMessages] Total messages extracted: ${messages.length}`,
-    );
     return messages;
   }
 
-  /**
-   * Process a single Facebook message
-   */
   protected async processSingleMessage(
     context: MessageProcessingContext,
     content: string,
     timestamp?: Date,
   ): Promise<void> {
-    const { externalId, senderId, recipientId, messageId, metadata } = context;
+    const { externalId, senderId, recipientId, messageId } = context;
     const pageId = externalId;
 
     this.logger.log(
       `Processing Facebook message from ${senderId} to page ${pageId}`,
     );
 
-    // Find channel by pageId
     const channel = await this.channelsService.findByExternalId(pageId);
 
     if (!channel) {
-      this.logger.warn(`âŒ No channel found for Facebook page ${pageId}`);
-
-      // List all Facebook channels for debugging
-      const allChannels = await this.channelsService.findAll();
-      const fbChannels = allChannels.filter((c) => c.type === 'facebook');
-      this.logger.warn(
-        `Currently connected Facebook channels: ${fbChannels.length}`,
-      );
-      fbChannels.forEach((ch) => {
-        this.logger.warn(`  - ${ch.name} (pageId: ${ch.metadata?.pageId})`);
-      });
-
+      this.logger.warn(` No channel found for Facebook page ${pageId}`);
       throw new Error(`No channel found for pageId: ${pageId}`);
     }
 
-    this.logger.log(`âœ… Channel found: ${channel.name} (ID: ${channel.id})`);
-
-    // Get botId from channel metadata
     const botId = channel.metadata?.botId as string | undefined;
 
     if (!botId) {
-      this.logger.warn(`âŒ No botId found for channel ${channel.id}`);
-      this.logger.warn(`Channel metadata: ${JSON.stringify(channel.metadata)}`);
       throw new Error(`No botId configured for channel: ${channel.id}`);
     }
 
-    this.logger.log(`âœ… Bot ID: ${botId}`);
-
-    // Get user info from Facebook
     let contactName = 'Facebook User';
     let contactAvatar: string | undefined;
 
@@ -235,7 +184,6 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
       }
     }
 
-    // Find or create conversation
     const conversation =
       await this.conversationsService.findOrCreateFromWebhook({
         botId,
@@ -250,9 +198,6 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
         },
       });
 
-    this.logger.log(`âœ… Conversation: ${conversation.id}`);
-
-    // Save message to database FIRST
     const savedMessage = await this.conversationsService.addMessageFromWebhook({
       conversationId: conversation.id,
       content,
@@ -267,20 +212,16 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
       },
     });
 
-    this.logger.log(`âœ… Message saved: ${savedMessage.id}`);
-
-    // Emit message via WebSocket
     try {
       this.conversationsGateway.emitNewMessage(conversation.id, savedMessage);
     } catch (error) {
       this.logger.warn('Failed to emit message WebSocket event:', error);
     }
 
-    // âœ… Broadcast conversation update AFTER message is saved (for conversations list)
     try {
       this.conversationsGateway.broadcastConversationUpdate({
         ...conversation,
-        lastMessage: content, // âœ… Include the actual message content
+        lastMessage: content,
         lastMessageAt: new Date(),
         contactName,
         contactAvatar,
@@ -289,7 +230,6 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
       this.logger.warn('Failed to broadcast conversation update:', error);
     }
 
-    // Emit message.received event for bot processing
     if (this.eventEmitter) {
       this.eventEmitter.emit(
         'message.received',
@@ -309,21 +249,14 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
         ),
       );
     }
-
-    this.logger.log(`âœ… Events emitted for message ${savedMessage.id}`);
   }
 
-  /**
-   * Override to add Facebook-specific error handling
-   */
   protected handleProcessingError(
     error: Error,
     payload: FacebookWebhookPayload,
     metadata?: Record<string, any>,
   ): void {
     super.handleProcessingError(error, payload, metadata);
-
-    // Additional Facebook-specific logging
     const pageIds = payload.entry?.map((e) => e.id).join(', ');
     this.logger.error(
       `Failed to process Facebook webhook for pages: ${pageIds}`,

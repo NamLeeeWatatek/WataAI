@@ -5,11 +5,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Package } from 'lucide-react';
 
 import { useState } from 'react';
-import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
+import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
 
 interface ProductsGridProps {
     jobs: CreationJob[];
