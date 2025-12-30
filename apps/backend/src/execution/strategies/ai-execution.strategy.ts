@@ -9,7 +9,9 @@ export class AiExecutionStrategy implements IExecutionStrategy {
   private readonly logger = new Logger(AiExecutionStrategy.name);
   private readonly engine = new Liquid();
 
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {
+    this.engine.registerFilter('json', (v) => JSON.stringify(v));
+  }
 
   async execute(
     config: AiExecutionConfig,

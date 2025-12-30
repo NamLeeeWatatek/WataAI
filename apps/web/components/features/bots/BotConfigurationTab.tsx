@@ -62,11 +62,10 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {/* Identity Section */}
-        <Card className="lg:col-span-2 rounded-2xl border-border/40 shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden group">
-          <div className="h-1.5 w-full bg-gradient-to-r from-primary/50 via-primary to-primary/50 group-hover:via-primary/70 transition-all duration-500" />
+        <Card variant="premium" className="lg:col-span-1">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-primary/10 rounded-xl shadow-inner">
+              <div className="p-2.5 bg-primary/10 rounded-xl">
                 <Settings2 className="w-5 h-5 text-primary" />
               </div>
               <div>
@@ -76,25 +75,25 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
             </div>
           </CardHeader>
           <CardContent className="grid gap-8 pt-2">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6">
               <div className="space-y-2.5">
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Bot Name</Label>
                 <Input
                   id="name"
+                  variant="premium"
                   value={formData.name}
                   onChange={(e) => onChange({ name: e.target.value })}
                   placeholder="e.g. Customer Support Agent"
-                  className="font-bold rounded-xl border-border/60 bg-muted/20 focus:bg-background transition-all h-11"
                 />
               </div>
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="isActive" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Status</Label>
-                  <Badge variant={formData.isActive ? "default" : "secondary"} className={formData.isActive ? "bg-green-500 hover:bg-green-600 px-2.5 font-bold" : "px-2.5 font-bold"}>
+                  <Badge variant={formData.isActive ? "success" : "secondary"}>
                     {formData.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between p-3.5 border border-border/60 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center justify-between p-3.5 border border-border/40 rounded-xl bg-muted/20">
                   <div className="space-y-0.5">
                     <span className="text-sm font-bold tracking-tight">Enable Bot</span>
                     <p className="text-[10px] font-medium text-muted-foreground">Make this bot accessible to users</p>
@@ -103,7 +102,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                     id="isActive"
                     checked={formData.isActive}
                     onCheckedChange={(checked) => onChange({ isActive: checked })}
-                    className="data-[state=checked]:bg-green-500"
                   />
                 </div>
               </div>
@@ -112,10 +110,11 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Description</Label>
               <Textarea
                 id="description"
+                variant="premium"
                 value={formData.description}
                 onChange={(e) => onChange({ description: e.target.value })}
                 placeholder="Briefly describe what this bot does..."
-                className="resize-none rounded-xl border-border/60 bg-muted/20 focus:bg-background transition-all min-h-[100px] leading-relaxed"
+                className="resize-none min-h-[100px]"
                 rows={2}
               />
             </div>
@@ -123,12 +122,11 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
         </Card>
 
         {/* System Prompt Section */}
-        <Card className="flex flex-col rounded-2xl border-border/40 shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden group">
-          <div className="h-1.5 w-full bg-gradient-to-r from-blue-500/50 via-blue-500 to-blue-500/50 group-hover:via-blue-500/70 transition-all duration-500" />
+        <Card variant="premium" className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-500/10 rounded-xl shadow-inner">
-                <MessageSquare className="w-5 h-5 text-blue-500" />
+              <div className="p-2.5 bg-primary/10 rounded-xl">
+                <MessageSquare className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl font-bold tracking-tight">System Prompt</CardTitle>
@@ -136,23 +134,23 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col pt-2 min-h-[300px]">
+          <CardContent className="flex-1 flex flex-col pt-2 min-h-[400px]">
             <Textarea
+              variant="premium"
               value={formData.systemPrompt}
               onChange={(e) => onChange({ systemPrompt: e.target.value })}
               placeholder="You are a helpful AI assistant tasked with..."
-              className="flex-1 resize-none rounded-xl border-border/60 bg-muted/20 focus:bg-background transition-all font-mono text-xs leading-relaxed p-4"
+              className="flex-1 resize-none font-mono text-sm p-4 scrollbar-thin scrollbar-thumb-border hover:scrollbar-thumb-primary/30"
             />
           </CardContent>
         </Card>
 
         {/* Intelligence Section */}
-        <Card className="lg:col-span-3 rounded-2xl border-border/40 shadow-xl shadow-purple-500/5 bg-card/50 backdrop-blur-sm overflow-hidden group">
-          <div className="h-1.5 w-full bg-gradient-to-r from-purple-500/50 via-purple-500 to-purple-500/50 group-hover:via-purple-500/70 transition-all duration-500" />
+        <Card variant="premium" className="lg:col-span-3">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-500/10 rounded-xl shadow-inner">
-                <Brain className="w-5 h-5 text-purple-500" />
+              <div className="p-2.5 bg-primary/10 rounded-xl">
+                <Brain className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <CardTitle className="text-xl font-bold tracking-tight">Model Intelligence</CardTitle>
@@ -167,7 +165,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">AI Provider</Label>
                     <Select value={formData.aiProviderId} onValueChange={(value) => onChange({ aiProviderId: value, aiModelName: '' })}>
-                      <SelectTrigger className="rounded-xl border-border/60 bg-muted/20 h-11 transition-all focus:ring-purple-500/20">
+                      <SelectTrigger variant="premium" rounded="xl">
                         <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
@@ -182,7 +180,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model</Label>
                     <Select value={formData.aiModelName} onValueChange={(value) => onChange({ aiModelName: value })}>
-                      <SelectTrigger className="rounded-xl border-border/60 bg-muted/20 h-11 transition-all focus:ring-purple-500/20">
+                      <SelectTrigger variant="premium" rounded="xl">
                         <SelectValue placeholder={!formData.aiProviderId ? "Select provider first" : "Select model"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
@@ -196,12 +194,12 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   </div>
                 </div>
 
-                <div className="space-y-3.5 p-4 rounded-xl border border-border/60 bg-muted/20">
+                <div className="space-y-3.5 p-4 rounded-xl border border-border/40 bg-muted/10">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-purple-500" />
                     <span className="text-sm font-bold tracking-tight">Performance Boosters</span>
                   </div>
-                  <Separator className="bg-border/60" />
+                  <Separator className="bg-border/20" />
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <span className="text-xs font-bold">Auto-Learning</span>
@@ -210,13 +208,12 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                     <Switch
                       checked={formData.enableAutoLearn}
                       onCheckedChange={(checked) => onChange({ enableAutoLearn: checked })}
-                      className="data-[state=checked]:bg-purple-500"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-8 p-6 rounded-2xl border border-border/60 bg-purple-500/[0.03]">
+              <div className="space-y-8 p-6 rounded-2xl border border-border/20 bg-muted/5">
                 <div className="space-y-5">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
@@ -234,7 +231,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                         </Tooltip>
                       </TooltipProvider>
                     </Label>
-                    <Badge variant="outline" className="font-mono font-bold border-purple-500/20 text-purple-600 bg-purple-500/5">
+                    <Badge variant="premium" className="font-mono font-bold">
                       {formData.aiParameters.temperature}
                     </Badge>
                   </div>
@@ -262,11 +259,11 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   </div>
                   <Input
                     type="number"
+                    variant="premium"
                     value={formData.aiParameters.max_tokens}
                     onChange={(e) => onChange({ aiParameters: { ...formData.aiParameters, max_tokens: parseInt(e.target.value) } })}
                     max={128000}
                     min={1}
-                    className="rounded-xl border-border/60 bg-muted/20 focus:bg-background h-11 transition-all"
                   />
                   <p className="text-[10px] font-medium text-muted-foreground flex items-center gap-1.5 px-1">
                     <Info className="w-3 h-3" />

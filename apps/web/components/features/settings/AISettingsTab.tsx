@@ -79,7 +79,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
   return (
     <div className="space-y-8">
       {/* System-wide AI Defaults */}
-      <Card>
+      <Card variant="premium">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -107,7 +107,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     onSystemSettingsChange({ ...systemSettings, defaultProviderId: value, defaultModel: '' });
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger variant="premium">
                     <SelectValue placeholder={
                       userConfigs.filter(config => config.isActive).length > 0
                         ? "Select default provider"
@@ -145,7 +145,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                   }}
                   disabled={!systemSettings.defaultProviderId || userConfigs.filter(config => config.isActive).length === 0}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger variant="premium">
                     <SelectValue placeholder={
                       !systemSettings.defaultProviderId
                         ? "Select provider first"
@@ -180,6 +180,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     min="0"
                     max="2"
                     value={systemSettings.minTemperature}
+                    variant="premium"
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       minTemperature: parseFloat(e.target.value) || 0.0
@@ -194,6 +195,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     min="0"
                     max="2"
                     value={systemSettings.maxTemperature}
+                    variant="premium"
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxTemperature: parseFloat(e.target.value) || 2.0
@@ -226,12 +228,12 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
               <h4 className="font-medium text-sm">Content Policies</h4>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border/40 rounded-xl bg-muted/5">
                   <div className="space-y-1">
-                    <Label className="cursor-pointer font-medium">
+                    <Label className="cursor-pointer font-bold text-sm">
                       Enable Content Moderation
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Filter inappropriate content and responses
                     </p>
                   </div>
@@ -243,12 +245,12 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border/40 rounded-xl bg-muted/5">
                   <div className="space-y-1">
-                    <Label className="cursor-pointer font-medium">
+                    <Label className="cursor-pointer font-bold text-sm">
                       Fallback to Safe Responses
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Provide safe alternatives when content is flagged
                     </p>
                   </div>
@@ -260,12 +262,12 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-border/40 rounded-xl bg-muted/5">
                   <div className="space-y-1">
-                    <Label className="cursor-pointer font-medium">
+                    <Label className="cursor-pointer font-bold text-sm">
                       Context-Aware Generation
                     </Label>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Consider conversation context for better responses
                     </p>
                   </div>
@@ -290,6 +292,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     type="number"
                     placeholder="1000"
                     value={systemSettings.maxRequestsPerHour}
+                    variant="premium"
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxRequestsPerHour: parseInt(e.target.value) || 1000
@@ -303,6 +306,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     type="number"
                     placeholder="100"
                     value={systemSettings.maxRequestsPerUser}
+                    variant="premium"
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxRequestsPerUser: parseInt(e.target.value) || 100
@@ -316,7 +320,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
       </Card>
 
       {/* System Prompt Templates */}
-      <Card>
+      <Card variant="premium">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-primary" />
@@ -328,13 +332,14 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="text-center py-8 border-2 border-dashed rounded-lg">
-              <Lightbulb className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Custom Templates</h3>
-              <p className="text-muted-foreground text-sm mb-4">
+            <div className="text-center py-10 border border-dashed border-border/40 rounded-3xl bg-muted/5 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent pointer-events-none" />
+              <Lightbulb className="w-12 h-12 mx-auto mb-4 text-primary opacity-40" />
+              <h3 className="text-lg font-black mb-1 tracking-tight">Custom Templates</h3>
+              <p className="text-muted-foreground text-xs mb-6 font-medium">
                 Create and manage custom prompt templates for different use cases
               </p>
-              <Button variant="outline" className="rounded-xl border-primary/20 hover:bg-primary/5 hover:text-primary transition-all">
+              <Button variant="outline" rounded="xl" className="font-bold border-primary/20 hover:bg-primary/5 hover:text-primary transition-all shadow-sm">
                 <Zap className="w-4 h-4 mr-2" />
                 Add Template
               </Button>
@@ -343,20 +348,25 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
             <div className="space-y-3">
               <h4 className="font-medium text-sm">Built-in Templates:</h4>
               <div className="grid gap-3">
-                {[
-                  { name: 'Customer Support', count: '12 templates' },
-                  { name: 'Marketing', count: '8 templates' },
-                  { name: 'Technical', count: '15 templates' },
-                  { name: 'Education', count: '6 templates' },
-                  { name: 'Creative', count: '9 templates' }
-                ].map((category) => (
-                  <div key={category.name} className="p-3 border rounded-lg bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{category.name}</span>
-                      <Badge variant="secondary">{category.count}</Badge>
+                {(() => {
+                  const categories = [
+                    { name: 'Customer Support', count: '12 templates' },
+                    { name: 'Marketing', count: '8 templates' },
+                    { name: 'Technical', count: '15 templates' },
+                    { name: 'Education', count: '6 templates' },
+                    { name: 'Creative', count: '9 templates' }
+                  ];
+                  return categories.map((category) => (
+                    <div key={category.name} className="p-4 border border-border/40 rounded-xl bg-muted/10 group hover:bg-muted/20 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm">{category.name}</span>
+                        <Badge variant="secondary" rounded="lg" className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
+                          {category.count}
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           </div>
@@ -367,7 +377,8 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
         <Button
           onClick={handleSaveSystemSettings}
           loading={aiSettingsLoading}
-          className="rounded-full px-8 py-6 font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all text-base bg-primary hover:bg-primary/90"
+          rounded="full"
+          className="px-8 h-12 font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all text-base"
         >
           <Settings2 className="w-5 h-5 mr-3" />
           Save Settings

@@ -335,6 +335,7 @@ export const DynamicFormField = memo(function DynamicFormField({
                             </DropdownMenuContent>
                         </DropdownMenu>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Simplified Channel Selector */}
                             {activeChannels.length > 0 ? (
                                 activeChannels.map(channel => {
                                     const isSelected = selectedValues.includes(channel.id);
@@ -348,30 +349,24 @@ export const DynamicFormField = memo(function DynamicFormField({
                                                 onChange(field.name, newValue);
                                             }}
                                             className={cn(
-                                                "group flex items-center gap-4 p-4 rounded-2xl border backdrop-blur-md cursor-pointer transition-all duration-300",
+                                                "group flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
                                                 isSelected
-                                                    ? "border-primary bg-primary/10 shadow-lg ring-1 ring-primary/20"
-                                                    : "border-primary/10 bg-card/40 hover:bg-card/60 hover:border-primary/30"
+                                                    ? "bg-accent border-primary/50"
+                                                    : "bg-card hover:bg-accent/50 border-input"
                                             )}
                                         >
-                                            <div className={cn(
-                                                "w-10 h-10 rounded-xl border flex items-center justify-center transition-all duration-300 shadow-inner",
-                                                isSelected ? "bg-primary border-primary scale-110" : "bg-muted/50 border-primary/10"
-                                            )}>
+                                            <div className="w-8 h-8 flex items-center justify-center">
                                                 {isSelected ? (
-                                                    <Check className="w-5 h-5 text-primary-foreground animate-in zoom-in duration-300" />
+                                                    <Check className="w-4 h-4 text-primary" />
                                                 ) : (
                                                     getPlatformIcon(channel.type)
                                                 )}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-black truncate bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 tracking-tight">
-                                                        {channel.name || channel.type}
-                                                    </span>
-                                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                                </div>
-                                                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">
+                                                <span className="text-sm font-medium truncate">
+                                                    {channel.name || channel.type}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground capitalize">
                                                     {channel.type}
                                                 </span>
                                             </div>
@@ -379,22 +374,16 @@ export const DynamicFormField = memo(function DynamicFormField({
                                     )
                                 })
                             ) : (
-                                <div className="col-span-full p-8 rounded-2xl border border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center text-center gap-4 group">
-                                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                                        <Monitor className="w-8 h-8 text-primary opacity-40" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-black bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 uppercase tracking-tight">
-                                            No channels connected
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground mt-1 font-bold uppercase tracking-widest opacity-60">
-                                            Integrate your accounts to start creating
-                                        </p>
+                                <div className="col-span-full flex flex-col items-center justify-center p-6 border border-dashed rounded-lg bg-muted/10 text-center gap-2">
+                                    <Monitor className="w-8 h-8 text-muted-foreground/50" />
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">No channels connected</p>
+                                        <p className="text-xs text-muted-foreground">Integrate your accounts to start creating</p>
                                     </div>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="rounded-full font-black text-[10px] uppercase tracking-wider h-8 px-6 border-primary/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+                                        className="mt-2 h-8"
                                         onClick={() => window.open('/channels', '_blank')}
                                     >
                                         Explore integrations <ArrowRight className="w-3 h-3 ml-2" />

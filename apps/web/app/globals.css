@@ -141,25 +141,32 @@
   h2,
   h3,
   h4,
+  /* Display Headings - Scoped Utility Classes for Marketing/Landing */
+  .display-heading-1 {
+    @apply text-4xl md:text-5xl lg:text-7xl leading-[1.1] tracking-tighter font-display font-bold;
+  }
+
+  .display-heading-2 {
+    @apply text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight font-display font-bold;
+  }
+
+  .display-heading-3 {
+    @apply text-2xl md:text-3xl lg:text-4xl leading-snug font-display font-bold;
+  }
+
+  .display-heading-4 {
+    @apply text-xl md:text-2xl lg:text-3xl font-display font-bold;
+  }
+
+  /* Reset standard headings to inherit size or use standard values if needed, 
+     but avoid aggressive global overrides that affect dashboard */
+  h1,
+  h2,
+  h3,
+  h4,
   h5,
   h6 {
-    @apply tracking-tight font-semibold text-foreground;
-  }
-
-  h1 {
-    @apply text-4xl md:text-5xl lg:text-6xl;
-  }
-
-  h2 {
-    @apply text-3xl md:text-4xl;
-  }
-
-  h3 {
-    @apply text-2xl md:text-3xl;
-  }
-
-  h4 {
-    @apply text-xl md:text-2xl;
+    @apply text-foreground font-semibold;
   }
 
   /* Scrollbar - Minimal */

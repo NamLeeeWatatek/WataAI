@@ -383,6 +383,13 @@ const knowledgeBaseSlice = createSlice({
       state.currentPage = action.payload
     },
 
+    appendDocuments: (state, action: PayloadAction<KBDocument[]>) => {
+      const newDocs = action.payload
+      const existingIds = new Set(state.documents.map(d => d.id))
+      const uniqueDocs = newDocs.filter(d => !existingIds.has(d.id))
+      state.documents = [...state.documents, ...uniqueDocs]
+    },
+
     resetState: () => initialState,
   },
 
@@ -544,7 +551,27 @@ export const {
   setPagination,
   setCurrentPage,
   resetState,
+  appendDocuments,
 } = knowledgeBaseSlice.actions
+
+export const fetchChildDocuments = createAsyncThunk(
+  'knowledgeBase/fetchChildDocuments',
+  async ({ kbId, folderId }: { kbId: string; folderId: string }, { dispatch }) => {
+    // We assume no pagination for child folders/tree view expansion for simplicity usually, or use default limit
+    const documentsRes = await getKBDocuments(kbId, {
+      limit: 100, // Fetch reasonable amount
+      filters: JSON.stringify({
+        folderId: folderId
+      })
+    })
+
+    // Check if response is array or object
+    const docData: KBDocument[] = (documentsRes as any)?.data || (Array.isArray(documentsRes) ? documentsRes : [])
+
+    dispatch(appendDocuments(docData))
+    return docData
+  }
+)
 
 export const selectCurrentKB = (state: { knowledgeBase: KnowledgeBaseState }) => state.knowledgeBase.currentKB
 export const selectStats = (state: { knowledgeBase: KnowledgeBaseState }) => state.knowledgeBase.stats

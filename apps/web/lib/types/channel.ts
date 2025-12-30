@@ -42,7 +42,7 @@ export interface Channel {
 }
 
 export interface IntegrationConfig {
-  id: number
+  id: string
   name?: string
   provider: ChannelPlatform | string
   client_id: string

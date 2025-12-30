@@ -43,6 +43,7 @@ interface KbTableViewProps {
   onDragOver?: (folderId: string) => void;
   onDrop?: (targetFolderId: string) => void;
   onToggleSelectAll?: (checked: boolean) => void;
+  onRowExpand?: (item: KbItem) => Promise<void> | void;
 }
 
 export function KbTableView({
@@ -64,7 +65,8 @@ export function KbTableView({
   onDragStart,
   onDragOver,
   onDrop,
-  onToggleSelectAll
+  onToggleSelectAll,
+  onRowExpand
 }: KbTableViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -78,13 +80,13 @@ export function KbTableView({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-success rounded-full shadow-[0_0_8px_rgba(var(--success),0.4)]"></div>;
       case 'processing':
-        return <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>;
+        return <div className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.4)]"></div>;
       case 'failed':
-        return <div className="w-2 h-2 bg-red-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-destructive rounded-full shadow-[0_0_8px_rgba(var(--destructive),0.4)]"></div>;
       default:
-        return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>;
     }
   };
 
@@ -121,7 +123,7 @@ export function KbTableView({
         >
           <div className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
-            row.type === 'folder' ? "bg-blue-500/10 text-blue-500" : "bg-muted/50 text-muted-foreground"
+            row.type === 'folder' ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground"
           )}>
             {row.type === 'folder' ? <Folder className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
           </div>
@@ -234,6 +236,8 @@ export function KbTableView({
         emptyMessage="No files found"
         isTree={true}
         treeColumnKey="name"
+        getRowCanExpand={(row) => row.type === 'folder'}
+        onRowExpand={onRowExpand}
         className="w-full"
         tableClassName="border-border/50 bg-card/50 backdrop-blur-sm"
         onRowDragStart={(e, row) => {

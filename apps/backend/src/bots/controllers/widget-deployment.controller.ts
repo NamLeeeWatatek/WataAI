@@ -23,9 +23,9 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @ApiTags('Widget Deployment')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, WorkspaceAccessGuard)
-@Controller({ path: 'bots/:id/widget/deployment', version: '1' })
+@Controller({ path: 'bots/:botId/widget/deployments', version: '1' })
 export class WidgetDeploymentController {
-  constructor(private readonly widgetVersionService: WidgetVersionService) {}
+  constructor(private readonly widgetVersionService: WidgetVersionService) { }
 
   @Get()
   @HttpCode(HttpStatus.OK)

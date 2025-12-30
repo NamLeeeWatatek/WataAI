@@ -67,7 +67,7 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
             {templates.map((template) => (
                 <Card
                     key={template.id}
-                    variant="glass"
+                    variant="premium"
                     rounded="xl"
                     className={cn(
                         "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
@@ -151,11 +151,12 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
                                 </Button>
 
                                 <div className="flex items-center text-xs text-muted-foreground" title={`Status: ${template.isActive ? 'Active' : 'Inactive'}`}>
-                                    {template.isActive ? (
-                                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                                    ) : (
-                                        <div className="w-2 h-2 rounded-full bg-slate-500" />
-                                    )}
+                                    <Badge
+                                        variant={template.isActive ? "success" : "secondary"}
+                                        className="h-5 px-2 text-[8px] font-black uppercase tracking-widest border-none"
+                                    >
+                                        {template.isActive ? 'Active matrix' : 'Offline'}
+                                    </Badge>
                                 </div>
                             </div>
                         </div>

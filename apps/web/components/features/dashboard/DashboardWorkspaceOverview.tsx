@@ -25,10 +25,10 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
     }
 
     return (
-        <Card variant="glass" className="h-full border-white/5 shadow-xl">
+        <Card variant="premium" className="h-full">
             <CardHeader className="border-b border-border/10 px-8 py-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-8 bg-info rounded-full shadow-[0_0_15px_rgba(var(--info),0.5)]" />
+                    <div className="w-1.5 h-8 bg-info rounded-full shadow-sm" />
                     <div>
                         <CardTitle className="text-xl font-bold tracking-tight">
                             {t('dashboard.stats.workspaceOverview')}
@@ -46,8 +46,8 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
                         { label: t('dashboard.stats.totalBots'), value: stats?.bots?.total, icon: FiZap, color: 'success' },
                         { label: t('dashboard.stats.totalConversations'), value: stats?.conversations?.total, icon: FiMessageSquare, color: 'info' }
                     ].map((item, idx) => (
-                        <div key={idx} className="p-6 rounded-3xl bg-muted/10 border border-white/5 flex flex-col items-center text-center group hover:bg-muted/20 transition-all duration-500 hover:-translate-y-1">
-                            <div className={cn("p-4 rounded-2xl mb-4 shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", `bg-${item.color}/10 text-${item.color}`)}>
+                        <div key={idx} className="p-6 rounded-3xl bg-muted/10 flex flex-col items-center text-center group hover:bg-muted/20 transition-all duration-500 hover:-translate-y-1">
+                            <div className={cn("p-4 rounded-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", `bg-${item.color}/10 text-${item.color}`)}>
                                 <item.icon className="w-6 h-6" />
                             </div>
                             <span className="text-3xl font-black mb-1">{item.value || 0}</span>

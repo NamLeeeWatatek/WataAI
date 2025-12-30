@@ -10,7 +10,9 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
   private readonly logger = new Logger(HttpExecutionStrategy.name);
   private readonly engine = new Liquid();
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {
+    this.engine.registerFilter('json', (v) => JSON.stringify(v));
+  }
 
   async execute(
     config: HttpExecutionConfig,
@@ -60,23 +62,37 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
 
     // 3. Execution
     try {
+      this.logger.debug(`Request URL: ${url}`);
+      this.logger.debug(`Request Headers: ${JSON.stringify(config.headers)}`);
+      this.logger.debug(`Request Body: ${JSON.stringify(body)}`);
+
       const response = await firstValueFrom(
         this.httpService.request({
           method: config.method,
           url,
-          headers: config.headers,
+          headers: {
+            'User-Agent': 'WataAI/1.0',
+            ...config.headers,
+          },
           data: body,
-          timeout: config.timeoutMs || 5000,
+          timeout: config.timeoutMs || 20000,
         }),
       );
-
       return {
         status: response.status,
         data: response.data,
         headers: response.headers,
       };
     } catch (error) {
-      this.logger.error(`HTTP Execution Failed: ${error.message}`, error.stack);
+      if (error.response) {
+        this.logger.error(
+          `HTTP Error ${error.response.status}: ${JSON.stringify(
+            error.response.data,
+          )}`,
+        );
+      } else {
+        this.logger.error(`HTTP Execution Failed: ${error.message}`);
+      }
       throw error;
     }
   }

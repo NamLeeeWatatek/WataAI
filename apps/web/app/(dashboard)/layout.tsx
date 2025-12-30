@@ -89,7 +89,7 @@ export default function DashboardLayout({
             <WorkspaceInitializer />
             {/* Mobile Sheet Navigation */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetContent side="left" className="p-0 w-72 border-r border-border/40 bg-background/95 backdrop-blur-xl">
+                <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
                     <DashboardSidebar
                         expandedSections={expandedSections}
                         onToggleSection={toggleSection}

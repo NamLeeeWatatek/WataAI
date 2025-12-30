@@ -122,35 +122,35 @@ export function ConnectedChannelsTab({
 
   const getColor = (type: string) => {
     const colors: Record<string, string> = {
-      'facebook': 'text-blue-600 bg-blue-500/10 border-blue-500/20',
-      'messenger': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+      'facebook': 'text-primary bg-primary/10 border-primary/20',
+      'messenger': 'text-primary bg-primary/10 border-primary/20',
       'instagram': 'text-pink-500 bg-pink-500/10 border-pink-500/20',
-      'whatsapp': 'text-green-500 bg-green-500/10 border-green-500/20',
-      'telegram': 'text-sky-500 bg-sky-500/10 border-sky-500/20',
-      'youtube': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'twitter': 'text-sky-400 bg-sky-400/10 border-sky-400/20',
-      'linkedin': 'text-blue-700 bg-blue-700/10 border-blue-700/20',
-      'tiktok': 'text-black bg-black/10 border-black/20',
-      'discord': 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
-      'slack': 'text-purple-600 bg-purple-600/10 border-purple-600/20',
-      'zalo': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'line': 'text-green-500 bg-green-500/10 border-green-500/20',
-      'viber': 'text-purple-500 bg-purple-500/10 border-purple-500/20',
-      'wechat': 'text-green-600 bg-green-600/10 border-green-600/20',
-      'sms': 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-      'email': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'webchat': 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20',
-      'shopify': 'text-green-600 bg-green-600/10 border-green-600/20',
-      'google': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'hubspot': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-      'salesforce': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'mailchimp': 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
-      'intercom': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'zapier': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-      'notion': 'text-gray-800 bg-gray-800/10 border-gray-800/20',
-      'airtable': 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+      'whatsapp': 'text-success bg-success/10 border-success/20',
+      'telegram': 'text-info bg-info/10 border-info/20',
+      'youtube': 'text-destructive bg-destructive/10 border-destructive/20',
+      'twitter': 'text-info bg-info/10 border-info/20',
+      'linkedin': 'text-primary bg-primary/10 border-primary/20',
+      'tiktok': 'text-foreground bg-muted border-border/40',
+      'discord': 'text-primary bg-primary/10 border-primary/20',
+      'slack': 'text-primary bg-primary/10 border-primary/20',
+      'zalo': 'text-info bg-info/10 border-info/20',
+      'line': 'text-success bg-success/10 border-success/20',
+      'viber': 'text-primary bg-primary/10 border-primary/20',
+      'wechat': 'text-success bg-success/10 border-success/20',
+      'sms': 'text-warning bg-warning/10 border-warning/20',
+      'email': 'text-destructive bg-destructive/10 border-destructive/20',
+      'webchat': 'text-primary bg-primary/10 border-primary/20',
+      'shopify': 'text-success bg-success/10 border-success/20',
+      'google': 'text-destructive bg-destructive/10 border-destructive/20',
+      'hubspot': 'text-warning bg-warning/10 border-warning/20',
+      'salesforce': 'text-primary bg-primary/10 border-primary/20',
+      'mailchimp': 'text-warning bg-warning/10 border-warning/20',
+      'intercom': 'text-primary bg-primary/10 border-primary/20',
+      'zapier': 'text-warning bg-warning/10 border-warning/20',
+      'notion': 'text-foreground bg-muted border-border/40',
+      'airtable': 'text-info bg-info/10 border-info/20',
     };
-    return colors[type] || 'text-gray-600 bg-gray-600/10 border-gray-600/20';
+    return colors[type] || 'text-muted-foreground bg-muted/50 border-border/40';
   };
 
   const filteredChannels = channels.filter(channel =>
@@ -166,24 +166,24 @@ export function ConnectedChannelsTab({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Controls Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-xl py-4 border-b border-border/10">
-        <div className="relative flex-1 w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
+        <div className="relative flex-1 w-full max-w-sm group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
           <Input
             placeholder="Search connected channels..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            rounded="xl"
-            className="pl-10 h-11 bg-muted/20 focus:bg-background/50 border-border/40 shadow-sm"
+            variant="premium"
+            className="pl-10 h-11"
           />
         </div>
 
-        <div className="bg-muted/10 p-1 rounded-xl flex shadow-sm border border-white/5 backdrop-blur-md">
+        <div className="bg-muted p-1 rounded-xl flex border border-border/40">
           <button
             onClick={() => onViewModeChange('grid')}
             className={cn(
               "p-2 rounded-lg transition-all duration-300",
-              viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+              viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             )}
           >
             <Grid className="w-4 h-4" />
@@ -192,7 +192,7 @@ export function ConnectedChannelsTab({
             onClick={() => onViewModeChange('list')}
             className={cn(
               "p-2 rounded-lg transition-all duration-300",
-              viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+              viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             )}
           >
             <List className="w-4 h-4" />
@@ -201,12 +201,12 @@ export function ConnectedChannelsTab({
       </div>
 
       {channels.length === 0 ? (
-        <div className="text-center py-20 border-2 border-dashed border-border/50 rounded-3xl bg-muted/5">
+        <div className="text-center py-20 border border-dashed border-border/40 rounded-3xl bg-muted/10">
           <h3 className="text-xl font-semibold mb-2">No connections yet</h3>
           <p className="text-muted-foreground mb-8 mx-auto max-w-lg">
             Configure your first integration to start connecting channels and automating your workflow
           </p>
-          <Button onClick={onLoadData} size="lg" className="rounded-xl font-bold px-8">
+          <Button onClick={onLoadData} rounded="xl" className="font-bold px-8">
             Go to Configurations
           </Button>
         </div>
@@ -218,19 +218,18 @@ export function ConnectedChannelsTab({
                 const sameTypeCount = channels.filter(c => c.type === channel.type).length;
 
                 return (
-                  <Card key={channel.id} variant="glass" rounded="xl" className="group relative overflow-hidden h-full flex flex-col hover:shadow-2xl transition-all duration-500 border-white/5 hover:-translate-y-1">
-                    <div className={cn("h-1.5 w-full bg-gradient-to-r", channel.status === 'connected' ? "from-success/80 to-success/20" : "from-destructive/80 to-destructive/20")} />
+                  <Card key={channel.id} variant="premium" className="group h-full flex flex-col">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 pt-6">
-                      <div className={cn("p-4 rounded-xl shadow-inner transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500", getColor(channel.type))}>
+                      <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(channel.type))}>
                         {getIcon(channel.type)}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <Badge variant="outline" rounded="lg" className="text-success border-success/30 bg-success/10 gap-1 font-bold">
-                          <CheckCircle2 className="w-3 h-3" /> Active
+                        <Badge variant="success" className="font-bold">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Active
                         </Badge>
                         {channel.metadata?.botId && (
-                          <Badge variant="secondary" rounded="lg" className="gap-1 text-[10px] bg-primary/10 text-primary border-primary/20 font-bold">
-                            <Settings className="w-3 h-3" /> Linked
+                          <Badge variant="info" className="font-bold">
+                            <Settings className="w-3 h-3 mr-1" /> Linked
                           </Badge>
                         )}
                       </div>
@@ -248,11 +247,11 @@ export function ConnectedChannelsTab({
                     </CardContent>
                     <CardFooter className="grid grid-cols-2 gap-3 border-t border-white/5 bg-muted/5 p-4 mt-auto">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        rounded="lg"
+                        rounded="xl"
                         onClick={() => onAssignBot(channel)}
-                        className="text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary border border-white/5 bg-background/50 shadow-sm"
+                        className="text-[10px] font-black uppercase tracking-widest"
                       >
                         <Settings className="w-3.5 h-3.5 mr-2" />
                         Configure
@@ -260,9 +259,9 @@ export function ConnectedChannelsTab({
                       <Button
                         variant="ghost"
                         size="sm"
-                        rounded="lg"
+                        rounded="xl"
                         onClick={() => onDisconnect(channel.id)}
-                        className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive border border-white/5 bg-background/50 shadow-sm"
+                        className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-2" />
                         Sever
@@ -273,7 +272,7 @@ export function ConnectedChannelsTab({
               })}
             </div>
           ) : (
-            <div className="glass rounded-2xl overflow-hidden border border-border/40 shadow-xl">
+            <Card variant="premium" className="overflow-hidden">
               <DataTable
                 data={paginatedChannels}
                 columns={[
@@ -296,8 +295,8 @@ export function ConnectedChannelsTab({
                     key: 'status',
                     label: 'Status',
                     render: (_, row) => (
-                      <Badge variant="outline" rounded="lg" className="text-success border-success/30 bg-success/10 gap-1 font-bold">
-                        <CheckCircle2 className="w-3 h-3" /> Active
+                      <Badge variant="success" className="font-bold">
+                        <CheckCircle2 className="w-3 h-3 mr-1" /> Active
                       </Badge>
                     )
                   },
@@ -305,9 +304,9 @@ export function ConnectedChannelsTab({
                     key: 'bot',
                     label: 'Assigned Bot',
                     render: (_, row) => row.metadata?.botId ? (
-                      <Badge variant="secondary" className="gap-1 bg-blue-500/10 text-blue-600">Bot Assigned</Badge>
+                      <Badge variant="info">Bot Assigned</Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">None</span>
+                      <span className="text-xs text-muted-foreground">Disconnected</span>
                     )
                   },
                   {
@@ -346,7 +345,7 @@ export function ConnectedChannelsTab({
                 className="border-none"
                 tableClassName="border-none shadow-none bg-transparent"
               />
-            </div>
+            </Card>
           )}
 
           {/* Unified Pagination */}

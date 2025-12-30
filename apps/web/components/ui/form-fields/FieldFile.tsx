@@ -86,33 +86,27 @@ export function FieldFile({ field, value, onChange }: DynamicFormFieldProps) {
                                                 showPlayIcon={isVideo}
                                             />
 
-                                            {/* Action UI */}
-                                            <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                            <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button
                                                     type="button"
                                                     variant="destructive"
                                                     size="icon"
-                                                    className="h-8 w-8 rounded-full shadow-lg border border-white/20"
+                                                    className="h-6 w-6 rounded-full shadow-md"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleFileDelete(fileObj.fileId, idx);
                                                     }}
                                                 >
-                                                    <X className="w-4 h-4" />
+                                                    <X className="w-3 h-3" />
                                                 </Button>
                                             </div>
                                         </div>
                                     </ImagePreview>
 
-                                    <div className="px-4 py-3 flex items-center justify-between bg-card">
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-bold truncate">
-                                                {fileObj.name || 'Original Media'}
-                                            </p>
-                                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black opacity-50">
-                                                Studio Quality • Non-Cropped
-                                            </p>
-                                        </div>
+                                    <div className="p-2 flex items-center bg-card">
+                                        <p className="text-xs font-medium truncate w-full" title={fileObj.name}>
+                                            {fileObj.name || 'File'}
+                                        </p>
                                     </div>
                                 </div>
                             )
@@ -122,30 +116,27 @@ export function FieldFile({ field, value, onChange }: DynamicFormFieldProps) {
                         return (
                             <div
                                 key={idx}
-                                className="group relative flex items-center gap-4 p-2.5 rounded-xl border border-border/60 bg-card hover:border-primary/30 transition-all"
+                                className="group relative flex items-center gap-3 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                             >
                                 <ImagePreview src={fileObj.url}>
-                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-black/5 shrink-0 cursor-zoom-in">
+                                    <div className="relative w-10 h-10 rounded overflow-hidden bg-muted shrink-0 cursor-pointer">
                                         <Media
                                             src={fileObj.url}
                                             fill
-                                            className="object-contain"
+                                            className="object-cover"
                                             containerClassName="h-full w-full"
                                             muted
                                             playsInline
-                                            autoPlayOnHover
+                                            autoPlayOnHover={false}
                                             showPlayIcon={false}
                                         />
                                     </div>
                                 </ImagePreview>
 
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-bold truncate">
-                                        {fileObj.name || 'Media Asset'}
+                                    <p className="text-sm font-medium truncate" title={fileObj.name}>
+                                        {fileObj.name || 'File'}
                                     </p>
-                                    <span className="text-[9px] text-primary font-black uppercase tracking-tighter opacity-80">
-                                        Verified
-                                    </span>
                                 </div>
 
                                 <Button

@@ -48,7 +48,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface IntegrationConfig {
-  id?: number;
+  id?: string;
   provider: string;
   name: string;
   client_id: string;
@@ -61,9 +61,9 @@ interface IntegrationConfig {
 interface ChannelConfigurationsTabProps {
   configs: IntegrationConfig[];
   isLoading: boolean;
-  onSaveConfig: (config: Partial<IntegrationConfig>) => Promise<void>;
-  onDeleteConfig: (id: number) => void;
-  onConnect: (provider: string, configId?: number) => void;
+  onSaveConfig: (config: any) => Promise<void>;
+  onDeleteConfig: (id: string) => void;
+  onConnect: (provider: string, configId?: string) => void;
 }
 
 export function ChannelConfigurationsTab({
@@ -74,7 +74,7 @@ export function ChannelConfigurationsTab({
   onConnect
 }: ChannelConfigurationsTabProps) {
   const [configForm, setConfigForm] = useState({
-    id: undefined as number | undefined,
+    id: undefined as string | undefined,
     provider: '',
     name: '',
     client_id: '',
@@ -125,41 +125,41 @@ export function ChannelConfigurationsTab({
 
   const getColor = (type: string) => {
     const colors: Record<string, string> = {
-      'facebook': 'text-blue-600 bg-blue-500/10 border-blue-500/20',
-      'messenger': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+      'facebook': 'text-primary bg-primary/10 border-primary/20',
+      'messenger': 'text-primary bg-primary/10 border-primary/20',
       'instagram': 'text-pink-500 bg-pink-500/10 border-pink-500/20',
-      'whatsapp': 'text-green-500 bg-green-500/10 border-green-500/20',
-      'telegram': 'text-sky-500 bg-sky-500/10 border-sky-500/20',
-      'youtube': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'twitter': 'text-sky-400 bg-sky-400/10 border-sky-400/20',
-      'linkedin': 'text-blue-700 bg-blue-700/10 border-blue-700/20',
-      'tiktok': 'text-black bg-black/10 border-black/20',
-      'discord': 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
-      'slack': 'text-purple-600 bg-purple-600/10 border-purple-600/20',
-      'zalo': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'line': 'text-green-500 bg-green-500/10 border-green-500/20',
-      'viber': 'text-purple-500 bg-purple-500/10 border-purple-500/20',
-      'wechat': 'text-green-600 bg-green-600/10 border-green-600/20',
-      'sms': 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-      'email': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'webchat': 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20',
-      'shopify': 'text-green-600 bg-green-600/10 border-green-600/20',
-      'google': 'text-red-500 bg-red-500/10 border-red-500/20',
-      'hubspot': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-      'salesforce': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'mailchimp': 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
-      'intercom': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-      'zapier': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-      'notion': 'text-gray-800 bg-gray-800/10 border-gray-800/20',
-      'airtable': 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+      'whatsapp': 'text-success bg-success/10 border-success/20',
+      'telegram': 'text-info bg-info/10 border-info/20',
+      'youtube': 'text-destructive bg-destructive/10 border-destructive/20',
+      'twitter': 'text-info bg-info/10 border-info/20',
+      'linkedin': 'text-primary bg-primary/10 border-primary/20',
+      'tiktok': 'text-foreground bg-muted border-border/40',
+      'discord': 'text-primary bg-primary/10 border-primary/20',
+      'slack': 'text-primary bg-primary/10 border-primary/20',
+      'zalo': 'text-info bg-info/10 border-info/20',
+      'line': 'text-success bg-success/10 border-success/20',
+      'viber': 'text-primary bg-primary/10 border-primary/20',
+      'wechat': 'text-success bg-success/10 border-success/20',
+      'sms': 'text-warning bg-warning/10 border-warning/20',
+      'email': 'text-destructive bg-destructive/10 border-destructive/20',
+      'webchat': 'text-primary bg-primary/10 border-primary/20',
+      'shopify': 'text-success bg-success/10 border-success/20',
+      'google': 'text-destructive bg-destructive/10 border-destructive/20',
+      'hubspot': 'text-warning bg-warning/10 border-warning/20',
+      'salesforce': 'text-primary bg-primary/10 border-primary/20',
+      'mailchimp': 'text-warning bg-warning/10 border-warning/20',
+      'intercom': 'text-primary bg-primary/10 border-primary/20',
+      'zapier': 'text-warning bg-warning/10 border-warning/20',
+      'notion': 'text-foreground bg-muted border-border/40',
+      'airtable': 'text-info bg-info/10 border-info/20',
     };
-    return colors[type] || 'text-gray-600 bg-gray-600/10 border-gray-600/20';
+    return colors[type] || 'text-muted-foreground bg-muted border-border/40';
   };
 
-  const openConfig = (configId?: number, provider?: string) => {
-    const existing = configId ? configs.find(c => c.id === configId) : null;
+  const openConfig = (configId?: string, provider?: string) => {
+    const existing = configId ? configs.find(c => String(c.id) === String(configId)) : null;
     setConfigForm({
-      id: existing?.id || undefined,
+      id: existing?.id ? String(existing.id) : undefined,
       provider: existing?.provider || provider || '',
       name: existing?.name || '',
       client_id: existing?.client_id || '',
@@ -185,20 +185,40 @@ export function ChannelConfigurationsTab({
 
   const saveConfig = async () => {
     if (!configForm.provider) {
-      // TODO: Show error
+      toast.error("Provider is required");
       return;
     }
 
-    if (!configForm.client_id || !configForm.client_secret) {
-      // TODO: Show error
+    if (!configForm.client_id) {
+      toast.error("Client ID is required");
+      return;
+    }
+
+    // Prepare data by mapping snake_case to camelCase for the backend
+    const payload: any = {
+      id: configForm.id,
+      provider: configForm.provider,
+      name: configForm.name,
+      clientId: configForm.client_id,
+      scopes: configForm.scopes,
+      verifyToken: configForm.verify_token,
+      isActive: true // Default to active
+    };
+
+    // Only send secret if it's changed and not the mask '***'
+    if (configForm.client_secret && configForm.client_secret !== '***') {
+      payload.clientSecret = configForm.client_secret;
+    } else if (!configForm.id && !configForm.client_secret) {
+      // Secret is required for new configs
+      toast.error("Client Secret is required");
       return;
     }
 
     try {
-      await onSaveConfig(configForm);
+      await onSaveConfig(payload);
       closeConfigDialog();
     } catch (error) {
-      // TODO: Handle error
+      console.error("Save config error", error);
     }
   };
 
@@ -241,9 +261,9 @@ export function ChannelConfigurationsTab({
         <div>
           <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
             Configured Integrations
-            <span className="text-sm font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+            <Badge variant="secondary" rounded="full" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5">
               {configs.length}
-            </span>
+            </Badge>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {configs.map((config) => {
@@ -251,9 +271,9 @@ export function ChannelConfigurationsTab({
               const channelInfo = [...MESSAGING_CHANNELS, ...BUSINESS_INTEGRATIONS].find(c => c.id === provider);
 
               return (
-                <Card key={config.id} variant="glass" rounded="xl" className="group h-full flex flex-col hover:shadow-2xl transition-all duration-500 border-white/5">
+                <Card key={config.id} variant="premium" className="group h-full flex flex-col">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 pt-6 px-6">
-                    <div className={cn("p-4 rounded-xl shadow-inner transform group-hover:rotate-6 transition-transform duration-500", getColor(provider))}>
+                    <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(provider))}>
                       {getIcon(provider)}
                     </div>
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -283,24 +303,24 @@ export function ChannelConfigurationsTab({
                       {channelInfo?.description || 'API configured'}
                     </CardDescription>
                     <div className="space-y-3">
-                      <Card variant="flat" className="bg-background/40 backdrop-blur rounded-xl border border-white/5 flex items-center justify-between p-3">
+                      <div className="bg-muted/30 rounded-xl border border-border/40 flex items-center justify-between p-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">ID Tag</span>
                         <span className="font-mono text-[10px] font-bold bg-muted px-2 py-0.5 rounded-lg">{config.client_id?.slice(0, 10) || 'N/A'}...</span>
-                      </Card>
-                      <Card variant="flat" className="bg-background/40 backdrop-blur rounded-xl border border-white/5 flex items-center justify-between p-3">
+                      </div>
+                      <div className="bg-muted/30 rounded-xl border border-border/40 flex items-center justify-between p-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Registry</span>
-                        <Badge variant="outline" rounded="lg" className={cn("text-[10px] font-black gap-1.5 py-0 px-2", config.is_active ? 'text-success border-success/30 bg-success/10' : 'text-destructive border-destructive/30 bg-destructive/10')}>
-                          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", config.is_active ? 'bg-success' : 'bg-destructive')}></span>
+                        <Badge variant={config.is_active ? "success" : "destructive"} rounded="lg" className="text-[10px] font-black gap-1.5 py-0 px-2 uppercase">
+                          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", config.is_active ? 'bg-current' : 'bg-current')}></span>
                           {config.is_active ? 'STABLE' : 'OFFLINE'}
                         </Badge>
-                      </Card>
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="flex gap-3 px-6 pb-6 pt-4">
                     <Button
                       size="lg"
                       rounded="xl"
-                      className="flex-1 font-black tracking-tight shadow-lg shadow-primary/10"
+                      className="flex-1 font-black tracking-tight"
                       onClick={() => onConnect(provider, config.id)}
                     >
                       <Zap className="w-4 h-4 mr-2" />
@@ -311,7 +331,7 @@ export function ChannelConfigurationsTab({
                       variant="outline"
                       rounded="xl"
                       onClick={() => openConfig(config.id)}
-                      className="px-4 glass border-white/5"
+                      className="px-4"
                     >
                       <Settings className="w-4 h-4" />
                     </Button>
@@ -340,15 +360,14 @@ export function ChannelConfigurationsTab({
               <Card
                 key={channel.id}
                 onClick={() => openConfig(undefined, channel.id)}
-                variant="glass"
-                rounded="xl"
-                className="cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 group ring-1 ring-transparent hover:ring-primary/10 overflow-hidden"
+                variant="premium"
+                className="cursor-pointer transition-all duration-300 group overflow-hidden"
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
-                  <div className={cn("p-3 rounded-xl shadow-inner group-hover:scale-110 transition-transform duration-500", getColor(channel.id))}>
+                  <div className={cn("p-3 rounded-xl transition-all duration-500", getColor(channel.id))}>
                     {getIcon(channel.id)}
                   </div>
-                  <Settings className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-90" />
+                  <Settings className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300" />
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <CardTitle className="text-md font-bold mb-1 group-hover:text-primary transition-colors">{channel.name}</CardTitle>
@@ -372,15 +391,14 @@ export function ChannelConfigurationsTab({
               <Card
                 key={integration.id}
                 onClick={() => openConfig(undefined, integration.id)}
-                variant="glass"
-                rounded="xl"
-                className="cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all duration-300 group ring-1 ring-transparent hover:ring-primary/10 overflow-hidden"
+                variant="premium"
+                className="cursor-pointer transition-all duration-300 group overflow-hidden"
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
-                  <div className={cn("p-3 rounded-xl shadow-inner group-hover:scale-110 transition-transform duration-500", getColor(integration.id))}>
+                  <div className={cn("p-3 rounded-xl transition-all duration-500", getColor(integration.id))}>
                     {getIcon(integration.id)}
                   </div>
-                  <Badge variant="outline" rounded="lg" className="text-[9px] font-black tracking-widest bg-muted/30 border-white/5 uppercase py-0 px-2 opacity-60">
+                  <Badge variant="outline" rounded="lg" className="text-[9px] font-black tracking-widest uppercase py-0 px-2 opacity-60">
                     {integration.category}
                   </Badge>
                 </CardHeader>
@@ -399,10 +417,10 @@ export function ChannelConfigurationsTab({
       {/* Configuration Dialog */}
       {showConfigDialog && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <Card variant="premium" rounded="2xl" className="w-full max-w-3xl shadow-2xl border-white/10 ring-1 ring-white/10 overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+          <Card variant="premium" className="w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
             <div className="p-8">
-              <div className="flex items-center gap-5 mb-8 border-b border-white/5 pb-6">
-                <div className={cn("p-4 rounded-2xl shadow-inner transform rotate-3", getColor(configForm.provider))}>
+              <div className="flex items-center gap-5 mb-8 border-b border-border/40 pb-6">
+                <div className={cn("p-4 rounded-2xl", getColor(configForm.provider))}>
                   {getIcon(configForm.provider)}
                 </div>
                 <div className="flex-1">
@@ -417,9 +435,9 @@ export function ChannelConfigurationsTab({
                   size="icon"
                   onClick={closeConfigDialog}
                   rounded="full"
-                  className="hover:bg-destructive/10 hover:text-destructive transition-colors h-10 w-10"
+                  className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors h-10 w-10"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
 
@@ -435,6 +453,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
+                      variant="premium"
                       value={configForm.name}
                       onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
                       placeholder="e.g. Primary Facebook Portal"
@@ -447,6 +466,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
+                      variant="premium"
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
                       placeholder="Client / App ID"
@@ -460,6 +480,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="password"
+                      variant="premium"
                       value={configForm.client_secret}
                       onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
                       placeholder="Secret Key"
@@ -471,7 +492,7 @@ export function ChannelConfigurationsTab({
                 {(configForm.provider === 'facebook' || configForm.provider === 'messenger' || configForm.provider === 'instagram') && (
                   <div className="space-y-6 border-t border-white/5 pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-white/5 h-full">
+                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/40 h-full">
                         <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">OAuth Redirect URI</Label>
                         <div className="flex items-center gap-2">
                           <Input
@@ -494,7 +515,7 @@ export function ChannelConfigurationsTab({
                         </div>
                       </div>
 
-                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-white/5 h-full">
+                      <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/40 h-full">
                         <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">Webhook Callback URL</Label>
                         <div className="flex items-center gap-2">
                           <Input
@@ -524,6 +545,7 @@ export function ChannelConfigurationsTab({
                         </Label>
                         <Input
                           type="text"
+                          variant="premium"
                           value={configForm.verify_token}
                           onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
                           placeholder="Security Token"
@@ -544,6 +566,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
+                      variant="premium"
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
                       placeholder="e.g. read_messages, write_post"
@@ -562,7 +585,7 @@ export function ChannelConfigurationsTab({
                   </Button>
                   <Button
                     rounded="xl"
-                    className="flex-[2] h-12 font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 active:scale-95 transition-all"
+                    className="flex-[2] h-12 font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                     onClick={saveConfig}
                     disabled={!configForm.client_id || !configForm.client_secret}
                   >

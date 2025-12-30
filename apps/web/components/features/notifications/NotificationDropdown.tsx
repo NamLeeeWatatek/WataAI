@@ -94,19 +94,19 @@ export function NotificationDropdown({
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success': return <Check className="w-4 h-4 text-green-500" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'warning': return <AlertCircle className="w-4 h-4 text-amber-500" />;
-      case 'info': default: return <Info className="w-4 h-4 text-blue-500" />;
+      case 'success': return <Check className="w-4 h-4 text-success" />;
+      case 'error': return <AlertCircle className="w-4 h-4 text-destructive" />;
+      case 'warning': return <AlertCircle className="w-4 h-4 text-warning" />;
+      case 'info': default: return <Info className="w-4 h-4 text-info" />;
     }
   };
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'success': return 'bg-green-500/10 border-green-500/20 text-green-600';
-      case 'error': return 'bg-red-500/10 border-red-500/20 text-red-600';
-      case 'warning': return 'bg-amber-500/10 border-amber-500/20 text-amber-600';
-      case 'info': default: return 'bg-blue-500/10 border-blue-500/20 text-blue-600';
+      case 'success': return 'bg-success/10 border-success/20 text-success';
+      case 'error': return 'bg-destructive/10 border-destructive/20 text-destructive';
+      case 'warning': return 'bg-warning/10 border-warning/20 text-warning';
+      case 'info': default: return 'bg-info/10 border-info/20 text-info';
     }
   };
 
@@ -136,7 +136,7 @@ export function NotificationDropdown({
           </Badge>
         )}
         {!isConnected && (
-          <div className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 border-2 border-background" />
+          <div className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-destructive border-2 border-background shadow-sm" />
         )}
       </Button>
 
@@ -166,12 +166,12 @@ export function NotificationDropdown({
                     <div className="flex items-center gap-1">
                       {isConnected ? (
                         <>
-                          <div className="h-2 w-2 rounded-full bg-green-500" />
+                          <div className="h-2 w-2 rounded-full bg-success" />
                           <span>Connected</span>
                         </>
                       ) : (
                         <>
-                          <div className="h-2 w-2 rounded-full bg-red-500" />
+                          <div className="h-2 w-2 rounded-full bg-destructive" />
                           <span>Disconnected</span>
                         </>
                       )}

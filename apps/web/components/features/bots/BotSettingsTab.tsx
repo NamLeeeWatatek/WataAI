@@ -18,11 +18,10 @@ import { Sparkles, Trash2, AlertTriangle, Settings2 } from 'lucide-react';
 export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSettingsTabProps) {
   return (
     <div className="space-y-8">
-      <Card className="rounded-2xl border-border/40 shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden group">
-        <div className="h-1.5 w-full bg-gradient-to-r from-primary/50 via-primary to-primary/50 group-hover:via-primary/70 transition-all duration-500" />
+      <Card variant="premium">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl shadow-inner">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
               <Settings2 className="w-5 h-5 text-primary" />
             </div>
             <div>
@@ -32,10 +31,10 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
           </div>
         </CardHeader>
         <CardContent className="space-y-8 pt-2">
-          <div className="flex items-center justify-between p-4 border border-border/40 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors">
+          <div className="flex items-center justify-between p-4 border border-border/40 rounded-xl bg-muted/10 group-hover:bg-muted/20 transition-colors">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-500" />
+                <Sparkles className="w-4 h-4 text-primary" />
                 <Label className="text-sm font-bold tracking-tight">Autonomous Learning</Label>
               </div>
               <p className="text-xs font-medium text-muted-foreground ml-6">Enable continuous refinement from user interactions</p>
@@ -43,17 +42,15 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
             <Switch
               checked={enableAutoLearn}
               onCheckedChange={onChange}
-              className="data-[state=checked]:bg-purple-500"
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-destructive/20 shadow-xl shadow-destructive/5 bg-destructive/[0.02] backdrop-blur-sm overflow-hidden group">
-        <div className="h-1.5 w-full bg-gradient-to-r from-destructive/50 via-destructive to-destructive/50" />
+      <Card variant="premium" className="bg-destructive/[0.02] border-destructive/20 transition-all hover:bg-destructive/[0.04]">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-destructive/10 rounded-xl shadow-inner">
+            <div className="p-2.5 bg-destructive/10 rounded-xl">
               <AlertTriangle className="w-5 h-5 text-destructive" />
             </div>
             <div>
@@ -63,10 +60,11 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pt-2">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 border border-destructive/20 rounded-xl bg-destructive/5">
-            <div className="space-y-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 border border-destructive/20 rounded-xl bg-destructive/5 relative overflow-hidden group/zone">
+            <div className="absolute inset-0 bg-gradient-to-r from-destructive/5 to-transparent pointer-events-none opacity-0 group-hover/zone:opacity-100 transition-opacity" />
+            <div className="space-y-1 relative">
               <h4 className="text-sm font-black uppercase tracking-widest text-destructive">Destroy Bot Instance</h4>
-              <p className="text-xs font-bold text-destructive/70 max-w-sm">
+              <p className="text-xs font-bold text-destructive/60 max-w-sm">
                 Permanently remove this bot and all associated configurations. This action is irreversible.
               </p>
             </div>
@@ -74,7 +72,8 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
               <Button
                 variant="destructive"
                 onClick={onDelete}
-                className="rounded-xl px-8 font-black shadow-lg shadow-destructive/20 h-11 transition-all active:scale-95 flex items-center gap-2"
+                rounded="xl"
+                className="px-8 font-black shadow-lg shadow-destructive/20 h-11 transition-all active:scale-95 flex items-center gap-2 relative"
               >
                 <Trash2 className="w-4 h-4" />
                 Execute Deletion

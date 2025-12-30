@@ -3,7 +3,8 @@ import {
     ExecutionFlow,
     ExecutionType,
     AiExecutionConfig,
-    HttpExecutionConfig
+    HttpExecutionConfig,
+    FormField
 } from '@/lib/api/creation-tools';
 import { Label } from '@/components/ui/Label';
 import { Input } from '@/components/ui/Input';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/Select';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen, Sparkles, Globe } from 'lucide-react';
+import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -31,13 +32,15 @@ import { Template } from '@/lib/types/template';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
+import { toast } from 'sonner';
 
 interface ExecutionConfigProps {
     config: ExecutionFlow;
     onChange: (config: ExecutionFlow) => void;
+    availableFields?: FormField[];
 }
 
-export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
+export function ExecutionConfig({ config, onChange, availableFields = [] }: ExecutionConfigProps) {
     const handleTypeChange = (type: ExecutionType) => {
         // Reset config to defaults based on type
         if (type === 'ai-generation') {
@@ -49,12 +52,18 @@ export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
                 parameters: { temperature: 0.7 }
             });
         } else if (type === 'http-webhook') {
+            // Create a smart default body based on available fields
+            const defaultBody: Record<string, string> = {};
+            availableFields.forEach(f => {
+                defaultBody[f.name] = `{{${f.name}}}`;
+            });
+
             onChange({
                 type: 'http-webhook',
                 urlTemplate: 'https://',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                bodyTemplate: '{\n  "input": "{{variable}}"\n}',
+                bodyTemplate: JSON.stringify(defaultBody, null, 2),
                 timeoutMs: 5000,
                 retryCount: 3
             });
@@ -112,7 +121,13 @@ export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
                 </CardContent>
             </Card>
 
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+                {availableFields.length > 0 && (
+                    <div className="mb-4">
+                        <VariablesHelper fields={availableFields} />
+                    </div>
+                )}
+
                 {config.type === 'ai-generation' && (
                     <AiConfigEditor
                         config={config as AiExecutionConfig}
@@ -128,6 +143,77 @@ export function ExecutionConfig({ config, onChange }: ExecutionConfigProps) {
                 )}
             </div>
         </div>
+    );
+}
+
+function VariablesHelper({ fields }: { fields: FormField[] }) {
+    const [copied, setCopied] = useState<string | null>(null);
+
+    const copyToClipboard = (text: string, label?: string) => {
+        navigator.clipboard.writeText(text);
+        setCopied(label || text);
+        setTimeout(() => setCopied(null), 2000);
+        toast.success(label ? `Copied ${label}` : `Copied {{${text}}} to clipboard`);
+    };
+
+    const copyAllAsJson = () => {
+        const lines: string[] = [];
+        fields.forEach(f => {
+            const isComplex = ['file', 'files', 'multi-select', 'channel-selector', 'json', 'key-value'].includes(f.type);
+            const variable = isComplex ? `{{${f.name} | json}}` : `{{${f.name}}}`;
+            if (isComplex) {
+                // For complex types, don't wrap in quotes so it injects raw JSON
+                lines.push(`  "${f.name}": ${variable}`);
+            } else {
+                lines.push(`  "${f.name}": "${variable}"`);
+            }
+        });
+        const jsonStr = `{\n${lines.join(',\n')}\n}`;
+        copyToClipboard(jsonStr, 'JSON Structure');
+    };
+
+    return (
+        <Card className="border-primary/20 bg-primary/5 shadow-none overflow-hidden underline-none">
+            <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Info className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Available Form Variables</span>
+                    </div>
+                    {fields.length > 0 && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[10px] gap-1.5 px-2 bg-background"
+                            onClick={copyAllAsJson}
+                        >
+                            {copied === 'JSON Structure' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                            Copy All as JSON
+                        </Button>
+                    )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                    {fields.map(f => (
+                        <button
+                            key={f.name}
+                            onClick={() => copyToClipboard(f.name)}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border hover:border-primary hover:text-primary transition-all group"
+                            title={`Click to copy {{${f.name}}}`}
+                        >
+                            <span className="text-xs font-mono">{f.name}</span>
+                            {copied === f.name ? (
+                                <Check className="w-3 h-3 text-green-500" />
+                            ) : (
+                                <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                        </button>
+                    ))}
+                    {fields.length === 0 && (
+                        <p className="text-[10px] text-muted-foreground italic">No fields defined yet. Add fields in the Form Builder tab first.</p>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -265,10 +351,10 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                         <span className="text-xs text-muted-foreground font-normal">(JSON)</span>
                     </Label>
                     <Textarea
-                        defaultValue={JSON.stringify(config.headers, null, 2)}
-                        onBlur={(e) => {
+                        value={JSON.stringify(config.headers, null, 2)}
+                        onChange={(e) => {
                             try { onChange({ ...config, headers: JSON.parse(e.target.value) }) }
-                            catch { /* Ignore invalid JSON on blur or show error */ }
+                            catch { /* Allow typing */ }
                         }}
                         className="font-mono text-xs h-24"
                     />

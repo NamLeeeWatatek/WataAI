@@ -184,42 +184,39 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card variant="glass" rounded="3xl" className="relative overflow-hidden group border-border/40 shadow-xl">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl -mr-16 -mt-16 group-hover:bg-primary/10 transition-all duration-500" />
+        <Card variant="premium">
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Connected Providers</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{allProviders.length}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="size-2 rounded-full bg-success animate-pulse" />
               <span>{activeProviders} Active Providers</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card variant="glass" rounded="3xl" className="relative overflow-hidden group border-border/40 shadow-xl">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all duration-500" />
+        <Card variant="premium">
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Usage</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{totalUsage.toLocaleString()}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <Activity className="size-3.5 text-blue-500" />
+              <Activity className="size-3.5 text-info" />
               <span>Requests Processed</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card variant="flat" rounded="3xl" className="relative overflow-hidden group border-primary/20 shadow-xl shadow-primary/5 bg-primary/5 backdrop-blur-md border-2 border-dashed">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          <CardHeader className="pb-3">
+        <Card variant="premium" className="bg-primary/5 border-dashed border-primary/20">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Add Capability</CardDescription>
+            <Sparkles className="size-4 text-primary opacity-50" />
           </CardHeader>
           <CardContent className="pt-2">
-            <Button onClick={() => handleOpenDialog()} className="w-full shadow-2xl shadow-primary/30 font-black rounded-2xl h-14 active:scale-[0.98] transition-all bg-primary hover:bg-primary text-sm tracking-tight group/btn overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000" />
+            <Button onClick={() => handleOpenDialog()} variant="premium" rounded="xl" className="w-full font-black h-14">
               <Plus className="mr-2 size-5" />
               Add Provider
             </Button>
@@ -235,49 +232,52 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
             placeholder="Search providers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 rounded-[20px] bg-muted/20 focus:bg-background border-border/40 focus:border-primary/40 focus:ring-primary/10 h-12 transition-all font-medium text-sm"
+            variant="premium"
+            className="pl-12"
           />
         </div>
 
-        <div className="bg-muted/30 p-1.5 rounded-2xl flex shadow-inner border border-border/40 backdrop-blur-md">
+        <div className="bg-muted/10 p-1 rounded-xl flex border border-border/20 backdrop-blur-md">
           <button
             onClick={() => setViewMode('grid')}
             className={cn(
-              "p-2.5 rounded-xl transition-all duration-300",
-              viewMode === 'grid' ? 'bg-background text-primary shadow-xl ring-1 ring-border/20 scale-100' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 scale-95'
+              "p-2 rounded-lg transition-all duration-300",
+              viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             )}
             title="Grid Topology"
           >
-            <Grid className="w-5 h-5" />
+            <Grid className="w-4 h-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
             className={cn(
-              "p-2.5 rounded-xl transition-all duration-300",
-              viewMode === 'list' ? 'bg-background text-primary shadow-xl ring-1 ring-border/20 scale-100' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 scale-95'
+              "p-2 rounded-lg transition-all duration-300",
+              viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
             )}
             title="Sequential Table"
           >
-            <List className="w-5 h-5" />
+            <List className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Content Area */}
       {allProviders.length === 0 ? (
-        <Card variant="flat" rounded="3xl" className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-border/40">
-          <div className="size-20 rounded-full bg-primary/5 flex items-center justify-center mb-6 ring-8 ring-primary/5">
-            <Key className="size-10 text-primary opacity-40" />
+        <div className="flex flex-col items-center justify-center py-24 border border-dashed border-border/40 rounded-3xl bg-muted/5 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent pointer-events-none" />
+          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 relative">
+            <Key className="size-10 text-primary opacity-60" />
+            <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-20" />
           </div>
-          <h3 className="text-xl font-black tracking-tight">No Providers Configured</h3>
-          <p className="text-muted-foreground text-center max-w-sm mt-2 mb-10 font-medium">
-            You haven't connected any AI providers yet. Add a provider to start using AI features.
+          <h3 className="text-xl font-black tracking-tight">System Identity Required</h3>
+          <p className="text-muted-foreground text-center max-w-sm mt-2 mb-10 font-medium leading-relaxed">
+            Initialize your neural gateway by connecting a verified AI provider to unlock advanced system capabilities.
           </p>
-          <Button onClick={() => handleOpenDialog()} size="lg" className="rounded-full font-bold px-10 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+          <Button onClick={() => handleOpenDialog()} variant="premium" size="lg" rounded="full" className="font-bold px-10 shadow-xl shadow-primary/20 active:scale-95 transition-all">
             <Plus className="mr-2 size-5" />
-            Connect Provider
+            Establish Neural Link
           </Button>
-        </Card>
+        </div>
       ) : (
         <>
           {viewMode === 'grid' ? (
@@ -294,10 +294,10 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
 
                   return (
                     <div key={provider.id}>
-                      <Card variant="glass" rounded="4xl" className="group h-full flex flex-col border border-border/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 overflow-hidden hover:-translate-y-1">
+                      <Card variant="premium" className="group h-full flex flex-col overflow-hidden">
                         <div className={cn(
-                          "h-1.5 w-full bg-gradient-to-r transition-all duration-500",
-                          provider.isActive ? "from-primary via-primary/80 to-primary/40" : "from-muted/40 via-muted/20 to-transparent"
+                          "h-1.5 w-full transition-all duration-500",
+                          provider.isActive ? "bg-primary" : "bg-muted"
                         )} />
 
                         <CardHeader className="p-6 pb-4">
@@ -319,10 +319,10 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               </div>
                             </div>
                             <div className={cn(
-                              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-sm flex items-center gap-1.5",
-                              provider.isActive ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted/30 text-muted-foreground border border-border/30"
+                              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5",
+                              provider.isActive ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/30"
                             )}>
-                              <div className={cn("size-1.5 rounded-full", provider.isActive ? "bg-primary animate-pulse" : "bg-muted-foreground")} />
+                              <div className={cn("size-1.5 rounded-full", provider.isActive ? "bg-success animate-pulse" : "bg-muted-foreground")} />
                               {provider.isActive ? 'Active' : 'Offline'}
                             </div>
                           </div>
@@ -354,28 +354,28 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {provider.modelList.slice(0, 5).map((model) => (
-                                  <Badge key={model} variant="secondary" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors rounded-md">
+                                  <Badge key={model} variant="secondary" rounded="lg" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors">
                                     {model}
                                   </Badge>
                                 ))}
                                 {provider.modelList.length > 5 && (
-                                  <Badge variant="secondary" className="text-[9px] px-2 py-0.5 bg-muted/5 border-border/10 opacity-60 rounded-md">
+                                  <Badge variant="secondary" rounded="lg" className="text-[9px] px-2 py-0.5 bg-muted/5 border-border/10 opacity-60">
                                     +{provider.modelList.length - 5}
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           ) : (
-                            <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed border-primary/10 rounded-2xl bg-primary/[0.02] group-hover:bg-primary/[0.04] transition-all relative overflow-hidden">
-                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-                              <Cpu className="size-6 text-primary/20 mb-3" />
-                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-4">No Models Detected</p>
+                            <div className="py-8 flex flex-col items-center justify-center border border-dashed border-primary/20 rounded-2xl bg-primary/5 group-hover:bg-primary/10 transition-all relative overflow-hidden">
+                              <Cpu className="size-6 text-primary/40 mb-3" />
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-4">No Models Detected</p>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleSyncModels(provider.id)}
                                 disabled={isSyncing === provider.id}
-                                className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all px-4"
+                                rounded="lg"
+                                className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all px-4"
                               >
                                 {isSyncing === provider.id ? (
                                   <Loader2 className="size-3 mr-2 animate-spin" />
@@ -387,7 +387,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 gap-6 p-4 rounded-2xl bg-muted/10 border border-border/10 mt-auto">
+                          <div className="grid grid-cols-2 gap-6 p-4 rounded-xl border border-border/20 bg-muted/5 mt-auto">
                             <div className="space-y-1">
                               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Workload</p>
                               <div className="flex items-center gap-1.5">
@@ -405,25 +405,22 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                             <div className="flex gap-3">
                               {!provider.isVerified && (
                                 <Button
-                                  variant="outline"
+                                  variant="warning"
                                   size="sm"
+                                  rounded="xl"
                                   onClick={() => handleVerify(provider.id)}
-                                  className="flex-1 h-11 rounded-xl border-orange-500/20 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 hover:text-orange-700 font-bold text-xs group/verify"
+                                  className="flex-1 h-11 font-bold text-xs"
                                 >
                                   <RefreshCw className="mr-2 size-3.5" />
                                   Validate
                                 </Button>
                               )}
                               <Button
-                                variant={provider.isActive ? "outline" : "default"}
+                                variant={provider.isActive ? "outline" : "premium"}
                                 size="sm"
+                                rounded="xl"
                                 onClick={() => handleToggleActive(provider)}
-                                className={cn(
-                                  "flex-1 h-11 rounded-xl font-bold text-xs transition-all active:scale-95",
-                                  provider.isActive
-                                    ? "border-primary/20 hover:bg-primary/5 hover:text-primary"
-                                    : "bg-primary shadow-lg shadow-primary/20"
-                                )}
+                                className="flex-1 h-11 font-bold text-xs"
                               >
                                 {provider.isActive ? 'Deactivate' : 'Activate'}
                               </Button>
@@ -454,7 +451,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                 })}
             </div>
           ) : (
-            <Card variant="glass" rounded="4xl" className="overflow-hidden border border-border/40 shadow-xl">
+            <Card variant="premium" className="overflow-hidden">
               <DataTable
                 data={allProviders
                   .filter(p =>

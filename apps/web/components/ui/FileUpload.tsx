@@ -36,11 +36,21 @@ export function FileUpload({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    processFile(file);
+    await processFiles(Array.from(files));
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
+    for (const file of files) {
+      await processSingleFile(file);
+    }
+  };
+
+  const processSingleFile = async (file: File) => {
     // Validate
     const validation = fileUploadService.validateFile(file, {
       maxSize,
@@ -99,6 +109,7 @@ export function FileUpload({
     } finally {
       setUploading(false);
       setProgress(0);
+      setPreview(null); // Clear preview after upload
     }
   };
 
@@ -153,7 +164,7 @@ export function FileUpload({
       {uploading && (
         <div className="mt-4 space-y-2 animate-in fade-in zoom-in-95 duration-300">
           <div className="flex justify-between text-[10px] items-center px-1">
-            <span className="font-bold text-primary uppercase tracking-tight">Uploading</span>
+            <span className="font-bold text-primary uppercase tracking-tight">Uploading {preview?.name}</span>
             <span className="font-mono font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full">{progress}%</span>
           </div>
           <Progress
@@ -215,10 +226,17 @@ export function FileDropzone({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [previewName, setPreviewName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
+    for (const file of files) {
+      await processSingleFile(file);
+    }
+  };
+
+  const processSingleFile = async (file: File) => {
     // Validate
     const validation = fileUploadService.validateFile(file, {
       maxSize,
@@ -232,6 +250,7 @@ export function FileDropzone({
 
     setUploading(true);
     setProgress(0);
+    setPreviewName(file.name);
 
     try {
       // Auto-determine bucket
@@ -259,6 +278,7 @@ export function FileDropzone({
     } finally {
       setUploading(false);
       setProgress(0);
+      setPreviewName('');
     }
   };
 
@@ -277,14 +297,17 @@ export function FileDropzone({
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      processFile(files[0]);
+      await processFiles(Array.from(files));
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      processFile(files[0]);
+      await processFiles(Array.from(files));
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -338,11 +361,6 @@ export function FileDropzone({
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30 pointer-events-none rounded-full" />
                   </div>
-                </div>
-
-                <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
-                  <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest">Encrypting Transfer</p>
                 </div>
               </>
             ) : (

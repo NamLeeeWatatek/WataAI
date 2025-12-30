@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/Card"
 import { motion } from 'framer-motion'
+import { Badge } from "@/components/ui/Badge"
 import { Users, LayoutGrid, Wrench, Sparkles, TrendingUp, TrendingDown, ClipboardList } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
@@ -14,13 +15,13 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
     const formatGrowthRate = (rate: number) => {
         const isPositive = rate >= 0
         return (
-            <div className={cn(
-                "flex items-center text-xs font-bold px-2 py-1 rounded-full",
-                isPositive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-            )}>
-                {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                <span>{isPositive ? '+' : ''}{rate.toFixed(1)}%</span>
-            </div>
+            <Badge
+                variant={isPositive ? 'success' : 'destructive'}
+                className="h-7 px-3 gap-1 rounded-full font-bold border-none"
+            >
+                {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                <span className="text-[10px]">{isPositive ? '+' : ''}{rate.toFixed(1)}%</span>
+            </Badge>
         )
     }
 
@@ -29,7 +30,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
             id: 'users',
             title: t('dashboard.stats.totalUsers'),
             icon: Users,
-            color: 'blue',
+            color: 'info',
             total: stats?.users?.total,
             growth: stats?.users?.growthRate,
             substats: [
@@ -41,7 +42,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
             id: 'workspaces',
             title: t('dashboard.stats.totalWorkspaces'),
             icon: LayoutGrid,
-            color: 'purple',
+            color: 'primary',
             total: stats?.workspaces?.total,
             growth: stats?.workspaces?.growthRate,
             substats: [
@@ -52,7 +53,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
             id: 'tools',
             title: t('admin.stats.creationTools'),
             icon: Wrench,
-            color: 'amber',
+            color: 'warning',
             total: stats?.creationTools?.total,
             growth: stats?.creationTools?.growthRate,
             substats: [
@@ -64,7 +65,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
             id: 'jobs',
             title: t('admin.stats.generationJobs'),
             icon: ClipboardList,
-            color: 'emerald',
+            color: 'success',
             total: stats?.jobs?.total,
             growth: stats?.jobs?.growthRate,
             substats: [
@@ -83,22 +84,22 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
                 >
-                    <Card className="overflow-hidden border-border/40 shadow-sm hover:shadow-xl transition-all duration-500 group relative">
+                    <Card variant="premium" className="group h-full flex flex-col pt-2 transition-all duration-500">
                         <div className={cn(
                             "absolute top-0 left-0 w-1 h-full opacity-0 group-hover:opacity-100 transition-opacity",
-                            card.color === 'blue' ? 'bg-blue-500' :
-                                card.color === 'purple' ? 'bg-purple-500' :
-                                    card.color === 'amber' ? 'bg-amber-500' :
-                                        card.color === 'emerald' ? 'bg-emerald-500' : 'bg-muted'
+                            card.color === 'info' ? 'bg-info' :
+                                card.color === 'primary' ? 'bg-primary' :
+                                    card.color === 'warning' ? 'bg-warning' :
+                                        card.color === 'success' ? 'bg-success' : 'bg-muted'
                         )} />
                         <CardContent className="p-6">
                             <div className="flex justify-between items-start mb-4">
                                 <div className={cn(
-                                    "p-3 rounded-xl transition-colors duration-300",
-                                    card.color === 'blue' ? 'bg-blue-500/10 text-blue-500 group-hover:bg-blue-500 group-hover:text-white' :
-                                        card.color === 'purple' ? 'bg-purple-500/10 text-purple-500 group-hover:bg-purple-500 group-hover:text-white' :
-                                            card.color === 'amber' ? 'bg-amber-500/10 text-amber-500 group-hover:bg-amber-500 group-hover:text-white' :
-                                                card.color === 'emerald' ? 'bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white' : 'bg-muted/10 text-muted-foreground'
+                                    "p-3 rounded-xl transition-all duration-300",
+                                    card.color === 'info' ? 'bg-info/10 text-info group-hover:bg-info group-hover:text-white' :
+                                        card.color === 'primary' ? 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white' :
+                                            card.color === 'warning' ? 'bg-warning/10 text-warning group-hover:bg-warning group-hover:text-black' :
+                                                card.color === 'success' ? 'bg-success/10 text-success group-hover:bg-success group-hover:text-white' : 'bg-muted/10 text-muted-foreground'
                                 )}>
                                     <card.icon className="w-5 h-5" />
                                 </div>

@@ -311,7 +311,11 @@ export function ToolDialog({
                             </TabsContent>
 
                             <TabsContent value="execution" className="mt-0 h-full">
-                                <ExecutionConfig config={executionFlow} onChange={setExecutionFlow} />
+                                <ExecutionConfig
+                                    config={executionFlow}
+                                    onChange={setExecutionFlow}
+                                    availableFields={formConfig.fields}
+                                />
                             </TabsContent>
                         </div>
                     </Tabs>

@@ -39,7 +39,7 @@ export function TemplateCardMedia({
             className
         )}>
             {!showFallback ? (
-                <div className="absolute inset-0 group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-1">
+                <div className="absolute inset-0">
                     <Media
                         src={thumbnailUrl!}
                         alt={name}

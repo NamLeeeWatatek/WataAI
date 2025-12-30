@@ -37,10 +37,10 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
     const [isDeleting, setIsDeleting] = useState(false);
 
     const statusConfig = {
-        [CreationJobStatus.COMPLETED]: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle, label: 'Completed' },
-        [CreationJobStatus.PROCESSING]: { color: 'bg-blue-500/10 text-blue-500', icon: Clock, label: 'Processing' },
-        [CreationJobStatus.PENDING]: { color: 'bg-yellow-500/10 text-yellow-500', icon: Clock, label: 'Pending' },
-        [CreationJobStatus.FAILED]: { color: 'bg-red-500/10 text-red-500', icon: AlertCircle, label: 'Failed' },
+        [CreationJobStatus.COMPLETED]: { color: 'text-success', variant: 'success' as const, icon: CheckCircle, label: 'Completed' },
+        [CreationJobStatus.PROCESSING]: { color: 'text-primary', variant: 'info' as const, icon: Clock, label: 'Processing' },
+        [CreationJobStatus.PENDING]: { color: 'text-warning', variant: 'warning' as const, icon: Clock, label: 'Pending' },
+        [CreationJobStatus.FAILED]: { color: 'text-destructive', variant: 'destructive' as const, icon: AlertCircle, label: 'Failed' },
     };
 
     const status = statusConfig[job.status] || statusConfig[CreationJobStatus.PENDING];
@@ -109,9 +109,9 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
 
     return (
         <>
-            <Card className={cn(
-                "flex flex-col h-full hover:shadow-lg transition-all relative group border-0 bg-secondary/30",
-                isSelected && "ring-2 ring-primary bg-primary/5"
+            <Card variant="premium" className={cn(
+                "flex flex-col h-full relative group transition-all",
+                isSelected && "border-primary ring-1 ring-primary/20 bg-primary/5 shadow-primary/10"
             )}>
                 <div className={cn(
                     "absolute top-3 left-3 z-10 transition-opacity",
@@ -130,11 +130,11 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
 
                 <CardHeader className="pb-2 pt-4">
                     <div className="flex justify-between items-start gap-2">
-                        <CardTitle className={cn("text-base font-semibold truncate transition-all", isSelected && "ml-7")} title={getDisplayName()}>
+                        <CardTitle className={cn("text-base font-bold truncate transition-all", isSelected && "ml-7")} title={getDisplayName()}>
                             {getDisplayName()}
                         </CardTitle>
-                        <Badge variant="outline" className={cn(status.color, "border-0 flex items-center gap-1 shrink-0 px-2 py-0 h-6")}>
-                            <StatusIcon className="w-3 h-3" />
+                        <Badge variant={status.variant} className="font-bold border-none h-6">
+                            <StatusIcon className="w-3 h-3 mr-1" />
                             {status.label}
                         </Badge>
                     </div>
@@ -162,8 +162,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                             </div>
                             <Progress
                                 value={job.progress}
-                                className="h-1.5 bg-secondary/50 border border-primary/5 shadow-inner"
-                                indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-500 shadow-[0_0_10px_rgba(var(--primary),0.5)]"
+                                className="h-1.5 bg-muted"
                             />
                         </div>
                     )}

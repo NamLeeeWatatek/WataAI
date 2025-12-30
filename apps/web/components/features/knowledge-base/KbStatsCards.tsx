@@ -9,10 +9,10 @@ interface KBStatsCardsProps {
 export function KBStatsCards({ stats }: KBStatsCardsProps) {
     return (
         <div className="grid grid-cols-4 gap-4 mb-6">
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
+            <Card variant="premium" className="p-4 group">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FileText className="w-5 h-5 text-blue-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Documents</p>
@@ -20,10 +20,10 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
+            <Card variant="premium" className="p-4 group">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Database className="w-5 h-5 text-green-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Database className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Size</p>
@@ -31,10 +31,10 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
+            <Card variant="premium" className="p-4 group">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Cpu className="w-5 h-5 text-purple-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Cpu className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Embedding Model</p>
@@ -42,10 +42,10 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
+            <Card variant="premium" className="p-4 group">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Settings className="w-5 h-5 text-orange-500" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Settings className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Chunk Size</p>

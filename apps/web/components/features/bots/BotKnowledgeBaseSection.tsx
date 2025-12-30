@@ -200,12 +200,11 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     ];
 
     return (
-        <Card className="rounded-2xl border-border/40 shadow-xl shadow-primary/5 bg-card/50 backdrop-blur-sm overflow-hidden group">
-            <div className="h-1.5 w-full bg-gradient-to-r from-primary/50 via-primary to-primary/50 group-hover:via-primary/70 transition-all duration-500" />
+        <Card variant="premium">
             <CardHeader className="pb-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-primary/10 rounded-xl shadow-inner">
+                        <div className="p-2.5 bg-primary/10 rounded-xl">
                             <Database className="w-5 h-5 text-primary" />
                         </div>
                         <div>
@@ -215,12 +214,12 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                     </div>
                     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="rounded-xl shadow-lg shadow-primary/10 font-bold h-10 transition-all active:scale-95">
+                            <Button rounded="xl" className="font-bold h-10 transition-all active:scale-95 shadow-lg shadow-primary/5">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Link Knowledge Base
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl rounded-3xl border-border/40 bg-card/95 backdrop-blur-xl">
+                        <DialogContent className="max-w-2xl rounded-3xl border-none shadow-3xl">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black tracking-tight">Link Knowledge Base</DialogTitle>
                                 <DialogDescription className="text-sm font-medium">
@@ -233,7 +232,8 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     <Input
                                         placeholder="Search available knowledge bases..."
-                                        className="pl-10 rounded-xl bg-muted/20 focus:bg-background border-border/50 transition-all h-11"
+                                        variant="premium"
+                                        className="pl-10"
                                         value={availableSearch}
                                         onChange={(e) => setAvailableSearch(e.target.value)}
                                     />
@@ -250,7 +250,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                                 label: 'Name',
                                                 render: (_, row) => (
                                                     <div className="flex items-center gap-3">
-                                                        <div className="p-2 rounded-lg bg-primary/5 text-primary border border-primary/10">
+                                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
                                                             <BookOpen className="w-4 h-4" />
                                                         </div>
                                                         <div>
@@ -265,7 +265,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                                 label: '',
                                                 className: 'text-right',
                                                 render: (_, row) => (
-                                                    <Button size="sm" onClick={() => handleLink(row)} className="rounded-lg h-8 px-4 font-bold text-xs shadow-md shadow-primary/5 hover:shadow-primary/10 transition-all">
+                                                    <Button size="sm" rounded="lg" onClick={() => handleLink(row)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
                                                         <LinkIcon className="w-3.5 h-3.5 mr-2" />
                                                         Link
                                                     </Button>
@@ -293,7 +293,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             sortable: true,
                             render: (_, row) => (
                                 <div className="flex items-center gap-4 py-1">
-                                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/10 shadow-inner">
+                                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
                                         <BookOpen className="w-5 h-5" />
                                     </div>
                                     <div>
@@ -307,7 +307,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             key: 'stats',
                             label: 'Volume',
                             render: (_, row) => (
-                                <Badge variant="secondary" className="font-mono font-bold text-[10px] px-2.5 py-0.5 bg-muted/50 border-border/40">
+                                <Badge variant="secondary" className="font-mono font-bold text-[10px] px-2.5 py-0.5">
                                     {row.knowledgeBase?.totalDocuments || 0} items
                                 </Badge>
                             )
@@ -361,8 +361,9 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             </p>
                             <Button
                                 variant="outline"
+                                rounded="full"
                                 onClick={() => setIsLinkDialogOpen(true)}
-                                className="rounded-full px-8 font-bold border-primary/20 hover:bg-primary/5 hover:text-primary shadow-xl shadow-primary/5 transition-all active:scale-95"
+                                className="px-8 font-bold border-primary/20 transition-all active:scale-95"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 Initialize First Source

@@ -65,13 +65,13 @@ export function GlobalActivityCenter() {
 
     const getActionIcon = (action: string) => {
         switch (action) {
-            case 'JOB_STARTED': return <Play className="w-3.5 h-3.5 text-blue-500" />;
-            case 'JOB_COMPLETED': return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
+            case 'JOB_STARTED': return <Play className="w-3.5 h-3.5 text-info" />;
+            case 'JOB_COMPLETED': return <CheckCircle2 className="w-3.5 h-3.5 text-success" />;
             case 'JOB_FAILED': return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-            case 'CRAWL_STARTED': return <Globe className="w-3.5 h-3.5 text-indigo-500" />;
-            case 'CRAWL_COMPLETED': return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
-            case 'DOCUMENT_PROCESSING': return <Cpu className="w-3.5 h-3.5 text-amber-500" />;
-            case 'CREATE': return <Zap className="w-3.5 h-3.5 text-yellow-500" />;
+            case 'CRAWL_STARTED': return <Globe className="w-3.5 h-3.5 text-primary" />;
+            case 'CRAWL_COMPLETED': return <CheckCircle2 className="w-3.5 h-3.5 text-success" />;
+            case 'DOCUMENT_PROCESSING': return <Cpu className="w-3.5 h-3.5 text-warning" />;
+            case 'CREATE': return <Zap className="w-3.5 h-3.5 text-warning" />;
             default: return <Activity className="w-3.5 h-3.5 text-muted-foreground" />;
         }
     };
@@ -97,7 +97,7 @@ export function GlobalActivityCenter() {
                         <div className="flex items-center justify-between mb-2">
                             <SheetTitle className="text-xl font-bold tracking-tight">System Activity</SheetTitle>
                             {pendingCount > 0 && (
-                                <Badge variant="default" className="bg-primary/10 text-primary border-primary/20 animate-pulse">
+                                <Badge variant="premium" className="animate-pulse border-none px-3 py-1">
                                     {pendingCount} Active
                                 </Badge>
                             )}
@@ -138,12 +138,14 @@ export function GlobalActivityCenter() {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <Badge
-                                                            variant="outline"
+                                                            variant={
+                                                                job.status === CreationJobStatus.COMPLETED ? "success" :
+                                                                    job.status === CreationJobStatus.FAILED ? "destructive" :
+                                                                        "info"
+                                                            }
                                                             className={cn(
-                                                                "text-[9px] h-4 px-1.5 uppercase font-bold tracking-tighter",
-                                                                job.status === CreationJobStatus.COMPLETED && "bg-green-500/10 text-green-600 border-green-500/20",
-                                                                job.status === CreationJobStatus.FAILED && "bg-destructive/10 text-destructive border-destructive/20",
-                                                                (job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING) && "bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse"
+                                                                "text-[9px] h-5 px-2 uppercase font-black tracking-wider border-none",
+                                                                (job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING) && "animate-pulse"
                                                             )}
                                                         >
                                                             {job.status}
@@ -170,7 +172,6 @@ export function GlobalActivityCenter() {
                                                         <Progress
                                                             value={job.progress}
                                                             className="h-1.5"
-                                                            indicatorClassName="bg-gradient-to-r from-primary to-indigo-500"
                                                         />
                                                     </div>
                                                 ) : (
@@ -178,7 +179,7 @@ export function GlobalActivityCenter() {
                                                         <div className="flex items-center gap-1.5 text-muted-foreground font-medium italic">
                                                             {job.status === CreationJobStatus.COMPLETED ? (
                                                                 <>
-                                                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                                                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                                                                     <span>Task finished successfully</span>
                                                                 </>
                                                             ) : (

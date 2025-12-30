@@ -32,10 +32,10 @@ export function ActiveJobsWidget() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         className={cn(
-                            "fixed z-50 transition-all duration-300 shadow-2xl backdrop-blur-xl",
+                            "fixed z-50 transition-all duration-300",
                             isMinimized
-                                ? "bottom-4 right-4 w-12 h-12 rounded-full overflow-hidden"
-                                : "bottom-6 right-6 w-96 rounded-2xl border border-white/10 ring-1 ring-black/5"
+                                ? "bottom-4 right-4 w-12 h-12 rounded-full overflow-hidden shadow-2xl"
+                                : "bottom-6 right-6 w-96 overflow-hidden"
                         )}
                     >
                         {isMinimized ? (
@@ -55,7 +55,7 @@ export function ActiveJobsWidget() {
                                 )}
                             </div>
                         ) : (
-                            <Card variant="premium" className="w-full bg-background/80 overflow-hidden flex flex-col shadow-none border-none">
+                            <Card variant="premium" className="w-full overflow-hidden flex flex-col">
                                 {/* Header */}
                                 <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30 cursor-pointer" onClick={() => setIsMinimized(true)}>
                                     <div className="flex items-center gap-2">
@@ -115,14 +115,14 @@ export function ActiveJobsWidget() {
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
-                                                            <Badge variant={
-                                                                job.status === CreationJobStatus.COMPLETED ? 'default' :
-                                                                    job.status === CreationJobStatus.FAILED ? 'destructive' : 'outline'
-                                                            } className={cn("text-[10px] px-2 h-5 capitalize shadow-none font-bold tracking-wide",
-                                                                job.status === CreationJobStatus.COMPLETED && "bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/20",
-                                                                job.status === CreationJobStatus.FAILED && "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/20",
-                                                                (job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/20 animate-pulse"
-                                                            )}>
+                                                            <Badge
+                                                                variant={
+                                                                    job.status === CreationJobStatus.COMPLETED ? 'success' :
+                                                                        job.status === CreationJobStatus.FAILED ? 'destructive' :
+                                                                            (job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) ? 'info' : 'outline'
+                                                                }
+                                                                className={cn((job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "animate-pulse")}
+                                                            >
                                                                 {job.status.toLowerCase()}
                                                             </Badge>
 

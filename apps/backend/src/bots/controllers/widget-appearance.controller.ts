@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Patch,
   Body,
   Param,
   UseGuards,
@@ -19,17 +20,18 @@ import { BotAppearanceService } from '../services/bot-appearance.service';
 @UseGuards(JwtAuthGuard, WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'bots/:botId/widget/appearance', version: '1' })
 export class WidgetAppearanceController {
-  constructor(private readonly appearanceService: BotAppearanceService) {}
+  constructor(private readonly appearanceService: BotAppearanceService) { }
 
   @Get()
-  @Permissions('chatbot:ReadBot')
+  @Permissions('bot:Get')
   @ApiOperation({ summary: 'Get active widget appearance' })
   async getAppearance(@Param('botId') botId: string) {
     return this.appearanceService.getAppearance(botId);
   }
 
   @Put()
-  @Permissions('chatbot:UpdateBot')
+  @Patch()
+  @Permissions('bot:Update')
   @ApiOperation({ summary: 'Update active widget appearance' })
   async updateAppearance(
     @Param('botId') botId: string,

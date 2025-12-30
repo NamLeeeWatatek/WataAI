@@ -34,13 +34,25 @@ export class ExecutionValidationService {
             );
           break;
         case 'checkbox':
+        case 'boolean':
           fieldSchema = z.boolean();
+          break;
+        case 'file':
+        case 'files':
+        case 'multi-select':
+        case 'channel-selector':
+        case 'json':
+        case 'key-value':
+          // These fields can be arrays, objects, strings, or numbers
+          fieldSchema = z.any();
           break;
         case 'text':
         case 'textarea':
+        case 'string':
         case 'color':
         case 'select':
         case 'radio':
+        case 'channel-select':
         default:
           fieldSchema = z.string();
           if (field.validation?.minLength)
@@ -66,7 +78,7 @@ export class ExecutionValidationService {
       schemaShape[field.name] = fieldSchema;
     }
 
-    const dynamicSchema = z.object(schemaShape);
+    const dynamicSchema = z.object(schemaShape).passthrough();
 
     // 3. Parse (will throw ZodError if invalid)
     return dynamicSchema.parse(inputs);

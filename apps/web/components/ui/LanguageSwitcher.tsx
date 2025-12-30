@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/DropdownMenu'
 import { Globe } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const languages = [
   { code: 'en', nameKey: 'english', flag: '🇺🇸' },
@@ -35,9 +36,11 @@ export function LanguageSwitcher({
         <Button
           variant="ghost"
           size={size}
-          className={`gap-2 ${
-            variant === 'landing' ? 'text-current hover:text-current hover:bg-current/10' : ''
-          } ${className}`}
+          className={cn(
+            "gap-2",
+            variant === 'landing' && "text-current hover:text-current hover:bg-current/10",
+            className
+          )}
           suppressHydrationWarning
         >
           <Globe className="h-4 w-4" />
@@ -49,7 +52,7 @@ export function LanguageSwitcher({
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
-            className={i18n.language === language.code ? 'bg-accent' : ''}
+            className={cn(i18n.language === language.code && "bg-accent")}
             suppressHydrationWarning
           >
             <span className="mr-2">{language.flag}</span>

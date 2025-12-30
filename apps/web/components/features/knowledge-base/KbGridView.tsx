@@ -69,13 +69,13 @@ export function KbGridView({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <div className="w-2 h-2 bg-green-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-success rounded-full shadow-[0_0_8px_rgba(var(--success),0.4)]"></div>;
       case 'processing':
-        return <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>;
+        return <div className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.4)]"></div>;
       case 'failed':
-        return <div className="w-2 h-2 bg-red-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-destructive rounded-full shadow-[0_0_8px_rgba(var(--destructive),0.4)]"></div>;
       default:
-        return <div className="w-2 h-2 bg-gray-500 rounded-full"></div>;
+        return <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>;
     }
   };
 
@@ -139,11 +139,11 @@ export function KbGridView({
             }}
             className={cn(
               "group p-4 cursor-pointer transition-all duration-300 relative overflow-hidden",
-              selectedIds.includes(item.id) ? "ring-2 ring-primary bg-primary/5" : "hover:shadow-xl",
-              dragOverFolder === item.id && "ring-2 ring-blue-500 bg-blue-500/10",
-              item.type === 'folder' && draggedItem && "border-blue-500/50 bg-blue-500/5"
+              selectedIds.includes(item.id) && "ring-2 ring-primary shadow-lg shadow-primary/10",
+              dragOverFolder === item.id && "ring-2 ring-primary bg-primary/10",
+              item.type === 'folder' && draggedItem && "border-primary/50 bg-primary/5"
             )}
-            variant={selectedIds.includes(item.id) ? "default" : "glass"}
+            variant={selectedIds.includes(item.id) ? "premium" : "glass"}
             rounded="2xl"
             onClick={() => onItemClick(item)}
           >
@@ -162,7 +162,7 @@ export function KbGridView({
             <div className="mt-2 flex flex-col items-center text-center">
               <div className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 shadow-lg border border-white/5",
-                item.type === 'folder' ? "bg-blue-500/10 text-blue-500" : "bg-muted/50 text-muted-foreground"
+                item.type === 'folder' ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground"
               )}>
                 {item.type === 'folder' ? (
                   <Folder className="w-8 h-8" />

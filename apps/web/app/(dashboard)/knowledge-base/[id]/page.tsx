@@ -87,6 +87,7 @@ import {
     selectPagination,
     setPagination,
     selectTotalCount,
+    fetchChildDocuments,
 } from '@/lib/store/slices/knowledgeBaseSlice'
 import { queryKnowledgeBase, updateKnowledgeBase } from '@/lib/api/knowledge-base'
 import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'
@@ -717,6 +718,11 @@ export default function KnowledgeBaseDetailPage() {
                     onDragStart={(item) => dispatch(setDraggedItem({ type: item.type, id: item.id }))}
                     onDragOver={(folderId) => dispatch(setDragOverFolder(folderId))}
                     onDrop={(targetFolderId) => handleDrop(targetFolderId)}
+                    onRowExpand={async (item) => {
+                        if (item.type === 'folder') {
+                            await dispatch(fetchChildDocuments({ kbId, folderId: item.id })).unwrap();
+                        }
+                    }}
                 />
             ) : (
                 <KbGridView

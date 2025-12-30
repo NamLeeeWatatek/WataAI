@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
+import { cn } from '@/lib/utils'
 import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import type { Message } from '@/lib/types'
@@ -64,32 +66,38 @@ export function AIFloatingButton() {
 
             <div className="fixed bottom-6 right-6 z-50">
                 {!isOpen ? (
-                    <button
+                    <Button
                         onClick={() => setIsOpen(true)}
-                        className="w-14 h-14 rounded-full bg-slate-700 hover:bg-slate-700 shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center text-white group"
+                        variant="premium"
+                        size="icon"
+                        className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-all duration-500 overflow-visible group"
                     >
                         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-                    </button>
+                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-success rounded-full border-2 border-background animate-pulse shadow-[0_0_8px_rgba(var(--success),0.5)]" />
+                    </Button>
                 ) : (
-                    <div className="glass rounded-2xl shadow-2xl border border-border/40 w-96 overflow-hidden flex flex-col max-h-[600px]">
-
-                        <div className="bg-slate-700 p-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                                    <MessageCircle className="w-5 h-5 text-white" />
+                    <Card variant="premium" className="rounded-2xl shadow-2xl border border-border/40 w-[400px] overflow-hidden flex flex-col max-h-[600px] bg-background/80 backdrop-blur-2xl">
+                        <div className="bg-primary p-5 flex items-center justify-between shadow-lg">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-inner">
+                                    <MessageCircle className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="text-white">
-                                    <div className="font-semibold">AI Assistant</div>
-                                    <div className="text-xs opacity-80">Always here to help</div>
+                                    <div className="font-black text-sm uppercase tracking-wider">AI Assistant</div>
+                                    <div className="text-[10px] font-bold opacity-70 flex items-center gap-1.5">
+                                        <div className="size-1.5 rounded-full bg-success animate-pulse" />
+                                        Always here to help
+                                    </div>
                                 </div>
                             </div>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => setIsOpen(false)}
-                                className="text-white/80 hover:text-white transition-colors"
+                                className="text-white/80 hover:text-white hover:bg-white/10 w-8 h-8 rounded-lg"
                             >
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
 
 
@@ -126,10 +134,12 @@ export function AIFloatingButton() {
                                             className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div
-                                                className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${msg.role === MessageRole.USER
-                                                    ? 'bg-primary text-white'
-                                                    : 'glass border border-border/40'
-                                                    }`}
+                                                className={cn(
+                                                    "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-medium shadow-sm",
+                                                    msg.role === MessageRole.USER
+                                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                                        : 'bg-muted/50 border border-border/40 rounded-tl-none'
+                                                )}
                                             >
                                                 {msg.content}
                                             </div>
@@ -147,7 +157,7 @@ export function AIFloatingButton() {
                         </div>
 
 
-                        <div className="p-4 border-t border-border/40 space-y-2">
+                        <div className="p-5 border-t border-border/20 space-y-3 bg-muted/5">
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -156,26 +166,28 @@ export function AIFloatingButton() {
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleQuickSend()}
                                     placeholder="Type your question..."
                                     disabled={loading}
-                                    className="flex-1 glass rounded-lg px-3 py-2 text-sm border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                                    className="flex-1 bg-background/50 rounded-xl px-4 py-2 text-sm border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 transition-all font-medium"
                                 />
-                                <button
+                                <Button
                                     onClick={handleQuickSend}
                                     disabled={!message.trim() || loading}
-                                    className="p-2 rounded-lg bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="shadow-md"
+                                    size="icon"
+                                    rounded="xl"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                </button>
+                                </Button>
                             </div>
                             <Button
                                 onClick={handleOpenFullChat}
-                                variant="ghost"
-                                className="w-full"
+                                variant="outline"
+                                className="w-full text-[10px] font-black uppercase tracking-widest border-none h-8 opacity-60 hover:opacity-100"
                                 size="sm"
                             >
-                                Open Full Chat
+                                Open Full Intelligence Suite
                             </Button>
                         </div>
-                    </div>
+                    </Card>
                 )}
             </div>
         </>

@@ -93,7 +93,7 @@ export function TeamTab() {
                         Manage your team structure and access rights.
                     </p>
                 </div>
-                <Button onClick={() => setInviteOpen(true)} className="rounded-xl h-11 px-6 shadow-lg shadow-primary/20 font-bold">
+                <Button onClick={() => setInviteOpen(true)} variant="premium" size="lg" rounded="xl" className="font-bold">
                     <UserPlus className="mr-2 h-4 w-4" />
                     Invite Member
                 </Button>
@@ -107,30 +107,30 @@ export function TeamTab() {
                 <div className="grid gap-8">
                     {/* Owner Section */}
                     {owner && (
-                        <Card className="border-border/60 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm hover:shadow-md transition-all duration-300">
+                        <Card variant="premium">
                             <CardHeader className="pb-2">
                                 <div className="flex items-center gap-2">
-                                    <Crown className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+                                    <Crown className="w-5 h-5 text-warning fill-warning/20" />
                                     <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Workspace Owner</h4>
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="flex items-center gap-5">
                                     <div className="relative">
-                                        <Avatar className="h-16 w-16 border-4 border-background ring-2 ring-primary/20 shadow-xl">
+                                        <Avatar className="h-16 w-16 border-2 border-background ring-2 ring-primary/20 shadow-xl">
                                             <AvatarImage src={owner.user.avatarUrl} />
                                             <AvatarFallback className="text-xl font-black bg-primary/10 text-primary">
                                                 {owner.user.firstName?.charAt(0) || owner.user.email?.charAt(0)}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white p-1 rounded-full ring-2 ring-background">
+                                        <div className="absolute -bottom-1 -right-1 bg-warning text-warning-foreground p-1 rounded-full ring-2 ring-background">
                                             <Crown className="w-3 h-3 fill-current" />
                                         </div>
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3">
                                             <h3 className="text-lg font-bold">{owner.user.firstName} {owner.user.lastName}</h3>
-                                            <Badge variant="default" className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-500/20">
+                                            <Badge variant="success" className="px-1.5 py-0.5">
                                                 Owner
                                             </Badge>
                                         </div>
@@ -152,7 +152,7 @@ export function TeamTab() {
                             </h4>
                         </div>
 
-                        <div className="border border-border/60 rounded-2xl overflow-hidden bg-card shadow-sm">
+                        <Card className="overflow-hidden">
                             {otherMembers.length === 0 ? (
                                 <div className="p-12 text-center flex flex-col items-center justify-center text-muted-foreground gap-3">
                                     <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
@@ -165,12 +165,12 @@ export function TeamTab() {
                                     {otherMembers.map((member) => (
                                         <div
                                             key={member.userId}
-                                            className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors group"
+                                            className="flex items-center justify-between p-5 hover:bg-muted/30 transition-all group"
                                         >
                                             <div className="flex items-center gap-4">
-                                                <Avatar className="h-10 w-10 border border-border/50">
+                                                <Avatar className="h-10 w-10 border border-border/40">
                                                     <AvatarImage src={member.user.avatarUrl} />
-                                                    <AvatarFallback className="bg-muted font-bold text-muted-foreground">
+                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
                                                         {member.user.firstName?.charAt(0) || member.user.email?.charAt(0)}
                                                     </AvatarFallback>
                                                 </Avatar>
@@ -180,12 +180,12 @@ export function TeamTab() {
                                                             {member.user.firstName} {member.user.lastName}
                                                         </p>
                                                         {member.role?.name?.toLowerCase() === 'admin' && (
-                                                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/20">
+                                                            <Badge variant="info" className="h-5 px-1.5 text-[10px]">
                                                                 Admin
                                                             </Badge>
                                                         )}
                                                         {member.role?.name?.toLowerCase() === 'viewer' && (
-                                                            <Badge variant="outline" className="h-5 px-1.5 text-[10px] bg-muted/50 text-muted-foreground border-border">
+                                                            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
                                                                 Viewer
                                                             </Badge>
                                                         )}
@@ -211,7 +211,7 @@ export function TeamTab() {
                                                                 })
                                                             }
                                                         >
-                                                            <Shield className="w-4 h-4 mr-2 text-blue-500" />
+                                                            <Shield className="w-4 h-4 mr-2" />
                                                             Make Admin
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
@@ -223,7 +223,7 @@ export function TeamTab() {
                                                                 })
                                                             }
                                                         >
-                                                            <UserPlus className="w-4 h-4 mr-2 text-muted-foreground" />
+                                                            <UserPlus className="w-4 h-4 mr-2" />
                                                             Make Member
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
@@ -235,7 +235,7 @@ export function TeamTab() {
                                                                 })
                                                             }
                                                         >
-                                                            <Eye className="w-4 h-4 mr-2 text-muted-foreground" />
+                                                            <Eye className="w-4 h-4 mr-2" />
                                                             Make Viewer
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
@@ -251,11 +251,10 @@ export function TeamTab() {
                                     ))}
                                 </div>
                             )}
-                        </div>
+                        </Card>
                     </div>
                 </div>
             )}
-
             <InviteMemberDialog
                 workspaceId={workspace.id}
                 open={inviteOpen}

@@ -280,15 +280,14 @@ export default function CreationToolDetailPage() {
                     <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-4">
 
                         {/* LEFT: Templates Area (7 cols ~ 58%) */}
-                        <Card variant="glass" rounded="xl" className="lg:col-span-7 flex flex-col h-full overflow-hidden border-border/40">
+                        <Card className="lg:col-span-7 flex flex-col h-full overflow-hidden">
                             <div className="px-6 py-5 border-b flex-none flex flex-col gap-4">
                                 <div className="flex items-center gap-4">
                                     <Button
                                         variant="outline"
                                         size="icon"
-                                        rounded="full"
                                         onClick={() => router.back()}
-                                        className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-background shadow-sm shrink-0"
+                                        className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-background shadow-sm shrink-0"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
                                     </Button>
@@ -296,19 +295,15 @@ export default function CreationToolDetailPage() {
                                     {/* Tool Visual Identity */}
                                     <div className="flex items-center gap-4 min-w-0">
                                         {(tool.coverImage || tool.icon) ? (
-                                            <div className="w-12 h-12 rounded-xl border border-primary/20 overflow-hidden bg-muted/30 shrink-0">
+                                            <div className="w-12 h-12 rounded-xl border border-primary/20 overflow-hidden bg-primary/5 shrink-0 flex items-center justify-center">
                                                 {tool.coverImage ? (
                                                     <Media
                                                         src={tool.coverImage}
                                                         alt={tool.name}
-                                                        width={48}
-                                                        height={48}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <Sparkles className="w-6 h-6 text-primary" />
-                                                    </div>
+                                                    <Sparkles className="w-6 h-6 text-primary" />
                                                 )}
                                             </div>
                                         ) : null}
@@ -324,7 +319,7 @@ export default function CreationToolDetailPage() {
                                         <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             placeholder="Search templates..."
-                                            className="pl-9 h-9 border-border/60 bg-muted/20"
+                                            className="pl-9 h-9"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                         />
@@ -337,8 +332,8 @@ export default function CreationToolDetailPage() {
                                             className={cn(
                                                 "px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold transition-all border",
                                                 selectedCategory === 'all'
-                                                    ? "bg-primary text-primary-foreground border-primary"
-                                                    : "bg-background hover:bg-accent border-border text-muted-foreground"
+                                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                    : "bg-muted/10 hover:bg-muted/30 border-border/40 text-muted-foreground"
                                             )}
                                         >
                                             ALL
@@ -350,8 +345,8 @@ export default function CreationToolDetailPage() {
                                                 className={cn(
                                                     "px-2.5 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold transition-all border",
                                                     selectedCategory === cat
-                                                        ? "bg-primary text-primary-foreground border-primary"
-                                                        : "bg-background hover:bg-accent border-border text-muted-foreground"
+                                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                                        : "bg-muted/10 hover:bg-muted/30 border-border/40 text-muted-foreground"
                                                 )}
                                             >
                                                 {cat.replace('-', ' ')}
@@ -400,10 +395,10 @@ export default function CreationToolDetailPage() {
                                                 key={template.id}
                                                 onClick={() => handleTemplateSelect(template)}
                                                 className={cn(
-                                                    "group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-500 ease-out",
+                                                    "group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300",
                                                     selectedTemplate?.id === template.id
-                                                        ? "border-primary ring-4 ring-primary/10 shadow-2xl scale-[0.98]"
-                                                        : "border-transparent bg-muted/20 hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 hover:scale-[1.01]"
+                                                        ? "border-primary"
+                                                        : "border-transparent bg-muted/20 hover:border-primary/30"
                                                 )}
                                             >
                                                 <TemplateCardMedia
@@ -420,7 +415,7 @@ export default function CreationToolDetailPage() {
                                                     </h3>
                                                     {template.category && (
                                                         <div className="flex items-center gap-2 mt-1.5">
-                                                            <Badge variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 h-auto">
+                                                            <Badge variant="secondary" className="bg-white/20 text-white">
                                                                 {typeof template.category === 'object' ? (template.category as any).name || (template.category as any).slug : template.category}
                                                             </Badge>
                                                         </div>
@@ -428,7 +423,7 @@ export default function CreationToolDetailPage() {
                                                 </div>
 
                                                 {selectedTemplate?.id === template.id && (
-                                                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/40 animate-in zoom-in spin-in-90 duration-300 z-10">
+                                                    <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-in zoom-in spin-in-90 duration-300 z-10">
                                                         <Check className="w-5 h-5 text-primary-foreground stroke-[3]" />
                                                     </div>
                                                 )}
@@ -440,14 +435,14 @@ export default function CreationToolDetailPage() {
                         </Card>
 
                         {/* RIGHT: Form Area (5 cols ~ 42%) */}
-                        <Card variant="premium" rounded="xl" className="lg:col-span-5 flex flex-col h-full overflow-hidden relative border-border/40 ring-1 ring-white/5 shadow-2xl">
+                        <Card className="lg:col-span-5 flex flex-col h-full overflow-hidden relative">
                             <div className="p-5 border-b flex-none bg-muted/5 flex items-center justify-between">
                                 <h2 className="font-bold text-lg flex items-center gap-2">
                                     <Settings className="w-4 h-4 text-primary animate-pulse" />
                                     Configure
                                 </h2>
                                 {selectedTemplate && (
-                                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">
+                                    <Badge variant="secondary" className="text-[10px] font-bold rounded-lg px-2">
                                         {selectedTemplate.name}
                                     </Badge>
                                 )}
@@ -457,13 +452,14 @@ export default function CreationToolDetailPage() {
                                 <Form {...form}>
                                     <form id="creation-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                                         {!selectedTemplate && (
-                                            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-foreground text-sm flex flex-col items-center justify-center text-center gap-3 py-12 animate-pulse">
-                                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <LayoutGrid className="w-6 h-6 text-primary" />
+                                            <div className="p-8 rounded-3xl bg-primary/5 border border-dashed border-primary/20 text-foreground flex flex-col items-center justify-center text-center gap-4 py-16 animate-pulse">
+                                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center relative">
+                                                    <LayoutGrid className="w-8 h-8 text-primary" />
+                                                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-20" />
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold">Ready to create?</p>
-                                                    <p className="text-muted-foreground text-xs mt-1">Select a template from the gallery to begin</p>
+                                                <div className="max-w-[200px]">
+                                                    <p className="font-black text-lg tracking-tight">System Ready</p>
+                                                    <p className="text-muted-foreground text-xs mt-1 font-medium">Select a structural template to initialize the generation sequence</p>
                                                 </div>
                                             </div>
                                         )}
@@ -481,12 +477,10 @@ export default function CreationToolDetailPage() {
                                 <Button
                                     type="submit"
                                     form="creation-form"
-                                    size="xl"
-                                    rounded="xl"
                                     disabled={submitting || !selectedTemplate}
                                     className={cn(
-                                        "w-full font-black tracking-tight shadow-xl transition-all h-14",
-                                        !selectedTemplate ? "opacity-50 grayscale" : "hover:translate-y-[-2px] hover:shadow-primary/20 hover:shadow-xl active:translate-y-[0px] bg-primary"
+                                        "w-full h-12 rounded-xl font-black tracking-tight transition-all",
+                                        !selectedTemplate ? "opacity-50 grayscale" : "bg-primary"
                                     )}
                                 >
                                     {submitting ? (

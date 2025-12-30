@@ -32,12 +32,13 @@ const AdminLink = () => {
         <Button
             variant="ghost"
             size="sm"
-            className="hidden md:flex items-center gap-2 text-primary hover:bg-primary/10 hover:text-primary font-medium px-3 mr-2"
+            rounded="xl"
+            className="hidden md:flex items-center gap-2 text-primary hover:bg-primary/10 hover:text-primary font-black text-[10px] uppercase tracking-wider px-4 mr-2 h-9 shadow-sm shadow-primary/5 border border-primary/10"
             asChild
         >
             <Link href={paths.system.root as any}>
-                <GrSystem className="w-4 h-4" />
-                <span>Go to System Admin</span>
+                <GrSystem className="w-3.5 h-3.5" />
+                <span>System Admin</span>
             </Link>
         </Button>
     )

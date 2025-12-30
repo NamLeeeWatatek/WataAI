@@ -14,7 +14,15 @@
     "pricing": "Giá cả",
     "documentation": "Tài liệu",
     "login": "Đăng nhập",
-    "start": "Bắt đầu"
+    "start": "Bắt đầu",
+    "creationTools": "Công cụ sáng tạo",
+    "myProducts": "Sản phẩm của tôi",
+    "users": "Người dùng",
+    "rolesPermissions": "Vai trò & Quyền",
+    "categories": "Danh mục",
+    "templates": "Template",
+    "adminSystem": "Hệ thống Quản trị",
+    "backToApp": "Quay lại ứng dụng"
   },
   "hero": {
     "title": "Nền tảng chatbot AI đa kênh thông minh",
@@ -77,6 +85,18 @@
         "creationTools": "Công cụ AI",
         "generationJobs": "Tiến trình xử lý"
       }
+    },
+    "charts": {
+      "activityTrend": "Xu hướng hoạt động",
+      "activityTrendDesc": "Hoạt động hội thoại trong 30 ngày qua",
+      "botsStatus": "Trạng thái Bot",
+      "botsStatusDesc": "Bot đang hoạt động vs Ngưng hoạt động",
+      "userGrowth": "Tăng trưởng người dùng",
+      "userGrowthDesc": "Người dùng mới trong 30 ngày qua",
+      "active": "Hoạt động",
+      "inactive": "Ngưng hoạt động",
+      "activity": "Hoạt động",
+      "users": "Người dùng"
     }
   },
   "features": {
