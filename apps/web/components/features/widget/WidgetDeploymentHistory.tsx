@@ -57,14 +57,14 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
         switch (status) {
             case 'deployed':
                 return (
-                    <Badge variant="success" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
+                    <Badge variant="default" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
                         <div className="size-1 rounded-full bg-current animate-pulse mr-1.5" />
                         Live
                     </Badge>
                 );
             case 'deploying':
                 return (
-                    <Badge variant="info" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
+                    <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
                         <Clock className="w-3 h-3 animate-spin mr-1.5" />
                         Syncing
                     </Badge>
@@ -141,7 +141,7 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                 )}
                             </div>
 
-                            <Card variant="premium" className="overflow-hidden">
+                            <Card className="overflow-hidden">
                                 <div className={cn(
                                     "h-1.5 w-full transition-all duration-500",
                                     deployment.status === 'deployed' ? "bg-primary" : "bg-muted"
@@ -177,7 +177,7 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                         {deployment.trafficPercentage < 100 && (
                                             <div className="flex flex-col items-end gap-2 shrink-0">
                                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Flux Distribution</div>
-                                                <Badge variant="premium" className="px-4 py-2 font-black border-none">
+                                                <Badge variant="default" className="px-4 py-2 font-black border-none">
                                                     {deployment.trafficPercentage}% Operational
                                                 </Badge>
                                             </div>

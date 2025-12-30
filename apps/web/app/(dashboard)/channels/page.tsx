@@ -276,11 +276,11 @@ export default function ChannelsPageRefactored() {
             />
 
             <Tabs value={activeTab} onValueChange={(value) => dispatch(setActiveTab(value as 'connected' | 'configurations'))} className="w-full">
-                <TabsList variant="premium" className="mb-8">
-                    <TabsTrigger value="connected" variant="premium">
+                <TabsList className="mb-8">
+                    <TabsTrigger value="connected">
                         Connections ({channels.length})
                     </TabsTrigger>
-                    <TabsTrigger value="configurations" variant="premium">
+                    <TabsTrigger value="configurations">
                         Configurations ({configs.length})
                     </TabsTrigger>
                 </TabsList>
@@ -324,7 +324,7 @@ export default function ChannelsPageRefactored() {
 
             {facebookPages.length > 0 && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in zoom-in duration-300">
-                    <Card variant="premium" className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+                    <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
                         <div className="p-6 border-b border-border/40 flex items-center justify-between bg-card/50">
                             <div>
                                 <h3 className="text-2xl font-black tracking-tight">Connect Facebook Pages</h3>
@@ -356,7 +356,6 @@ export default function ChannelsPageRefactored() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                rounded="xl"
                                                 onClick={() => window.open('/bots', '_blank')}
                                                 className="bg-background"
                                             >
@@ -404,7 +403,7 @@ export default function ChannelsPageRefactored() {
                                                         {page.tasks && page.tasks.length > 0 && (
                                                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                                                                 {page.tasks.slice(0, 3).map((task: string) => (
-                                                                    <Badge key={task} variant="outline" rounded="lg" className="text-[9px] uppercase font-bold tracking-wider py-0 px-2 opacity-60">
+                                                                    <Badge key={task} variant="outline" className="text-[9px] uppercase font-bold tracking-wider py-0 px-2 opacity-60">
                                                                         {task}
                                                                     </Badge>
                                                                 ))}
@@ -414,7 +413,6 @@ export default function ChannelsPageRefactored() {
                                                 </div>
                                                 <Button
                                                     size="lg"
-                                                    rounded="xl"
                                                     onClick={() => handleConnectFacebookPage(page)}
                                                     disabled={connectingPage || !selectedBotId || bots.length === 0}
                                                     className="px-8 font-black transition-all"

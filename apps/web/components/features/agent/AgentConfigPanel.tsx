@@ -103,7 +103,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
     if (loading) {
         return (
             <div className="fixed inset-0 bg-background/60 backdrop-blur-md z-50 flex items-center justify-center">
-                <Card variant="premium" className="p-10 flex flex-col items-center gap-4 border-none">
+                <Card className="p-10 flex flex-col items-center gap-4 border-none">
                     <Loader2 className="w-10 h-10 text-primary animate-spin" />
                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Synchronizing Intelligence...</p>
                 </Card>
@@ -113,7 +113,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
 
     return (
         <div className="fixed inset-0 bg-background/40 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-            <Card variant="premium" className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border-none shadow-2xl">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border-none shadow-2xl">
                 <div className="p-8 border-b border-border/10 flex items-center justify-between bg-muted/5">
                     <div>
                         <h2 className="text-2xl font-black tracking-tight uppercase">Agent configuration</h2>
@@ -126,7 +126,6 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                         variant="ghost"
                         size="icon"
                         onClick={onClose}
-                        rounded="xl"
                         className="hover:bg-destructive/10 hover:text-destructive transition-all"
                     >
                         <X className="w-5 h-5" />
@@ -274,7 +273,6 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                     <Button
                         variant="ghost"
                         onClick={onClose}
-                        rounded="xl"
                         className="font-bold text-xs"
                     >
                         Cancel
@@ -282,8 +280,6 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                     <Button
                         onClick={handleSave}
                         disabled={saving}
-                        variant="premium"
-                        rounded="xl"
                         className="px-8 font-black uppercase tracking-widest text-[11px]"
                     >
                         {saving ? (

@@ -97,7 +97,7 @@ export function GlobalActivityCenter() {
                         <div className="flex items-center justify-between mb-2">
                             <SheetTitle className="text-xl font-bold tracking-tight">System Activity</SheetTitle>
                             {pendingCount > 0 && (
-                                <Badge variant="premium" className="animate-pulse border-none px-3 py-1">
+                                <Badge className="animate-pulse border-none px-3 py-1">
                                     {pendingCount} Active
                                 </Badge>
                             )}
@@ -138,11 +138,7 @@ export function GlobalActivityCenter() {
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <Badge
-                                                            variant={
-                                                                job.status === CreationJobStatus.COMPLETED ? "success" :
-                                                                    job.status === CreationJobStatus.FAILED ? "destructive" :
-                                                                        "info"
-                                                            }
+
                                                             className={cn(
                                                                 "text-[9px] h-5 px-2 uppercase font-black tracking-wider border-none",
                                                                 (job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING) && "animate-pulse"

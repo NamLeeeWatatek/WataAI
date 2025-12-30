@@ -124,7 +124,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
 
     return (
         <>
-            <Card variant="premium">
+            <Card>
                 <CardHeader className="pb-0">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -136,7 +136,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                                 <CardDescription className="text-xs font-medium">Connect your bot to external platforms</CardDescription>
                             </div>
                         </div>
-                        <Button onClick={() => setShowModal(true)} rounded="xl" className="shadow-lg shadow-primary/5 font-bold h-10 transition-all active:scale-95">
+                        <Button onClick={() => setShowModal(true)} className="shadow-lg shadow-primary/5 font-bold h-10 transition-all active:scale-95">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Channel
                         </Button>
@@ -154,7 +154,6 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                             </p>
                             <Button
                                 variant="outline"
-                                rounded="full"
                                 onClick={() => setShowModal(true)}
                                 className="px-8 font-bold border-primary/20 transition-all active:scale-95"
                             >
@@ -169,7 +168,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                                 const colorClass = CHANNEL_COLORS[channel.type] || 'text-muted-foreground bg-muted/20';
 
                                 return (
-                                    <Card key={channel.id} variant="premium" className="relative p-6 flex flex-col min-h-[220px]">
+                                    <Card key={channel.id} className="relative p-6 flex flex-col min-h-[220px]">
                                         <div className={cn("absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 transition-opacity group-hover:opacity-20", colorClass.split(' ')[0])} />
 
                                         <div className="flex justify-between items-start mb-6 relative z-10">
@@ -190,7 +189,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                                                     {channel.type}
                                                 </Badge>
                                                 {channel.isActive ? (
-                                                    <Badge variant="success" className="text-[10px] uppercase tracking-widest px-2">Active</Badge>
+                                                    <Badge variant="default" className="text-[10px] uppercase tracking-widest px-2">Active</Badge>
                                                 ) : (
                                                     <Badge variant="secondary" className="text-muted-foreground text-[10px] uppercase tracking-widest px-2">Offline</Badge>
                                                 )}
@@ -253,7 +252,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                         <div className="space-y-2.5">
                             <Label htmlFor="channel-type" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Select Platform</Label>
                             <Select value={channelType} onValueChange={setChannelType}>
-                                <SelectTrigger id="channel-type" variant="premium" rounded="xl" className="h-12 font-bold">
+                                <SelectTrigger id="channel-type" className="h-12 font-bold">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl p-1">
@@ -314,7 +313,6 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                             <Input
                                 id="channel-name"
                                 placeholder="e.g. Production Support, Dev Environment..."
-                                variant="premium"
                                 value={channelName}
                                 onChange={(e) => setChannelName(e.target.value)}
                                 className="h-11 font-bold"
@@ -323,13 +321,12 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                         </div>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="ghost" rounded="xl" onClick={() => setShowModal(false)} className="font-bold">
+                        <Button variant="ghost" onClick={() => setShowModal(false)} className="font-bold">
                             Cancel
                         </Button>
                         <Button
                             onClick={handleCreate}
                             disabled={creating}
-                            rounded="xl"
                             className="px-8 font-black shadow-lg shadow-primary/20 transition-all active:scale-95"
                         >
                             {creating ? 'Initializing...' : 'Add Channel'}

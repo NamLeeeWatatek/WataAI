@@ -60,7 +60,7 @@ export function MarketingHeader() {
                         <Button variant="ghost" asChild>
                             <Link href="/login">Đăng nhập</Link>
                         </Button>
-                        <Button asChild rounded="xl">
+                        <Button>
                             <Link href="/register">Bắt đầu miễn phí</Link>
                         </Button>
                     </div>

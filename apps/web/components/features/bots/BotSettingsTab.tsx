@@ -18,7 +18,7 @@ import { Sparkles, Trash2, AlertTriangle, Settings2 } from 'lucide-react';
 export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSettingsTabProps) {
   return (
     <div className="space-y-8">
-      <Card variant="premium">
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -47,7 +47,7 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
         </CardContent>
       </Card>
 
-      <Card variant="premium" className="bg-destructive/[0.02] border-destructive/20 transition-all hover:bg-destructive/[0.04]">
+      <Card className="bg-destructive/[0.02] border-destructive/20 transition-all hover:bg-destructive/[0.04]">
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-destructive/10 rounded-xl">
@@ -72,7 +72,6 @@ export function BotSettingsTab({ enableAutoLearn, onChange, onDelete }: BotSetti
               <Button
                 variant="destructive"
                 onClick={onDelete}
-                rounded="xl"
                 className="px-8 font-black shadow-lg shadow-destructive/20 h-11 transition-all active:scale-95 flex items-center gap-2 relative"
               >
                 <Trash2 className="w-4 h-4" />

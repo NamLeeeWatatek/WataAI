@@ -55,7 +55,7 @@ export function ActiveJobsWidget() {
                                 )}
                             </div>
                         ) : (
-                            <Card variant="premium" className="w-full overflow-hidden flex flex-col">
+                            <Card className="w-full overflow-hidden flex flex-col">
                                 {/* Header */}
                                 <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30 cursor-pointer" onClick={() => setIsMinimized(true)}>
                                     <div className="flex items-center gap-2">
@@ -116,11 +116,7 @@ export function ActiveJobsWidget() {
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <Badge
-                                                                variant={
-                                                                    job.status === CreationJobStatus.COMPLETED ? 'success' :
-                                                                        job.status === CreationJobStatus.FAILED ? 'destructive' :
-                                                                            (job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) ? 'info' : 'outline'
-                                                                }
+
                                                                 className={cn((job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "animate-pulse")}
                                                             >
                                                                 {job.status.toLowerCase()}

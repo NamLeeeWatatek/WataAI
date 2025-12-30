@@ -96,13 +96,13 @@ export default function MarketingPage() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Button size="lg" rounded="xl" className="min-w-[200px] font-bold" asChild>
+                            <Button size="lg" className="min-w-[200px] font-bold" asChild>
                                 <Link href="/register">
                                     Bắt đầu miễn phí
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </Link>
                             </Button>
-                            <Button size="lg" variant="outline" rounded="xl" className="min-w-[200px]" asChild>
+                            <Button size="lg" variant="outline" className="min-w-[200px]" asChild>
                                 <Link href="#features">
                                     Khám phá tính năng
                                 </Link>
@@ -208,7 +208,6 @@ export default function MarketingPage() {
                                 <Button
                                     size="lg"
                                     variant="secondary"
-                                    rounded="xl"
                                     className="min-w-[200px] font-bold bg-white text-primary hover:bg-white/90"
                                     asChild
                                 >
@@ -220,7 +219,6 @@ export default function MarketingPage() {
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    rounded="xl"
                                     className="min-w-[200px] border-white/30 text-white hover:bg-white/10"
                                 >
                                     <a href="#features">Xem thêm tính năng</a>

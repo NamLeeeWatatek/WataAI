@@ -213,7 +213,7 @@ export default function BotsPage() {
                 onRefresh={loadBots}
                 refreshing={loading}
             >
-                <Button rounded="xl" onClick={() => openModal()} className="px-6 font-bold h-10">
+                <Button onClick={() => openModal()} className="px-6 font-bold h-10">
                     <Plus className="w-4 h-4 mr-2" />
                     New Bot
                 </Button>
@@ -237,7 +237,7 @@ export default function BotsPage() {
             {loading && bots.length === 0 ? (
                 <PageLoading message="Loading agents" />
             ) : bots.length === 0 ? (
-                <Card variant="flat" rounded="2xl" className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed">
+                <Card className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed">
                     <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-6">
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>
@@ -250,7 +250,7 @@ export default function BotsPage() {
                             : 'Create your first custom AI bot to start automating your tasks.'
                         }
                     </p>
-                    <Button rounded="full" onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8">
+                    <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Bot
                     </Button>
@@ -263,7 +263,6 @@ export default function BotsPage() {
                             return (
                                 <Card
                                     key={bot.id}
-                                    variant="premium"
                                     className="group relative flex flex-col overflow-hidden"
                                 >
                                     <div className="p-6">
@@ -298,7 +297,7 @@ export default function BotsPage() {
                                                 <div className="min-w-0">
                                                     <h3 className="font-bold text-lg leading-tight truncate">{bot.name}</h3>
                                                     <Badge
-                                                        variant={bot.status === 'active' ? "success" : "secondary"}
+                                                        variant={bot.status === 'active' ? "default" : "secondary"}
                                                         className="mt-1.5"
                                                     >
                                                         {bot.status === 'active' ? 'Active' : 'Paused'}
@@ -308,7 +307,7 @@ export default function BotsPage() {
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" rounded="full" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                                         <MoreHorizontal className="w-4 h-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -341,7 +340,6 @@ export default function BotsPage() {
                                         <Button
                                             variant="default"
                                             size="sm"
-                                            rounded="xl"
                                             className="w-full font-bold transition-all h-10 group/btn"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >

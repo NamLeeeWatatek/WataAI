@@ -60,7 +60,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Activity Trend Chart */}
-      <Card variant="premium" rounded="2xl" className="overflow-hidden">
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>{t('dashboard.charts.activityTrend')}</CardTitle>
           <CardDescription>{t('dashboard.charts.activityTrendDesc')}</CardDescription>
@@ -89,7 +89,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Bots Status Chart */}
-      <Card variant="premium" rounded="2xl" className="overflow-hidden">
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>{t('dashboard.charts.botsStatus')}</CardTitle>
           <CardDescription>{t('dashboard.charts.botsStatusDesc')}</CardDescription>
@@ -116,7 +116,7 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Users Growth Chart */}
-      <Card variant="premium" rounded="2xl" className="md:col-span-2 overflow-hidden">
+      <Card className="md:col-span-2 overflow-hidden">
         <CardHeader>
           <CardTitle>{t('dashboard.charts.userGrowth')}</CardTitle>
           <CardDescription>{t('dashboard.charts.userGrowthDesc')}</CardDescription>

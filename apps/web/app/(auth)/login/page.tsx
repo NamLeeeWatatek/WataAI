@@ -110,7 +110,7 @@ function LoginPageContent() {
             </div>
 
             <div className="w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in duration-700">
-                <Card variant="premium" className="p-8 md:p-10 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
+                <Card className="p-8 md:p-10 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
                     {/* Header */}
@@ -129,8 +129,7 @@ function LoginPageContent() {
                     <div className="grid grid-cols-2 gap-4 mb-8">
                         <Button
                             variant="secondary"
-                            rounded="xl"
-                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs"
+                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('google')}
                             disabled={isLoading}
                         >
@@ -139,8 +138,7 @@ function LoginPageContent() {
                         </Button>
                         <Button
                             variant="secondary"
-                            rounded="xl"
-                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs"
+                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('facebook')}
                             disabled={isLoading}
                         >

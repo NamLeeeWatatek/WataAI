@@ -58,7 +58,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
 
     if (!activeVersion) {
         return (
-            <Card variant="flat" rounded="4xl" className="border-dashed border-border/60">
+            <Card className="border-dashed border-border/60">
                 <CardHeader className="p-12 text-center">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 border border-primary/20">
                         <Code className="w-8 h-8 text-primary/60" />
@@ -75,7 +75,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Deployment Status Header */}
-            <Card variant="premium" rounded="xl">
+            <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
@@ -89,7 +89,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 Protocol: <span className="text-primary font-mono ml-1">v{activeVersion.version}</span>
                             </CardDescription>
                         </div>
-                        <Badge variant="success" className="hidden md:flex rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none px-4 py-2">
+                        <Badge variant="default" className="hidden md:flex rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none px-4 py-2">
                             <div className="size-2 rounded-full bg-current animate-pulse mr-2" />
                             Live & Transmitting
                         </Badge>
@@ -98,17 +98,17 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
             </Card>
 
             <Tabs defaultValue="script" className="w-full">
-                <TabsList variant="premium" className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="script" variant="premium">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="script">
                         Standard Script
                     </TabsTrigger>
-                    <TabsTrigger value="iframe" variant="premium">
+                    <TabsTrigger value="iframe">
                         IFrame Proxy
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="script" className="mt-0 space-y-6">
-                    <Card variant="premium" rounded="xl">
+                    <Card>
                         <div className="p-8 space-y-6">
                             <div className="flex items-start justify-between">
                                 <div className="space-y-2">
@@ -117,7 +117,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                         Insert this snippet before the closing <code className="bg-muted px-1.5 py-0.5 rounded text-primary">&lt;/body&gt;</code> tag.
                                     </p>
                                 </div>
-                                <Badge variant="info" className="rounded-lg text-[9px] font-black uppercase tracking-widest border-none px-3 py-1">Recommended</Badge>
+                                <Badge variant="secondary" className="rounded-lg text-[9px] font-black uppercase tracking-widest border-none px-3 py-1">Recommended</Badge>
                             </div>
 
                             <div className="relative group/code">
@@ -128,7 +128,6 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    rounded="xl"
                                     className="absolute top-4 right-4 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-xl"
                                     onClick={() => copyToClipboard(scriptCode, 'script')}
                                 >
@@ -144,7 +143,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                 </TabsContent>
 
                 <TabsContent value="iframe" className="mt-0 space-y-6">
-                    <Card variant="premium" rounded="xl">
+                    <Card>
                         <div className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <h3 className="font-black text-lg tracking-tight">Isolated IFrame</h3>
@@ -161,7 +160,6 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    rounded="xl"
                                     className="absolute top-4 right-4 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-xl"
                                     onClick={() => copyToClipboard(iframeCode, 'iframe')}
                                 >
@@ -177,7 +175,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                 </TabsContent>
             </Tabs>
 
-            <Card variant="premium" rounded="xl">
+            <Card>
                 <CardHeader>
                     <CardTitle className="text-lg font-black tracking-tight">Simulator Laboratory</CardTitle>
                     <CardDescription className="font-medium">
@@ -188,7 +186,6 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                     <div className="flex flex-wrap gap-4">
                         <Button
                             variant="outline"
-                            rounded="xl"
                             className="h-12 font-bold transition-all active:scale-95"
                             onClick={() => window.open(publicBotUrl, '_blank')}
                         >
@@ -197,7 +194,6 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                         </Button>
                         <Button
                             variant="outline"
-                            rounded="xl"
                             className="h-12 font-bold transition-all active:scale-95"
                             onClick={() => {
                                 const testHtml = `<!DOCTYPE html>

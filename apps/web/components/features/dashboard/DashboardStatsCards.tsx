@@ -83,7 +83,7 @@ export function DashboardStatsCards({ stats, itemVariants }: DashboardStatsCards
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
             {cards.map((card) => (
                 <motion.div key={card.id} variants={itemVariants}>
-                    <Card variant="premium" className="overflow-hidden">
+                    <Card className="overflow-hidden">
                         <CardContent className="p-6 relative">
                             <div className="flex justify-between items-start mb-6 relative z-10">
                                 <div className={cn(

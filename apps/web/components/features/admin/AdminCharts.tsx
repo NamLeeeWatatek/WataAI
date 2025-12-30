@@ -72,7 +72,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
         >
             {/* System Activity trend - Full Width on Mobile, 2 cols on Large */}
             <motion.div variants={itemVariants} className="md:col-span-2">
-                <Card variant="glass" rounded="2xl" className="border-border/40 shadow-xl overflow-hidden group">
+                <Card className="border-border/40 shadow-xl overflow-hidden group">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <div>

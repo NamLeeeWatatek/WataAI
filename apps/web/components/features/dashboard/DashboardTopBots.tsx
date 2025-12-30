@@ -12,7 +12,7 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
     const { t } = useTranslation()
 
     return (
-        <Card variant="premium" className="h-full">
+        <Card className="h-full">
             <CardHeader className="border-b border-border/10 px-8 py-6">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-8 bg-primary rounded-full shadow-sm" />

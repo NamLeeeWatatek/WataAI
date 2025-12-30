@@ -135,7 +135,7 @@ export default function ConversationPage() {
                             </h2>
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={conversation.status === 'open' ? 'success' : 'secondary'}
+                                    variant={conversation.status === 'open' ? 'default' : 'secondary'}
                                     className="h-5 px-1.5 text-[10px] uppercase tracking-wider font-bold"
                                 >
                                     {conversation.status}

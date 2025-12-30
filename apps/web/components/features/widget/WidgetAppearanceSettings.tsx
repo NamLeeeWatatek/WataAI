@@ -91,28 +91,28 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
             {/* Left Column: Editor */}
             <div className="w-full xl:w-[480px] 2xl:w-[540px] flex-shrink-0 space-y-6 lg:sticky lg:top-8">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-                    <TabsList variant="premium" className="grid w-full grid-cols-3 mb-6 bg-transparent border-none shadow-none">
+                    <TabsList className="grid w-full grid-cols-3 mb-6 bg-transparent border-none shadow-none">
                         <TabsTrigger
                             value="design"
-                            variant="premium"
+
                         >
                             <Palette className="w-4 h-4 mr-2" /> Design
                         </TabsTrigger>
                         <TabsTrigger
                             value="messaging"
-                            variant="premium"
+
                         >
                             <MessageSquare className="w-4 h-4 mr-2" /> Messaging
                         </TabsTrigger>
                         <TabsTrigger
                             value="behavior"
-                            variant="premium"
+
                         >
                             <Settings2 className="w-4 h-4 mr-2" /> Behavior
                         </TabsTrigger>
                     </TabsList>
 
-                    <Card variant="premium" rounded="3xl" className="flex flex-col shadow-none">
+                    <Card className="flex flex-col shadow-none">
                         <div className="h-1.5 w-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 group-hover:via-primary/70 transition-all duration-500 shrink-0" />
                         <ScrollArea className="h-[500px] 2xl:h-[600px]">
                             <div className="p-6 space-y-8">
@@ -131,14 +131,14 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <div className="relative group/color">
                                                     <Input
                                                         type="color"
-                                                        variant="premium"
+
                                                         className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform"
                                                         value={settings.primaryColor}
                                                         onChange={(e) => updateSetting('primaryColor', e.target.value)}
                                                     />
                                                 </div>
                                                 <Input
-                                                    variant="premium"
+
                                                     value={settings.primaryColor}
                                                     onChange={(e) => updateSetting('primaryColor', e.target.value)}
                                                     className="uppercase font-mono text-sm tracking-widest h-12 focus:bg-background"
@@ -152,13 +152,13 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             <div className="flex gap-3">
                                                 <Input
                                                     type="color"
-                                                    variant="premium"
+
                                                     className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform"
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
                                                 />
                                                 <Input
-                                                    variant="premium"
+
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
                                                     className="uppercase font-mono text-sm tracking-widest h-12 focus:bg-background"
@@ -179,7 +179,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Bot Bubble</Label>
                                                 <Input
                                                     type="color"
-                                                    variant="premium"
+
                                                     className="w-full h-10 p-1 cursor-pointer"
                                                     value={settings.botMessageColor}
                                                     onChange={(e) => updateSetting('botMessageColor', e.target.value)}
@@ -189,7 +189,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Bot Text</Label>
                                                 <Input
                                                     type="color"
-                                                    variant="premium"
+
                                                     className="w-full h-10 p-1 cursor-pointer"
                                                     value={settings.botMessageTextColor}
                                                     onChange={(e) => updateSetting('botMessageTextColor', e.target.value)}
@@ -208,7 +208,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-3">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Font Atmosphere</Label>
                                             <Select value={settings.fontFamily} onValueChange={(val) => updateSetting('fontFamily', val)}>
-                                                <SelectTrigger variant="premium" rounded="xl">
+                                                <SelectTrigger >
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent className="rounded-xl shadow-2xl p-1">
@@ -234,7 +234,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-4">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Onboarding Greeting</Label>
                                             <Input
-                                                variant="premium"
+
                                                 value={settings.welcomeMessage}
                                                 onChange={(e) => updateSetting('welcomeMessage', e.target.value)}
                                                 placeholder="e.g. Protocol initialized. How can I assist?"
@@ -246,7 +246,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-4">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Placeholder</Label>
                                             <Input
-                                                variant="premium"
+
                                                 value={settings.placeholderText}
                                                 onChange={(e) => updateSetting('placeholderText', e.target.value)}
                                                 placeholder="e.g. Transmit your query..."
@@ -328,7 +328,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Trigger Scale</h3>
                                         </div>
                                         <Select value={settings.widgetButtonSize} onValueChange={(val) => updateSetting('widgetButtonSize', val)}>
-                                            <SelectTrigger variant="premium" rounded="xl" className="h-12">
+                                            <SelectTrigger className="h-12">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl p-1">
@@ -367,7 +367,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
 
             {/* Right Column: Preview */}
             <div className="flex-1 w-full xl:sticky xl:top-8 space-y-8">
-                <Card variant="flat" rounded="3xl" className="p-8 lg:p-12 relative overflow-hidden flex items-center justify-center group/preview border-border/40 min-h-[600px] 2xl:min-h-[750px] bg-muted/5">
+                <Card className="p-8 lg:p-12 relative overflow-hidden flex items-center justify-center group/preview border-border/40 min-h-[600px] 2xl:min-h-[750px] bg-muted/5">
                     {/* Visual Enhancers */}
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64 transition-all duration-1000 group-hover/preview:bg-primary/10" />
                     <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -ml-64 -mb-64 transition-all duration-1000 group-hover/preview:bg-primary/10" />

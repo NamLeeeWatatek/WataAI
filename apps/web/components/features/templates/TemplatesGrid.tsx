@@ -53,7 +53,7 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
 
     if (templates.length === 0) {
         return (
-            <Card variant="flat" className="p-8 text-center border-dashed">
+            <Card className="p-8 text-center border-dashed">
                 <CardTitle className="mb-2">No Templates Found</CardTitle>
                 <CardDescription>
                     Create your first template to get started with standardized UGC content creation.
@@ -67,8 +67,6 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
             {templates.map((template) => (
                 <Card
                     key={template.id}
-                    variant="premium"
-                    rounded="xl"
                     className={cn(
                         "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
                         selectionMode ? "cursor-pointer ring-2 ring-transparent hover:ring-primary" : ""
@@ -152,7 +150,6 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
 
                                 <div className="flex items-center text-xs text-muted-foreground" title={`Status: ${template.isActive ? 'Active' : 'Inactive'}`}>
                                     <Badge
-                                        variant={template.isActive ? "success" : "secondary"}
                                         className="h-5 px-2 text-[8px] font-black uppercase tracking-widest border-none"
                                     >
                                         {template.isActive ? 'Active matrix' : 'Offline'}

@@ -89,7 +89,7 @@ export function KbGridView({
 
   if (items.length === 0) {
     return (
-      <Card variant="flat" rounded="3xl" className="py-20 text-center flex flex-col items-center border-2 border-dashed border-border/40">
+      <Card className="py-20 text-center flex flex-col items-center border-2 border-dashed border-border/40">
         <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
           <Folder className="w-10 h-10 text-primary opacity-40" />
         </div>
@@ -143,8 +143,6 @@ export function KbGridView({
               dragOverFolder === item.id && "ring-2 ring-primary bg-primary/10",
               item.type === 'folder' && draggedItem && "border-primary/50 bg-primary/5"
             )}
-            variant={selectedIds.includes(item.id) ? "premium" : "glass"}
-            rounded="2xl"
             onClick={() => onItemClick(item)}
           >
             <div className={cn(

@@ -16,7 +16,6 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
         const isPositive = rate >= 0
         return (
             <Badge
-                variant={isPositive ? 'success' : 'destructive'}
                 className="h-7 px-3 gap-1 rounded-full font-bold border-none"
             >
                 {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -84,7 +83,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
                 >
-                    <Card variant="premium" className="group h-full flex flex-col pt-2 transition-all duration-500">
+                    <Card className="group h-full flex flex-col pt-2 transition-all duration-500">
                         <div className={cn(
                             "absolute top-0 left-0 w-1 h-full opacity-0 group-hover:opacity-100 transition-opacity",
                             card.color === 'info' ? 'bg-info' :

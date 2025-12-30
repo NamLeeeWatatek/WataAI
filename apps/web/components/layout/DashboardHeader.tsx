@@ -32,7 +32,6 @@ const AdminLink = () => {
         <Button
             variant="ghost"
             size="sm"
-            rounded="xl"
             className="hidden md:flex items-center gap-2 text-primary hover:bg-primary/10 hover:text-primary font-black text-[10px] uppercase tracking-wider px-4 mr-2 h-9 shadow-sm shadow-primary/5 border border-primary/10"
             asChild
         >

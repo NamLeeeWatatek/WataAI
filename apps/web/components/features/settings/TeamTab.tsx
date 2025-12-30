@@ -93,7 +93,7 @@ export function TeamTab() {
                         Manage your team structure and access rights.
                     </p>
                 </div>
-                <Button onClick={() => setInviteOpen(true)} variant="premium" size="lg" rounded="xl" className="font-bold">
+                <Button onClick={() => setInviteOpen(true)} variant="default" size="lg" className="font-bold">
                     <UserPlus className="mr-2 h-4 w-4" />
                     Invite Member
                 </Button>
@@ -107,7 +107,7 @@ export function TeamTab() {
                 <div className="grid gap-8">
                     {/* Owner Section */}
                     {owner && (
-                        <Card variant="premium">
+                        <Card>
                             <CardHeader className="pb-2">
                                 <div className="flex items-center gap-2">
                                     <Crown className="w-5 h-5 text-warning fill-warning/20" />
@@ -130,7 +130,7 @@ export function TeamTab() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3">
                                             <h3 className="text-lg font-bold">{owner.user.firstName} {owner.user.lastName}</h3>
-                                            <Badge variant="success" className="px-1.5 py-0.5">
+                                            <Badge variant="default" className="px-1.5 py-0.5">
                                                 Owner
                                             </Badge>
                                         </div>
@@ -180,7 +180,7 @@ export function TeamTab() {
                                                             {member.user.firstName} {member.user.lastName}
                                                         </p>
                                                         {member.role?.name?.toLowerCase() === 'admin' && (
-                                                            <Badge variant="info" className="h-5 px-1.5 text-[10px]">
+                                                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
                                                                 Admin
                                                             </Badge>
                                                         )}

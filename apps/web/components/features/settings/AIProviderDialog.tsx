@@ -221,7 +221,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 disabled={isEdit}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger variant="premium">
+                                                    <SelectTrigger >
                                                         <SelectValue placeholder="Select Provider" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -248,7 +248,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 <Input
                                                     placeholder="e.g. My OpenAI"
                                                     {...field}
-                                                    variant="premium"
+
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -284,7 +284,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                             placeholder={`Enter ${fieldName}...`}
                                                             {...field}
                                                             value={(field.value as string) || ''}
-                                                            variant="premium"
+
                                                             className="font-mono text-sm"
                                                         />
                                                     </FormControl>
@@ -308,7 +308,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                         <Input
                                                             {...field}
                                                             value={(field.value as string) || ''}
-                                                            variant="premium"
+
                                                             className="text-sm"
                                                         />
                                                     </FormControl>
@@ -328,7 +328,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                rounded="lg"
                                                 onClick={() => handleFetchModels()}
                                                 disabled={isFetchingModels}
                                                 className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 transition-all font-bold"
@@ -384,7 +383,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             <Button
                                 type="button"
                                 variant="ghost"
-                                rounded="2xl"
                                 onClick={() => onOpenChange(false)}
                                 className="h-14 font-bold text-muted-foreground"
                             >
@@ -392,7 +390,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             </Button>
                             <Button
                                 type="submit"
-                                rounded="2xl"
                                 disabled={saveMutation.isPending}
                                 className="h-14 px-8 font-black flex-1 sm:flex-none shadow-xl shadow-primary/20"
                             >

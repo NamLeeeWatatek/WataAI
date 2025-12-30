@@ -129,7 +129,7 @@ export function ChannelConfigDialog({
                                         <FormLabel>Provider</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                                             <FormControl>
-                                                <SelectTrigger variant="premium">
+                                                <SelectTrigger>
                                                     <SelectValue placeholder="Select provider" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -152,7 +152,7 @@ export function ChannelConfigDialog({
                                     <FormItem>
                                         <FormLabel>Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="My Facebook Page" variant="premium" {...field} />
+                                            <Input placeholder="My Facebook Page" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -173,7 +173,7 @@ export function ChannelConfigDialog({
                                     <div className="space-y-2">
                                         <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">OAuth Redirect URI</FormLabel>
                                         <div className="flex items-center gap-2">
-                                            <Input readOnly value={redirectUrl} variant="premium" className="bg-muted font-mono text-xs truncate h-9" />
+                                            <Input readOnly value={redirectUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(redirectUrl)} className="shrink-0">
                                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </Button>
@@ -183,7 +183,7 @@ export function ChannelConfigDialog({
                                     <div className="space-y-2">
                                         <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">Webhook Callback URL</FormLabel>
                                         <div className="flex items-center gap-2">
-                                            <Input readOnly value={callbackUrl} variant="premium" className="bg-muted font-mono text-xs truncate h-9" />
+                                            <Input readOnly value={callbackUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(callbackUrl)} className="shrink-0">
                                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </Button>
@@ -201,7 +201,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Page ID</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="1234567890" variant="premium" {...field} />
+                                                    <Input placeholder="1234567890"  {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -214,7 +214,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Verify Token</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="my_secure_token" variant="premium" {...field} />
+                                                    <Input placeholder="my_secure_token"  {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -227,7 +227,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>App Secret</FormLabel>
                                                 <FormControl>
-                                                    <Input type="password" variant="premium" placeholder="App Secret" {...field} />
+                                                    <Input type="password" placeholder="App Secret" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -240,7 +240,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Page Access Token</FormLabel>
                                                 <FormControl>
-                                                    <Input type="password" variant="premium" placeholder="EAA..." {...field} />
+                                                    <Input type="password" placeholder="EAA..." {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -272,10 +272,10 @@ export function ChannelConfigDialog({
                         />
 
                         <DialogFooter className="gap-2 pt-4 border-t border-border/10">
-                            <Button type="button" variant="ghost" rounded="xl" onClick={() => onOpenChange(false)} className="font-bold">
+                            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="font-bold">
                                 Cancel
                             </Button>
-                            <Button type="submit" rounded="xl" className="font-bold px-8" loading={form.formState.isSubmitting}>
+                            <Button type="submit" className="font-bold px-8" loading={form.formState.isSubmitting}>
                                 {channel ? 'Save Changes' : 'Create Channel'}
                             </Button>
                         </DialogFooter>

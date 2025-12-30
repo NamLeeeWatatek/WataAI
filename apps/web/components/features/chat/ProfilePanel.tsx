@@ -118,7 +118,6 @@ export function ProfilePanel({
                             Status
                         </label>
                         <Badge
-                            variant={statusConfig.variant}
                             className="h-7 px-3 gap-2 font-bold"
                         >
                             <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />

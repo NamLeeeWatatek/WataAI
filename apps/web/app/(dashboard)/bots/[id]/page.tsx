@@ -211,7 +211,6 @@ export default function BotDetailPage() {
                             onClick={handleSave}
                             disabled={!hasChanges}
                             loading={saving}
-                            rounded="xl"
                             className="font-bold h-10 px-6"
                         >
                             <Save className="w-4 h-4 mr-2" />
@@ -221,7 +220,7 @@ export default function BotDetailPage() {
                 </PageHeader>
 
                 {hasChanges && (
-                    <Card variant="premium" className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <Card className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
                         <div className="h-1 w-full bg-amber-500 animate-pulse" />
                         <CardContent className="py-4">
                             <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
@@ -235,7 +234,7 @@ export default function BotDetailPage() {
                 )}
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
-                    <TabsList variant="premium" className="flex flex-wrap h-auto">
+                    <TabsList className="flex flex-wrap h-auto">
                         {[
                             { value: 'configuration', label: 'Configuration', icon: BotIcon },
                             { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
@@ -246,7 +245,6 @@ export default function BotDetailPage() {
                             <TabsTrigger
                                 key={tab.value}
                                 value={tab.value}
-                                variant="premium"
                             >
                                 <tab.icon className="w-4 h-4 mr-2" />
                                 {tab.label}

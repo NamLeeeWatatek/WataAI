@@ -135,12 +135,11 @@ export default function AIModelsPage() {
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="flex-1 flex flex-col">
           <div className="px-6 lg:px-8 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-            <TabsList variant="line">
+            <TabsList >
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  variant="line"
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}

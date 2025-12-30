@@ -186,7 +186,7 @@ export function AssignBotDialog({
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">{channel.type} Connection</p>
                 </div>
                 {channel.botId && (
-                  <Badge variant="outline" rounded="lg" className="gap-1.5 text-success border-success/30 bg-success/10 font-bold py-1">
+                  <Badge variant="outline" className="gap-1.5 text-success border-success/30 bg-success/10 font-bold py-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     AUTHORIZED
                   </Badge>
@@ -219,7 +219,7 @@ export function AssignBotDialog({
                           <Bot className="w-4 h-4 opacity-60" />
                           <span>{bot.name}</span>
                           {bot.aiModelName && (
-                            <Badge variant="outline" rounded="lg" className="text-[9px] uppercase font-black tracking-tighter opacity-70">
+                            <Badge variant="outline" className="text-[9px] uppercase font-black tracking-tighter opacity-70">
                               {bot.aiModelName}
                             </Badge>
                           )}
@@ -244,7 +244,6 @@ export function AssignBotDialog({
             {channel.botId && (
               <Button
                 variant="ghost"
-                rounded="xl"
                 className="h-12 flex-1 font-black uppercase tracking-widest text-[10px] text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={handleRemove}
                 disabled={saving}
@@ -254,7 +253,6 @@ export function AssignBotDialog({
             )}
             <Button
               variant="outline"
-              rounded="xl"
               className="h-12 flex-1 font-black uppercase tracking-widest text-[10px] glass border-white/10"
               onClick={() => onOpenChange(false)}
               disabled={saving}
@@ -263,7 +261,6 @@ export function AssignBotDialog({
             </Button>
             <Button
               loading={saving}
-              rounded="xl"
               className="h-12 flex-[2] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20 active:scale-95 transition-all"
               onClick={handleSave}
               disabled={!selectedBotId || loading}

@@ -173,7 +173,6 @@ export function ConnectedChannelsTab({
             placeholder="Search connected channels..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            variant="premium"
             className="pl-10 h-11"
           />
         </div>
@@ -206,7 +205,7 @@ export function ConnectedChannelsTab({
           <p className="text-muted-foreground mb-8 mx-auto max-w-lg">
             Configure your first integration to start connecting channels and automating your workflow
           </p>
-          <Button onClick={onLoadData} rounded="xl" className="font-bold px-8">
+          <Button onClick={onLoadData} className="font-bold px-8">
             Go to Configurations
           </Button>
         </div>
@@ -218,17 +217,17 @@ export function ConnectedChannelsTab({
                 const sameTypeCount = channels.filter(c => c.type === channel.type).length;
 
                 return (
-                  <Card key={channel.id} variant="premium" className="group h-full flex flex-col">
+                  <Card key={channel.id} className="group h-full flex flex-col">
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 pt-6">
                       <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(channel.type))}>
                         {getIcon(channel.type)}
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        <Badge variant="success" className="font-bold">
+                        <Badge variant="default" className="font-bold">
                           <CheckCircle2 className="w-3 h-3 mr-1" /> Active
                         </Badge>
                         {channel.metadata?.botId && (
-                          <Badge variant="info" className="font-bold">
+                          <Badge variant="secondary" className="font-bold">
                             <Settings className="w-3 h-3 mr-1" /> Linked
                           </Badge>
                         )}
@@ -249,7 +248,6 @@ export function ConnectedChannelsTab({
                       <Button
                         variant="outline"
                         size="sm"
-                        rounded="xl"
                         onClick={() => onAssignBot(channel)}
                         className="text-[10px] font-black uppercase tracking-widest"
                       >
@@ -259,7 +257,6 @@ export function ConnectedChannelsTab({
                       <Button
                         variant="ghost"
                         size="sm"
-                        rounded="xl"
                         onClick={() => onDisconnect(channel.id)}
                         className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10"
                       >
@@ -272,7 +269,7 @@ export function ConnectedChannelsTab({
               })}
             </div>
           ) : (
-            <Card variant="premium" className="overflow-hidden">
+            <Card className="overflow-hidden">
               <DataTable
                 data={paginatedChannels}
                 columns={[
@@ -295,7 +292,7 @@ export function ConnectedChannelsTab({
                     key: 'status',
                     label: 'Status',
                     render: (_, row) => (
-                      <Badge variant="success" className="font-bold">
+                      <Badge variant="default" className="font-bold">
                         <CheckCircle2 className="w-3 h-3 mr-1" /> Active
                       </Badge>
                     )
@@ -304,7 +301,7 @@ export function ConnectedChannelsTab({
                     key: 'bot',
                     label: 'Assigned Bot',
                     render: (_, row) => row.metadata?.botId ? (
-                      <Badge variant="info">Bot Assigned</Badge>
+                      <Badge variant="secondary">Bot Assigned</Badge>
                     ) : (
                       <span className="text-xs text-muted-foreground">Disconnected</span>
                     )
@@ -322,7 +319,6 @@ export function ConnectedChannelsTab({
                         <Button
                           variant="ghost"
                           size="icon"
-                          rounded="lg"
                           onClick={() => onAssignBot(row)}
                           className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                         >
@@ -331,7 +327,6 @@ export function ConnectedChannelsTab({
                         <Button
                           variant="ghost"
                           size="icon"
-                          rounded="lg"
                           onClick={() => onDisconnect(row.id)}
                           className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         >

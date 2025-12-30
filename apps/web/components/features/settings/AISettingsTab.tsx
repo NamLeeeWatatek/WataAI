@@ -79,7 +79,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
   return (
     <div className="space-y-8">
       {/* System-wide AI Defaults */}
-      <Card variant="premium">
+      <Card >
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -107,7 +107,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     onSystemSettingsChange({ ...systemSettings, defaultProviderId: value, defaultModel: '' });
                   }}
                 >
-                  <SelectTrigger variant="premium">
+                  <SelectTrigger >
                     <SelectValue placeholder={
                       userConfigs.filter(config => config.isActive).length > 0
                         ? "Select default provider"
@@ -145,7 +145,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                   }}
                   disabled={!systemSettings.defaultProviderId || userConfigs.filter(config => config.isActive).length === 0}
                 >
-                  <SelectTrigger variant="premium">
+                  <SelectTrigger >
                     <SelectValue placeholder={
                       !systemSettings.defaultProviderId
                         ? "Select provider first"
@@ -180,7 +180,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     min="0"
                     max="2"
                     value={systemSettings.minTemperature}
-                    variant="premium"
+
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       minTemperature: parseFloat(e.target.value) || 0.0
@@ -195,7 +195,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     min="0"
                     max="2"
                     value={systemSettings.maxTemperature}
-                    variant="premium"
+
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxTemperature: parseFloat(e.target.value) || 2.0
@@ -292,7 +292,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     type="number"
                     placeholder="1000"
                     value={systemSettings.maxRequestsPerHour}
-                    variant="premium"
+
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxRequestsPerHour: parseInt(e.target.value) || 1000
@@ -306,7 +306,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     type="number"
                     placeholder="100"
                     value={systemSettings.maxRequestsPerUser}
-                    variant="premium"
+
                     onChange={(e) => onSystemSettingsChange(prev => ({
                       ...prev,
                       maxRequestsPerUser: parseInt(e.target.value) || 100
@@ -320,7 +320,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
       </Card>
 
       {/* System Prompt Templates */}
-      <Card variant="premium">
+      <Card >
         <CardHeader>
           <div className="flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-primary" />
@@ -339,7 +339,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
               <p className="text-muted-foreground text-xs mb-6 font-medium">
                 Create and manage custom prompt templates for different use cases
               </p>
-              <Button variant="outline" rounded="xl" className="font-bold border-primary/20 hover:bg-primary/5 hover:text-primary transition-all shadow-sm">
+              <Button variant="outline" className="font-bold border-primary/20 hover:bg-primary/5 hover:text-primary transition-all shadow-sm">
                 <Zap className="w-4 h-4 mr-2" />
                 Add Template
               </Button>
@@ -360,7 +360,7 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
                     <div key={category.name} className="p-4 border border-border/40 rounded-xl bg-muted/10 group hover:bg-muted/20 transition-colors">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-sm">{category.name}</span>
-                        <Badge variant="secondary" rounded="lg" className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
+                        <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5">
                           {category.count}
                         </Badge>
                       </div>
@@ -377,7 +377,6 @@ export function AISettingsTab({ userConfigs, systemSettings, onSystemSettingsCha
         <Button
           onClick={handleSaveSystemSettings}
           loading={aiSettingsLoading}
-          rounded="full"
           className="px-8 h-12 font-bold shadow-xl shadow-primary/20 active:scale-95 transition-all text-base"
         >
           <Settings2 className="w-5 h-5 mr-3" />

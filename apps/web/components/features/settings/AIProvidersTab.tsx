@@ -184,7 +184,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card variant="premium">
+        <Card >
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Connected Providers</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{allProviders.length}</CardTitle>
@@ -197,7 +197,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           </CardContent>
         </Card>
 
-        <Card variant="premium">
+        <Card >
           <CardHeader className="pb-3 border-b border-border/10">
             <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Usage</CardDescription>
             <CardTitle className="text-4xl font-black tracking-tighter mt-1">{totalUsage.toLocaleString()}</CardTitle>
@@ -210,13 +210,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           </CardContent>
         </Card>
 
-        <Card variant="premium" className="bg-primary/5 border-dashed border-primary/20">
+        <Card className="bg-primary/5 border-dashed border-primary/20">
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Add Capability</CardDescription>
             <Sparkles className="size-4 text-primary opacity-50" />
           </CardHeader>
           <CardContent className="pt-2">
-            <Button onClick={() => handleOpenDialog()} variant="premium" rounded="xl" className="w-full font-black h-14">
+            <Button onClick={() => handleOpenDialog()} className="w-full font-black h-14">
               <Plus className="mr-2 size-5" />
               Add Provider
             </Button>
@@ -232,7 +232,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
             placeholder="Search providers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            variant="premium"
+
             className="pl-12"
           />
         </div>
@@ -273,7 +273,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           <p className="text-muted-foreground text-center max-w-sm mt-2 mb-10 font-medium leading-relaxed">
             Initialize your neural gateway by connecting a verified AI provider to unlock advanced system capabilities.
           </p>
-          <Button onClick={() => handleOpenDialog()} variant="premium" size="lg" rounded="full" className="font-bold px-10 shadow-xl shadow-primary/20 active:scale-95 transition-all">
+          <Button onClick={() => handleOpenDialog()} size="lg" className="font-bold px-10 shadow-xl shadow-primary/20 active:scale-95 transition-all">
             <Plus className="mr-2 size-5" />
             Establish Neural Link
           </Button>
@@ -294,7 +294,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
 
                   return (
                     <div key={provider.id}>
-                      <Card variant="premium" className="group h-full flex flex-col overflow-hidden">
+                      <Card className="group h-full flex flex-col overflow-hidden">
                         <div className={cn(
                           "h-1.5 w-full transition-all duration-500",
                           provider.isActive ? "bg-primary" : "bg-muted"
@@ -354,12 +354,12 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {provider.modelList.slice(0, 5).map((model) => (
-                                  <Badge key={model} variant="secondary" rounded="lg" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors">
+                                  <Badge key={model} variant="secondary" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors">
                                     {model}
                                   </Badge>
                                 ))}
                                 {provider.modelList.length > 5 && (
-                                  <Badge variant="secondary" rounded="lg" className="text-[9px] px-2 py-0.5 bg-muted/5 border-border/10 opacity-60">
+                                  <Badge variant="secondary" className="text-[9px] px-2 py-0.5 bg-muted/5 border-border/10 opacity-60">
                                     +{provider.modelList.length - 5}
                                   </Badge>
                                 )}
@@ -374,7 +374,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                                 variant="outline"
                                 onClick={() => handleSyncModels(provider.id)}
                                 disabled={isSyncing === provider.id}
-                                rounded="lg"
+
                                 className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all px-4"
                               >
                                 {isSyncing === provider.id ? (
@@ -405,9 +405,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                             <div className="flex gap-3">
                               {!provider.isVerified && (
                                 <Button
-                                  variant="warning"
                                   size="sm"
-                                  rounded="xl"
                                   onClick={() => handleVerify(provider.id)}
                                   className="flex-1 h-11 font-bold text-xs"
                                 >
@@ -416,9 +414,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                                 </Button>
                               )}
                               <Button
-                                variant={provider.isActive ? "outline" : "premium"}
                                 size="sm"
-                                rounded="xl"
                                 onClick={() => handleToggleActive(provider)}
                                 className="flex-1 h-11 font-bold text-xs"
                               >
@@ -451,7 +447,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                 })}
             </div>
           ) : (
-            <Card variant="premium" className="overflow-hidden">
+            <Card className="overflow-hidden">
               <DataTable
                 data={allProviders
                   .filter(p =>

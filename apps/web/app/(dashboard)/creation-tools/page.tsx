@@ -60,7 +60,6 @@ export default function CreationToolsPage() {
                 {items.map((tool) => (
                     <Card
                         key={tool.id}
-                        variant="premium"
                         className="cursor-pointer"
                         onClick={() => router.push(`/creation-tools/${tool.slug}`)}
                     >
@@ -96,7 +95,7 @@ export default function CreationToolsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button className="w-full font-bold" size="lg" rounded="xl">
+                            <Button className="w-full font-bold" size="lg">
                                 Start Creating
                                 <Sparkles className="w-4 h-4 ml-2" />
                             </Button>

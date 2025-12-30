@@ -97,7 +97,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
     const getStatusBadge = (version: Version) => {
         if (version.isActive) {
             return (
-                <Badge variant="success" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+                <Badge variant="default" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
                     <div className="size-1.5 rounded-full bg-current animate-pulse mr-1.5" />
                     Live Protocol
                 </Badge>
@@ -105,7 +105,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
         }
         if (version.status === 'draft') {
             return (
-                <Badge variant="info" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+                <Badge variant="secondary" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
                     <Clock className="w-3 h-3 mr-1.5" />
                     Draft State
                 </Badge>
@@ -120,7 +120,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
             );
         }
         return (
-            <Badge variant="premium" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+            <Badge variant="default" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
                 <Rocket className="w-3 h-3 mr-1.5" />
                 Published
             </Badge>
@@ -166,8 +166,6 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                 {versions.map((version) => (
                     <Card
                         key={version.id}
-                        variant="premium"
-                        rounded="xl"
                         className="relative overflow-hidden transition-all duration-500 group"
                     >
                         <CardHeader className="p-6 pb-4">
@@ -194,7 +192,6 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        rounded="xl"
                                         className="h-10 font-bold active:scale-95 transition-all px-4"
                                         onClick={() => {
                                             window.location.href = `/bots/${botId}/widget/${version.id}`;
@@ -216,7 +213,6 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                     {version.status === 'draft' && (
                                         <Button
                                             size="sm"
-                                            rounded="xl"
                                             className="h-10 font-black shadow-lg shadow-primary/20 active:scale-95 transition-all text-xs uppercase tracking-widest px-4"
                                             onClick={() => handlePublish(version.id)}
                                             disabled={isSubmitting}
@@ -229,8 +225,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                     {version.status === 'published' && !version.isActive && (
                                         <Button
                                             size="sm"
-                                            variant="warning"
-                                            rounded="xl"
+                                            variant="outline"
                                             className="h-10 font-black active:scale-95 transition-all text-xs px-4 border-none"
                                             onClick={() => setRollbackVersion(version)}
                                             disabled={isSubmitting}
@@ -244,7 +239,6 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            rounded="xl"
                                             className="h-10 w-10 text-muted-foreground/40 hover:text-foreground hover:bg-muted"
                                             onClick={() => handleArchive(version.id)}
                                             disabled={isSubmitting}
@@ -257,7 +251,6 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            rounded="xl"
                                             className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
                                             onClick={() => setDeleteVersion(version)}
                                             disabled={isSubmitting}
@@ -324,7 +317,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                         <AlertDialogAction
                             onClick={handleRollback}
                             disabled={!rollbackReason.trim() || isSubmitting}
-                            className="rounded-2xl h-12 font-black bg-warning hover:bg-warning/90 text-warning-foreground shadow-xl shadow-warning/20 active:scale-95 transition-all px-8 border-none"
+                            className="rounded-2xl h-12 font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 active:scale-95 transition-all px-8 border-none"
                         >
                             {isSubmitting ? 'Processing...' : 'Execute Reversion'}
                         </AlertDialogAction>

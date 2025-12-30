@@ -62,7 +62,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {/* Identity Section */}
-        <Card variant="premium" className="lg:col-span-1">
+        <Card className="lg:col-span-1">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -80,7 +80,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Bot Name</Label>
                 <Input
                   id="name"
-                  variant="premium"
                   value={formData.name}
                   onChange={(e) => onChange({ name: e.target.value })}
                   placeholder="e.g. Customer Support Agent"
@@ -89,7 +88,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="isActive" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Status</Label>
-                  <Badge variant={formData.isActive ? "success" : "secondary"}>
+                  <Badge variant={formData.isActive ? "default" : "secondary"}>
                     {formData.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
@@ -110,7 +109,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Description</Label>
               <Textarea
                 id="description"
-                variant="premium"
                 value={formData.description}
                 onChange={(e) => onChange({ description: e.target.value })}
                 placeholder="Briefly describe what this bot does..."
@@ -122,7 +120,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
         </Card>
 
         {/* System Prompt Section */}
-        <Card variant="premium" className="lg:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -136,7 +134,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
           </CardHeader>
           <CardContent className="flex-1 flex flex-col pt-2 min-h-[400px]">
             <Textarea
-              variant="premium"
               value={formData.systemPrompt}
               onChange={(e) => onChange({ systemPrompt: e.target.value })}
               placeholder="You are a helpful AI assistant tasked with..."
@@ -146,7 +143,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
         </Card>
 
         {/* Intelligence Section */}
-        <Card variant="premium" className="lg:col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-primary/10 rounded-xl">
@@ -165,7 +162,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">AI Provider</Label>
                     <Select value={formData.aiProviderId} onValueChange={(value) => onChange({ aiProviderId: value, aiModelName: '' })}>
-                      <SelectTrigger variant="premium" rounded="xl">
+                      <SelectTrigger>
                         <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
@@ -180,7 +177,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model</Label>
                     <Select value={formData.aiModelName} onValueChange={(value) => onChange({ aiModelName: value })}>
-                      <SelectTrigger variant="premium" rounded="xl">
+                      <SelectTrigger>
                         <SelectValue placeholder={!formData.aiProviderId ? "Select provider first" : "Select model"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
@@ -231,7 +228,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                         </Tooltip>
                       </TooltipProvider>
                     </Label>
-                    <Badge variant="premium" className="font-mono font-bold">
+                    <Badge className="font-mono font-bold">
                       {formData.aiParameters.temperature}
                     </Badge>
                   </div>
@@ -259,7 +256,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   </div>
                   <Input
                     type="number"
-                    variant="premium"
                     value={formData.aiParameters.max_tokens}
                     onChange={(e) => onChange({ aiParameters: { ...formData.aiParameters, max_tokens: parseInt(e.target.value) } })}
                     max={128000}

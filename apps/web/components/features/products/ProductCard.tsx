@@ -109,7 +109,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
 
     return (
         <>
-            <Card variant="premium" className={cn(
+            <Card className={cn(
                 "flex flex-col h-full relative group transition-all",
                 isSelected && "border-primary ring-1 ring-primary/20 bg-primary/5 shadow-primary/10"
             )}>
@@ -133,7 +133,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                         <CardTitle className={cn("text-base font-bold truncate transition-all", isSelected && "ml-7")} title={getDisplayName()}>
                             {getDisplayName()}
                         </CardTitle>
-                        <Badge variant={status.variant} className="font-bold border-none h-6">
+                        <Badge className="font-bold border-none h-6">
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {status.label}
                         </Badge>

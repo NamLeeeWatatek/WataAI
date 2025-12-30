@@ -104,7 +104,7 @@ function RegisterPageContent() {
             </div>
 
             <div className="w-full max-w-xl relative z-10 animate-in fade-in zoom-in duration-700">
-                <Card variant="premium" className="p-10 md:p-12 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
+                <Card className="p-10 md:p-12 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
                     {/* Header */}
                     <div className="text-center mb-10">
                         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-inner ring-2 ring-primary/5 group-hover:scale-110 transition-transform duration-500">

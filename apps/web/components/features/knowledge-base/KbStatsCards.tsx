@@ -9,7 +9,7 @@ interface KBStatsCardsProps {
 export function KBStatsCards({ stats }: KBStatsCardsProps) {
     return (
         <div className="grid grid-cols-4 gap-4 mb-6">
-            <Card variant="premium" className="p-4 group">
+            <Card className="p-4 group">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <FileText className="w-5 h-5 text-primary" />
@@ -20,7 +20,7 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card variant="premium" className="p-4 group">
+            <Card className="p-4 group">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Database className="w-5 h-5 text-primary" />
@@ -31,7 +31,7 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card variant="premium" className="p-4 group">
+            <Card className="p-4 group">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Cpu className="w-5 h-5 text-primary" />
@@ -42,7 +42,7 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     </div>
                 </div>
             </Card>
-            <Card variant="premium" className="p-4 group">
+            <Card className="p-4 group">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Settings className="w-5 h-5 text-primary" />

@@ -199,7 +199,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
             </nav>
 
             <div className="p-3 border-t border-border/20">
-                <Card variant="premium" className="p-3 hover:bg-card/60 transition-all duration-300 overflow-visible">
+                <Card className="p-3 hover:bg-card/60 transition-all duration-300 overflow-visible">
                     <div className="flex items-center gap-3 mb-3">
                         <Avatar className="w-9 h-9 ring-2 ring-primary/10 shadow-md">
                             <AvatarImage src={user?.avatarUrl || user?.image || ''} />
@@ -215,7 +215,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                             </div>
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 {user?.role && (
-                                    <Badge variant="premium" className="px-1.5 py-0 text-[8px] font-black uppercase tracking-wider border-none">
+                                    <Badge className="px-1.5 py-0 text-[8px] font-black uppercase tracking-wider border-none">
                                         {getRoleName(user.role)}
                                     </Badge>
                                 )}
@@ -229,7 +229,6 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                     <Button
                         variant="ghost"
                         size="sm"
-                        rounded="xl"
                         className="w-full h-8 justify-start text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                         onClick={onSignOutConfirm}
                     >

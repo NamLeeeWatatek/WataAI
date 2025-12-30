@@ -632,10 +632,10 @@ function ConversationsPageContent() {
           </div>
 
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-            <TabsList variant="premium" className="w-full grid-cols-3">
-              <TabsTrigger value="active" variant="premium">Active</TabsTrigger>
-              <TabsTrigger value="closed" variant="premium">Closed</TabsTrigger>
-              <TabsTrigger value="all" variant="premium">All</TabsTrigger>
+            <TabsList className="w-full grid-cols-3">
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="closed">Closed</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -724,7 +724,7 @@ function ConversationsPageContent() {
                       {/* Badge row - Like image */}
                       <div className="flex items-center gap-2 mb-1.5">
                         {conv.metadata?.tags?.includes('VIP') && (
-                          <Badge variant="premium" className="bg-warning/10 text-warning border-warning/20">
+                          <Badge className="bg-warning/10 text-warning border-warning/20">
                             🔒 VIP Lead
                           </Badge>
                         )}
@@ -734,7 +734,7 @@ function ConversationsPageContent() {
                           </Badge>
                         )}
                         {conv.metadata?.tags?.includes('Payment') && (
-                          <Badge variant="success">
+                          <Badge variant="default">
                             💳 Payments
                           </Badge>
                         )}

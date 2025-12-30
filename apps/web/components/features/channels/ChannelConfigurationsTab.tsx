@@ -261,7 +261,7 @@ export function ChannelConfigurationsTab({
         <div>
           <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
             Configured Integrations
-            <Badge variant="secondary" rounded="full" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5">
+            <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5">
               {configs.length}
             </Badge>
           </h2>
@@ -271,7 +271,7 @@ export function ChannelConfigurationsTab({
               const channelInfo = [...MESSAGING_CHANNELS, ...BUSINESS_INTEGRATIONS].find(c => c.id === provider);
 
               return (
-                <Card key={config.id} variant="premium" className="group h-full flex flex-col">
+                <Card key={config.id} className="group h-full flex flex-col">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 pt-6 px-6">
                     <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(provider))}>
                       {getIcon(provider)}
@@ -280,7 +280,7 @@ export function ChannelConfigurationsTab({
                       <Button
                         variant="ghost"
                         size="icon"
-                        rounded="lg"
+
                         onClick={() => openConfig(config.id)}
                         className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                       >
@@ -289,7 +289,7 @@ export function ChannelConfigurationsTab({
                       <Button
                         variant="ghost"
                         size="icon"
-                        rounded="lg"
+
                         onClick={() => config.id && onDeleteConfig(config.id)}
                         className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       >
@@ -309,7 +309,7 @@ export function ChannelConfigurationsTab({
                       </div>
                       <div className="bg-muted/30 rounded-xl border border-border/40 flex items-center justify-between p-3">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Registry</span>
-                        <Badge variant={config.is_active ? "success" : "destructive"} rounded="lg" className="text-[10px] font-black gap-1.5 py-0 px-2 uppercase">
+                        <Badge className="text-[10px] font-black gap-1.5 py-0 px-2 uppercase">
                           <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", config.is_active ? 'bg-current' : 'bg-current')}></span>
                           {config.is_active ? 'STABLE' : 'OFFLINE'}
                         </Badge>
@@ -319,7 +319,7 @@ export function ChannelConfigurationsTab({
                   <CardFooter className="flex gap-3 px-6 pb-6 pt-4">
                     <Button
                       size="lg"
-                      rounded="xl"
+
                       className="flex-1 font-black tracking-tight"
                       onClick={() => onConnect(provider, config.id)}
                     >
@@ -329,7 +329,7 @@ export function ChannelConfigurationsTab({
                     <Button
                       size="lg"
                       variant="outline"
-                      rounded="xl"
+
                       onClick={() => openConfig(config.id)}
                       className="px-4"
                     >
@@ -360,7 +360,7 @@ export function ChannelConfigurationsTab({
               <Card
                 key={channel.id}
                 onClick={() => openConfig(undefined, channel.id)}
-                variant="premium"
+
                 className="cursor-pointer transition-all duration-300 group overflow-hidden"
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
@@ -391,14 +391,14 @@ export function ChannelConfigurationsTab({
               <Card
                 key={integration.id}
                 onClick={() => openConfig(undefined, integration.id)}
-                variant="premium"
+
                 className="cursor-pointer transition-all duration-300 group overflow-hidden"
               >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
                   <div className={cn("p-3 rounded-xl transition-all duration-500", getColor(integration.id))}>
                     {getIcon(integration.id)}
                   </div>
-                  <Badge variant="outline" rounded="lg" className="text-[9px] font-black tracking-widest uppercase py-0 px-2 opacity-60">
+                  <Badge variant="outline" className="text-[9px] font-black tracking-widest uppercase py-0 px-2 opacity-60">
                     {integration.category}
                   </Badge>
                 </CardHeader>
@@ -417,7 +417,7 @@ export function ChannelConfigurationsTab({
       {/* Configuration Dialog */}
       {showConfigDialog && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <Card variant="premium" className="w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+          <Card className="w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-center gap-5 mb-8 border-b border-border/40 pb-6">
                 <div className={cn("p-4 rounded-2xl", getColor(configForm.provider))}>
@@ -434,7 +434,6 @@ export function ChannelConfigurationsTab({
                   variant="ghost"
                   size="icon"
                   onClick={closeConfigDialog}
-                  rounded="full"
                   className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors h-10 w-10"
                 >
                   <X className="w-5 h-5" />
@@ -453,7 +452,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-                      variant="premium"
+
                       value={configForm.name}
                       onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
                       placeholder="e.g. Primary Facebook Portal"
@@ -466,7 +465,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-                      variant="premium"
+
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
                       placeholder="Client / App ID"
@@ -480,7 +479,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="password"
-                      variant="premium"
+
                       value={configForm.client_secret}
                       onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
                       placeholder="Secret Key"
@@ -545,7 +544,7 @@ export function ChannelConfigurationsTab({
                         </Label>
                         <Input
                           type="text"
-                          variant="premium"
+
                           value={configForm.verify_token}
                           onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
                           placeholder="Security Token"
@@ -566,7 +565,7 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-                      variant="premium"
+
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
                       placeholder="e.g. read_messages, write_post"
@@ -577,14 +576,14 @@ export function ChannelConfigurationsTab({
                 <div className="flex gap-4 mt-8 pt-6 border-t border-white/5">
                   <Button
                     variant="ghost"
-                    rounded="xl"
+
                     className="flex-1 h-12 font-black uppercase tracking-widest text-xs opacity-60 hover:opacity-100 transition-opacity"
                     onClick={closeConfigDialog}
                   >
                     Discard
                   </Button>
                   <Button
-                    rounded="xl"
+
                     className="flex-[2] h-12 font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                     onClick={saveConfig}
                     disabled={!configForm.client_id || !configForm.client_secret}

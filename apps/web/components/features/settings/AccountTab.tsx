@@ -243,7 +243,7 @@ export function AccountTab() {
                         <FormItem>
                           <FormLabel className="text-[13px] font-bold">First name</FormLabel>
                           <FormControl>
-                            <Input placeholder="John" {...field} variant="premium" />
+                            <Input placeholder="John" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -256,7 +256,7 @@ export function AccountTab() {
                         <FormItem>
                           <FormLabel className="text-[13px] font-bold">Last name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Doe" {...field} variant="premium" />
+                            <Input placeholder="Doe" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -272,7 +272,7 @@ export function AccountTab() {
                         <FormLabel className="text-[13px] font-bold">Email address</FormLabel>
                         <FormControl>
                           <div className="relative group">
-                            <Input {...field} disabled variant="premium" className="opacity-80 cursor-not-allowed pr-10" />
+                            <Input {...field} disabled className="opacity-80 cursor-not-allowed pr-10" />
                             <Mail className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground opacity-40" />
                           </div>
                         </FormControl>
@@ -315,7 +315,7 @@ export function AccountTab() {
                               type={showOldPassword ? "text" : "password"}
                               placeholder="••••••••"
                               {...field}
-                              variant="premium"
+
                               className="pr-10"
                             />
                             <button
@@ -345,7 +345,7 @@ export function AccountTab() {
                                 type={showNewPassword ? "text" : "password"}
                                 placeholder="Enter min. 6 characters"
                                 {...field}
-                                variant="premium"
+
                                 className="pr-10"
                               />
                               <button
@@ -373,7 +373,7 @@ export function AccountTab() {
                                 type={showConfirmPassword ? "text" : "password"}
                                 placeholder="Repeat your new password"
                                 {...field}
-                                variant="premium"
+
                                 className="pr-10"
                               />
                               <button
@@ -403,7 +403,6 @@ export function AccountTab() {
             <Button
               type="submit"
               disabled={updateProfileMutation.isPending || !form.formState.isDirty}
-              rounded="2xl"
               className="px-10 h-12 font-black transition-all"
             >
               {updateProfileMutation.isPending && (

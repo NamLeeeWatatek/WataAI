@@ -200,7 +200,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     ];
 
     return (
-        <Card variant="premium">
+        <Card>
             <CardHeader className="pb-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -214,7 +214,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                     </div>
                     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button rounded="xl" className="font-bold h-10 transition-all active:scale-95 shadow-lg shadow-primary/5">
+                            <Button className="font-bold h-10 transition-all active:scale-95 shadow-lg shadow-primary/5">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Link Knowledge Base
                             </Button>
@@ -232,7 +232,6 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                                     <Input
                                         placeholder="Search available knowledge bases..."
-                                        variant="premium"
                                         className="pl-10"
                                         value={availableSearch}
                                         onChange={(e) => setAvailableSearch(e.target.value)}
@@ -265,7 +264,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                                 label: '',
                                                 className: 'text-right',
                                                 render: (_, row) => (
-                                                    <Button size="sm" rounded="lg" onClick={() => handleLink(row)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
+                                                    <Button size="sm" onClick={() => handleLink(row)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
                                                         <LinkIcon className="w-3.5 h-3.5 mr-2" />
                                                         Link
                                                     </Button>
@@ -339,7 +338,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
                                     onClick={() => handleUnlink(row)}
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -361,7 +360,6 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             </p>
                             <Button
                                 variant="outline"
-                                rounded="full"
                                 onClick={() => setIsLinkDialogOpen(true)}
                                 className="px-8 font-bold border-primary/20 transition-all active:scale-95"
                             >

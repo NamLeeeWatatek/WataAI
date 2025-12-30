@@ -141,7 +141,7 @@ export default function KnowledgeBasePage() {
                 premium
             >
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => setDialogOpen(true)} variant="premium" rounded="xl" className="font-bold">
+                    <Button onClick={() => setDialogOpen(true)} className="font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         New Knowledge Base
                     </Button>
@@ -154,7 +154,6 @@ export default function KnowledgeBasePage() {
                     <Input
                         placeholder="Search system intelligence..."
                         value={searchQuery}
-                        variant="premium"
                         onChange={(e) => {
                             const val = e.target.value;
                             setSearchQuery(val);
@@ -180,7 +179,7 @@ export default function KnowledgeBasePage() {
                     <p className="text-muted-foreground mb-8 text-center max-w-sm font-medium leading-relaxed">
                         {searchQuery ? 'Adjust your search parameters to locate specific intelligence assets.' : 'Initialize your first knowledge base engine to power your AI agents.'}
                     </p>
-                    <Button onClick={() => setDialogOpen(true)} variant="premium" rounded="full" className="px-8 font-bold">
+                    <Button onClick={() => setDialogOpen(true)} className="px-8 font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         Construct First Vault
                     </Button>
@@ -191,7 +190,6 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                variant="premium"
                                 className="p-6 cursor-pointer"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
                             >
@@ -201,7 +199,7 @@ export default function KnowledgeBasePage() {
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" rounded="full" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all">
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all">
                                                 <MoreVertical className="w-4 h-4 text-muted-foreground" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -250,7 +248,7 @@ export default function KnowledgeBasePage() {
                                             {kb.embeddingModel}
                                         </Badge>
                                         {(kb as any).isActive && (
-                                            <Badge variant="success" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
+                                            <Badge variant="default" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
                                                 Active
                                             </Badge>
                                         )}

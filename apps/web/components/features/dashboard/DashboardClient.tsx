@@ -68,7 +68,7 @@ export function DashboardClient() {
                     icon={LayoutDashboard}
                     className="mb-10 px-2"
                 >
-                    <Button variant="premium" rounded="xl" className="shadow-lg shadow-primary/10">
+                    <Button className="shadow-lg shadow-primary/10">
                         <FiDownload className="mr-2 h-4 w-4" />
                         {t('dashboard.downloadReport')}
                     </Button>

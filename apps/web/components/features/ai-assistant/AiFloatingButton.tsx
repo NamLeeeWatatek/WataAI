@@ -68,7 +68,6 @@ export function AIFloatingButton() {
                 {!isOpen ? (
                     <Button
                         onClick={() => setIsOpen(true)}
-                        variant="premium"
                         size="icon"
                         className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-all duration-500 overflow-visible group"
                     >
@@ -76,7 +75,7 @@ export function AIFloatingButton() {
                         <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-success rounded-full border-2 border-background animate-pulse shadow-[0_0_8px_rgba(var(--success),0.5)]" />
                     </Button>
                 ) : (
-                    <Card variant="premium" className="rounded-2xl shadow-2xl border border-border/40 w-[400px] overflow-hidden flex flex-col max-h-[600px] bg-background/80 backdrop-blur-2xl">
+                    <Card className="rounded-2xl shadow-2xl border border-border/40 w-[400px] overflow-hidden flex flex-col max-h-[600px] bg-background/80 backdrop-blur-2xl">
                         <div className="bg-primary p-5 flex items-center justify-between shadow-lg">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shadow-inner">
@@ -173,7 +172,6 @@ export function AIFloatingButton() {
                                     disabled={!message.trim() || loading}
                                     className="shadow-md"
                                     size="icon"
-                                    rounded="xl"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 </Button>
