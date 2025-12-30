@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { creationToolsApi, CreationTool, FormField } from '@/lib/api/creation-tools';
 import { templatesApi } from '@/lib/api/templates';
 import { getChannels } from '@/lib/api/channels';
@@ -41,6 +41,7 @@ import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore';
 export default function CreationToolDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { toast } = useToast();
     const { addJob } = useCreationJobs();
     const [tool, setTool] = useState<CreationTool | null>(null);
@@ -49,7 +50,7 @@ export default function CreationToolDetailPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [includeTemplate, setIncludeTemplate] = useState(true);
+    const [includeTemplate, setIncludeTemplate] = useState(false);
     const formConfig = tool?.formConfig || { fields: [] };
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -179,6 +180,15 @@ export default function CreationToolDetailPage() {
                 const templatesData = Array.isArray(result) ? result : (result?.data || []);
                 setTemplates(templatesData);
 
+                // Auto-select template if ID is in URL
+                const queryTemplateId = searchParams.get('templateId');
+                if (queryTemplateId && !selectedTemplate) {
+                    const match = templatesData.find((t: any) => t.id === queryTemplateId);
+                    if (match) {
+                        handleTemplateSelect(match);
+                    }
+                }
+
                 // Extract categories from unfiltered list or first load
                 if ((!debouncedSearch && selectedCategory === 'all') || categories.length <= 1) {
                     const distinctCategories = ['all', ...Array.from(new Set(templatesData.map((t: any) => {
@@ -213,11 +223,14 @@ export default function CreationToolDetailPage() {
         setSubmitting(true);
 
         try {
-            const inputData = {
+            const inputData: any = {
                 ...data,
-                templateId: selectedTemplate?.id,
                 includeTemplate: includeTemplate
             };
+
+            if (selectedTemplate?.id) {
+                inputData.templateId = selectedTemplate.id;
+            }
 
             const job = await creationJobsApi.create({
                 creationToolId: tool.id,
@@ -465,7 +478,7 @@ export default function CreationToolDetailPage() {
                                                 </div>
                                                 <div className="max-w-[200px]">
                                                     <p className="font-black text-lg tracking-tight">System Ready</p>
-                                                    <p className="text-muted-foreground text-xs mt-1 font-medium">Select a structural template to initialize the generation sequence</p>
+                                                    <p className="text-muted-foreground text-xs mt-1 font-medium italic">Select a structural template to pre-fill variables or accelerate your workflow</p>
                                                 </div>
                                             </div>
                                         )}
@@ -480,7 +493,7 @@ export default function CreationToolDetailPage() {
                             </ScrollArea>
 
                             <div className="p-5 border-t bg-muted/5 flex-none mt-auto space-y-4">
-                                {tool.executionFlow.type === 'ai-generation' && (tool.executionFlow as any).includeTemplate && (
+                                {tool.executionFlow.type === 'ai-generation' && selectedTemplate && (
                                     <div className="flex items-center space-x-3 p-4 rounded-xl border bg-primary/5 border-primary/10 mb-6 font-medium animate-in fade-in slide-in-from-bottom-2">
                                         <Checkbox
                                             id="include-template-run"
@@ -508,10 +521,10 @@ export default function CreationToolDetailPage() {
                                         form="creation-form"
                                         size="lg"
                                         className={cn(
-                                            "w-full font-bold group",
-                                            !selectedTemplate ? "opacity-50 grayscale" : "bg-primary"
+                                            "w-full font-bold group bg-primary transition-all active:scale-95",
+                                            submitting && "opacity-80"
                                         )}
-                                        disabled={submitting || !selectedTemplate}
+                                        disabled={submitting}
                                     >
                                         {submitting ? (
                                             <>

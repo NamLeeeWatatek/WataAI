@@ -83,4 +83,33 @@ export class ExecutionValidationService {
     // 3. Parse (will throw ZodError if invalid)
     return dynamicSchema.parse(inputs);
   }
+
+  /**
+   * Prepares inputs for execution by simplifying complex objects (e.g., files to URLs).
+   * This ensures that templates (LiquidJS) receive clean strings instead of metadata objects.
+   */
+  prepareInputs(config: FormConfig, inputs: any): any {
+    if (!config || !config.fields) {
+      return inputs;
+    }
+
+    const prepared = { ...inputs };
+
+    for (const field of config.fields) {
+      const value = prepared[field.name];
+      if (!value) continue;
+
+      if (field.type === 'file' || field.type === 'files') {
+        if (Array.isArray(value)) {
+          prepared[field.name] = value.map((v) =>
+            typeof v === 'object' && v.url ? v.url : v,
+          );
+        } else if (typeof value === 'object' && value.url) {
+          prepared[field.name] = value.url;
+        }
+      }
+    }
+
+    return prepared;
+  }
 }

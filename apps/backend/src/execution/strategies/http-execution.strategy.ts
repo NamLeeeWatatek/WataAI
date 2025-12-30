@@ -75,14 +75,16 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
             ...config.headers,
           },
           data: body,
-          timeout: config.timeoutMs || 20000,
+          timeout: config.timeoutMs || 60000, // Default to 60s for slow webhooks
         }),
       );
-      return {
-        status: response.status,
-        data: response.data,
-        headers: response.headers,
-      };
+
+      this.logger.log(
+        `HTTP Strategy Response: ${response.status} ${response.statusText}`,
+      );
+      this.logger.debug(`Response Data: ${JSON.stringify(response.data)}`);
+
+      return response.data;
     } catch (error) {
       if (error.response) {
         this.logger.error(
@@ -90,6 +92,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
             error.response.data,
           )}`,
         );
+      } else if (error.code === 'ECONNABORTED') {
+        this.logger.error(`HTTP Strategy Timeout: Request took longer than timeout`);
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);
       }

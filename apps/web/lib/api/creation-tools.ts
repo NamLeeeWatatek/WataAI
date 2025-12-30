@@ -27,7 +27,24 @@ export interface FormConfig {
 
 export interface FormField {
     name: string;
-    type: 'text' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'number' | 'file' | 'slider' | 'color' | 'channel-selector';
+    type:
+    | 'text'
+    | 'textarea'
+    | 'string'
+    | 'select'
+    | 'radio'
+    | 'checkbox'
+    | 'boolean'
+    | 'number'
+    | 'file'
+    | 'files'
+    | 'slider'
+    | 'color'
+    | 'json'
+    | 'key-value'
+    | 'channel-select'
+    | 'channel-selector'
+    | 'multi-select';
     label: string;
     placeholder?: string;
     description?: string;
@@ -63,6 +80,7 @@ export interface AiExecutionConfig extends BaseExecutionConfig {
     parameters?: Record<string, any>;
     promptTemplate: string;
     includeTemplate?: boolean;
+    useTools?: boolean;
 }
 
 export interface HttpExecutionConfig extends BaseExecutionConfig {

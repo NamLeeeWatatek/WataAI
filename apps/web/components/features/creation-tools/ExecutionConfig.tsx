@@ -54,18 +54,26 @@ export function ExecutionConfig({ config, onChange, availableFields = [] }: Exec
             });
         } else if (type === 'http-webhook') {
             // Create a smart default body based on available fields
-            const defaultBody: Record<string, string> = {};
+            const lines: string[] = [];
             availableFields.forEach(f => {
-                defaultBody[f.name] = `{{${f.name}}}`;
+                const isComplex = ['file', 'files', 'multi-select', 'channel-select', 'channel-selector', 'json', 'key-value', 'multi-select'].includes(f.type);
+                const variable = isComplex ? `{{${f.name} | json}}` : `{{${f.name}}}`;
+                if (isComplex) {
+                    lines.push(`  "${f.name}": ${variable}`);
+                } else {
+                    lines.push(`  "${f.name}": "${variable}"`);
+                }
             });
+
+            const defaultBody = `{\n${lines.join(',\n')}\n}`;
 
             onChange({
                 type: 'http-webhook',
                 urlTemplate: 'https://',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                bodyTemplate: JSON.stringify(defaultBody, null, 2),
-                timeoutMs: 5000,
+                bodyTemplate: defaultBody,
+                timeoutMs: 60000,
                 retryCount: 3
             });
         }

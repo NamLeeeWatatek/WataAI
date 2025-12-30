@@ -25,7 +25,12 @@ const FIELD_TYPES = [
     { value: 'slider', label: 'Slider' },
     { value: 'file', label: 'Single File' },
     { value: 'files', label: 'Multiple Files' },
-    { value: 'channel-selector', label: 'Channel Selector' },
+    { value: 'multi-select', label: 'Multi-Select' },
+    { value: 'channel-selector', label: 'Channel Selector (Multi)' },
+    { value: 'channel-select', label: 'Channel Picker (Single)' },
+    { value: 'color', label: 'Color Picker' },
+    { value: 'json', label: 'JSON Editor' },
+    { value: 'key-value', label: 'Key-Value Editor' },
 ];
 
 const slugify = (text: string) => {
@@ -240,7 +245,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 <Label htmlFor="req">Required Field</Label>
                             </div>
 
-                            {(editingField.type === 'select' || editingField.type === 'radio') && (
+                            {(editingField.type === 'select' || editingField.type === 'radio' || editingField.type === 'multi-select') && (
                                 <div className="space-y-3 pt-2">
                                     <Label>Options</Label>
                                     <div className="space-y-2">
