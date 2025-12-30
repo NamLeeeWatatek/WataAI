@@ -116,8 +116,15 @@ export function ActiveJobsWidget() {
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
                                                             <Badge
-
-                                                                className={cn((job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "animate-pulse")}
+                                                                variant={
+                                                                    job.status === CreationJobStatus.COMPLETED ? "default" :
+                                                                        job.status === CreationJobStatus.FAILED ? "destructive" :
+                                                                            "secondary"
+                                                                }
+                                                                className={cn(
+                                                                    "capitalize",
+                                                                    (job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "animate-pulse"
+                                                                )}
                                                             >
                                                                 {job.status.toLowerCase()}
                                                             </Badge>

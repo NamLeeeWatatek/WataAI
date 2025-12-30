@@ -62,6 +62,7 @@ export interface AiExecutionConfig extends BaseExecutionConfig {
     model: string;
     parameters?: Record<string, any>;
     promptTemplate: string;
+    includeTemplate?: boolean;
 }
 
 export interface HttpExecutionConfig extends BaseExecutionConfig {

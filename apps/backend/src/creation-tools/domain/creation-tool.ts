@@ -79,6 +79,8 @@ export interface AiExecutionConfig {
   model: string;
   parameters?: Record<string, any>;
   promptTemplate: string; // e.g. "Write a story about {{topic}}"
+  includeTemplate?: boolean;
+  useTools?: boolean;
 }
 
 /**

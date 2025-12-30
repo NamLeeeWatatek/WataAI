@@ -33,6 +33,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 interface ExecutionConfigProps {
     config: ExecutionFlow;
@@ -308,6 +309,26 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
                         Use <code>{`{{ variable_name }}`}</code> to allow users to inject data from the form.
                     </p>
                 </div>
+
+                <div className="flex items-center space-x-3 p-4 rounded-xl border bg-primary/5 border-primary/10">
+                    <Checkbox
+                        id="include-template"
+                        checked={config.includeTemplate}
+                        onCheckedChange={(checked) => onChange({ ...config, includeTemplate: !!checked })}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                        <Label
+                            htmlFor="include-template"
+                            className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
+                        >
+                            Include Template Content
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1">Context</Badge>
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                            Automatically include the selected template's prompt and configuration in the execution payload.
+                        </p>
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );
@@ -496,3 +517,4 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
         </Dialog>
     );
 }
+

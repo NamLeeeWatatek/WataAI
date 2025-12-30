@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { IExecutionStrategy } from './execution.strategy.interface';
 import { AiExecutionConfig } from '../../creation-tools/domain/creation-tool';
 import { AiProvidersService } from '../../ai-providers/ai-providers.service';
+import { TemplatesService } from '../../templates/templates.service';
 import { Liquid } from 'liquidjs';
 
 @Injectable()
@@ -9,7 +10,10 @@ export class AiExecutionStrategy implements IExecutionStrategy {
   private readonly logger = new Logger(AiExecutionStrategy.name);
   private readonly engine = new Liquid();
 
-  constructor(private readonly aiProvidersService: AiProvidersService) {
+  constructor(
+    private readonly aiProvidersService: AiProvidersService,
+    private readonly templatesService: TemplatesService,
+  ) {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
   }
 
@@ -22,10 +26,42 @@ export class AiExecutionStrategy implements IExecutionStrategy {
       `Executing AI Strategy: ${config.provider} - ${config.model}`,
     );
 
+    let finalInputs = { ...inputs };
+    let finalPromptTemplate = config.promptTemplate;
+
+    // 0. Handle Template Inclusion if requested
+    const shouldIncludeTemplate = inputs.includeTemplate === true || config.includeTemplate === true;
+
+    if (shouldIncludeTemplate && inputs.templateId) {
+      try {
+        const template = await this.templatesService.findById(inputs.templateId);
+        if (template) {
+          this.logger.debug(`Including Template Context: ${template.name}`);
+
+          // Add template info to inputs for Liquid rendering
+          finalInputs = {
+            ...finalInputs,
+            template: {
+              name: template.name,
+              description: template.description,
+              prompt: template.prompt,
+              content: template.promptTemplate, // Often promptTemplate contains the main content/instruction
+            }
+          };
+
+          // If the template has its own promptTemplate, we might want to use it
+          // Decision: If template has promptTemplate, it's often the 'specialized' prompt.
+          // For now, we'll just expose it as {{template.content}} in the main promptTemplate.
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to fetch template ${inputs.templateId} for inclusion: ${error.message}`);
+      }
+    }
+
     // 1. Render Prompt
     const prompt = await this.engine.parseAndRender(
-      config.promptTemplate,
-      inputs,
+      finalPromptTemplate,
+      finalInputs,
     );
 
     // 2. Execute via AiProvidersService
@@ -37,6 +73,8 @@ export class AiExecutionStrategy implements IExecutionStrategy {
       config.provider,
       undefined, // apiKey (auto-resolve)
       context?.workspaceId,
+      undefined, // baseURL (auto-resolve)
+      config.useTools ?? false, // Enable tool usage like Google Search if configured
     );
 
     return {

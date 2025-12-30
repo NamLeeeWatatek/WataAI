@@ -49,6 +49,8 @@ export default function CreationToolDetailPage() {
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [includeTemplate, setIncludeTemplate] = useState(true);
+    const formConfig = tool?.formConfig || { fields: [] };
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [categories, setCategories] = useState<string[]>([]);
@@ -211,7 +213,11 @@ export default function CreationToolDetailPage() {
         setSubmitting(true);
 
         try {
-            const inputData = { ...data, templateId: selectedTemplate?.id };
+            const inputData = {
+                ...data,
+                templateId: selectedTemplate?.id,
+                includeTemplate: includeTemplate
+            };
 
             const job = await creationJobsApi.create({
                 creationToolId: tool.id,
@@ -474,27 +480,52 @@ export default function CreationToolDetailPage() {
                             </ScrollArea>
 
                             <div className="p-5 border-t bg-muted/5 flex-none mt-auto space-y-4">
-                                <Button
-                                    type="submit"
-                                    form="creation-form"
-                                    disabled={submitting || !selectedTemplate}
-                                    className={cn(
-                                        "w-full h-12 rounded-xl font-black tracking-tight transition-all",
-                                        !selectedTemplate ? "opacity-50 grayscale" : "bg-primary"
-                                    )}
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                                            Starting...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="w-5 h-5 mr-3" />
-                                            {tool.formConfig.submitLabel || 'Generate Now'}
-                                        </>
-                                    )}
-                                </Button>
+                                {tool.executionFlow.type === 'ai-generation' && (tool.executionFlow as any).includeTemplate && (
+                                    <div className="flex items-center space-x-3 p-4 rounded-xl border bg-primary/5 border-primary/10 mb-6 font-medium animate-in fade-in slide-in-from-bottom-2">
+                                        <Checkbox
+                                            id="include-template-run"
+                                            checked={includeTemplate}
+                                            onCheckedChange={(checked) => setIncludeTemplate(!!checked)}
+                                        />
+                                        <div className="grid gap-1.5 leading-none">
+                                            <Label
+                                                htmlFor="include-template-run"
+                                                className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
+                                            >
+                                                Include Template Context
+                                                <Badge variant="secondary" className="text-[10px] h-4 px-1">Optimization</Badge>
+                                            </Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                Send tool-specific template instructions to the AI for better results.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-4">
+                                    <Button
+                                        type="submit"
+                                        form="creation-form"
+                                        size="lg"
+                                        className={cn(
+                                            "w-full font-bold group",
+                                            !selectedTemplate ? "opacity-50 grayscale" : "bg-primary"
+                                        )}
+                                        disabled={submitting || !selectedTemplate}
+                                    >
+                                        {submitting ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                                                Initializing Matrix...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Execute Generation
+                                                <Sparkles className="w-5 h-5 ml-3 group-hover:scale-110 transition-transform" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         </Card>
 
