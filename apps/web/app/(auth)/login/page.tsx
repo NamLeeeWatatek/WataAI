@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
+import { Card } from '@/components/ui/Card'
 import { Sparkles, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -103,33 +104,32 @@ function LoginPageContent() {
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-sans selection:bg-primary/30">
             {/* Ambient Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.05)_0%,transparent_70%)]" />
+                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000" />
+                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000 delay-700" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.08)_0%,transparent_70%)]" />
             </div>
 
             <div className="w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in duration-700">
-                <div className="glass p-10 bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] rounded-[2.5rem] relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                <Card className="p-8 md:p-10 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-primary to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-inner ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-500">
-                            <Sparkles className="w-8 h-8 text-primary drop-shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                    <div className="text-center mb-10">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-inner ring-2 ring-primary/5 group-hover:scale-110 transition-transform duration-500">
+                            <Sparkles className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
                         </div>
-                        <h1 className="text-3xl font-black mb-2 tracking-tighter">
-                            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">{t('login.welcomeBack')}</span>
+                        <h1 className="text-3xl font-black mb-3 tracking-tighter">
+                            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent uppercase tracking-tight">{t('login.welcomeBack')}</span>
                         </h1>
-                        <p className="text-muted-foreground text-sm" suppressHydrationWarning>
+                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60" suppressHydrationWarning>
                             {t('login.subtitle')}
                         </p>
                     </div>
 
-                    {/* Social Login */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="grid grid-cols-2 gap-4 mb-8">
                         <Button
-                            variant="outline"
-                            className="h-12 bg-background/50 hover:bg-background border-border/50"
+                            variant="secondary"
+                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('google')}
                             disabled={isLoading}
                         >
@@ -137,8 +137,8 @@ function LoginPageContent() {
                             Google
                         </Button>
                         <Button
-                            variant="outline"
-                            className="h-12 bg-background/50 hover:bg-background border-border/50"
+                            variant="secondary"
+                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('facebook')}
                             disabled={isLoading}
                         >
@@ -147,12 +147,12 @@ function LoginPageContent() {
                         </Button>
                     </div>
 
-                    <div className="relative mb-6">
+                    <div className="relative mb-8">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-border/50" />
+                            <span className="w-full border-t border-border/10" />
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-card px-2 text-muted-foreground rounded-full border border-border/50">
+                        <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                            <span className="bg-card px-4 text-muted-foreground/60 rounded-full border border-border/10">
                                 {t('login.or')}
                             </span>
                         </div>
@@ -161,23 +161,23 @@ function LoginPageContent() {
                     {/* Email Form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">{t('login.email')}</Label>
+                            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('login.email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 placeholder={t('login.emailPlaceholder')}
-                                className="h-12 bg-background/50 border-border/50"
+                                className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 font-bold"
                                 {...register('email')}
                                 disabled={isLoading}
                             />
-                            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                            {errors.email && <p className="text-[10px] font-bold text-destructive ml-1">{errors.email.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password">{t('login.password')}</Label>
+                            <div className="flex items-center justify-between px-1">
+                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('login.password')}</Label>
                                 <Link
                                     href={"/forgot-password" as any}
-                                    className="text-xs text-primary hover:underline"
+                                    className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline hover:opacity-80 transition-all"
                                 >
                                     {t('login.forgotPassword')}
                                 </Link>
@@ -187,20 +187,20 @@ function LoginPageContent() {
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    className="h-12 bg-background/50 border-border/50 pr-10"
+                                    className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 pr-12 font-bold"
                                     {...register('password')}
                                     disabled={isLoading}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                                    className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors"
                                     tabIndex={-1}
                                 >
-                                    {showPassword ? <EyeOff className="h-5 w-5 py-0.5" /> : <Eye className="h-5 w-5 py-0.5" />}
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
-                            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+                            {errors.password && <p className="text-[10px] font-bold text-destructive ml-1">{errors.password.message}</p>}
                         </div>
 
                         {loginError && (
@@ -227,20 +227,20 @@ function LoginPageContent() {
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-8 text-center text-sm text-muted-foreground">
+                    <div className="mt-10 text-center text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
                         {t('login.noAccount')}{' '}
-                        <Link href={"/register" as any} className="font-bold text-primary hover:underline">
+                        <Link href={"/register" as any} className="text-primary hover:text-primary/80 transition-colors">
                             {t('login.signUp')}
                         </Link>
                     </div>
 
-                    <div className="mt-6 text-center">
-                        <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all group/back" suppressHydrationWarning>
+                    <div className="mt-8 text-center">
+                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back" suppressHydrationWarning>
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             {t('login.backToHome')}
                         </Link>
                     </div>
-                </div>
+                </Card>
             </div >
         </div >
     )

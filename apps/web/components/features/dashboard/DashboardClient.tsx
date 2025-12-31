@@ -41,16 +41,16 @@ export function DashboardClient() {
     if (isLoading) {
         return (
             <div className="w-full min-h-full pb-12">
-                <div className="mb-10 px-1 animate-pulse">
-                    <div className="h-8 w-48 bg-muted/40 rounded-lg mb-2"></div>
-                    <div className="h-4 w-64 bg-muted/30 rounded-lg"></div>
+                <div className="mb-10 px-2 animate-pulse">
+                    <div className="h-10 w-64 bg-primary/5 rounded-2xl mb-3"></div>
+                    <div className="h-5 w-80 bg-muted/20 rounded-xl"></div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-32 bg-muted/20 rounded-2xl border border-border/40"></div>
+                        <div key={i} className="h-32 bg-card/40 rounded-3xl border border-primary/5 shadow-sm"></div>
                     ))}
                 </div>
-                <div className="h-96 bg-muted/10 rounded-2xl border border-border/40 mb-12"></div>
+                <div className="h-[450px] bg-card/30 rounded-3xl border border-primary/5 shadow-sm mb-12"></div>
             </div>
         )
     }
@@ -64,11 +64,11 @@ export function DashboardClient() {
             <motion.div variants={itemVariants}>
                 <PageHeader
                     title={t('dashboard.title')}
-                    description={t('dashboard.welcomeBack', { name: user?.name || 'User' })}
+                    description={t('dashboard.welcomeBack', { name: user?.name || t('welcome') })}
                     icon={LayoutDashboard}
-                    className="mb-10 px-1"
+                    className="mb-10 px-2"
                 >
-                    <Button variant="outline" rounded="xl" className="glass shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Button className="shadow-lg shadow-primary/10">
                         <FiDownload className="mr-2 h-4 w-4" />
                         {t('dashboard.downloadReport')}
                     </Button>

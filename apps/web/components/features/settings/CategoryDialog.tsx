@@ -116,7 +116,6 @@ export function CategoryDialog({
               <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Label</Label>
               <Input
                 id="name"
-                rounded="xl"
                 className="h-12 glass border-white/5 font-bold pl-4"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
@@ -129,7 +128,6 @@ export function CategoryDialog({
               <Label htmlFor="slug" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Cryptic Slug</Label>
               <Input
                 id="slug"
-                rounded="xl"
                 className="h-12 glass border-white/5 font-mono font-bold text-sm pl-4"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
@@ -175,7 +173,6 @@ export function CategoryDialog({
             <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Contextual Description</Label>
             <Textarea
               id="description"
-              rounded="xl"
               className="glass border-white/5 font-bold"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -189,7 +186,6 @@ export function CategoryDialog({
             <Input
               id="order"
               type="number"
-              rounded="xl"
               className="h-12 glass border-white/5 font-bold pl-4"
               value={order}
               onChange={(e) => setOrder(parseInt(e.target.value))}
@@ -201,7 +197,6 @@ export function CategoryDialog({
             <Button
               type="button"
               variant="outline"
-              rounded="xl"
               className="h-12 flex-1 font-black uppercase tracking-widest text-xs glass border-white/10"
               onClick={() => onOpenChange(false)}
             >
@@ -209,7 +204,6 @@ export function CategoryDialog({
             </Button>
             <Button
               type="submit"
-              rounded="xl"
               className="h-12 flex-[2] font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
               disabled={loading}
             >

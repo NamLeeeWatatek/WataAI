@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { Textarea } from '@/components/ui/Textarea'
+import { cn } from '@/lib/utils'
 
 interface JsonEditorProps {
     value: any
@@ -51,15 +53,18 @@ export function JsonEditor({ value, onChange, placeholder, rows = 4 }: JsonEdito
 
     return (
         <div>
-            <textarea
+            <Textarea
                 value={text}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className={`w-full glass rounded-lg px-3 py-2 border ${error ? 'border-red-500' : 'border-border/40'} focus:outline-none focus:ring-2 focus:ring-primary/20 font-mono text-xs`}
+                className={cn(
+                    "font-mono text-xs",
+                    error && "border-destructive focus-visible:ring-destructive"
+                )}
                 rows={rows}
                 placeholder={placeholder}
             />
-            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            {error && <p className="text-xs text-destructive mt-1 font-medium">{error}</p>}
         </div>
     )
 }

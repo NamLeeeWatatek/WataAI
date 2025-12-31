@@ -131,7 +131,7 @@ export function ChannelConversationList({
             <div className="relative shrink-0">
               <Avatar className="h-11 w-11 ring-1 ring-border">
                 <AvatarImage src={conv.customerAvatar} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-sm font-semibold">
+                <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                   {(conv.customerName || 'User').charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

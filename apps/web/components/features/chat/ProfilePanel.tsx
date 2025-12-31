@@ -64,15 +64,15 @@ export function ProfilePanel({
         const config = {
             open: {
                 label: 'In Progress',
-                className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30'
+                variant: 'warning' as const
             },
             pending: {
                 label: 'Medium',
-                className: 'bg-blue-500/10 text-blue-600 border-blue-500/30'
+                variant: 'info' as const
             },
             closed: {
                 label: 'Completed',
-                className: 'bg-green-500/10 text-green-600 border-green-500/30'
+                variant: 'success' as const
             },
         };
         return config[status as keyof typeof config] || config.open;
@@ -92,9 +92,9 @@ export function ProfilePanel({
                 <div className="px-6 py-6 space-y-6">
                     {/* Avatar & Name */}
                     <div className="flex flex-col items-center text-center">
-                        <Avatar className="h-20 w-20 ring-4 ring-background shadow-lg mb-4">
+                        <Avatar className="h-20 w-20 ring-4 ring-background shadow-xl mb-4">
                             <AvatarImage src={customerAvatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 text-2xl font-semibold">
+                            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
                                 {customerName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
@@ -118,11 +118,10 @@ export function ProfilePanel({
                             Status
                         </label>
                         <Badge
-                            variant="outline"
-                            className={cn('h-7 px-3 gap-2', statusConfig.className)}
+                            className="h-7 px-3 gap-2 font-bold"
                         >
-                            <span className="w-2 h-2 rounded-full bg-current" />
-                            <span className="text-xs font-medium">{statusConfig.label}</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                            <span className="text-[10px] uppercase tracking-wider">{statusConfig.label}</span>
                         </Badge>
                     </div>
 
@@ -223,13 +222,13 @@ export function ProfilePanel({
                                     <div
                                         key={task.id}
                                         className={cn(
-                                            'p-3 rounded-lg border border-border/50 transition-colors',
-                                            task.completed ? 'bg-muted/30' : 'bg-background hover:bg-muted/30'
+                                            'p-3 rounded-xl border border-border/40 transition-all',
+                                            task.completed ? 'bg-muted/30' : 'bg-card hover:bg-muted/30 shadow-sm'
                                         )}
                                     >
-                                        <div className="flex items-start gap-2">
+                                        <div className="flex items-start gap-3">
                                             <div className={cn(
-                                                'mt-0.5 h-4 w-4 rounded border-2 flex items-center justify-center shrink-0',
+                                                'mt-0.5 h-4 w-4 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors',
                                                 task.completed
                                                     ? 'bg-primary border-primary'
                                                     : 'border-muted-foreground/30'
@@ -240,14 +239,14 @@ export function ProfilePanel({
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={cn(
-                                                    'text-sm font-medium',
-                                                    task.completed && 'line-through text-muted-foreground'
+                                                    'text-sm font-bold tracking-tight',
+                                                    task.completed && 'line-through text-muted-foreground opacity-60'
                                                 )}>
                                                     {task.title}
                                                 </p>
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    <Clock className="w-3 h-3 text-muted-foreground" />
-                                                    <span className="text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-1.5 mt-1 opacity-70">
+                                                    <Clock className="w-3 h-3" />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider">
                                                         {format(new Date(task.dueDate), 'MMM dd, yyyy')}
                                                     </span>
                                                 </div>

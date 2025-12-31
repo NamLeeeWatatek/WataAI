@@ -98,10 +98,6 @@ export class TemplatesService {
     return this.templatesRepository.findByWorkspace(workspaceId);
   }
 
-  findByCreationTool(creationToolId: string): Promise<Template[]> {
-    return this.templatesRepository.findByCreationTool(creationToolId);
-  }
-
   async update(
     id: Template['id'],
     updateTemplateDto: UpdateTemplateDto,

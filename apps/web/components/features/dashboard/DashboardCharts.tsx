@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/Chart"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { useTranslation } from 'react-i18next'
 import type { DashboardStats } from "@/lib/types"
 
 interface DashboardChartsProps {
@@ -11,55 +12,58 @@ interface DashboardChartsProps {
 }
 
 export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) {
+  const { t, i18n } = useTranslation()
+  const currentLang = i18n.language === 'vi' ? 'vi-VN' : 'en-US'
+
   // Chart configurations
   const activityConfig = {
     value: {
-      label: "Activity",
+      label: t('dashboard.charts.activity'),
       color: "hsl(var(--primary))",
     },
   }
 
   const botsConfig = {
     active: {
-      label: "Active Bots",
+      label: t('dashboard.charts.active'),
       color: "hsl(142 76% 36%)",
     },
     inactive: {
-      label: "Inactive",
+      label: t('dashboard.charts.inactive'),
       color: "hsl(0 84% 60%)",
     },
   }
 
   const usersConfig = {
     value: {
-      label: "Users",
+      label: t('dashboard.charts.users'),
       color: "hsl(221 83% 53%)",
     },
   }
 
   // Prepare data
   const botsData = [
-    { name: "Active", value: stats.bots?.active || 0 },
-    { name: "Inactive", value: stats.bots?.inactive || 0 },
+    { name: t('dashboard.charts.active'), value: stats.bots?.active || 0 },
+    { name: t('dashboard.charts.inactive'), value: stats.bots?.inactive || 0 },
   ]
 
   const usersTrendData = stats.users?.trend?.map(item => ({
-    date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: new Date(item.date).toLocaleDateString(currentLang, { month: 'short', day: 'numeric' }),
     value: item.value,
   })) || []
 
   const activityData = activityTrend?.map(item => ({
-    date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: new Date(item.date).toLocaleDateString(currentLang, { month: 'short', day: 'numeric' }),
     value: item.value,
   })) || []
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Activity Trend Chart */}
-      <Card className="glass">
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Activity Trend</CardTitle>
-          <CardDescription>Conversation activity over the last 30 days</CardDescription>
+          <CardTitle>{t('dashboard.charts.activityTrend')}</CardTitle>
+          <CardDescription>{t('dashboard.charts.activityTrendDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={activityConfig} className="h-[300px] w-full">
@@ -85,10 +89,10 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Bots Status Chart */}
-      <Card className="glass">
+      <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Bots Status</CardTitle>
-          <CardDescription>Active vs Inactive bots</CardDescription>
+          <CardTitle>{t('dashboard.charts.botsStatus')}</CardTitle>
+          <CardDescription>{t('dashboard.charts.botsStatusDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={botsConfig} className="h-[300px] w-full">
@@ -112,10 +116,10 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Users Growth Chart */}
-      <Card className="glass md:col-span-2">
+      <Card className="md:col-span-2 overflow-hidden">
         <CardHeader>
-          <CardTitle>User Growth</CardTitle>
-          <CardDescription>New users over the last 30 days</CardDescription>
+          <CardTitle>{t('dashboard.charts.userGrowth')}</CardTitle>
+          <CardDescription>{t('dashboard.charts.userGrowthDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={usersConfig} className="h-[300px] w-full">

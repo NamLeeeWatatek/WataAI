@@ -110,7 +110,7 @@ export function ChannelConfigDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl rounded-3xl border-none shadow-3xl">
                 <DialogHeader>
                     <DialogTitle>{channel ? 'Edit Channel' : 'New Channel'}</DialogTitle>
                     <DialogDescription>
@@ -162,7 +162,7 @@ export function ChannelConfigDialog({
 
                         {/* Facebook Specific Config Section */}
                         {form.watch('provider') === 'facebook' && (
-                            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                            <div className="space-y-4 rounded-xl border border-border/40 p-5 bg-muted/10">
                                 <div className="flex items-center gap-2 mb-2 font-semibold text-sm">
                                     <Settings className="w-4 h-4" />
                                     Facebook Configuration
@@ -173,7 +173,7 @@ export function ChannelConfigDialog({
                                     <div className="space-y-2">
                                         <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">OAuth Redirect URI</FormLabel>
                                         <div className="flex items-center gap-2">
-                                            <Input readOnly value={redirectUrl} className="bg-muted text-muted-foreground font-mono text-xs truncate" />
+                                            <Input readOnly value={redirectUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(redirectUrl)} className="shrink-0">
                                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </Button>
@@ -183,7 +183,7 @@ export function ChannelConfigDialog({
                                     <div className="space-y-2">
                                         <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">Webhook Callback URL</FormLabel>
                                         <div className="flex items-center gap-2">
-                                            <Input readOnly value={callbackUrl} className="bg-muted text-muted-foreground font-mono text-xs truncate" />
+                                            <Input readOnly value={callbackUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(callbackUrl)} className="shrink-0">
                                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </Button>
@@ -201,7 +201,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Page ID</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="1234567890" {...field} />
+                                                    <Input placeholder="1234567890"  {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -214,7 +214,7 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Verify Token</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="my_secure_token" {...field} />
+                                                    <Input placeholder="my_secure_token"  {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -254,7 +254,7 @@ export function ChannelConfigDialog({
                             control={form.control}
                             name="isActive"
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/40 p-4 bg-muted/5">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">Active Status</FormLabel>
                                         <FormDescription>
@@ -271,11 +271,11 @@ export function ChannelConfigDialog({
                             )}
                         />
 
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <DialogFooter className="gap-2 pt-4 border-t border-border/10">
+                            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="font-bold">
                                 Cancel
                             </Button>
-                            <Button type="submit" loading={form.formState.isSubmitting}>
+                            <Button type="submit" className="font-bold px-8" loading={form.formState.isSubmitting}>
                                 {channel ? 'Save Changes' : 'Create Channel'}
                             </Button>
                         </DialogFooter>

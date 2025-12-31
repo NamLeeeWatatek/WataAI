@@ -92,6 +92,10 @@ export interface DataTableProps<T = any> {
   className?: string
   tableClassName?: string
   compact?: boolean
+
+  // Expand logic
+  onRowExpand?: (row: T) => Promise<void> | void
+  getRowCanExpand?: (row: T) => boolean
 }
 
 export function DataTable<T = any>({
@@ -132,6 +136,9 @@ export function DataTable<T = any>({
 
   selectedIds = [],
   onSelectionChange,
+
+  onRowExpand,
+  getRowCanExpand,
 
   className,
   tableClassName,
@@ -186,8 +193,14 @@ export function DataTable<T = any>({
     onSearch?.(value)
   }
 
-  const toggleExpand = (e: React.MouseEvent, id: string) => {
+  const toggleExpand = (e: React.MouseEvent, id: string, row: T) => {
     e.stopPropagation()
+    const isExpanding = !expandedRows.has(id)
+
+    if (isExpanding && onRowExpand) {
+      onRowExpand(row)
+    }
+
     setExpandedRows(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -236,8 +249,10 @@ export function DataTable<T = any>({
     return nodes.flatMap((row, index) => {
       const id = (row as any).id || (row as any).key || index.toString()
       const children = (row as any)[childrenKey]
-      const hasChildren = children && Array.isArray(children) && children.length > 0
+
       const isExpanded = expandedRows.has(id)
+      const canExpand = getRowCanExpand ? getRowCanExpand(row) : (children && Array.isArray(children) && children.length > 0)
+      const hasChildren = canExpand
 
       const tableRow = (
         <TableRow
@@ -275,7 +290,7 @@ export function DataTable<T = any>({
                       <div style={{ width: `${level * indentSize}px` }} className="flex-shrink-0" />
                       {hasChildren ? (
                         <button
-                          onClick={(e) => toggleExpand(e, id)}
+                          onClick={(e) => toggleExpand(e, id, row)}
                           className="mr-2 h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground/60 hover:text-foreground"
                         >
                           {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -288,7 +303,6 @@ export function DataTable<T = any>({
                   <div className={cn(isSelection && "flex items-center justify-center w-full")}>
                     {(isSelection && !column.render) ? (
                       <Checkbox
-                        style={{ padding: '0 !important' }}
                         checked={selectedIds.includes(id)}
                         onCheckedChange={() => handleSelectRow(id)}
                         onClick={(e) => e.stopPropagation()}
@@ -305,7 +319,7 @@ export function DataTable<T = any>({
         </TableRow>
       )
 
-      if (isTree && hasChildren && isExpanded) {
+      if (isTree && hasChildren && isExpanded && children) {
         return [tableRow, ...renderRows(children, level + 1)]
       }
 

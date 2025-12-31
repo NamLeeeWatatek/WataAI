@@ -12,10 +12,10 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
     const { t } = useTranslation()
 
     return (
-        <Card variant="glass" className="h-full border-white/5 shadow-xl">
+        <Card className="h-full">
             <CardHeader className="border-b border-border/10 px-8 py-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                    <div className="w-1.5 h-8 bg-primary rounded-full shadow-sm" />
                     <div>
                         <CardTitle className="text-xl font-bold tracking-tight">
                             {t('dashboard.stats.topPerformingBots')}
@@ -32,7 +32,7 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
                         stats.topBots.slice(0, 3).map((bot: any, index: number) => (
                             <div key={bot.id} className="group cursor-pointer">
                                 <div className="flex items-center gap-5 mb-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center text-white font-black transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -46,7 +46,7 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter opacity-70">{t('dashboard.stats.success')}</p>
                                     </div>
                                 </div>
-                                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden shadow-inner">
+                                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${bot.metric || 0}%` }}

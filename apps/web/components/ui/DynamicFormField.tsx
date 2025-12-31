@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, memo } from 'react'
-import { Upload, X, ArrowRight, ChevronDown, Monitor, Check, Image as ImageIcon, FileText } from 'lucide-react'
+import { Upload, X, ArrowRight, ChevronDown, Monitor, Check, Image as ImageIcon, FileText, Facebook, Instagram, Share2, Globe } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './Select'
 import { Spinner } from './Spinner'
 import axiosClient from '@/lib/axios-client'
@@ -13,45 +13,24 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuTrigger
 } from './DropdownMenu'
+import { RadioGroup, RadioGroupItem } from './RadioGroup'
 import { Input } from './Input'
+import { Slider } from './Slider'
 import { Textarea } from './Textarea'
 import { Label } from './Label'
-import { useFileUpload } from '@/lib/hooks/use-file-upload'
+import { Progress } from './Progress'
 import { cn } from '@/lib/utils'
 import { KeyValueEditor } from './KeyValueEditor'
+import { Media } from './Media'
+import { ImagePreview } from './FilePreview'
+import { isImageUrl, isVideoUrl } from '@/lib/utils/media'
+import { Eye } from 'lucide-react'
+import { Badge } from './Badge'
+import { FormField as ApiFormField } from '@/lib/api/creation-tools'
 
-// NodeProperty type from backend - this should match the backend definition
-interface NodeProperty {
-    name: string
-    label: string
-    type: 'string' | 'text' | 'textarea' | 'number' | 'boolean' | 'select' | 'multi-select' | 'json' | 'file' | 'files' | 'key-value' | 'dynamic-form' | 'channel-select'
-    displayName?: string
-    description?: string
-    helpText?: string
-    hint?: string
-    required?: boolean
-    placeholder?: string
-    options?: Array<{ value: string; label: string } | string> | string
-    default?: any
-    showWhen?: Record<string, any>
-    min?: number
-    max?: number
-    step?: number
-    pattern?: string
-    maxLength?: number
-    rows?: number
-    accept?: string
-    multiple?: boolean
-    properties?: NodeProperty[]
-}
-
-interface DynamicFormFieldProps {
-    field: NodeProperty
-    value: any
-    onChange: (key: string, value: any) => void
-    allValues?: Record<string, any>
-    className?: string
-}
+// NodeProperty type from backend - sync with ApiFormField but more flexible
+import { DynamicFormFieldProps } from './form-fields/types'
+import { FieldFile } from './form-fields/FieldFile'
 
 export const DynamicFormField = memo(function DynamicFormField({
     field,
@@ -64,41 +43,33 @@ export const DynamicFormField = memo(function DynamicFormField({
     const [dynamicOptions, setDynamicOptions] = useState<any[]>([])
     const [loadingOptions, setLoadingOptions] = useState(false)
     const [optionsConfig, setOptionsConfig] = useState<string>('')
-    const [previewFiles, setPreviewFiles] = useState<any[]>([])
 
-    const { uploadFile, uploadMultipleFiles, uploading: uploadLoading, error: uploadHookError } = useFileUpload({
-        bucket: 'images',
-        onProgress: (progress) => {
-            // Could add progress tracking here if needed
-        },
-        onSuccess: (fileUrl, fileData) => {
-            // Handle successful upload
-        },
-    })
-
-    const resizeImage = (file: File, maxWidth = 1200): Promise<File> => {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas')
-            const ctx = canvas.getContext('2d')!
-            const img = new Image()
-            img.onload = () => {
-                const ratio = Math.min(1, maxWidth / img.width)
-                canvas.width = img.width * ratio
-                canvas.height = img.height * ratio
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-                canvas.toBlob((blob) => {
-                    const resizedFile = new File([blob!], file.name, { type: file.type })
-                    resolve(resizedFile)
-                }, file.type)
-            }
-            img.src = URL.createObjectURL(file)
-        })
-    }
-
+    // Visibility logic: support both showWhen (simple) and showIf (complex)
     if (field.showWhen) {
         const conditionMet = Object.entries(field.showWhen).every(
             ([key, val]) => allValues[key] === val
         )
+        if (!conditionMet) return null
+    }
+
+    if (field.showIf) {
+        const targetValue = allValues[field.showIf.field]
+        let conditionMet = true
+
+        switch (field.showIf.operator) {
+            case 'equals':
+                conditionMet = targetValue === field.showIf.value
+                break
+            case 'not-equals':
+                conditionMet = targetValue !== field.showIf.value
+                break
+            case 'contains':
+                conditionMet = String(targetValue || '').includes(field.showIf.value)
+                break
+            default:
+                conditionMet = true
+        }
+
         if (!conditionMet) return null
     }
 
@@ -109,16 +80,10 @@ export const DynamicFormField = memo(function DynamicFormField({
         const options = field.options
         if (typeof options === 'string' && (options as string).startsWith('dynamic:')) {
             loadDynamicOptions(options as string)
-        } else if (field.type === 'channel-select') {
+        } else if (field.type === 'channel-select' || field.type === 'channel-selector') {
             loadDynamicOptions('dynamic:channels')
         }
     }, [field.name])
-
-    useEffect(() => {
-        return () => {
-            previewFiles.forEach(p => URL.revokeObjectURL(p.url))
-        }
-    }, [previewFiles])
 
     const loadDynamicOptions = async (optionsStr: string) => {
         const optionsConfig = optionsStr.replace('dynamic:', '')
@@ -134,8 +99,8 @@ export const DynamicFormField = memo(function DynamicFormField({
                 setDynamicOptions(data as any)
             }
             else if (optionsConfig === 'channels') {
-                // Call the correct dynamic options endpoint
-                const data = await axiosClient.get<any[]>('/node-types/dynamic-options/channels')
+                // Fetch actual connected channels from user config
+                const data = await axiosClient.get<any[]>('/channels/')
                 setDynamicOptions(data as any)
             }
         } catch (error) {
@@ -144,63 +109,6 @@ export const DynamicFormField = memo(function DynamicFormField({
             setDynamicOptions([])
         } finally {
             setLoadingOptions(false)
-        }
-    }
-
-    const handleFileDelete = async (fileId: string) => {
-        try {
-            await axiosClient.delete(`/files/${fileId}`)
-        } catch (error) {
-            console.error('Delete error:', error)
-            throw error
-        }
-    }
-
-    const handleFileUpload = async (files: FileList) => {
-        if (!files || files.length === 0) return;
-
-        if (field.multiple) {
-            const filesArray = Array.from(files)
-            const processedFiles = await Promise.all(filesArray.map(file =>
-                file.type.startsWith('image/') ? resizeImage(file) : Promise.resolve(file)
-            ))
-
-            try {
-                const uploadedFiles = await uploadMultipleFiles(processedFiles)
-                const formattedFiles = uploadedFiles.map((uploadResult, index) => ({
-                    url: uploadResult?.fileUrl || '',
-                    fileId: uploadResult?.fileData?.id || '',
-                    fileKey: uploadResult?.fileData?.path || '',
-                    name: filesArray[index]?.name || `file_${index}`
-                }))
-
-                onChange(field.name, formattedFiles)
-                setPreviewFiles([])
-            } catch (error) {
-                console.error('Multiple upload failed:', error)
-            }
-        } else {
-            if (!files[0]) return;
-            let processedFile = files[0]
-
-            // Resize image if necessary
-            if (processedFile.type.startsWith('image/')) {
-                processedFile = await resizeImage(processedFile)
-            }
-
-            try {
-                const uploadResult = await uploadFile(processedFile)
-                const formattedFile = {
-                    url: uploadResult?.fileUrl || '',
-                    fileId: uploadResult?.fileData?.id || '',
-                    fileKey: uploadResult?.fileData?.path || '',
-                    name: files[0]?.name || 'unknown_file'
-                }
-                onChange(field.name, formattedFile)
-                setPreviewFiles([])
-            } catch (error) {
-                console.error('Single upload failed:', error)
-            }
         }
     }
 
@@ -327,8 +235,9 @@ export const DynamicFormField = memo(function DynamicFormField({
                                     </div>
                                 )}
                                 {options.map((opt: any) => {
-                                    const optValue = typeof opt === 'string' ? opt : opt.value
-                                    const optLabel = typeof opt === 'string' ? opt : opt.label
+                                    const isChannel = field.type === 'channel-select' || optionsConfig === 'channels'
+                                    const optValue = isChannel ? opt.id : (typeof opt === 'string' ? opt : opt.value)
+                                    const optLabel = isChannel ? (opt.name || opt.type) : (typeof opt === 'string' ? opt : opt.label)
                                     return (
                                         <SelectItem key={optValue} value={String(optValue)}>
                                             {optLabel}
@@ -358,15 +267,147 @@ export const DynamicFormField = memo(function DynamicFormField({
                     </div>
                 )
 
+            case 'channel-selector': {
+                const activeChannels = dynamicOptions.filter(c => c.status === 'active' || c.status === 'connected');
+                const selectedValues: string[] = Array.isArray(currentValue) ? currentValue : (currentValue ? [currentValue] : []);
+
+                const getPlatformIcon = (type: string) => {
+                    switch (type?.toLowerCase()) {
+                        case 'facebook': return <Facebook className="w-4 h-4 text-blue-600" />;
+                        case 'instagram': return <Instagram className="w-4 h-4 text-pink-600" />;
+                        case 'telegram': return <Share2 className="w-4 h-4 text-sky-500" />;
+                        default: return <Globe className="w-4 h-4 text-muted-foreground" />;
+                    }
+                };
+
+                const selectorPlaceholder = "Select platforms"
+
+                return (
+                    <div className="space-y-4">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-full justify-between bg-card/50 rounded-xl"
+                                >
+                                    <div className="flex flex-wrap gap-1">
+                                        {selectedValues.length > 0 ? (
+                                            selectedValues.map((val) => {
+                                                const platformOpt = (field.options as any[])?.find((o: any) => o.value === val)
+                                                return (
+                                                    <Badge
+                                                        key={val}
+                                                        variant="secondary"
+                                                        className="bg-primary/10 text-primary border-primary/20"
+                                                    >
+                                                        {platformOpt?.label || val}
+                                                    </Badge>
+                                                )
+                                            })
+                                        ) : (
+                                            <span className="text-muted-foreground">{selectorPlaceholder}</span>
+                                        )}
+                                    </div>
+                                    <ChevronDown className="h-4 w-4 opacity-50" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto">
+                                {dynamicOptions.map((channel: any) => {
+                                    const isSelected = selectedValues.includes(channel.id)
+                                    return (
+                                        <DropdownMenuCheckboxItem
+                                            key={channel.id}
+                                            checked={isSelected}
+                                            onCheckedChange={(checked) => {
+                                                const newValue = checked
+                                                    ? [...selectedValues, channel.id]
+                                                    : selectedValues.filter(v => v !== channel.id)
+                                                onChange(field.name, newValue)
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {getPlatformIcon(channel.type)}
+                                                <span>{channel.name || channel.type}</span>
+                                            </div>
+                                        </DropdownMenuCheckboxItem>
+                                    )
+                                })}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Simplified Channel Selector */}
+                            {activeChannels.length > 0 ? (
+                                activeChannels.map(channel => {
+                                    const isSelected = selectedValues.includes(channel.id);
+                                    return (
+                                        <div
+                                            key={channel.id}
+                                            onClick={() => {
+                                                const newValue = isSelected
+                                                    ? selectedValues.filter(v => v !== channel.id)
+                                                    : [...selectedValues, channel.id];
+                                                onChange(field.name, newValue);
+                                            }}
+                                            className={cn(
+                                                "group flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                                                isSelected
+                                                    ? "bg-accent border-primary/50"
+                                                    : "bg-card hover:bg-accent/50 border-input"
+                                            )}
+                                        >
+                                            <div className="w-8 h-8 flex items-center justify-center">
+                                                {isSelected ? (
+                                                    <Check className="w-4 h-4 text-primary" />
+                                                ) : (
+                                                    getPlatformIcon(channel.type)
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm font-medium truncate">
+                                                    {channel.name || channel.type}
+                                                </span>
+                                                <span className="text-xs text-muted-foreground capitalize">
+                                                    {channel.type}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )
+                                })
+                            ) : (
+                                <div className="col-span-full flex flex-col items-center justify-center p-6 border border-dashed rounded-lg bg-muted/10 text-center gap-2">
+                                    <Monitor className="w-8 h-8 text-muted-foreground/50" />
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium">No channels connected</p>
+                                        <p className="text-xs text-muted-foreground">Integrate your accounts to start creating</p>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2 h-8"
+                                        onClick={() => window.open('/channels', '_blank')}
+                                    >
+                                        Explore integrations <ArrowRight className="w-3 h-3 ml-2" />
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
+
+            case 'checkbox':
             case 'boolean':
                 return (
-                    <div className="flex items-center space-x-2 p-3 rounded-lg border border-input bg-card/50 hover:bg-accent/50 transition-colors">
+                    <div className="flex items-center space-x-2 bg-card/50 p-3 rounded-xl border border-border/50">
                         <Checkbox
-                            id={fieldId}
-                            checked={currentValue || false}
-                            onCheckedChange={(checked) => onChange(field.name, checked)}
+                            id={field.name}
+                            checked={!!currentValue}
+                            onCheckedChange={(checked) => onChange(field.name, !!checked)}
                         />
-                        <Label htmlFor={fieldId} className="text-sm font-medium cursor-pointer">
+                        <Label
+                            htmlFor={field.name}
+                            className="text-sm font-medium leading-none cursor-pointer select-none"
+                        >
                             {field.label}
                         </Label>
                     </div>
@@ -387,175 +428,79 @@ export const DynamicFormField = memo(function DynamicFormField({
                     />
                 )
 
-            case 'file':
-            case 'files':
-                const isMultiple = field.type === 'files' || field.multiple
-                const filesToShow = previewFiles.length > 0 ? previewFiles : currentValue
+            case 'slider':
+                const min = field.min ?? 0
+                const max = field.max ?? 100
+                const step = field.step ?? 1
+                const val = typeof currentValue === 'number' ? currentValue : min
 
                 return (
-                    <div className="space-y-3">
-                        {/* Upload Zone */}
-                        <div className="relative">
-                            <input
-                                type="file"
-                                id={`file-${field.name}`}
-                                onChange={(e) => {
-                                    if (e.target.files && e.target.files.length > 0) {
-                                        const filesArray = Array.from(e.target.files)
-                                        const previews = filesArray.map(file => ({
-                                            url: URL.createObjectURL(file),
-                                            name: file.name,
-                                            isPreview: true
-                                        }))
-                                        if (field.multiple) {
-                                            setPreviewFiles(previews)
-                                        } else {
-                                            setPreviewFiles([previews[0]])
-                                        }
-                                        handleFileUpload(e.target.files)
-                                        e.target.value = ''
-                                    }
-                                }}
-                                className="hidden"
-                                accept={field.accept}
-                                multiple={isMultiple}
-                                disabled={uploadLoading}
-                            />
-                            <label
-                                htmlFor={`file-${field.name}`}
-                                className={cn(
-                                    "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all",
-                                    uploadLoading
-                                        ? 'border-muted bg-muted/50 cursor-not-allowed'
-                                        : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30 bg-card/30'
-                                )}
-                            >
-                                {uploadLoading ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-5 h-5 text-primary" />
-                                        <span className="text-xs text-muted-foreground">Processing</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center text-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                                            <Upload className="w-4 h-4 text-muted-foreground" />
-                                        </div>
-                                        <div>
-                                            <span className="text-sm font-medium text-foreground">Click to upload</span>
-                                            <span className="text-xs text-muted-foreground block mt-0.5">or drag and drop</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </label>
+                    <div className="space-y-3 pt-1">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground font-mono">
+                                {min}
+                            </span>
+                            <span className="text-sm font-bold text-primary">
+                                {val}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-mono">
+                                {max}
+                            </span>
                         </div>
-
-                        {uploadHookError && (
-                            <p className="text-xs text-destructive flex items-center gap-1">
-                                <X className="w-3 h-3" /> {uploadHookError.message}
-                            </p>
-                        )}
-
-                        {/* File List / Previews */}
-                        {(previewFiles.length > 0 || currentValue) && (() => {
-                            const items = Array.isArray(filesToShow) ? filesToShow : (filesToShow ? [filesToShow] : [])
-
-                            if (items.length === 0) return null
-
-                            return (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                    {items.map((item: any, idx: number) => {
-                                        const fileObj = typeof item === 'object' && item.url ? item : { url: item, fileId: null, fileKey: null }
-                                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileObj.url)
-                                        const canDelete = true // Allow delete
-
-                                        return (
-                                            <div key={idx} className="relative group rounded-lg border border-border/50 bg-card overflow-hidden hover:shadow-sm transition-all">
-                                                {isImage ? (
-                                                    <div className="aspect-square relative">
-                                                        <img
-                                                            src={fileObj.url}
-                                                            alt={`File ${idx}`}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            {canDelete && (
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="destructive"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 rounded-full"
-                                                                    onClick={async () => {
-                                                                        if (fileObj.fileId) {
-                                                                            try {
-                                                                                await handleFileDelete(fileObj.fileId)
-                                                                            } catch (error) {
-                                                                                console.error('Failed to delete file:', error)
-                                                                            }
-                                                                        }
-                                                                        // Update parent
-                                                                        if (Array.isArray(currentValue)) {
-                                                                            const newFiles = items.filter((_, i) => i !== idx)
-                                                                            onChange(field.name, newFiles.length > 0 ? newFiles : null)
-                                                                        } else {
-                                                                            onChange(field.name, null)
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="p-3 flex items-center justify-between gap-2">
-                                                        <div className="flex items-center gap-2 overflow-hidden">
-                                                            <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
-                                                                <FileText className="w-4 h-4 text-primary" />
-                                                            </div>
-                                                            <div className="flex flex-col min-w-0">
-                                                                <span className="text-xs font-medium truncate">
-                                                                    {fileObj.name || fileObj.url.split('/').pop() || 'File'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        {canDelete && (
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                                                onClick={async () => {
-                                                                    // Same delete logic
-                                                                    if (fileObj.fileId) {
-                                                                        try {
-                                                                            await handleFileDelete(fileObj.fileId)
-                                                                        } catch (error) {
-                                                                            console.error('Failed to delete file:', error)
-                                                                        }
-                                                                    }
-                                                                    if (Array.isArray(currentValue)) {
-                                                                        const newFiles = items.filter((_, i) => i !== idx)
-                                                                        onChange(field.name, newFiles.length > 0 ? newFiles : null)
-                                                                    } else {
-                                                                        onChange(field.name, null)
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )
-                        })()}
+                        <Slider
+                            value={[val]}
+                            min={min}
+                            max={max}
+                            step={step}
+                            onValueChange={(vals) => onChange(field.name, vals[0])}
+                            className="py-2"
+                        />
                     </div>
                 )
 
-            case 'multi-select':
+            case 'color':
+                return (
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="w-10 h-10 rounded-xl border border-border/50 shadow-sm shrink-0 transition-colors"
+                            style={{ backgroundColor: currentValue || '#000000' }}
+                        />
+                        <div className="flex-1 relative">
+                            <Input
+                                type="text"
+                                value={currentValue || ''}
+                                onChange={(e) => onChange(field.name, e.target.value)}
+                                placeholder="#000000"
+                                className="font-mono bg-card/50 pl-10 upper"
+                                maxLength={7}
+                            />
+                            <div className="absolute left-1 top-1 bottom-1 w-8 overflow-hidden rounded-md opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                                <input
+                                    type="color"
+                                    value={currentValue || '#000000'}
+                                    onChange={(e) => onChange(field.name, e.target.value)}
+                                    className="w-[150%] h-[150%] -m-[25%] cursor-pointer p-0 border-0"
+                                />
+                            </div>
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+                                <span className="text-xs">#</span>
+                            </div>
+                        </div>
+                    </div>
+                )
+
+            case 'file':
+            case 'files':
+                return (
+                    <FieldFile
+                        field={field}
+                        value={currentValue}
+                        onChange={onChange}
+                        allValues={allValues}
+                    />
+                )
+
+            case 'multi-select': {
                 const multiOptions = typeof field.options === 'string' && field.options.startsWith('dynamic:')
                     ? dynamicOptions
                     : (field.options as any[]) || []
@@ -568,7 +513,7 @@ export const DynamicFormField = memo(function DynamicFormField({
                             <Button
                                 variant="outline"
                                 role="combobox"
-                                className="w-full justify-between bg-card/50 font-normal hover:bg-accent hover:text-accent-foreground"
+                                className="w-full justify-between font-normal hover:bg-accent hover:text-accent-foreground"
                             >
                                 <span className={selectedValues.length === 0 ? "text-muted-foreground" : "text-foreground"}>
                                     {selectedValues.length === 0
@@ -609,6 +554,32 @@ export const DynamicFormField = memo(function DynamicFormField({
                             })}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                )
+            }
+
+            case 'radio':
+                const radioOptions = (field.options as any[]) || []
+                return (
+                    <RadioGroup
+                        value={String(currentValue || '')}
+                        onValueChange={(val) => onChange(field.name, val)}
+                        className="flex flex-col space-y-2 mt-2"
+                    >
+                        {radioOptions.map((opt: any) => {
+                            const optValue = typeof opt === 'string' ? opt : opt.value
+                            const optLabel = typeof opt === 'string' ? opt : opt.label
+                            const optionId = `${field.name}-${optValue}`
+
+                            return (
+                                <div key={optValue} className="flex items-center space-x-2">
+                                    <RadioGroupItem value={String(optValue)} id={optionId} />
+                                    <Label htmlFor={optionId} className="font-normal cursor-pointer">
+                                        {optLabel}
+                                    </Label>
+                                </div>
+                            )
+                        })}
+                    </RadioGroup>
                 )
 
             default:

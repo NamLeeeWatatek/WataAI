@@ -60,7 +60,8 @@ const config: Config = {
 				}
 			},
 			fontFamily: {
-				sans: ['Inter', 'Helvetica Neue', 'Arial', 'system-ui', '-apple-system', 'sans-serif'],
+				sans: ['var(--font-inter)', 'Inter', 'Helvetica Neue', 'Arial', 'system-ui', '-apple-system', 'sans-serif'],
+				display: ['var(--font-outfit)', 'Outfit', 'var(--font-inter)', 'Inter', 'sans-serif'],
 				serif: ['"Times New Roman"', 'Times', 'serif'],
 				mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
 			},

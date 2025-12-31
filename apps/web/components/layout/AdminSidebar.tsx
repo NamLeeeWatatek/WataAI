@@ -46,11 +46,11 @@ import { PERMISSIONS } from '@/lib/config/permissions'
 
 const getAdminNavigation = (t: any): NavigationItem[] => [
     { name: t('dashboard.title') || 'Dashboard', href: paths.system.root, icon: LayoutDashboard },
-    { name: 'Users', href: paths.system.users.root, icon: Users, permission: PERMISSIONS.IAM.LIST_USERS },
-    { name: 'Roles & Permissions', href: paths.system.roles.root, icon: ShieldCheck, permission: PERMISSIONS.IAM.LIST_ROLES },
-    { name: 'Categories', href: paths.system.categories?.root, icon: Folder, permission: PERMISSIONS.TOOLS.LIST }, // Assuming Categories uses Tool list permission for now, or add specific later
-    { name: 'Creation Tools', href: paths.system.creationTools.root, icon: Wrench, permission: PERMISSIONS.TOOLS.LIST },
-    { name: 'Templates', href: paths.system.templates.root, icon: Sparkles, permission: PERMISSIONS.TEMPLATES.LIST },
+    { name: t('navigation.users'), href: paths.system.users.root, icon: Users, permission: PERMISSIONS.IAM.LIST_USERS },
+    { name: t('navigation.rolesPermissions'), href: paths.system.roles.root, icon: ShieldCheck, permission: PERMISSIONS.IAM.LIST_ROLES },
+    { name: t('navigation.categories'), href: paths.system.categories?.root, icon: Folder, permission: PERMISSIONS.TOOLS.LIST }, // Assuming Categories uses Tool list permission for now, or add specific later
+    { name: t('navigation.creationTools'), href: paths.system.creationTools.root, icon: Wrench, permission: PERMISSIONS.TOOLS.LIST },
+    { name: t('navigation.templates'), href: paths.system.templates.root, icon: Sparkles, permission: PERMISSIONS.TEMPLATES.LIST },
 ]
 
 export const AdminSidebar = React.memo<AdminSidebarProps>(({
@@ -100,7 +100,7 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
                     <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center ring-1 ring-red-500/20">
                         <ShieldCheck className="w-4 h-4 text-red-500" />
                     </div>
-                    <span className="text-lg font-bold tracking-tight text-foreground">Admin System</span>
+                    <span className="text-lg font-bold tracking-tight text-foreground">{t('navigation.adminSystem')}</span>
                 </div>
             </div>
 
@@ -199,7 +199,7 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
                     )}
                 >
                     <ArrowLeft className="w-4 h-4 opacity-70" />
-                    <span>Back to App</span>
+                    <span>{t('navigation.backToApp')}</span>
                 </Link>
 
             </nav>

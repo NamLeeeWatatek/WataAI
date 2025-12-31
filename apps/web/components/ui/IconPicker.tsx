@@ -92,26 +92,24 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                 <Button
                     variant="outline"
                     role="combobox"
-                    rounded="xl"
                     aria-expanded={open}
-                    className={cn("w-full justify-start h-12 glass border-white/5 pl-4 font-bold hover:border-primary/40 focus:ring-primary/40 transition-all", className)}
+                    className={cn("w-full justify-start h-12 pl-4 font-medium hover:bg-accent transition-all rounded-lg", className)}
                 >
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary mr-3 shadow-inner">
+                    <div className="p-2 rounded bg-primary/10 text-primary mr-3">
                         <SelectedIcon className="w-4 h-4" />
                     </div>
-                    <span className="opacity-80">{value || "Identify with icon..."}</span>
+                    <span className="opacity-80">{value || "Select icon..."}</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 glass border-white/10 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200" align="start">
-                <div className="p-4 border-b border-white/5">
+            <PopoverContent className="w-80 p-0 rounded-lg shadow-md animate-in zoom-in-95 duration-200" align="start">
+                <div className="p-4 border-b border-border">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
                         <Input
-                            placeholder="Search cryptograms..."
+                            placeholder="Search icons..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            rounded="xl"
-                            className="h-10 glass border-white/5 pl-9 font-bold text-xs"
+                            className="h-10 pl-9 font-medium text-xs rounded-lg border-none focus-visible:ring-0 shadow-none bg-muted/50"
                         />
                     </div>
                 </div>
@@ -122,15 +120,16 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                             if (!IconComponent) return null;
 
                             return (
-                                <button
+                                <Button
                                     key={iconName}
+                                    variant="ghost"
                                     onClick={() => {
                                         onChange(iconName)
                                         setOpen(false)
                                     }}
                                     className={cn(
-                                        "aspect-square rounded-xl hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center group relative",
-                                        value === iconName ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted/10 glass border border-white/5"
+                                        "h-auto w-auto aspect-square p-0 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center group relative",
+                                        value === iconName ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/10 border border-border/50"
                                     )}
                                     title={iconName}
                                 >
@@ -138,7 +137,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                                     {value === iconName && (
                                         <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-success rounded-full border-2 border-background animate-bounce" />
                                     )}
-                                </button>
+                                </Button>
                             )
                         })}
                     </div>

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
+import { Card } from '@/components/ui/Card'
 import { Sparkles, ArrowLeft, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -98,21 +99,21 @@ function RegisterPageContent() {
         <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-sans selection:bg-primary/30 py-12 px-6">
             {/* Ambient Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px] animate-pulse" />
+                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000" />
+                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000 delay-700" />
             </div>
 
             <div className="w-full max-w-xl relative z-10 animate-in fade-in zoom-in duration-700">
-                <div className="glass p-8 md:p-12 bg-card/40 backdrop-blur-2xl border border-white/5 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] rounded-[2.5rem] relative overflow-hidden group">
+                <Card className="p-10 md:p-12 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">
                     {/* Header */}
                     <div className="text-center mb-10">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-inner ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-500">
-                            <Sparkles className="w-8 h-8 text-primary drop-shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 shadow-inner ring-2 ring-primary/5 group-hover:scale-110 transition-transform duration-500">
+                            <Sparkles className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black mb-3 tracking-tighter">
+                        <h1 className="text-3xl md:text-4xl font-black mb-3 tracking-tighter uppercase tracking-tight">
                             <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">{t('register.title')}</span>
                         </h1>
-                        <p className="text-muted-foreground text-sm max-w-[280px] mx-auto">
+                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60 max-w-[280px] mx-auto leading-relaxed">
                             {t('register.subtitle')}
                         </p>
                     </div>
@@ -120,84 +121,84 @@ function RegisterPageContent() {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label htmlFor="firstName">{t('register.firstName')}</Label>
+                                <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('register.firstName')}</Label>
                                 <Input
                                     id="firstName"
                                     placeholder="John"
-                                    className="h-12 bg-background/50 border-border/50"
+                                    className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 font-bold"
                                     {...register('firstName')}
                                     disabled={isLoading}
                                 />
-                                {errors.firstName && <p className="text-xs text-destructive font-medium">{errors.firstName.message}</p>}
+                                {errors.firstName && <p className="text-[10px] font-bold text-destructive ml-1">{errors.firstName.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="lastName">{t('register.lastName')}</Label>
+                                <Label htmlFor="lastName" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('register.lastName')}</Label>
                                 <Input
                                     id="lastName"
                                     placeholder="Doe"
-                                    className="h-12 bg-background/50 border-border/50"
+                                    className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 font-bold"
                                     {...register('lastName')}
                                     disabled={isLoading}
                                 />
-                                {errors.lastName && <p className="text-xs text-destructive font-medium">{errors.lastName.message}</p>}
+                                {errors.lastName && <p className="text-[10px] font-bold text-destructive ml-1">{errors.lastName.message}</p>}
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">{t('register.email')}</Label>
+                            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('register.email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 placeholder="name@example.com"
-                                className="h-12 bg-background/50 border-border/50"
+                                className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 font-bold"
                                 {...register('email')}
                                 disabled={isLoading}
                             />
-                            {errors.email && <p className="text-xs text-destructive font-medium">{errors.email.message}</p>}
+                            {errors.email && <p className="text-[10px] font-bold text-destructive ml-1">{errors.email.message}</p>}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <Label htmlFor="password">{t('register.password')}</Label>
+                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('register.password')}</Label>
                                 <div className="relative">
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
-                                        className="h-12 bg-background/50 border-border/50 pr-10"
+                                        className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 pr-12 font-bold"
                                         {...register('password')}
                                         disabled={isLoading}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors"
                                         tabIndex={-1}
                                     >
-                                        {showPassword ? <EyeOff className="h-5 w-5 py-0.5" /> : <Eye className="h-5 w-5 py-0.5" />}
+                                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>
                                 </div>
-                                {errors.password && <p className="text-xs text-destructive font-medium">{errors.password.message}</p>}
+                                {errors.password && <p className="text-[10px] font-bold text-destructive ml-1">{errors.password.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="confirmPassword">{t('register.confirmPassword')}</Label>
+                                <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('register.confirmPassword')}</Label>
                                 <div className="relative">
                                     <Input
                                         id="confirmPassword"
                                         type={showConfirmPassword ? "text" : "password"}
-                                        className="h-12 bg-background/50 border-border/50 pr-10"
+                                        className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 pr-12 font-bold"
                                         {...register('confirmPassword')}
                                         disabled={isLoading}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                                        className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors"
                                         tabIndex={-1}
                                     >
-                                        {showConfirmPassword ? <EyeOff className="h-5 w-5 py-0.5" /> : <Eye className="h-5 w-5 py-0.5" />}
+                                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>
                                 </div>
-                                {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword.message}</p>}
+                                {errors.confirmPassword && <p className="text-[10px] font-bold text-destructive ml-1">{errors.confirmPassword.message}</p>}
                             </div>
                         </div>
 
@@ -226,20 +227,20 @@ function RegisterPageContent() {
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-10 text-center text-sm text-muted-foreground">
+                    <div className="mt-10 text-center text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
                         {t('register.alreadyHaveAccount')}{' '}
-                        <Link href="/login" className="font-bold text-primary hover:underline transition-all hover:tracking-tight">
+                        <Link href="/login" className="text-primary hover:text-primary/80 transition-colors">
                             {t('register.signIn')}
                         </Link>
                     </div>
 
-                    <div className="mt-8 text-center border-t border-border/30 pt-8">
-                        <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-all group/back">
+                    <div className="mt-8 text-center border-t border-border/10 pt-8">
+                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back">
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             {t('register.backToHome')}
                         </Link>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     )

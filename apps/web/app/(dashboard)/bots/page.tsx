@@ -213,7 +213,7 @@ export default function BotsPage() {
                 onRefresh={loadBots}
                 refreshing={loading}
             >
-                <Button rounded="xl" onClick={() => openModal()} className="shadow-lg shadow-primary/20 px-6 font-bold h-10">
+                <Button onClick={() => openModal()} className="px-6 font-bold h-10">
                     <Plus className="w-4 h-4 mr-2" />
                     New Bot
                 </Button>
@@ -237,7 +237,7 @@ export default function BotsPage() {
             {loading && bots.length === 0 ? (
                 <PageLoading message="Loading agents" />
             ) : bots.length === 0 ? (
-                <Card variant="flat" rounded="2xl" className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed">
+                <Card className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed">
                     <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-6">
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>
@@ -250,7 +250,7 @@ export default function BotsPage() {
                             : 'Create your first custom AI bot to start automating your tasks.'
                         }
                     </p>
-                    <Button rounded="full" onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8">
+                    <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8">
                         <Plus className="w-4 h-4 mr-2" />
                         Create Bot
                     </Button>
@@ -263,9 +263,7 @@ export default function BotsPage() {
                             return (
                                 <Card
                                     key={bot.id}
-                                    variant="glass"
-                                    rounded="2xl"
-                                    className="group relative flex flex-col overflow-hidden border-border/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20"
+                                    className="group relative flex flex-col overflow-hidden"
                                 >
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-5">
@@ -291,21 +289,16 @@ export default function BotsPage() {
                                                     </div>
                                                     <div className="absolute -bottom-1 -right-1">
                                                         <div className={cn(
-                                                            "w-4 h-4 rounded-full border-2 border-background shadow-sm",
-                                                            bot.status === 'active' ? "bg-green-500 shadow-green-500/20" : "bg-amber-500 shadow-amber-500/20"
+                                                            "w-4 h-4 rounded-full border-2 border-background",
+                                                            bot.status === 'active' ? "bg-green-500" : "bg-amber-500"
                                                         )} />
                                                     </div>
                                                 </div>
                                                 <div className="min-w-0">
                                                     <h3 className="font-bold text-lg leading-tight truncate">{bot.name}</h3>
                                                     <Badge
-                                                        variant="secondary"
-                                                        className={cn(
-                                                            "mt-1.5 text-[10px] uppercase font-black tracking-widest px-2 py-0 h-4",
-                                                            bot.status === 'active'
-                                                                ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                                                                : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                                                        )}
+                                                        variant={bot.status === 'active' ? "default" : "secondary"}
+                                                        className="mt-1.5"
                                                     >
                                                         {bot.status === 'active' ? 'Active' : 'Paused'}
                                                     </Badge>
@@ -314,11 +307,11 @@ export default function BotsPage() {
 
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" rounded="full" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                                         <MoreHorizontal className="w-4 h-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end" className="w-48 rounded-xl border-border/40 shadow-xl">
+                                                <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => openModal(bot)} className="rounded-lg">
                                                         <Edit2 className="w-4 h-4 mr-2" />
                                                         Edit Profile
@@ -347,8 +340,7 @@ export default function BotsPage() {
                                         <Button
                                             variant="default"
                                             size="sm"
-                                            rounded="xl"
-                                            className="w-full font-bold shadow-lg shadow-primary/10 active:scale-[0.98] transition-all h-10 group/btn"
+                                            className="w-full font-bold transition-all h-10 group/btn"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
                                             <Settings className="w-4 h-4 mr-2 transition-transform duration-500 group-hover/btn:rotate-90" />
@@ -381,7 +373,7 @@ export default function BotsPage() {
             )}
 
             <Dialog open={showModal} onOpenChange={setShowModal}>
-                <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
                     <DialogHeader className="p-6 bg-muted/20 border-b">
                         <DialogTitle className="text-xl font-bold flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -430,7 +422,7 @@ export default function BotsPage() {
                                     <Button type="button" variant="ghost" onClick={closeModal} className="font-bold">
                                         Cancel
                                     </Button>
-                                    <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8 shadow-lg shadow-primary/20">
+                                    <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8">
                                         {editingBot ? 'Save Changes' : 'Launch Agent'}
                                     </Button>
                                 </div>
@@ -450,6 +442,6 @@ export default function BotsPage() {
                 onConfirm={confirmDelete}
                 variant="destructive"
             />
-        </div >
+        </div>
     )
 }

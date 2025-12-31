@@ -53,14 +53,14 @@ export async function createIntegration(
 /**
  * Update integration configuration
  */
-export async function updateIntegration(id: number, data: UpdateIntegrationDto): Promise<IntegrationConfig> {
+export async function updateIntegration(id: string, data: UpdateIntegrationDto): Promise<IntegrationConfig> {
   return axiosClient.patch(`/integrations/${id}`, data)
 }
 
 /**
  * Delete integration configuration
  */
-export async function deleteIntegration(id: number): Promise<void> {
+export async function deleteIntegration(id: string): Promise<void> {
   await axiosClient.delete(`/integrations/${id}`)
 }
 
@@ -69,7 +69,7 @@ export async function deleteIntegration(id: number): Promise<void> {
  */
 export async function getOAuthUrl(
   provider: string,
-  configId?: number,
+  configId?: string,
   workspaceId?: string
 ): Promise<{ url: string }> {
   const params: any = {}

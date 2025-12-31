@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useMemo, useState } from 'react'
+import { useEffect, useCallback, useMemo, useState, useRef } from 'react'
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
     KBStatsCards,
@@ -87,6 +87,7 @@ import {
     selectPagination,
     setPagination,
     selectTotalCount,
+    fetchChildDocuments,
 } from '@/lib/store/slices/knowledgeBaseSlice'
 import { queryKnowledgeBase, updateKnowledgeBase } from '@/lib/api/knowledge-base'
 import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'
@@ -146,6 +147,7 @@ export default function KnowledgeBaseDetailPage() {
     const [deleteItemId, setDeleteItemId] = useState<{ type: 'folder' | 'document'; id: string } | null>(null)
     const [showBulkDelete, setShowBulkDelete] = useState(false)
     const [editingItem, setEditingItem] = useState<{ type: 'folder' | 'document'; item: KBFolder | KBDocument } | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // DataTable State (Sort local, Pagination/Search in Redux)
     const [sortColumn, setSortColumn] = useState('name')
@@ -215,14 +217,8 @@ export default function KnowledgeBaseDetailPage() {
         dispatch(loadKnowledgeBase({
             kbId,
             folderId: currentFolderId,
-            params: {
-                page: currentPage,
-                limit: pageSize,
-                filters: JSON.stringify(filters),
-                sort: sort ? JSON.stringify(sort) : undefined
-            }
         }))
-    }, [dispatch, kbId, currentFolderId, currentPage, pageSize, searchQuery, sortColumn, sortDirection])
+    }, [dispatch, kbId, currentFolderId])
 
     useEffect(() => {
         loadData()
@@ -244,17 +240,11 @@ export default function KnowledgeBaseDetailPage() {
                 dispatch(refreshData({
                     kbId,
                     folderId: currentFolderId,
-                    params: {
-                        page: currentPage,
-                        limit: pageSize,
-                        filters: JSON.stringify(filters),
-                        sort: sort ? JSON.stringify(sort) : undefined
-                    }
                 }))
             }, 5000)
             return () => clearInterval(interval)
         }
-    }, [dispatch, hasProcessing, kbId, currentFolderId, currentPage, pageSize, searchQuery, sortColumn, sortDirection])
+    }, [hasProcessing, dispatch, kbId, currentFolderId])
 
     // Handlers
     const handleNavigateToFolder = (id: string, name: string) => {
@@ -550,15 +540,15 @@ export default function KnowledgeBaseDetailPage() {
 
     const tableData = useMemo(() => {
         const buildFolderTree = (parentId: string | null): any[] => {
-            const currentFolders = allFolders.filter(f =>
-                (f.parentId === parentId || f.parentFolderId === parentId) ||
-                (!f.parentId && !f.parentFolderId && parentId === null)
-            )
+            const currentFolders = allFolders.filter(f => {
+                const fParentId = f.parentId || f.parentFolderId || null;
+                return fParentId === parentId;
+            })
 
-            const currentDocs = allDocuments.filter(d =>
-                (d.folderId === parentId) ||
-                (!d.folderId && parentId === null)
-            )
+            const currentDocs = allDocuments.filter(d => {
+                const dFolderId = d.folderId || null;
+                return dFolderId === parentId;
+            })
 
             const folderItems = currentFolders.map(f => ({
                 id: f.id,
@@ -587,13 +577,16 @@ export default function KnowledgeBaseDetailPage() {
         }
 
         // If in table view and at root, we might want to show the full tree
-        // But if searching, show flat view
-        if (viewMode === 'table' && !searchQuery) {
-            // In tree mode, we start from the current folder but fetch EVERYTHING relative to it
-            return buildFolderTree(currentFolderId)
+        // However, to ensure current level items are ALWAYS visible, we can start with them
+        // if buildFolderTree fails to find them in allFolders for some reason
+        const rootItems = buildFolderTree(currentFolderId)
+
+        if (viewMode === 'table' && !searchQuery && rootItems.length > 0) {
+            return rootItems
         }
 
-        // Flat view for grid or search
+        // Flat view for grid or search or if tree build returned nothing
+        // When searching or in grid view, we use the already filtered folders/documents from the slice
         const folderItems = folders.map(f => ({
             id: f.id,
             name: f.name,
@@ -658,7 +651,7 @@ export default function KnowledgeBaseDetailPage() {
                 onRefresh={loadData}
                 onCreateFolder={() => setFolderDialogOpen(true)}
                 onCreateDocument={() => setDocumentDialogOpen(true)}
-                onUploadFile={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
+                onUploadFile={() => fileInputRef.current?.click()}
                 onCrawlWebsite={() => setCrawlerDialogOpen(true)}
                 selectedCount={selectedIds.length}
                 onDeleteSelected={() => setShowBulkDelete(true)}
@@ -717,6 +710,11 @@ export default function KnowledgeBaseDetailPage() {
                     onDragStart={(item) => dispatch(setDraggedItem({ type: item.type, id: item.id }))}
                     onDragOver={(folderId) => dispatch(setDragOverFolder(folderId))}
                     onDrop={(targetFolderId) => handleDrop(targetFolderId)}
+                    onRowExpand={async (item) => {
+                        if (item.type === 'folder') {
+                            await dispatch(fetchChildDocuments({ kbId, folderId: item.id })).unwrap();
+                        }
+                    }}
                 />
             ) : (
                 <KbGridView
@@ -750,6 +748,15 @@ export default function KnowledgeBaseDetailPage() {
             <KBItemEditDialog open={editingItem !== null} onOpenChange={(o) => !o && setEditingItem(null)} item={editingItem?.item || null} type={editingItem?.type || 'folder'} onSubmit={handleSaveEdit} />
             <AlertDialogConfirm open={deleteItemId !== null} onOpenChange={(o) => !o && setDeleteItemId(null)} title={`Delete ${deleteItemId?.type}`} description="This action cannot be undone." onConfirm={handleDelete} variant="destructive" />
             <AlertDialogConfirm open={showBulkDelete} onOpenChange={setShowBulkDelete} title={`Delete ${selectedIds.length} items`} description="This will permanently remove selected items." onConfirm={handleBulkDelete} variant="destructive" />
+
+            {/* Hidden Input for Uploads (Shadcn Standard) */}
+            <Input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                onChange={handleFileSelect}
+            />
         </div>
     )
 }

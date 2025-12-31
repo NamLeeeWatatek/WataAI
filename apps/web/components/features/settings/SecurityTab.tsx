@@ -56,7 +56,7 @@ export function SecurityTab() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <Card className="border-border/50 bg-card/50 backdrop-blur-md overflow-hidden rounded-2xl shadow-xl ring-1 ring-white/10">
+                    <Card >
                         <CardHeader className="border-b border-border/40 bg-muted/5 p-6">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center shadow-inner ring-1 ring-amber-500/20">
@@ -88,7 +88,7 @@ export function SecurityTab() {
                                                     {...field}
                                                     type="password"
                                                     placeholder="••••••••"
-                                                    className="rounded-xl border-border/50 bg-muted/20 h-12 focus:bg-background transition-all shadow-sm"
+
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -110,7 +110,7 @@ export function SecurityTab() {
                                                         {...field}
                                                         type="password"
                                                         placeholder="••••••••"
-                                                        className="rounded-xl border-border/50 bg-muted/20 h-12 focus:bg-background transition-all shadow-sm"
+
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -130,7 +130,7 @@ export function SecurityTab() {
                                                         {...field}
                                                         type="password"
                                                         placeholder="••••••••"
-                                                        className="rounded-xl border-border/50 bg-muted/20 h-12 focus:bg-background transition-all shadow-sm"
+
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -144,7 +144,7 @@ export function SecurityTab() {
                                 <Button
                                     type="submit"
                                     disabled={changePasswordMutation.isPending}
-                                    className="rounded-2xl px-10 py-7 font-bold shadow-xl shadow-amber-500/20 active:scale-95 transition-all text-base bg-amber-600 hover:bg-amber-500"
+                                    className="px-10 h-14 font-bold shadow-xl shadow-amber-500/20 active:scale-95 transition-all text-base bg-amber-600 hover:bg-amber-500"
                                 >
                                     {changePasswordMutation.isPending ? (
                                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />

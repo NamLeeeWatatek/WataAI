@@ -88,7 +88,7 @@ export default function ChannelsPageRefactored() {
         dispatch(loadChannelsData());
     };
 
-    const handleConnect = async (provider: string, configId?: number) => {
+    const handleConnect = async (provider: string, configId?: string) => {
         dispatch(setConnecting(provider));
 
         try {
@@ -276,11 +276,11 @@ export default function ChannelsPageRefactored() {
             />
 
             <Tabs value={activeTab} onValueChange={(value) => dispatch(setActiveTab(value as 'connected' | 'configurations'))} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/20 backdrop-blur-md rounded-xl border border-white/5 mb-8">
-                    <TabsTrigger value="connected" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                <TabsList className="mb-8">
+                    <TabsTrigger value="connected">
                         Connections ({channels.length})
                     </TabsTrigger>
-                    <TabsTrigger value="configurations" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-300">
+                    <TabsTrigger value="configurations">
                         Configurations ({configs.length})
                     </TabsTrigger>
                 </TabsList>
@@ -324,8 +324,8 @@ export default function ChannelsPageRefactored() {
 
             {facebookPages.length > 0 && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in zoom-in duration-300">
-                    <Card variant="premium" className="w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl border-white/10 ring-1 ring-white/5 rounded-2xl overflow-hidden">
-                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-muted/5">
+                    <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+                        <div className="p-6 border-b border-border/40 flex items-center justify-between bg-card/50">
                             <div>
                                 <h3 className="text-2xl font-black tracking-tight">Connect Facebook Pages</h3>
                                 <p className="text-sm text-muted-foreground mt-1 font-medium">
@@ -352,11 +352,10 @@ export default function ChannelsPageRefactored() {
                                         </div>
                                     ) : bots.length === 0 ? (
                                         <div className="flex flex-col items-center gap-4 py-8">
-                                            <p className="font-bold opacity-80">No active AI agents found in this workspace.</p>
+                                            <p className="font-bold opacity-80 text-muted-foreground">No active AI agents found in this workspace.</p>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                rounded="xl"
                                                 onClick={() => window.open('/bots', '_blank')}
                                                 className="bg-background"
                                             >
@@ -392,19 +391,19 @@ export default function ChannelsPageRefactored() {
                                         {facebookPages.map((page) => (
                                             <div
                                                 key={page.id}
-                                                className="flex items-center justify-between p-4 bg-muted/5 border border-white/5 rounded-2xl hover:bg-muted/10 transition-all duration-300 group ring-1 ring-transparent hover:ring-primary/20 shadow-sm"
+                                                className="flex items-center justify-between p-4 bg-muted/5 border border-border/40 rounded-2xl hover:bg-muted/10 transition-all duration-300 group"
                                             >
                                                 <div className="flex items-center gap-5">
-                                                    <div className="p-4 rounded-xl bg-blue-500/10 text-blue-500 shadow-inner group-hover:rotate-6 transition-transform duration-500">
+                                                    <div className="p-4 rounded-xl bg-primary/10 text-primary shadow-inner group-hover:rotate-6 transition-transform duration-500">
                                                         <Facebook className="w-6 h-6" />
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold text-lg tracking-tight">{page.name}</h4>
-                                                        <p className="text-xs font-semibold text-muted-foreground opacity-70">{page.category}</p>
+                                                        <p className="text-sm font-semibold text-muted-foreground opacity-70">{page.category}</p>
                                                         {page.tasks && page.tasks.length > 0 && (
                                                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                                                                 {page.tasks.slice(0, 3).map((task: string) => (
-                                                                    <Badge key={task} variant="outline" rounded="lg" className="text-[9px] uppercase font-bold tracking-wider py-0 px-2 opacity-60">
+                                                                    <Badge key={task} variant="outline" className="text-[9px] uppercase font-bold tracking-wider py-0 px-2 opacity-60">
                                                                         {task}
                                                                     </Badge>
                                                                 ))}
@@ -414,10 +413,9 @@ export default function ChannelsPageRefactored() {
                                                 </div>
                                                 <Button
                                                     size="lg"
-                                                    rounded="xl"
                                                     onClick={() => handleConnectFacebookPage(page)}
                                                     disabled={connectingPage || !selectedBotId || bots.length === 0}
-                                                    className="px-8 font-black shadow-lg hover:shadow-primary/20 active:scale-95 transition-all"
+                                                    className="px-8 font-black transition-all"
                                                 >
                                                     {connectingPage ? 'Connecting...' : 'Link Page'}
                                                 </Button>

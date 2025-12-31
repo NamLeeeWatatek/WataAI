@@ -132,6 +132,7 @@ export class AiProvidersService {
     messages: ChatMessage[],
     model: string,
     apiKey?: string | null,
+    useTools?: boolean,
   ): Promise<string> {
     const key = apiKey || (await this.getApiKey('google'));
     const genAI = new GoogleGenerativeAI(key);
@@ -145,12 +146,17 @@ export class AiProvidersService {
 
     // Start chat with system instruction if available
     let chatSession;
+    const tools = useTools ? [{ googleSearch: {} }] : undefined;
+
     if (systemMessage) {
       chatSession = chat.startChat({
         systemInstruction: systemMessage.content,
+        tools: tools as any,
       });
     } else {
-      chatSession = chat.startChat();
+      chatSession = chat.startChat({
+        tools: tools as any,
+      });
     }
 
     // Send user messages one by one to maintain conversation
@@ -188,6 +194,7 @@ export class AiProvidersService {
     model: string,
     apiKey?: string | null,
     baseURL?: string | null,
+    useTools?: boolean,
   ): Promise<string> {
     const key = apiKey || (await this.getApiKey('openai'));
     const clientConfig: any = { apiKey: key };
@@ -197,6 +204,11 @@ export class AiProvidersService {
         : `${baseURL.replace(/\/$/, '')}/v1`;
     }
     const openai = new OpenAI(clientConfig);
+
+    // Simple implementation for now, primarily focused on Google Search via Gemini
+    // For OpenAI we'd need a more complex tool loop if we wanted generic tools,
+    // but many people just want "Search" which Gemini handles natively via tools.
+
     const response = await openai.chat.completions.create({
       model,
       messages: [{ role: 'user', content: prompt }],
@@ -209,6 +221,7 @@ export class AiProvidersService {
     model: string,
     apiKey?: string | null,
     baseURL?: string | null,
+    useTools?: boolean,
   ): Promise<string> {
     const key = apiKey || (await this.getApiKey('openai'));
     const clientConfig: any = { apiKey: key };
@@ -795,12 +808,13 @@ export class AiProvidersService {
     apiKey?: string | null,
     workspaceId?: string,
     baseURL?: string | null,
+    useTools?: boolean,
   ): Promise<string> {
     const providerKey = provider || 'openai'; // default to openai
 
     switch (providerKey) {
       case 'openai':
-        return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
+        return this.chatWithOpenAI(prompt, model, apiKey, baseURL, useTools);
       case 'anthropic':
         return this.chatWithAnthropic(prompt, model, apiKey);
       case 'ollama':
@@ -810,13 +824,14 @@ export class AiProvidersService {
           [{ role: 'user', content: prompt }],
           model,
           apiKey,
+          useTools,
         );
       case 'custom':
-        return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
+        return this.chatWithOpenAI(prompt, model, apiKey, baseURL, useTools);
       default:
         // Try OpenAI compatible as fallback for unknown providers
         if (baseURL) {
-          return this.chatWithOpenAI(prompt, model, apiKey, baseURL);
+          return this.chatWithOpenAI(prompt, model, apiKey, baseURL, useTools);
         }
         throw new BadRequestException(`Unsupported provider: ${providerKey}`);
     }

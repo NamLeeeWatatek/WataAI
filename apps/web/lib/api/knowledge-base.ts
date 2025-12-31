@@ -9,8 +9,10 @@ import type {
   UpdateKnowledgeBaseResponse,
   DeleteKnowledgeBaseResponse,
   GetKnowledgeBaseStatsResponse,
+  KBFolder,
   GetFoldersResponse,
   GetFolderTreeResponse,
+  KBDocument,
   CreateFolderDto,
   CreateFolderResponse,
   UpdateFolderDto,
@@ -99,6 +101,19 @@ export async function getKBFolders(kbId: string): Promise<GetFoldersResponse> {
  */
 export async function getKBFolderTree(kbId: string): Promise<GetFolderTreeResponse> {
   return axiosClient.get(`/knowledge-bases/${kbId}/folders/tree`)
+}
+
+/**
+ * Get unified content (folders and documents) in a specific level
+ */
+export async function getKBContent(kbId: string, folderId?: string | null): Promise<{
+  folders: KBFolder[]
+  documents: { data: KBDocument[]; total: number }
+  breadcrumbs: Array<{ id: string; name: string }>
+}> {
+  return axiosClient.get(`/knowledge-bases/${kbId}/content`, {
+    params: { folderId: folderId || 'null' }
+  })
 }
 
 /**

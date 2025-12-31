@@ -460,7 +460,7 @@ function ConversationsPageContent() {
               className={cn(
                 'w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group',
                 selectedChannel === 'all'
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-primary/50'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                   : 'hover:bg-muted/80 text-foreground/80 hover:text-foreground'
               )}
             >
@@ -476,7 +476,7 @@ function ConversationsPageContent() {
               {totalUnread > 0 && (
                 <Badge
                   variant={selectedChannel === 'all' ? 'secondary' : 'default'}
-                  className="h-6 min-w-[24px] px-2 rounded-full font-bold shadow-sm"
+                  className="h-6 min-w-[24px] px-2 rounded-full font-bold"
                 >
                   {totalUnread}
                 </Badge>
@@ -507,7 +507,7 @@ function ConversationsPageContent() {
                   className={cn(
                     'w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group',
                     selectedChannel === channel.id
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-primary/50'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
                       : 'hover:bg-muted/60 text-foreground/80 hover:text-foreground'
                   )}
                 >
@@ -516,7 +516,7 @@ function ConversationsPageContent() {
                       'p-2.5 rounded-xl transition-colors shrink-0',
                       selectedChannel === channel.id
                         ? 'bg-primary-foreground/20'
-                        : 'bg-card border border-border/50 group-hover:bg-muted group-hover:border-border transition-all'
+                        : 'bg-card border border-border/40 group-hover:bg-muted group-hover:border-border transition-all'
                     )}>
                       <div className={cn(
                         "transition-transform group-hover:scale-110 duration-300",
@@ -530,7 +530,7 @@ function ConversationsPageContent() {
                   {channel.unreadCount > 0 && (
                     <Badge
                       variant={selectedChannel === channel.id ? 'secondary' : 'default'}
-                      className="h-6 min-w-[24px] px-2 rounded-full shrink-0 ml-2 font-bold shadow-sm"
+                      className="h-6 min-w-[24px] px-2 rounded-full shrink-0 ml-2 font-bold"
                     >
                       {channel.unreadCount}
                     </Badge>
@@ -570,13 +570,13 @@ function ConversationsPageContent() {
                 <div className="flex items-center gap-1.5 ml-1">
                   <div
                     className={cn(
-                      'w-2 h-2 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]',
-                      isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                      'w-2 h-2 rounded-full',
+                      isConnected ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(var(--success),0.4)]' : 'bg-muted-foreground/30'
                     )}
                     title={isConnected ? 'Connected (Real-time)' : 'Disconnected'}
                   />
                   {isConnected && (
-                    <span className="text-[10px] font-black text-green-600 dark:text-green-400 uppercase tracking-widest opacity-80">
+                    <span className="text-[10px] font-black text-success uppercase tracking-widest opacity-80">
                       Live
                     </span>
                   )}
@@ -593,7 +593,7 @@ function ConversationsPageContent() {
               >
                 <Bell className="w-4 h-4" />
                 {permission !== 'granted' && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full border border-background" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-warning rounded-full border border-background" />
                 )}
               </Button>
 
@@ -632,10 +632,10 @@ function ConversationsPageContent() {
           </div>
 
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-            <TabsList className="w-full grid grid-cols-3 h-10 bg-muted/30 border border-border/40 rounded-xl p-1">
-              <TabsTrigger value="active" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Active</TabsTrigger>
-              <TabsTrigger value="closed" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Closed</TabsTrigger>
-              <TabsTrigger value="all" className="text-xs font-bold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">All</TabsTrigger>
+            <TabsList className="w-full grid-cols-3">
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="closed">Closed</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -691,7 +691,7 @@ function ConversationsPageContent() {
                     <div className="relative shrink-0">
                       <Avatar className="h-11 w-11 ring-1 ring-border">
                         <AvatarImage src={conv.customerAvatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-sm font-semibold">
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                           {(conv.customerName || 'User').charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -724,17 +724,17 @@ function ConversationsPageContent() {
                       {/* Badge row - Like image */}
                       <div className="flex items-center gap-2 mb-1.5">
                         {conv.metadata?.tags?.includes('VIP') && (
-                          <Badge variant="secondary" className="h-5 px-2 text-[10px] font-medium bg-amber-500/10 text-amber-700 border-amber-500/20">
+                          <Badge className="bg-warning/10 text-warning border-warning/20">
                             🔒 VIP Lead
                           </Badge>
                         )}
                         {conv.metadata?.tags?.includes('Hot') && (
-                          <Badge variant="secondary" className="h-5 px-2 text-[10px] font-medium bg-red-500/10 text-red-700 border-red-500/20">
+                          <Badge variant="destructive">
                             🔥 Hot Lead
                           </Badge>
                         )}
                         {conv.metadata?.tags?.includes('Payment') && (
-                          <Badge variant="secondary" className="h-5 px-2 text-[10px] font-medium bg-green-500/10 text-green-700 border-green-500/20">
+                          <Badge variant="default">
                             💳 Payments
                           </Badge>
                         )}
@@ -781,7 +781,7 @@ function ConversationsPageContent() {
             <div
               className="text-center max-w-md"
             >
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/5">
+              <div className="w-24 h-24 rounded-3xl bg-primary/5 border border-primary/10 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/5">
                 <MessageSquare className="w-12 h-12 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-3 text-foreground">Select a conversation</h3>

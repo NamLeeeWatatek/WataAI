@@ -95,37 +95,35 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
     };
 
     const getStatusBadge = (version: Version) => {
-        const badgeBase = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] shadow-sm flex items-center gap-1.5 border transition-all duration-300";
-
         if (version.isActive) {
             return (
-                <div className={cn(badgeBase, "bg-green-500/10 text-green-600 border-green-500/20")}>
-                    <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                <Badge variant="default" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+                    <div className="size-1.5 rounded-full bg-current animate-pulse mr-1.5" />
                     Live Protocol
-                </div>
+                </Badge>
             );
         }
         if (version.status === 'draft') {
             return (
-                <div className={cn(badgeBase, "bg-blue-500/10 text-blue-600 border-blue-500/20")}>
-                    <Clock className="w-3 h-3" />
+                <Badge variant="secondary" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+                    <Clock className="w-3 h-3 mr-1.5" />
                     Draft State
-                </div>
+                </Badge>
             );
         }
         if (version.status === 'archived') {
             return (
-                <div className={cn(badgeBase, "bg-muted text-muted-foreground border-border/40")}>
-                    <Archive className="w-3 h-3" />
+                <Badge variant="secondary" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none opacity-60">
+                    <Archive className="w-3 h-3 mr-1.5" />
                     Archived
-                </div>
+                </Badge>
             );
         }
         return (
-            <div className={cn(badgeBase, "bg-primary/10 text-primary border-primary/20")}>
-                <Rocket className="w-3 h-3" />
+            <Badge variant="default" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] border-none">
+                <Rocket className="w-3 h-3 mr-1.5" />
                 Published
-            </div>
+            </Badge>
         );
     };
 
@@ -168,17 +166,9 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                 {versions.map((version) => (
                     <Card
                         key={version.id}
-                        className={cn(
-                            "relative overflow-hidden border transition-all duration-500 group rounded-[2rem] shadow-xl",
-                            version.isActive
-                                ? "border-primary/40 bg-primary/[0.03] shadow-primary/10 scale-[1.02]"
-                                : "border-border/40 bg-card/40 backdrop-blur-md hover:border-primary/20 hover:shadow-2xl"
-                        )}
+                        className="relative overflow-hidden transition-all duration-500 group"
                     >
-                        {version.isActive && (
-                            <div className="h-1.5 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-                        )}
-                        <CardHeader className="p-8 pb-4">
+                        <CardHeader className="p-6 pb-4">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                                 <div className="space-y-3">
                                     <div className="flex flex-wrap items-center gap-4">
@@ -188,11 +178,11 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         {getStatusBadge(version)}
                                     </div>
                                     {version.changelog ? (
-                                        <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed max-w-2xl px-1">
+                                        <p className="text-sm font-medium text-muted-foreground/80 leading-relaxed max-w-2xl">
                                             {version.changelog}
                                         </p>
                                     ) : (
-                                        <p className="text-xs font-bold text-muted-foreground/30 uppercase tracking-widest pl-1 italic">
+                                        <p className="text-xs font-bold text-muted-foreground/30 uppercase tracking-widest italic">
                                             No manifest provided
                                         </p>
                                     )}
@@ -202,7 +192,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-10 rounded-xl bg-background/50 hover:bg-background border-border/40 font-bold active:scale-95 transition-all"
+                                        className="h-10 font-bold active:scale-95 transition-all px-4"
                                         onClick={() => {
                                             window.location.href = `/bots/${botId}/widget/${version.id}`;
                                         }}
@@ -223,7 +213,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                     {version.status === 'draft' && (
                                         <Button
                                             size="sm"
-                                            className="h-10 rounded-xl font-black bg-primary shadow-lg shadow-primary/20 active:scale-95 transition-all text-xs uppercase tracking-widest px-4"
+                                            className="h-10 font-black shadow-lg shadow-primary/20 active:scale-95 transition-all text-xs uppercase tracking-widest px-4"
                                             onClick={() => handlePublish(version.id)}
                                             disabled={isSubmitting}
                                         >
@@ -236,7 +226,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="h-10 rounded-xl border-orange-500/20 bg-orange-500/5 text-orange-600 hover:bg-orange-500/10 font-black active:scale-95 transition-all text-xs"
+                                            className="h-10 font-black active:scale-95 transition-all text-xs px-4 border-none"
                                             onClick={() => setRollbackVersion(version)}
                                             disabled={isSubmitting}
                                         >
@@ -249,7 +239,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-10 w-10 rounded-xl text-muted-foreground/40 hover:text-foreground hover:bg-muted"
+                                            className="h-10 w-10 text-muted-foreground/40 hover:text-foreground hover:bg-muted"
                                             onClick={() => handleArchive(version.id)}
                                             disabled={isSubmitting}
                                         >
@@ -261,7 +251,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-10 w-10 rounded-xl text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
+                                            className="h-10 w-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
                                             onClick={() => setDeleteVersion(version)}
                                             disabled={isSubmitting}
                                         >
@@ -271,7 +261,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-8 pt-2">
+                        <CardContent className="p-6 pt-2">
                             <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-border/10">
                                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
                                     <Clock className="size-3" />
@@ -301,8 +291,8 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                 <AlertDialogContent className="rounded-[2.5rem] border-border/40 bg-card/95 backdrop-blur-xl shadow-2xl p-8">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
-                            <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                                <RotateCcw className="size-6 text-orange-500" />
+                            <div className="p-2 bg-warning/10 rounded-xl border border-warning/20">
+                                <RotateCcw className="size-6 text-warning" />
                             </div>
                             Protocol Reversion
                         </AlertDialogTitle>
@@ -327,7 +317,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
                         <AlertDialogAction
                             onClick={handleRollback}
                             disabled={!rollbackReason.trim() || isSubmitting}
-                            className="rounded-2xl h-12 font-black bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/20 active:scale-95 transition-all px-8 border-none"
+                            className="rounded-2xl h-12 font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 active:scale-95 transition-all px-8 border-none"
                         >
                             {isSubmitting ? 'Processing...' : 'Execute Reversion'}
                         </AlertDialogAction>

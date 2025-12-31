@@ -19,7 +19,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'integrations', version: '1' })
 export class IntegrationsController {
-  constructor(private readonly integrationsService: IntegrationsService) {}
+  constructor(private readonly integrationsService: IntegrationsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all integration credentials' })
@@ -37,6 +37,7 @@ export class IntegrationsController {
       client_id: cred.clientId,
       client_secret: cred.clientSecret ? '***' : undefined,
       scopes: cred.scopes,
+      verify_token: cred.metadata?.verifyToken,
       is_active: cred.isActive,
     }));
   }
@@ -62,6 +63,7 @@ export class IntegrationsController {
       client_id: credential.clientId,
       client_secret: '***',
       scopes: credential.scopes,
+      verify_token: credential.metadata?.verifyToken,
       is_active: credential.isActive,
     };
   }
@@ -88,6 +90,7 @@ export class IntegrationsController {
       client_id: credential.clientId,
       client_secret: '***',
       scopes: credential.scopes,
+      verify_token: credential.metadata?.verifyToken,
       is_active: credential.isActive,
     };
   }

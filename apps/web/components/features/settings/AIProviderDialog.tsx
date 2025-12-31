@@ -175,7 +175,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none bg-card/95 backdrop-blur-2xl shadow-3xl rounded-[32px]">
+            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none shadow-3xl rounded-[32px]">
                 <div className="h-2 w-full bg-gradient-to-r from-primary via-primary/50 to-primary/20" />
 
                 <Form {...form}>
@@ -221,7 +221,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 disabled={isEdit}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold">
+                                                    <SelectTrigger >
                                                         <SelectValue placeholder="Select Provider" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -248,7 +248,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 <Input
                                                     placeholder="e.g. My OpenAI"
                                                     {...field}
-                                                    className="rounded-xl border-border/40 bg-muted/20 h-12 focus:ring-primary/20 font-bold"
+
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -284,7 +284,8 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                             placeholder={`Enter ${fieldName}...`}
                                                             {...field}
                                                             value={(field.value as string) || ''}
-                                                            className="rounded-xl border-border/40 bg-muted/20 h-11 focus:ring-primary/20 font-mono text-sm"
+
+                                                            className="font-mono text-sm"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -307,7 +308,8 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                         <Input
                                                             {...field}
                                                             value={(field.value as string) || ''}
-                                                            className="rounded-xl border-border/40 bg-muted/20 h-11 focus:ring-primary/20 text-sm"
+
+                                                            className="text-sm"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -328,7 +330,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 size="sm"
                                                 onClick={() => handleFetchModels()}
                                                 disabled={isFetchingModels}
-                                                className="h-8 rounded-lg text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all"
+                                                className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 transition-all font-bold"
                                             >
                                                 {isFetchingModels ? (
                                                     <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
@@ -382,14 +384,14 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 type="button"
                                 variant="ghost"
                                 onClick={() => onOpenChange(false)}
-                                className="rounded-2xl h-14 font-bold text-muted-foreground hover:bg-muted/30"
+                                className="h-14 font-bold text-muted-foreground"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={saveMutation.isPending}
-                                className="rounded-2xl h-14 px-8 font-black shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 flex-1 sm:flex-none"
+                                className="h-14 px-8 font-black flex-1 sm:flex-none shadow-xl shadow-primary/20"
                             >
                                 {saveMutation.isPending ? (
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />

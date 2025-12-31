@@ -43,6 +43,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
     }
 
     this.logger.log(`Processing Job ID: ${jobEntity.id}`);
+    this.logger.debug(`Raw Input Data: ${JSON.stringify(jobEntity.inputData)}`);
 
     try {
       // Update Status to PROCESSING
@@ -70,8 +71,9 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
       }
 
       // 1.5 Validate Inputs
+      let validatedInputs = jobEntity.inputData;
       try {
-        this.validationService.validateInputs(
+        validatedInputs = this.validationService.validateInputs(
           tool.formConfig,
           jobEntity.inputData,
         );
@@ -82,6 +84,12 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         throw new Error(`Input Validation Failed: ${validationError.message}`);
       }
 
+      // 1.8 Prepare Inputs (Flatten complex objects for execution engine)
+      const executionInputs = this.validationService.prepareInputs(
+        tool.formConfig,
+        validatedInputs,
+      );
+
       const config = tool.executionFlow as ExecutionFlow;
 
       // 2. Dispatch
@@ -89,7 +97,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         `Dispatching execution via Strategy Resolver for type: ${config.type}`,
       );
       const strategy = this.strategyResolver.resolve(config.type);
-      const result = await strategy.execute(config, jobEntity.inputData, {
+      const result = await strategy.execute(config, executionInputs, {
         workspaceId: jobEntity.workspaceId,
         userId: 'createdBy' in jobEntity ? jobEntity.createdBy : undefined,
       });

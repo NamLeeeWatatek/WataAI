@@ -1,58 +1,85 @@
 import { Card } from '@/components/ui/Card'
 import { FileText, Database, Cpu, Settings } from 'lucide-react'
 import type { KnowledgeBaseStats } from '@/lib/types/knowledge-base'
+import { cn } from '@/lib/utils'
 
 interface KBStatsCardsProps {
     stats: KnowledgeBaseStats
 }
 
 export function KBStatsCards({ stats }: KBStatsCardsProps) {
+    const cards = [
+        {
+            label: 'Documents',
+            value: stats.totalDocuments,
+            icon: FileText,
+            color: 'text-blue-500',
+            bg: 'bg-blue-500/10',
+            border: 'border-blue-500/20'
+        },
+        {
+            label: 'Total Size',
+            value: stats.totalSize,
+            icon: Database,
+            color: 'text-purple-500',
+            bg: 'bg-purple-500/10',
+            border: 'border-purple-500/20'
+        },
+        {
+            label: 'Embedding Model',
+            value: stats.embeddingModel,
+            icon: Cpu,
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-500/10',
+            border: 'border-emerald-500/20',
+            isSmall: true
+        },
+        {
+            label: 'Chunk Size',
+            value: stats.chunkSize,
+            icon: Settings,
+            color: 'text-orange-500',
+            bg: 'bg-orange-500/10',
+            border: 'border-orange-500/20'
+        }
+    ]
+
     return (
-        <div className="grid grid-cols-4 gap-4 mb-6">
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FileText className="w-5 h-5 text-blue-500" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {cards.map((card, i) => (
+                <Card
+                    key={i}
+                    className={cn(
+                        "p-4 group relative overflow-hidden transition-all duration-300",
+                        "bg-card/40 backdrop-blur-md border border-border/50",
+                        "hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 hover:border-border/80"
+                    )}
+                >
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                            "group-hover:scale-110 group-hover:rotate-3 shadow-sm",
+                            card.bg, card.color
+                        )}>
+                            <card.icon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/70 mb-0.5">{card.label}</p>
+                            <p className={cn(
+                                "font-black tracking-tight transition-colors group-hover:text-foreground",
+                                card.isSmall ? "text-sm truncate" : "text-2xl"
+                            )} title={typeof card.value === 'string' ? card.value : undefined}>
+                                {card.value}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Documents</p>
-                        <p className="text-xl font-black">{stats.totalDocuments}</p>
-                    </div>
-                </div>
-            </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Database className="w-5 h-5 text-green-500" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Size</p>
-                        <p className="text-xl font-black">{stats.totalSize}</p>
-                    </div>
-                </div>
-            </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Cpu className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Embedding Model</p>
-                        <p className="text-sm font-bold truncate max-w-[120px]">{stats.embeddingModel}</p>
-                    </div>
-                </div>
-            </Card>
-            <Card className="p-4 bg-muted/20 border-border/50 hover:border-primary/50 transition-colors group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Settings className="w-5 h-5 text-orange-500" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Chunk Size</p>
-                        <p className="text-xl font-black">{stats.chunkSize}</p>
-                    </div>
-                </div>
-            </Card>
+                    {/* Subtle decorative background element */}
+                    <div className={cn(
+                        "absolute -right-4 -bottom-4 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700",
+                        card.bg
+                    )} />
+                </Card>
+            ))}
         </div>
     )
 }

@@ -14,7 +14,15 @@
     "pricing": "Pricing",
     "documentation": "Documentation",
     "login": "Login",
-    "start": "Start"
+    "start": "Start",
+    "creationTools": "Creation Tools",
+    "myProducts": "My Products",
+    "users": "Users",
+    "rolesPermissions": "Roles & Permissions",
+    "categories": "Categories",
+    "templates": "Templates",
+    "adminSystem": "Admin System",
+    "backToApp": "Back to App"
   },
   "hero": {
     "title": "Smart Multi-Channel AI Chatbot Platform",
@@ -77,6 +85,18 @@
         "creationTools": "Creation Tools",
         "generationJobs": "Generation Jobs"
       }
+    },
+    "charts": {
+      "activityTrend": "Activity Trend",
+      "activityTrendDesc": "Conversation activity over the last 30 days",
+      "botsStatus": "Bots Status",
+      "botsStatusDesc": "Active vs Inactive bots",
+      "userGrowth": "User Growth",
+      "userGrowthDesc": "New users over the last 30 days",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activity": "Activity",
+      "users": "Users"
     }
   },
   "features": {

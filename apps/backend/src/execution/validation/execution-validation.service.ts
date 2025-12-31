@@ -34,13 +34,25 @@ export class ExecutionValidationService {
             );
           break;
         case 'checkbox':
+        case 'boolean':
           fieldSchema = z.boolean();
+          break;
+        case 'file':
+        case 'files':
+        case 'multi-select':
+        case 'channel-selector':
+        case 'json':
+        case 'key-value':
+          // These fields can be arrays, objects, strings, or numbers
+          fieldSchema = z.any();
           break;
         case 'text':
         case 'textarea':
+        case 'string':
         case 'color':
         case 'select':
         case 'radio':
+        case 'channel-select':
         default:
           fieldSchema = z.string();
           if (field.validation?.minLength)
@@ -66,9 +78,38 @@ export class ExecutionValidationService {
       schemaShape[field.name] = fieldSchema;
     }
 
-    const dynamicSchema = z.object(schemaShape);
+    const dynamicSchema = z.object(schemaShape).passthrough();
 
     // 3. Parse (will throw ZodError if invalid)
     return dynamicSchema.parse(inputs);
+  }
+
+  /**
+   * Prepares inputs for execution by simplifying complex objects (e.g., files to URLs).
+   * This ensures that templates (LiquidJS) receive clean strings instead of metadata objects.
+   */
+  prepareInputs(config: FormConfig, inputs: any): any {
+    if (!config || !config.fields) {
+      return inputs;
+    }
+
+    const prepared = { ...inputs };
+
+    for (const field of config.fields) {
+      const value = prepared[field.name];
+      if (!value) continue;
+
+      if (field.type === 'file' || field.type === 'files') {
+        if (Array.isArray(value)) {
+          prepared[field.name] = value.map((v) =>
+            typeof v === 'object' && v.url ? v.url : v,
+          );
+        } else if (typeof value === 'object' && value.url) {
+          prepared[field.name] = value.url;
+        }
+      }
+    }
+
+    return prepared;
   }
 }

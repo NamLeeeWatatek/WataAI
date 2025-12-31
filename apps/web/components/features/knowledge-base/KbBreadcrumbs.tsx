@@ -1,15 +1,23 @@
-import { FiChevronRight, FiHome } from 'react-icons/fi'
+import React from 'react'
+import { Home, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/Button'
+import {
+    Breadcrumb,
+    BreadcrumbList,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbPage,
+    BreadcrumbSeparator
+} from '@/components/ui/Breadcrumb'
 
-interface Breadcrumb {
+interface BreadcrumbData {
     id: string | null
     name: string
 }
 
 interface KBBreadcrumbsProps {
     rootName: string
-    breadcrumbs: Breadcrumb[]
+    breadcrumbs: BreadcrumbData[]
     onNavigate: (index: number) => void
     onDrop?: (folderId: string | null) => void
     dragOverId?: string | null
@@ -28,46 +36,77 @@ export function KBBreadcrumbs({
     }
 
     return (
-        <div className="flex items-center gap-2 mb-4 text-sm flex-wrap">
-            <Button
-                variant="ghost"
-                onClick={() => onNavigate(-1)}
-                onDragOver={handleDragOver}
-                onDrop={(e: React.DragEvent) => {
-                    e.preventDefault()
-                    onDrop?.(null)
-                }}
-                className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 h-auto font-normal rounded-md transition-all",
-                    "text-muted-foreground hover:text-foreground hover:bg-muted",
-                    dragOverId === null && "bg-primary/10 ring-2 ring-primary"
-                )}
-            >
-                <FiHome className="w-4 h-4 mr-2" />
-                {rootName}
-            </Button>
-            {breadcrumbs.map((crumb, index) => (
-                <div key={crumb.id || index} className="flex items-center gap-2">
-                    <FiChevronRight className="w-4 h-4 text-muted-foreground" />
-                    <Button
-                        variant="ghost"
-                        onClick={() => onNavigate(index)}
+        <Breadcrumb className="mb-6">
+            <BreadcrumbList className="sm:gap-2">
+                <BreadcrumbItem>
+                    <BreadcrumbLink
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onNavigate(-1);
+                        }}
                         onDragOver={handleDragOver}
                         onDrop={(e: React.DragEvent) => {
                             e.preventDefault()
-                            onDrop?.(crumb.id)
+                            onDrop?.(null)
                         }}
                         className={cn(
-                            "px-3 py-1.5 h-auto font-normal rounded-md transition-all",
-                            "text-muted-foreground hover:text-foreground hover:bg-muted",
-                            dragOverId === crumb.id && "bg-primary/10 ring-2 ring-primary"
+                            "flex items-center gap-1.5 cursor-pointer transition-all px-2 py-1 rounded-md",
+                            "hover:bg-muted hover:text-foreground",
+                            dragOverId === null && "bg-primary/20 ring-1 ring-primary text-primary font-bold shadow-sm"
                         )}
+                        href="#"
                     >
-                        {crumb.name}
-                    </Button>
-                </div>
-            ))}
-        </div>
+                        <Home className="w-4 h-4" />
+                        <span className="font-semibold">{rootName}</span>
+                    </BreadcrumbLink>
+                </BreadcrumbItem>
+
+                {breadcrumbs.map((crumb, index) => (
+                    <React.Fragment key={crumb.id || index}>
+                        <BreadcrumbSeparator>
+                            <ChevronRight className="w-4 h-4 opacity-50" />
+                        </BreadcrumbSeparator>
+                        <BreadcrumbItem>
+                            {index === breadcrumbs.length - 1 ? (
+                                <BreadcrumbPage
+                                    className={cn(
+                                        "font-bold text-foreground px-2 py-1 rounded-md transition-all",
+                                        dragOverId === crumb.id && "bg-primary/20 ring-1 ring-primary text-primary shadow-sm"
+                                    )}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e: React.DragEvent) => {
+                                        e.preventDefault()
+                                        onDrop?.(crumb.id)
+                                    }}
+                                >
+                                    {crumb.name}
+                                </BreadcrumbPage>
+                            ) : (
+                                <BreadcrumbLink
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onNavigate(index);
+                                    }}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e: React.DragEvent) => {
+                                        e.preventDefault()
+                                        onDrop?.(crumb.id)
+                                    }}
+                                    className={cn(
+                                        "cursor-pointer transition-all px-2 py-1 rounded-md",
+                                        "hover:bg-muted hover:text-foreground",
+                                        dragOverId === crumb.id && "bg-primary/20 ring-1 ring-primary text-primary font-bold shadow-sm"
+                                    )}
+                                    href="#"
+                                >
+                                    {crumb.name}
+                                </BreadcrumbLink>
+                            )}
+                        </BreadcrumbItem>
+                    </React.Fragment>
+                ))}
+            </BreadcrumbList>
+        </Breadcrumb>
     )
 }
 

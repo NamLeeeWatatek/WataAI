@@ -83,12 +83,11 @@ export function DashboardStatsCards({ stats, itemVariants }: DashboardStatsCards
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-12">
             {cards.map((card) => (
                 <motion.div key={card.id} variants={itemVariants}>
-                    <Card variant="glass" className="overflow-hidden border-white/5 shadow-xl hover:shadow-2xl transition-all duration-500 group">
+                    <Card className="overflow-hidden">
                         <CardContent className="p-6 relative">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
                             <div className="flex justify-between items-start mb-6 relative z-10">
                                 <div className={cn(
-                                    "p-4 rounded-2xl shadow-inner group-hover:scale-110 transition-transform duration-500",
+                                    "p-4 rounded-2xl group-hover:scale-110 transition-transform duration-500",
                                     card.color === 'primary' ? 'bg-primary/10 text-primary' :
                                         card.color === 'success' ? 'bg-success/10 text-success' :
                                             card.color === 'info' ? 'bg-info/10 text-info' :

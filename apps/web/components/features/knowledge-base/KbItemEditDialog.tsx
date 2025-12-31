@@ -92,7 +92,6 @@ export function KBItemEditDialog({
                             <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Label</Label>
                             <Input
                                 id="name"
-                                rounded="xl"
                                 className="h-12 glass border-white/5 font-bold pl-4"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
@@ -104,7 +103,6 @@ export function KBItemEditDialog({
                             <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Contextual Description</Label>
                             <Textarea
                                 id="description"
-                                rounded="xl"
                                 className="glass border-white/5 font-bold"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
@@ -124,7 +122,6 @@ export function KBItemEditDialog({
                         <Button
                             type="button"
                             variant="outline"
-                            rounded="xl"
                             className="h-12 flex-1 font-black uppercase tracking-widest text-xs glass border-white/10"
                             onClick={() => onOpenChange(false)}
                         >
@@ -132,7 +129,6 @@ export function KBItemEditDialog({
                         </Button>
                         <Button
                             type="submit"
-                            rounded="xl"
                             className="h-12 flex-[2] font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
                             disabled={loading}
                         >

@@ -5,6 +5,7 @@ import { Copy, Check, Code, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Badge } from '@/components/ui/Badge';
 import { toast } from 'sonner';
 
 interface Props {
@@ -57,7 +58,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
 
     if (!activeVersion) {
         return (
-            <Card className="border border-dashed border-border/60 bg-muted/5 rounded-[2rem]">
+            <Card className="border-dashed border-border/60">
                 <CardHeader className="p-12 text-center">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6 border border-primary/20">
                         <Code className="w-8 h-8 text-primary/60" />
@@ -74,9 +75,8 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Deployment Status Header */}
-            <Card className="relative overflow-hidden border border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-[2.5rem] group">
-                <div className="h-1.5 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-                <CardHeader className="p-8">
+            <Card>
+                <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <CardTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
@@ -89,26 +89,26 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 Protocol: <span className="text-primary font-mono ml-1">v{activeVersion.version}</span>
                             </CardDescription>
                         </div>
-                        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-green-500/10 border border-green-500/20 text-green-600 text-[10px] font-black uppercase tracking-[0.2em]">
-                            <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+                        <Badge variant="default" className="hidden md:flex rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none px-4 py-2">
+                            <div className="size-2 rounded-full bg-current animate-pulse mr-2" />
                             Live & Transmitting
-                        </div>
+                        </Badge>
                     </div>
                 </CardHeader>
             </Card>
 
             <Tabs defaultValue="script" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/30 backdrop-blur-sm p-1.5 rounded-2xl border border-border/50 shadow-sm">
-                    <TabsTrigger value="script" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-xl font-black transition-all h-11 text-xs uppercase tracking-widest">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="script">
                         Standard Script
                     </TabsTrigger>
-                    <TabsTrigger value="iframe" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-xl font-black transition-all h-11 text-xs uppercase tracking-widest">
+                    <TabsTrigger value="iframe">
                         IFrame Proxy
                     </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="script" className="mt-0 space-y-6">
-                    <Card className="border border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl overflow-hidden group">
+                    <Card>
                         <div className="p-8 space-y-6">
                             <div className="flex items-start justify-between">
                                 <div className="space-y-2">
@@ -117,7 +117,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                         Insert this snippet before the closing <code className="bg-muted px-1.5 py-0.5 rounded text-primary">&lt;/body&gt;</code> tag.
                                     </p>
                                 </div>
-                                <div className="px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 text-[9px] font-black uppercase tracking-widest">Recommended</div>
+                                <Badge variant="secondary" className="rounded-lg text-[9px] font-black uppercase tracking-widest border-none px-3 py-1">Recommended</Badge>
                             </div>
 
                             <div className="relative group/code">
@@ -127,7 +127,8 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 </pre>
                                 <Button
                                     size="sm"
-                                    className="absolute top-4 right-4 h-10 w-10 p-0 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 shadow-xl active:scale-95 transition-all"
+                                    variant="outline"
+                                    className="absolute top-4 right-4 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-xl"
                                     onClick={() => copyToClipboard(scriptCode, 'script')}
                                 >
                                     {copiedScript ? (
@@ -142,7 +143,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                 </TabsContent>
 
                 <TabsContent value="iframe" className="mt-0 space-y-6">
-                    <Card className="border border-border/40 shadow-xl bg-card/40 backdrop-blur-md rounded-3xl overflow-hidden group">
+                    <Card>
                         <div className="p-8 space-y-6">
                             <div className="space-y-2">
                                 <h3 className="font-black text-lg tracking-tight">Isolated IFrame</h3>
@@ -158,7 +159,8 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                                 </pre>
                                 <Button
                                     size="sm"
-                                    className="absolute top-4 right-4 h-10 w-10 p-0 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 shadow-xl active:scale-95 transition-all"
+                                    variant="outline"
+                                    className="absolute top-4 right-4 h-10 w-10 p-0 bg-white/10 hover:bg-white/20 backdrop-blur-md border-white/10 shadow-xl"
                                     onClick={() => copyToClipboard(iframeCode, 'iframe')}
                                 >
                                     {copiedIframe ? (
@@ -173,8 +175,8 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                 </TabsContent>
             </Tabs>
 
-            <Card className="border border-border/40 shadow-xl bg-muted/20 backdrop-blur-md rounded-[2.5rem] overflow-hidden group">
-                <CardHeader className="pb-4">
+            <Card>
+                <CardHeader>
                     <CardTitle className="text-lg font-black tracking-tight">Simulator Laboratory</CardTitle>
                     <CardDescription className="font-medium">
                         Validate your deployment across different rendering protocols.
@@ -184,7 +186,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                     <div className="flex flex-wrap gap-4">
                         <Button
                             variant="outline"
-                            className="h-12 rounded-2xl font-bold bg-background/50 hover:bg-background shadow-sm hover:shadow-md transition-all active:scale-95 border-border/40"
+                            className="h-12 font-bold transition-all active:scale-95"
                             onClick={() => window.open(publicBotUrl, '_blank')}
                         >
                             <ExternalLink className="w-4 h-4 mr-2 text-primary" />
@@ -192,7 +194,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
                         </Button>
                         <Button
                             variant="outline"
-                            className="h-12 rounded-2xl font-bold bg-background/50 hover:bg-background shadow-sm hover:shadow-md transition-all active:scale-95 border-border/40"
+                            className="h-12 font-bold transition-all active:scale-95"
                             onClick={() => {
                                 const testHtml = `<!DOCTYPE html>
 <html>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
+import { Media } from '@/components/ui/Media'
 import { FileDropzone } from '@/components/ui/FileUpload'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -221,13 +222,17 @@ export function TemplateDialog({
                                 {formData.mediaFiles.length > 0 && (
                                     <div className="grid grid-cols-2 gap-4">
                                         {formData.mediaFiles.map((url, index) => (
-                                            <div key={index} className="relative group rounded-md overflow-hidden border bg-background aspect-video flex items-center justify-center">
-                                                {/* Simple detection of type based on extension or just show as media */}
-                                                {url.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                                                    <video src={url} className="w-full h-full object-cover" controls />
-                                                ) : (
-                                                    <img src={url} alt={`Media ${index + 1}`} className="w-full h-full object-cover" />
-                                                )}
+                                            <div key={index} className="relative group rounded-xl overflow-hidden border bg-muted/20 aspect-video">
+                                                <Media
+                                                    src={url}
+                                                    alt={`Media ${index + 1}`}
+                                                    fill
+                                                    ambient
+                                                    objectFit="contain"
+                                                    controls
+                                                    playsInline
+                                                    className="transition-transform duration-500 group-hover:scale-[1.01]"
+                                                />
 
                                                 <button
                                                     type="button"

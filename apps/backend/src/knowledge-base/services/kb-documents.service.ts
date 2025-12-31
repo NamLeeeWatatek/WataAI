@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -33,11 +33,12 @@ export class KBDocumentsService {
     private readonly documentRepository: Repository<KbDocumentEntity>,
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
+    @Inject(forwardRef(() => KBManagementService))
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly filesService: FilesService,
     private readonly processingQueue: KBProcessingQueueService,
-  ) {}
+  ) { }
 
   private async extractPdfWithPdf2json(buffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -316,18 +317,13 @@ export class KBDocumentsService {
       await this.filesService.confirmFromUrl(savedDoc.fileUrl);
     }
 
-    const jobId = this.processingQueue.addJob(
+    const jobId = await this.processingQueue.addJob(
       savedDoc.id,
       createDto.knowledgeBaseId,
+      'embedding',
+      userId,
     );
     this.processingQueue.setJobDocumentName(jobId, sanitizedName);
-
-    this.processDocumentWithTracking(savedDoc, kb, jobId).catch((error) => {
-      this.logger.error(
-        `Error processing document ${savedDoc.id}: ${error.message}`,
-      );
-      this.processingQueue.failJob(jobId, error.message);
-    });
 
     return savedDoc;
   }
@@ -518,15 +514,12 @@ export class KBDocumentsService {
       document.processingStatus = KbProcessingStatus.PENDING;
       const savedDoc = await this.documentRepository.save(document);
 
-      const kb = await this.kbManagementService.findOne(
+      await this.processingQueue.addJob(
+        documentId,
         document.knowledgeBaseId,
+        'embedding',
         userId,
       );
-      this.processDocument(savedDoc, kb).catch((error) => {
-        this.logger.error(
-          `Error reprocessing document ${savedDoc.id}: ${error.message}`,
-        );
-      });
 
       return savedDoc;
     }
@@ -576,135 +569,7 @@ export class KBDocumentsService {
     return this.documentRepository.save(document);
   }
 
-  private async processDocumentWithTracking(
-    document: KbDocumentEntity,
-    kb: any,
-    jobId: string,
-  ) {
-    try {
-      this.processingQueue.startJob(jobId);
-      await this.processDocument(document, kb, jobId);
-      this.processingQueue.completeJob(jobId);
-    } catch (error) {
-      this.processingQueue.failJob(jobId, error.message);
-      throw error;
-    }
-  }
-
-  private async processDocument(
-    document: KbDocumentEntity,
-    kb: any,
-    jobId?: string,
-  ) {
-    try {
-      document.processingStatus = KbProcessingStatus.PROCESSING;
-      await this.documentRepository.save(document);
-
-      const content = await this.getDocumentContent(document);
-
-      if (!content || content.length === 0) {
-        throw new Error('Document content is empty');
-      }
-
-      const chunks = await this.embeddingsService.chunkText(
-        content,
-        kb.chunkSize,
-        kb.chunkOverlap,
-      );
-
-      this.logger.log(
-        `ðŸ“„ Document ${document.id}: Created ${chunks.length} chunks`,
-      );
-
-      if (jobId) {
-        this.processingQueue.updateJobProgress(jobId, 0, chunks.length);
-      }
-
-      const batchSize = 100;
-      const chunkEntities: any[] = [];
-
-      for (let i = 0; i < chunks.length; i += batchSize) {
-        const batch = chunks.slice(i, i + batchSize);
-        const entities = batch.map((chunk, index) => {
-          const sanitizedContent = sanitizeText(chunk.content);
-
-          return this.chunkRepository.create({
-            documentId: document.id,
-            knowledgeBaseId: document.knowledgeBaseId,
-            content: sanitizedContent,
-            chunkIndex: i + index,
-            startChar: chunk.startChar,
-            endChar: chunk.endChar,
-            tokenCount: chunk.tokenCount,
-            metadata: sanitizeMetadata({
-              documentName: document.metadata?.originalName || document.name,
-              fileType: document.fileType,
-            }),
-            embeddingStatus: KbProcessingStatus.PENDING,
-          });
-        });
-
-        const saved = await this.chunkRepository.save(entities);
-        chunkEntities.push(...saved);
-
-        this.logger.log(
-          `ðŸ’¾ Saved chunks ${i + 1}-${Math.min(i + batchSize, chunks.length)} of ${chunks.length}`,
-        );
-      }
-
-      // Check if Qdrant/vector service is available before processing embeddings
-      const vectorService = (this.embeddingsService as any).vectorService;
-      if (vectorService) {
-        const connectionOk = await vectorService.testConnection();
-        if (!connectionOk) {
-          this.logger.warn(
-            `âš ï¸ Qdrant service is unavailable for document ${document.id}, skipping vector embeddings`,
-          );
-
-          for (const chunk of chunkEntities) {
-            chunk.embeddingStatus = KbProcessingStatus.SKIPPED;
-            chunk.embeddingError = 'Vector service unavailable';
-          }
-          await this.chunkRepository.save(chunkEntities);
-
-          document.processingStatus = KbProcessingStatus.COMPLETED;
-          document.chunkCount = chunks.length;
-          await this.documentRepository.save(document);
-          this.logger.log(
-            `âœ… Document ${document.id} processed without vector embeddings (Qdrant unavailable)`,
-          );
-          return;
-        }
-      } else {
-        this.logger.error(
-          `âš ï¸ Vector service not found, skipping embeddings processing`,
-        );
-      }
-
-      await this.embeddingsService.processChunksWithProgress(
-        chunkEntities,
-        kb.embeddingModel,
-        (processed, total) => {
-          if (jobId) {
-            this.processingQueue.updateJobProgress(jobId, processed, total);
-          }
-
-          this.logger.log(
-            `âš¡ Processing embeddings: ${processed}/${total} (${Math.round((processed / total) * 100)}%)`,
-          );
-        },
-      );
-
-      document.processingStatus = KbProcessingStatus.COMPLETED;
-      document.chunkCount = chunks.length;
-      await this.documentRepository.save(document);
-
-      this.logger.log(`âœ… Document ${document.id} processed successfully`);
-    } catch (error) {
-      document.processingStatus = KbProcessingStatus.FAILED;
-      document.processingError = error.message;
-      await this.documentRepository.save(document);
-      throw error;
-    }
+  async findOneWithSecurity(documentId: string, userId: string) {
+    return this.findOne(documentId, userId);
   }
 }

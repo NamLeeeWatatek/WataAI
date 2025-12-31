@@ -15,8 +15,8 @@ interface FileUploadProps {
   bucket?: 'images' | 'documents' | 'avatars' | 'videos' | 'audios';
   multiple?: boolean;
   className?: string;
+  compact?: boolean;
 }
-
 export function FileUpload({
   onUploadComplete,
   onUploadError,
@@ -25,6 +25,7 @@ export function FileUpload({
   bucket,
   multiple = false,
   className = '',
+  compact = false,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -35,11 +36,21 @@ export function FileUpload({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    processFile(file);
+    await processFiles(Array.from(files));
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
+    for (const file of files) {
+      await processSingleFile(file);
+    }
+  };
+
+  const processSingleFile = async (file: File) => {
     // Validate
     const validation = fileUploadService.validateFile(file, {
       maxSize,
@@ -88,7 +99,9 @@ export function FileUpload({
       };
 
       const result = await fileUploadService.uploadFile(file, options);
-      const fileUrl = fileUploadService.getFileUrl(result.file.path, targetBucket);
+      // Use the URL returned by the API (downloadSignedUrl or uploadSignedUrl) 
+      // instead of manually constructing it which relies on env vars that might be missing
+      const fileUrl = result.downloadSignedUrl || result.uploadSignedUrl || fileUploadService.getFileUrl(result.file.path, targetBucket);
 
       onUploadComplete?.(fileUrl, result.file);
     } catch (error) {
@@ -96,6 +109,7 @@ export function FileUpload({
     } finally {
       setUploading(false);
       setProgress(0);
+      setPreview(null); // Clear preview after upload
     }
   };
 
@@ -148,12 +162,16 @@ export function FileUpload({
       </div>
 
       {uploading && (
-        <div className="space-y-2 animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Uploading...</span>
-            <span>{progress}%</span>
+        <div className="mt-4 space-y-2 animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex justify-between text-[10px] items-center px-1">
+            <span className="font-bold text-primary uppercase tracking-tight">Uploading {preview?.name}</span>
+            <span className="font-mono font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full">{progress}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress
+            value={progress}
+            className="h-2 w-full bg-primary/10 shadow-inner rounded-full overflow-hidden"
+            indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
+          />
         </div>
       )}
 
@@ -192,6 +210,7 @@ export function FileUpload({
 interface FileDropzoneProps extends Omit<FileUploadProps, 'className'> {
   height?: string;
   className?: string;
+  compact?: boolean;
 }
 
 export function FileDropzone({
@@ -202,14 +221,22 @@ export function FileDropzone({
   bucket,
   height = 'h-64',
   className = '',
+  compact = false,
 }: FileDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [previewName, setPreviewName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  const processFile = async (file: File) => {
+  const processFiles = async (files: File[]) => {
+    for (const file of files) {
+      await processSingleFile(file);
+    }
+  };
+
+  const processSingleFile = async (file: File) => {
     // Validate
     const validation = fileUploadService.validateFile(file, {
       maxSize,
@@ -223,6 +250,7 @@ export function FileDropzone({
 
     setUploading(true);
     setProgress(0);
+    setPreviewName(file.name);
 
     try {
       // Auto-determine bucket
@@ -240,7 +268,9 @@ export function FileDropzone({
       };
 
       const result = await fileUploadService.uploadFile(file, options);
-      const fileUrl = fileUploadService.getFileUrl(result.file.path, targetBucket);
+      // Use the URL returned by the API (downloadSignedUrl or uploadSignedUrl) 
+      // instead of manually constructing it which relies on env vars that might be missing
+      const fileUrl = result.downloadSignedUrl || result.uploadSignedUrl || fileUploadService.getFileUrl(result.file.path, targetBucket);
 
       onUploadComplete?.(fileUrl, result.file);
     } catch (error) {
@@ -248,6 +278,7 @@ export function FileDropzone({
     } finally {
       setUploading(false);
       setProgress(0);
+      setPreviewName('');
     }
   };
 
@@ -266,14 +297,17 @@ export function FileDropzone({
     setIsDragging(false);
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      processFile(files[0]);
+      await processFiles(Array.from(files));
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      processFile(files[0]);
+      await processFiles(Array.from(files));
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -300,41 +334,78 @@ export function FileDropzone({
         />
 
         {uploading ? (
-          <div className="flex flex-col items-center justify-center p-6 w-full max-w-xs mx-auto space-y-4">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <div className="absolute inset-0 border-4 border-muted/30 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-              <span className="text-xs font-bold text-primary">{progress}%</span>
-            </div>
-            <div className="text-center">
-              <p className="font-medium">Uploading...</p>
-              <p className="text-xs text-muted-foreground mt-1">Please wait while we process your file.</p>
-            </div>
+          <div className={cn(
+            "flex flex-col items-center justify-center space-y-2 animate-in fade-in zoom-in-95 duration-500",
+            compact ? "p-2" : "p-8 w-full max-w-md mx-auto space-y-6"
+          )}>
+            {!compact ? (
+              <>
+                <div className="w-full space-y-4">
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 uppercase tracking-wider">
+                        Processing File
+                      </p>
+                      <p className="text-[10px] text-muted-foreground font-medium italic">
+                        Uploading to secure storage...
+                      </p>
+                    </div>
+                    <span className="text-sm font-black text-primary font-mono">{progress}%</span>
+                  </div>
+
+                  <div className="relative pt-1">
+                    <Progress
+                      value={progress}
+                      className="h-3.5 w-full bg-primary/5 shadow-inner border border-primary/10 rounded-full"
+                      indicatorClassName="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 transition-all duration-500 ease-out hover:brightness-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-30 pointer-events-none rounded-full" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-[8px] font-black text-primary">{progress}%</span>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-6 text-center space-y-4">
-            <div className={cn(
-              "w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm border",
-              isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-            )}>
-              <Upload className="w-8 h-8" />
-            </div>
+          <div className={cn(
+            "flex flex-col items-center justify-center text-center",
+            compact ? "p-2" : "p-6 space-y-4"
+          )}>
+            {compact ? (
+              <div className="flex flex-col items-center justify-center gap-1">
+                <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Add</span>
+              </div>
+            ) : (
+              <>
+                <div className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-sm border",
+                  isDragging ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                )}>
+                  <Upload className="w-8 h-8" />
+                </div>
 
-            <div className="space-y-1">
-              <p className="text-sm font-semibold">
-                {isDragging ? "Drop file to upload" : "Click to upload or drag and drop"}
-              </p>
-              <p className="text-xs text-muted-foreground max-w-[240px] mx-auto">
-                Supported: Images, Videos, Audio, PDF, Docs (Max {maxSize / 1024 / 1024}MB)
-              </p>
-            </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold">
+                    {isDragging ? "Drop file to upload" : "Click to upload or drag and drop"}
+                  </p>
+                  <p className="text-xs text-muted-foreground max-w-[240px] mx-auto">
+                    Supported: Images, Videos, Audio, PDF, Docs (Max {maxSize / 1024 / 1024}MB)
+                  </p>
+                </div>
 
-            <div className="flex gap-2 justify-center opacity-60 group-hover:opacity-100 transition-opacity pt-2">
-              <ImageIcon className="w-4 h-4 text-blue-500" />
-              <Video className="w-4 h-4 text-purple-500" />
-              <Music className="w-4 h-4 text-green-500" />
-              <FileText className="w-4 h-4 text-orange-500" />
-            </div>
+                <div className="flex gap-2 justify-center opacity-60 group-hover:opacity-100 transition-opacity pt-2">
+                  <ImageIcon className="w-4 h-4 text-blue-500" />
+                  <Video className="w-4 h-4 text-purple-500" />
+                  <Music className="w-4 h-4 text-green-500" />
+                  <FileText className="w-4 h-4 text-orange-500" />
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

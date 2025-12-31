@@ -4,12 +4,11 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Switch } from '@/components/ui/Switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Plus, Trash2, Settings, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/Dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { toast } from 'sonner';
 
 interface FormBuilderProps {
     config: FormConfig;
@@ -24,9 +23,22 @@ const FIELD_TYPES = [
     { value: 'radio', label: 'Radio Group' },
     { value: 'checkbox', label: 'Checkbox' },
     { value: 'slider', label: 'Slider' },
-    { value: 'file', label: 'File Upload' },
-    { value: 'channel-selector', label: 'Channel Selector' },
+    { value: 'file', label: 'Single File' },
+    { value: 'files', label: 'Multiple Files' },
+    { value: 'multi-select', label: 'Multi-Select' },
+    { value: 'channel-selector', label: 'Channel Selector (Multi)' },
+    { value: 'channel-select', label: 'Channel Picker (Single)' },
+    { value: 'color', label: 'Color Picker' },
+    { value: 'json', label: 'JSON Editor' },
+    { value: 'key-value', label: 'Key-Value Editor' },
 ];
+
+const slugify = (text: string) => {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/(^_|_$)+/g, '');
+};
 
 export function FormBuilder({ config, onChange }: FormBuilderProps) {
     const [editingField, setEditingField] = useState<FormField | null>(null);
@@ -122,9 +134,20 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                             {field.type}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-muted-foreground font-mono mt-0.5 truncate">
-                                        {field.name}
-                                    </p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <code className="text-[10px] text-primary font-mono bg-primary/5 px-1 rounded">
+                                            {`{{${field.name}}}`}
+                                        </code>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`{{${field.name}}}`);
+                                                toast.success(`Copied {{${field.name}}} to clipboard`);
+                                            }}
+                                            className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -162,7 +185,15 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                     <Label>Field Label *</Label>
                                     <Input
                                         value={editingField.label}
-                                        onChange={(e) => setEditingField({ ...editingField, label: e.target.value })}
+                                        onChange={(e) => {
+                                            const label = e.target.value;
+                                            const update: any = { label };
+                                            // Auto-slugify name if name is empty or matches previous slugified label
+                                            if (!editingField.name || editingField.name === slugify(editingField.label)) {
+                                                update.name = slugify(label);
+                                            }
+                                            setEditingField({ ...editingField, ...update });
+                                        }}
                                         placeholder="Display Label"
                                     />
                                 </div>
@@ -202,7 +233,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 />
                             </div>
 
-                            <div className="flex items-center space-x-2 border p-3 rounded">
+                            <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="req"
                                     checked={editingField.validation?.required || false}
@@ -214,22 +245,49 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 <Label htmlFor="req">Required Field</Label>
                             </div>
 
-                            {(editingField.type === 'select' || editingField.type === 'radio') && (
-                                <div className="space-y-2 border p-3 rounded bg-muted/20">
-                                    <Label>Options (Comma separated for now)</Label>
-                                    <Input
-                                        placeholder="Option 1, Option 2, Option 3"
-                                        // Simple string parsing for MVP
-                                        value={editingField.options?.map(o => o.label).join(', ') || ''}
-                                        onChange={(e) => {
-                                            const opts = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                                            setEditingField({
-                                                ...editingField,
-                                                options: opts.map(o => ({ label: o, value: o }))
-                                            })
-                                        }}
-                                    />
-                                    <p className="text-xs text-muted-foreground">Enter options separated by comma.</p>
+                            {(editingField.type === 'select' || editingField.type === 'radio' || editingField.type === 'multi-select') && (
+                                <div className="space-y-3 pt-2">
+                                    <Label>Options</Label>
+                                    <div className="space-y-2">
+                                        {(editingField.options || []).map((option, index) => (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <Input
+                                                    value={option.label}
+                                                    onChange={(e) => {
+                                                        const newOptions = [...(editingField.options || [])];
+                                                        newOptions[index] = { label: e.target.value, value: e.target.value };
+                                                        setEditingField({ ...editingField, options: newOptions });
+                                                    }}
+                                                    placeholder={`Option ${index + 1}`}
+                                                />
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    onClick={() => {
+                                                        const newOptions = [...(editingField.options || [])];
+                                                        newOptions.splice(index, 1);
+                                                        setEditingField({ ...editingField, options: newOptions });
+                                                    }}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full border-dashed"
+                                            onClick={() => {
+                                                const newOptions = [...(editingField.options || [])];
+                                                newOptions.push({ label: '', value: '' });
+                                                setEditingField({ ...editingField, options: newOptions });
+                                            }}
+                                        >
+                                            <Plus className="w-4 h-4 mr-2" /> Add Option
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </div>

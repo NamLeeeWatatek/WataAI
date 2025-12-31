@@ -145,10 +145,11 @@ export class KBCrawlerService {
       { url: startUrl, depth: 0 },
     ];
 
-    const crawlJobId = this.processingQueue.addJob(
+    const crawlJobId = await this.processingQueue.addJob(
       'crawl-' + Date.now(),
       knowledgeBaseId,
       'crawl',
+      userId,
     );
     this.processingQueue.setJobDocumentName(crawlJobId, `Crawl: ${startUrl}`);
     this.processingQueue.startJob(crawlJobId);
@@ -216,18 +217,15 @@ export class KBCrawlerService {
         const savedDoc = await this.documentRepository.save(document);
         documentsCreated++;
 
-        // Start processing asynchronously
-        const jobId = this.processingQueue.addJob(savedDoc.id, knowledgeBaseId);
+        // Start processing asynchronously via BullMQ
+        const jobId = await this.processingQueue.addJob(
+          savedDoc.id,
+          knowledgeBaseId,
+          'embedding',
+          userId,
+        );
         this.processingQueue.setJobDocumentName(jobId, result.title);
         processingStarted++;
-
-        // Don't await - let it process in background
-        this.processDocument(savedDoc, kb, jobId).catch((error) => {
-          this.logger.error(
-            `Error processing document ${savedDoc.id}: ${error.message}`,
-          );
-          this.processingQueue.failJob(jobId, error.message);
-        });
 
         this.logger.log(
           `âœ… Created document from ${url} (${documentsCreated}/${maxPages})`,
@@ -277,91 +275,4 @@ export class KBCrawlerService {
     return { documentsCreated, errors, processingStarted };
   }
 
-  private async processDocument(
-    document: KbDocumentEntity,
-    kb: any,
-    jobId: string,
-  ) {
-    try {
-      this.processingQueue.startJob(jobId);
-
-      // Activity Log - Document Processing Started
-      if (document.createdBy) {
-        await this.auditService.log({
-          userId: document.createdBy,
-          workspaceId: document.workspaceId,
-          action: 'DOCUMENT_PROCESSING',
-          resourceType: 'knowledge-base-document',
-          resourceId: document.id,
-          details: { name: document.name },
-        });
-      }
-
-      document.processingStatus = KbProcessingStatus.PROCESSING;
-      await this.documentRepository.save(document);
-
-      const content = document.content;
-      if (!content || content.length === 0) {
-        throw new Error('Document content is empty');
-      }
-
-      const chunks = await this.embeddingsService.chunkText(
-        content,
-        kb.chunkSize,
-        kb.chunkOverlap,
-      );
-
-      this.logger.log(
-        `ðŸ“„ Document ${document.id}: Created ${chunks.length} chunks`,
-      );
-
-      this.processingQueue.updateJobProgress(jobId, 0, chunks.length);
-
-      const chunkEntities = chunks.map((chunk, index) => {
-        const sanitizedContent = sanitizeText(chunk.content);
-
-        return this.chunkRepository.create({
-          documentId: document.id,
-          knowledgeBaseId: document.knowledgeBaseId,
-          content: sanitizedContent,
-          chunkIndex: index,
-          startChar: chunk.startChar,
-          endChar: chunk.endChar,
-          tokenCount: chunk.tokenCount,
-          metadata: sanitizeMetadata({
-            documentName: document.name,
-            fileType: document.fileType,
-            sourceUrl: document.sourceUrl,
-          }),
-          embeddingStatus: KbProcessingStatus.PENDING,
-        });
-      });
-
-      const savedChunks = await this.chunkRepository.save(chunkEntities);
-
-      await this.embeddingsService.processChunksWithProgress(
-        savedChunks,
-        kb.embeddingModel,
-        (processed, total) => {
-          this.processingQueue.updateJobProgress(jobId, processed, total);
-          this.logger.log(
-            `âš¡ Processing embeddings: ${processed}/${total} (${Math.round((processed / total) * 100)}%)`,
-          );
-        },
-      );
-
-      document.processingStatus = KbProcessingStatus.COMPLETED;
-      document.chunkCount = chunks.length;
-      await this.documentRepository.save(document);
-
-      this.processingQueue.completeJob(jobId);
-      this.logger.log(`âœ… Document ${document.id} processed successfully`);
-    } catch (error) {
-      document.processingStatus = KbProcessingStatus.FAILED;
-      document.processingError = error.message;
-      await this.documentRepository.save(document);
-      this.processingQueue.failJob(jobId, error.message);
-      throw error;
-    }
-  }
 }

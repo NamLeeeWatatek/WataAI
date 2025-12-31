@@ -53,7 +53,7 @@ export const disconnectChannelAsync = createAsyncThunk(
 
 export const deleteConfigAsync = createAsyncThunk(
   'channels/deleteConfig',
-  async (configId: number, { dispatch, rejectWithValue }) => {
+  async (configId: string, { dispatch, rejectWithValue }) => {
     dispatch(setGlobalLoading({ actionId: 'delete-config', isLoading: true, message: 'Deleting configuration' }))
     try {
       await deleteIntegration(configId);
@@ -83,7 +83,7 @@ export const createConfigAsync = createAsyncThunk(
 
 export const updateConfigAsync = createAsyncThunk(
   'channels/updateConfig',
-  async ({ id, data }: { id: number; data: any }, { dispatch, rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: any }, { dispatch, rejectWithValue }) => {
     dispatch(setGlobalLoading({ actionId: 'update-config', isLoading: true, message: 'Updating configuration' }))
     try {
       const config = await updateIntegration(id, data);
@@ -158,7 +158,7 @@ interface ChannelsState {
   // UI state
   activeTab: 'connected' | 'configurations';
   disconnectId: string | null;
-  deleteConfigId: number | null;
+  deleteConfigId: string | null;
   assignBotDialogOpen: boolean;
   selectedChannel: any;
 }
@@ -225,8 +225,8 @@ const channelsSlice = createSlice({
         state.configs[index] = action.payload;
       }
     },
-    removeConfig: (state, action: PayloadAction<number>) => {
-      state.configs = state.configs.filter(c => c.id !== action.payload);
+    removeConfig: (state, action: PayloadAction<string>) => {
+      state.configs = state.configs.filter(c => String(c.id) !== String(action.payload));
     },
 
     // Facebook specific
@@ -270,7 +270,7 @@ const channelsSlice = createSlice({
     setDisconnectId: (state, action: PayloadAction<string | null>) => {
       state.disconnectId = action.payload;
     },
-    setDeleteConfigId: (state, action: PayloadAction<number | null>) => {
+    setDeleteConfigId: (state, action: PayloadAction<string | null>) => {
       state.deleteConfigId = action.payload;
     },
     setAssignBotDialogOpen: (state, action: PayloadAction<boolean>) => {
@@ -318,7 +318,7 @@ const channelsSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteConfigAsync.fulfilled, (state, action) => {
-        state.configs = state.configs.filter(c => c.id !== action.payload);
+        state.configs = state.configs.filter(c => String(c.id) !== String(action.payload));
       })
       .addCase(deleteConfigAsync.rejected, (state, action) => {
         state.error = action.payload as string;

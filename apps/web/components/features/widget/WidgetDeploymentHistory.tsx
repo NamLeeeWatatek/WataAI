@@ -28,20 +28,20 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
         switch (type) {
             case 'publish':
                 return (
-                    <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 group-hover:bg-blue-500/20 transition-all">
-                        <Rocket className={cn(iconClass, "text-blue-500")} />
+                    <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20 group-hover:bg-primary/20 transition-all">
+                        <Rocket className={cn(iconClass, "text-primary")} />
                     </div>
                 );
             case 'rollback':
                 return (
-                    <div className="p-2.5 bg-orange-500/10 rounded-xl border border-orange-500/20 group-hover:bg-orange-500/20 transition-all">
-                        <RotateCcw className={cn(iconClass, "text-orange-500")} />
+                    <div className="p-2.5 bg-warning/10 rounded-xl border border-warning/20 group-hover:bg-warning/20 transition-all">
+                        <RotateCcw className={cn(iconClass, "text-warning")} />
                     </div>
                 );
             case 'canary':
                 return (
-                    <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 group-hover:bg-purple-500/20 transition-all">
-                        <Activity className={cn(iconClass, "text-purple-500")} />
+                    <div className="p-2.5 bg-info/10 rounded-xl border border-info/20 group-hover:bg-info/20 transition-all">
+                        <Activity className={cn(iconClass, "text-info")} />
                     </div>
                 );
             default:
@@ -54,35 +54,34 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
     };
 
     const getStatusBadge = (status: string) => {
-        const badgeBase = "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-sm flex items-center gap-1.5 border transition-all duration-300";
         switch (status) {
             case 'deployed':
                 return (
-                    <div className={cn(badgeBase, "bg-green-500/10 text-green-600 border-green-500/20")}>
-                        <div className="size-1 rounded-full bg-green-500 animate-pulse" />
+                    <Badge variant="default" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
+                        <div className="size-1 rounded-full bg-current animate-pulse mr-1.5" />
                         Live
-                    </div>
+                    </Badge>
                 );
             case 'deploying':
                 return (
-                    <div className={cn(badgeBase, "bg-blue-500/10 text-blue-600 border-blue-500/20")}>
-                        <Clock className="w-3 h-3 animate-spin" />
+                    <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
+                        <Clock className="w-3 h-3 animate-spin mr-1.5" />
                         Syncing
-                    </div>
+                    </Badge>
                 );
             case 'failed':
                 return (
-                    <div className={cn(badgeBase, "bg-destructive/10 text-destructive border-destructive/20")}>
-                        <XCircle className="w-3 h-3" />
+                    <Badge variant="destructive" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
+                        <XCircle className="w-3 h-3 mr-1.5" />
                         Terminated
-                    </div>
+                    </Badge>
                 );
             case 'rolled_back':
                 return (
-                    <div className={cn(badgeBase, "bg-muted text-muted-foreground border-border/40")}>
-                        <RotateCcw className="w-3 h-3" />
+                    <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none opacity-60">
+                        <RotateCcw className="w-3 h-3 mr-1.5" />
                         Reverted
-                    </div>
+                    </Badge>
                 );
             default:
                 return <Badge variant="outline" className="rounded-full text-[10px] font-bold">{status}</Badge>;
@@ -142,10 +141,10 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                 )}
                             </div>
 
-                            <Card className="border border-border/40 shadow-xl group-hover:shadow-2xl transition-all duration-500 bg-card/40 backdrop-blur-md rounded-[2rem] overflow-hidden group-hover:-translate-y-1">
+                            <Card className="overflow-hidden">
                                 <div className={cn(
-                                    "h-1.5 w-full bg-gradient-to-r transition-all duration-500",
-                                    deployment.status === 'deployed' ? "from-primary/60 to-primary/10" : "from-muted/40 to-transparent"
+                                    "h-1.5 w-full transition-all duration-500",
+                                    deployment.status === 'deployed' ? "bg-primary" : "bg-muted"
                                 )} />
 
                                 <CardContent className="p-7">
@@ -156,7 +155,6 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                                     {deployment.deploymentType === 'publish' && 'Synchronized'}
                                                     {deployment.deploymentType === 'rollback' && 'Reverted to'}
                                                     {deployment.deploymentType === 'canary' && 'Canary Flux'}
-                                                    {' '}
                                                     <span className="text-primary font-mono bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10 ml-1">v{deployment.version}</span>
                                                 </h3>
                                                 {getStatusBadge(deployment.status)}
@@ -179,9 +177,9 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
                                         {deployment.trafficPercentage < 100 && (
                                             <div className="flex flex-col items-end gap-2 shrink-0">
                                                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Flux Distribution</div>
-                                                <div className="px-4 py-2 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-600 text-sm font-black">
+                                                <Badge variant="default" className="px-4 py-2 font-black border-none">
                                                     {deployment.trafficPercentage}% Operational
-                                                </div>
+                                                </Badge>
                                             </div>
                                         )}
                                     </div>

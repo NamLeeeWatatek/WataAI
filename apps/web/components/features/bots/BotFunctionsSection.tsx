@@ -27,7 +27,7 @@ export function BotFunctionsSection({ botFunctions, onAdd, onEdit, onDelete }: P
                             Extend your bot's capabilities with custom functions
                         </CardDescription>
                     </div>
-                    <Button onClick={onAdd} size="sm">
+                    <Button onClick={onAdd} size="sm" className="font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         Add Function
                     </Button>
@@ -41,7 +41,7 @@ export function BotFunctionsSection({ botFunctions, onAdd, onEdit, onDelete }: P
                         <p className="text-muted-foreground mb-4 text-sm">
                             Add functions to enable document access, auto-fill, and AI suggestions
                         </p>
-                        <Button onClick={onAdd} variant="outline">
+                        <Button onClick={onAdd} variant="outline" className="font-bold">
                             <Plus className="w-4 h-4 mr-2" />
                             Add Your First Function
                         </Button>

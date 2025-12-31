@@ -3,7 +3,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Grid, List, Search, RefreshCw, Plus, FolderPlus, Upload, Globe, Trash2 } from 'lucide-react';
+import { Grid, List, Search, RefreshCw, Plus, FolderPlus, Upload, Globe } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/Separator';
 
 interface KbToolbarProps {
   searchQuery: string;
@@ -31,12 +33,10 @@ export function KbToolbar({
   onCreateDocument,
   onUploadFile,
   onCrawlWebsite,
-  selectedCount = 0,
-  onDeleteSelected
 }: KbToolbarProps) {
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 border-b">
+    <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 transition-all">
       {/* Search */}
       <div className="relative flex-1 w-full max-w-sm group">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary w-4 h-4" />
@@ -45,82 +45,91 @@ export function KbToolbar({
           placeholder="Search items..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border-border/50 bg-muted/20 focus:bg-background transition-all outline-none h-auto"
+          className="pl-10 h-10 bg-muted/30 border-border/50 focus-visible:ring-primary focus-visible:bg-background transition-all"
         />
       </div>
 
       {/* Controls */}
-      <div className="flex items-center gap-3">
-        {/* Action Buttons */}
+      <div className="flex items-center gap-2 flex-wrap justify-end w-full md:w-auto">
         <Button
           variant="ghost"
           size="icon"
           onClick={onRefresh}
           disabled={isLoading}
-          className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
-          title="Refresh"
+          className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted"
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
         </Button>
 
-        {/* Quick Actions Dropdown */}
+        <Separator orientation="vertical" className="h-6 mx-2 hidden md:block" />
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={onCreateFolder}
-            className="rounded-lg h-9 font-bold"
+            className="h-10 font-semibold px-4"
           >
-            <FolderPlus className="w-4 h-4 mr-2" />
+            <FolderPlus className="w-4 h-4 mr-2 text-primary" />
             Folder
           </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={onCreateDocument}
-            className="rounded-lg h-9 font-bold"
+            className="h-10 font-semibold px-4"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 mr-2 text-primary" />
             Doc
           </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={onUploadFile}
-            className="rounded-lg h-9 font-bold"
+            className="h-10 font-semibold px-4"
           >
-            <Upload className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4 mr-2 text-primary" />
             Upload
           </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={onCrawlWebsite}
-            className="rounded-lg h-9 font-bold"
+            className="h-10 font-semibold px-4"
           >
-            <Globe className="w-4 h-4 mr-2" />
+            <Globe className="w-4 h-4 mr-2 text-primary" />
             Crawl
           </Button>
-          <div className="bg-muted/50 p-1 rounded-xl flex shadow-sm border border-border/40">
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => onViewModeChange('grid')}
-              className={`rounded-lg h-9 w-9 transition-all ${viewMode === 'grid' ? 'bg-background text-primary shadow-sm border border-border/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
-              title="Grid View"
-            >
-              <Grid className="w-5 h-5" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="icon"
-              onClick={() => onViewModeChange('table')}
-              className={`rounded-lg h-9 w-9 transition-all ${viewMode === 'table' ? 'bg-background text-primary shadow-sm border border-border/20' : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
-              title="List View"
-            >
-              <List className="w-5 h-5" />
-            </Button>
-          </div>
+        </div>
+
+        <Separator orientation="vertical" className="h-6 mx-2 hidden md:block" />
+
+        <div className="flex items-center bg-muted/30 p-1 rounded-md border border-border/50">
+          <Button
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => onViewModeChange('grid')}
+            className={cn(
+              "h-8 w-8 transition-all",
+              viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Grid className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => onViewModeChange('table')}
+            className={cn(
+              "h-8 w-8 transition-all",
+              viewMode === 'table' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <List className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

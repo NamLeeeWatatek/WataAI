@@ -156,7 +156,7 @@ export default function BotDetailPage() {
 
     const handleSaveAppearance = async (settings: any) => {
         try {
-            await axiosClient.patch(`/bots/${botId}/widget/appearance`, {
+            await axiosClient.put(`/bots/${botId}/widget/appearance`, {
                 primaryColor: settings.primaryColor,
                 backgroundColor: settings.backgroundColor,
                 botMessageColor: settings.botMessageColor,
@@ -190,8 +190,8 @@ export default function BotDetailPage() {
     }
 
     return (
-        <div className="h-full overflow-y-auto">
-            <div className="max-w-7xl mx-auto p-8">
+        <div className="h-full overflow-y-auto scrollbar-hide">
+            <div className="max-w-[1440px] mx-auto p-4 md:p-8">
                 <PageHeader
                     title={bot.name}
                     description="Configure and manage your chatbot settings"
@@ -203,7 +203,6 @@ export default function BotDetailPage() {
                     <div className="flex items-center gap-3">
                         <Badge
                             variant={bot.isActive ? "default" : "secondary"}
-                            className={bot.isActive ? "bg-green-500 hover:bg-green-600 px-3 py-1 font-bold" : ""}
                         >
                             {bot.isActive ? <Eye className="w-3.5 h-3.5 mr-1.5" /> : <EyeOff className="w-3.5 h-3.5 mr-1.5" />}
                             {bot.isActive ? 'Active' : 'Inactive'}
@@ -212,7 +211,7 @@ export default function BotDetailPage() {
                             onClick={handleSave}
                             disabled={!hasChanges}
                             loading={saving}
-                            className="rounded-xl shadow-lg shadow-primary/20 h-10 px-6 font-bold"
+                            className="font-bold h-10 px-6"
                         >
                             <Save className="w-4 h-4 mr-2" />
                             Save Changes
@@ -221,7 +220,7 @@ export default function BotDetailPage() {
                 </PageHeader>
 
                 {hasChanges && (
-                    <Card className="mb-8 border-amber-500/20 bg-amber-500/5 backdrop-blur-md rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 group">
+                    <Card className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
                         <div className="h-1 w-full bg-amber-500 animate-pulse" />
                         <CardContent className="py-4">
                             <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
@@ -235,7 +234,7 @@ export default function BotDetailPage() {
                 )}
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
-                    <TabsList className="flex flex-wrap h-auto p-1.5 bg-card/30 backdrop-blur-md border border-border/50 gap-1 rounded-2xl shadow-sm">
+                    <TabsList className="flex flex-wrap h-auto">
                         {[
                             { value: 'configuration', label: 'Configuration', icon: BotIcon },
                             { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
@@ -246,9 +245,8 @@ export default function BotDetailPage() {
                             <TabsTrigger
                                 key={tab.value}
                                 value={tab.value}
-                                className="flex items-center gap-2 px-6 py-3 transition-all data-[state=active]:bg-background data-[state=active]:shadow-xl data-[state=active]:ring-1 data-[state=active]:ring-border/50 font-bold text-xs rounded-xl"
                             >
-                                <tab.icon className="w-4 h-4" />
+                                <tab.icon className="w-4 h-4 mr-2" />
                                 {tab.label}
                             </TabsTrigger>
                         ))}
@@ -313,30 +311,34 @@ export default function BotDetailPage() {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                                        <Code className="w-5 h-5 text-primary" />
-                                        Embed Code
-                                    </h3>
-                                    <p className="text-muted-foreground mb-4">Copy this code to install your widget on any website</p>
-                                    <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <div>
+                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                                            <Code className="w-5 h-5 text-primary" />
+                                            Embed Code
+                                        </h3>
+                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Copy this code to install your widget on any website</p>
+                                        <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
+                                    </div>
                                 </div>
 
-                                <div className="space-y-6">
+                                <div className="lg:col-span-1 space-y-8">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
                                             <History className="w-5 h-5 text-primary" />
                                             Versions
                                         </h3>
+                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Manage historical iterations</p>
                                         <WidgetVersionsList botId={botId} versions={versions || []} isLoading={versionsLoading} onRefresh={mutateVersions} />
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
                                             <Clock className="w-5 h-5 text-primary" />
                                             Deployments
                                         </h3>
+                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Recent distribution activity</p>
                                         <WidgetDeploymentHistory deployments={deployments || []} isLoading={deploymentsLoading} />
                                     </div>
                                 </div>

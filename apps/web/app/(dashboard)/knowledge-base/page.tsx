@@ -141,7 +141,7 @@ export default function KnowledgeBasePage() {
                 premium
             >
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => setDialogOpen(true)} className="rounded-lg shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 h-10 px-6 font-bold transition-all active:scale-95">
+                    <Button onClick={() => setDialogOpen(true)} className="font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         New Knowledge Base
                     </Button>
@@ -164,23 +164,24 @@ export default function KnowledgeBasePage() {
                                 setCurrentPage(1);
                             }, 500);
                         }}
-                        className="pl-10 rounded-lg border-border/50 bg-muted/20 focus:bg-background transition-all"
+                        className="pl-10"
                     />
                 </div>
             </div>
 
             {knowledgeBases.length === 0 && !loading ? (
-                <div className="flex flex-col items-center justify-center flex-1 py-12 border-2 border-dashed border-border/40 rounded-lg bg-muted/5 glass">
-                    <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
-                        <Database className="w-10 h-10 text-primary opacity-40" />
+                <div className="flex flex-col items-center justify-center flex-1 py-12 border border-dashed border-border/40 rounded-3xl bg-muted/5 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent pointer-events-none" />
+                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 relative">
+                        <Database className="w-10 h-10 text-primary opacity-60" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2">No knowledge bases found</h3>
-                    <p className="text-muted-foreground mb-8 text-center max-w-sm leading-relaxed">
+                    <h3 className="text-2xl font-black mb-2 tracking-tight">Intelligence Vault Empty</h3>
+                    <p className="text-muted-foreground mb-8 text-center max-w-sm font-medium leading-relaxed">
                         {searchQuery ? 'Adjust your search parameters to locate specific intelligence assets.' : 'Initialize your first knowledge base engine to power your AI agents.'}
                     </p>
-                    <Button onClick={() => setDialogOpen(true)} className="rounded-full px-8 h-12 shadow-xl shadow-primary/20 font-bold bg-primary hover:bg-primary/90">
+                    <Button onClick={() => setDialogOpen(true)} className="px-8 font-bold">
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Intelligence Engine
+                        Construct First Vault
                     </Button>
                 </div>
             ) : (
@@ -189,16 +190,16 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                className="p-6 cursor-pointer hover:shadow-lg transition-shadow group border-border/60 hover:border-border"
+                                className="p-6 cursor-pointer"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-lg border border-white/5 transition-transform group-hover:scale-110" style={{ backgroundColor: kb.color || '#3B82F6' }}>
+                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform group-hover:scale-110" style={{ backgroundColor: kb.color || '#3B82F6' }}>
                                         <Database className="w-6 h-6 text-white" />
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all rounded-full hover:bg-muted/80">
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-all">
                                                 <MoreVertical className="w-4 h-4 text-muted-foreground" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -243,11 +244,11 @@ export default function KnowledgeBasePage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2 bg-primary/5 text-primary border-primary/10">
+                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
                                             {kb.embeddingModel}
                                         </Badge>
                                         {(kb as any).isActive && (
-                                            <Badge variant="success" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
+                                            <Badge variant="default" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
                                                 Active
                                             </Badge>
                                         )}
@@ -275,7 +276,8 @@ export default function KnowledgeBasePage() {
                         />
                     )}
                 </div>
-            )}
+            )
+            }
 
             <KBCollectionDialog
                 open={dialogOpen}
@@ -291,6 +293,6 @@ export default function KnowledgeBasePage() {
                 onConfirm={handleDeleteKnowledgeBase}
                 variant="destructive"
             />
-        </div>
+        </div >
     );
 }

@@ -2,6 +2,8 @@
 
 import { ReactNode } from 'react'
 import { AlertDialogHeader, AlertDialogFooter, AlertDialogDescription, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogTitle } from './AlertDialog'
+import { buttonVariants } from './Button'
+import { cn } from '@/lib/utils'
 
 interface AlertDialogConfirmProps {
   open: boolean
@@ -48,7 +50,7 @@ export function AlertDialogConfirm({
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            className={variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            className={cn(variant === 'destructive' && buttonVariants({ variant: "destructive" }))}
           >
             {confirmText}
           </AlertDialogAction>

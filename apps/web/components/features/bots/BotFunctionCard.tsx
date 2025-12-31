@@ -14,10 +14,10 @@ const FUNCTION_ICONS: Record<string, any> = {
 }
 
 const FUNCTION_COLORS: Record<string, string> = {
-    document_access: 'bg-blue-500',
-    auto_fill: 'bg-green-500',
-    ai_suggest: 'bg-purple-500',
-    custom: 'bg-orange-500',
+    document_access: 'bg-primary/10 text-primary',
+    auto_fill: 'bg-success/10 text-success',
+    ai_suggest: 'bg-info/10 text-info',
+    custom: 'bg-warning/10 text-warning',
 }
 
 export function BotFunctionCard({ botFunction, onEdit, onDelete }: BotFunctionCardProps) {
@@ -29,7 +29,7 @@ export function BotFunctionCard({ botFunction, onEdit, onDelete }: BotFunctionCa
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg ${colorClass} flex items-center justify-center`}>
-                        <Icon className="w-5 h-5 text-white" />
+                        <Icon className="w-5 h-5" />
                     </div>
                     <div>
                         <h4 className="font-semibold">{botFunction.name}</h4>
@@ -45,7 +45,7 @@ export function BotFunctionCard({ botFunction, onEdit, onDelete }: BotFunctionCa
             </p>
 
             <div className="flex items-center gap-2 pt-3 border-t border-border/40">
-                <Button variant="outline" size="sm" className="flex-1" onClick={onEdit}>
+                <Button variant="outline" size="sm" className="flex-1 font-bold" onClick={onEdit}>
                     <Edit2 className="w-4 h-4 mr-2" />
                     Edit
                 </Button>

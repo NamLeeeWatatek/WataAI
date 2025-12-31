@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { UserRole } from '@/types/next-auth'
 
@@ -52,9 +54,9 @@ interface DashboardSidebarProps {
 
 const getTranslatedNavigation = (t: any): NavigationItem[] => [
     { name: t('dashboard.title'), href: '/dashboard', icon: Layout },
-    { name: 'Creation Tools', href: '/creation-tools', icon: Sparkles },
+    { name: t('navigation.creationTools'), href: '/creation-tools', icon: Sparkles },
     // Jobs page removed in favor of global widget
-    { name: 'My Products', href: '/my-products', icon: Package },
+    { name: t('navigation.myProducts'), href: '/my-products', icon: Package },
     // Admin was moved to Header
     { name: t('dashboard.bots'), href: '/bots', icon: Bot },
     { name: t('dashboard.chatAI'), href: '/chat', icon: MessageSquare },
@@ -115,10 +117,10 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
             {/* Header */}
             <div className="h-16 flex items-center px-6">
                 <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                        <Sparkles className="w-4 h-4 text-primary" />
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                        <Sparkles className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-lg font-bold tracking-tight text-foreground">Wata AI</span>
+                    <span className="text-2xl font-black tracking-tighter text-foreground font-display">Wata AI</span>
                 </div>
             </div>
 
@@ -158,13 +160,13 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                     href={item.href as any}
                                     onClick={onCloseSidebar}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-300",
                                         active
-                                            ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/10"
+                                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 translate-x-1"
                                             : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                                     )}
                                 >
-                                    <item.icon className={cn("w-4 h-4", active ? "text-primary" : "opacity-70")} />
+                                    <item.icon className={cn("w-4 h-4", active ? "text-primary-foreground" : "opacity-70")} />
                                     <span>{item.name}</span>
                                 </Link>
                             )}
@@ -196,44 +198,44 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                 })}
             </nav>
 
-            <div className="p-3 border-t border-border/30">
-                <div className="group rounded-xl border border-border/30 bg-card/20 p-3 hover:bg-card/40 transition-all duration-200">
+            <div className="p-3 border-t border-border/20">
+                <Card className="p-3 hover:bg-card/60 transition-all duration-300 overflow-visible">
                     <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="w-9 h-9 border border-border/50">
+                        <Avatar className="w-9 h-9 ring-2 ring-primary/10 shadow-md">
                             <AvatarImage src={user?.avatarUrl || user?.image || ''} />
-                            <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-black">
                                 {getUserInitial()}
                             </AvatarFallback>
                         </Avatar>
-
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium truncate text-foreground">
+                                <p className="text-sm font-bold truncate text-foreground tracking-tight">
                                     {getUserName()}
                                 </p>
-                                {user?.role && (
-                                    <span className="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20 capitalize">
-                                        {getRoleName(user.role)}
-                                    </span>
-                                )}
                             </div>
-                            <p className="text-[11px] text-muted-foreground truncate">
-                                {getUserEmail()}
-                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                {user?.role && (
+                                    <Badge className="px-1.5 py-0 text-[8px] font-black uppercase tracking-wider border-none">
+                                        {getRoleName(user.role)}
+                                    </Badge>
+                                )}
+                                <p className="text-[10px] text-muted-foreground truncate opacity-70">
+                                    {getUserEmail()}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Sign Out Button */}
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full h-8 justify-start text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="w-full h-8 justify-start text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                         onClick={onSignOutConfirm}
                     >
                         <LogOut className="w-3.5 h-3.5 mr-2" />
                         <span>{t('dashboard.signOut')}</span>
                     </Button>
-                </div>
+                </Card>
             </div>
         </aside>
     )
