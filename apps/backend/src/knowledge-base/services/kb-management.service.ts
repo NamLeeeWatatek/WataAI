@@ -13,6 +13,9 @@ import {
 } from '../dto/query-knowledge-base.dto';
 import { IPaginationOptions } from '../../utils/types/pagination-options';
 import { BotKnowledgeBaseEntity } from '../../bots/infrastructure/persistence/relational/entities/bot.entity';
+import { KBDocumentsService } from './kb-documents.service';
+import { Inject, forwardRef } from '@nestjs/common';
+import { KnowledgeBaseDocumentEntity, KbDocumentEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 
 @Injectable()
 export class KBManagementService {
@@ -21,7 +24,11 @@ export class KBManagementService {
     private readonly kbRepository: Repository<KnowledgeBaseEntity>,
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly agentKbRepository: Repository<BotKnowledgeBaseEntity>,
-  ) {}
+    @InjectRepository(KnowledgeBaseDocumentEntity)
+    private readonly documentRepository: Repository<KbDocumentEntity>,
+    @Inject(forwardRef(() => KBDocumentsService))
+    private readonly kbDocumentsService: KBDocumentsService,
+  ) { }
 
   async create(userId: string, createDto: CreateKnowledgeBaseDto) {
     const kb = this.kbRepository.create({
@@ -130,6 +137,21 @@ export class KBManagementService {
 
   async remove(id: string, userId: string) {
     const kb = await this.findOne(id, userId);
+
+    // 1. Delete all documents in this knowledge base (handles chunks and vectors)
+    const documents = await this.documentRepository.find({
+      where: { knowledgeBaseId: id },
+    });
+
+    for (const doc of documents) {
+      try {
+        await this.kbDocumentsService.remove(doc.id, userId);
+      } catch (error) {
+        console.error(`Failed to delete document ${doc.id} during KB removal:`, error);
+      }
+    }
+
+    // 2. Remove the knowledge base itself (DB cascade will handle folders and agent assignments)
     await this.kbRepository.remove(kb);
     return { success: true };
   }

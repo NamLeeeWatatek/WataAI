@@ -1,5 +1,7 @@
 ﻿import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 export interface ProcessingJob {
   id: string;
@@ -13,28 +15,29 @@ export interface ProcessingJob {
   error?: string;
   startedAt?: Date;
   completedAt?: Date;
+  documentName?: string;
 }
 
 @Injectable()
 export class KBProcessingQueueService {
   private readonly logger = new Logger(KBProcessingQueueService.name);
   private jobs = new Map<string, ProcessingJob>();
-  private queue: string[] = [];
-  private processing = false;
-  private readonly maxConcurrent = 3;
-  private activeJobs = new Set<string>();
 
-  constructor(private readonly eventEmitter: EventEmitter2) { }
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    @InjectQueue('kb-processing') private readonly kbQueue: Queue,
+  ) { }
 
-  addJob(
+  async addJob(
     documentId: string,
     knowledgeBaseId: string,
     type: 'embedding' | 'crawl' = 'embedding',
-  ): string {
-    const jobId = `${type}-${documentId}-${Date.now()}`;
+    userId?: string,
+  ): Promise<string> {
+    const internalJobId = `${type}-${documentId}-${Date.now()}`;
 
-    const job: ProcessingJob = {
-      id: jobId,
+    const jobStatus: ProcessingJob = {
+      id: internalJobId,
       documentId,
       knowledgeBaseId,
       status: 'queued',
@@ -44,25 +47,35 @@ export class KBProcessingQueueService {
       type,
     };
 
-    this.jobs.set(jobId, job);
-    this.queue.push(jobId);
+    this.jobs.set(internalJobId, jobStatus);
+    this.logger.log(`📥 Job ${internalJobId} added to memory status and BullMQ`);
 
-    this.logger.log(`ðŸ“‹ Job ${jobId} added to queue`);
-    this.emitJobUpdate(job);
+    // Add to BullMQ
+    await this.kbQueue.add(
+      type === 'embedding' ? 'process-document' : 'crawl-website',
+      {
+        documentId,
+        knowledgeBaseId,
+        userId,
+        internalJobId,
+      },
+      {
+        jobId: internalJobId,
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
 
-    if (!this.processing) {
-      this.processQueue();
-    }
-
-    return jobId;
+    this.emitJobUpdate(jobStatus);
+    return internalJobId;
   }
 
   updateJobProgress(
-    jobId: string,
+    internalJobId: string,
     processedChunks: number,
     totalChunks: number,
   ) {
-    const job = this.jobs.get(jobId);
+    const job = this.jobs.get(internalJobId);
     if (!job) return;
 
     job.processedChunks = processedChunks;
@@ -72,50 +85,43 @@ export class KBProcessingQueueService {
     this.emitJobUpdate(job);
   }
 
-  startJob(jobId: string) {
-    const job = this.jobs.get(jobId);
+  startJob(internalJobId: string) {
+    const job = this.jobs.get(internalJobId);
     if (!job) return;
 
     job.status = 'processing';
     job.startedAt = new Date();
-    this.activeJobs.add(jobId);
 
-    this.logger.log(`â–¶ï¸ Job ${jobId} started processing`);
+    this.logger.log(`▶️ Job ${internalJobId} started processing`);
     this.emitJobUpdate(job);
   }
 
-  completeJob(jobId: string) {
-    const job = this.jobs.get(jobId);
+  completeJob(internalJobId: string) {
+    const job = this.jobs.get(internalJobId);
     if (!job) return;
 
     job.status = 'completed';
     job.progress = 100;
     job.completedAt = new Date();
-    this.activeJobs.delete(jobId);
 
-    this.logger.log(`âœ… Job ${jobId} completed`);
+    this.logger.log(`✅ Job ${internalJobId} completed`);
     this.emitJobUpdate(job);
-
-    this.processQueue();
   }
 
-  failJob(jobId: string, error: string) {
-    const job = this.jobs.get(jobId);
+  failJob(internalJobId: string, error: string) {
+    const job = this.jobs.get(internalJobId);
     if (!job) return;
 
     job.status = 'failed';
     job.error = error;
     job.completedAt = new Date();
-    this.activeJobs.delete(jobId);
 
-    this.logger.error(`âŒ Job ${jobId} failed: ${error}`);
+    this.logger.error(`❌ Job ${internalJobId} failed: ${error}`);
     this.emitJobUpdate(job);
-
-    this.processQueue();
   }
 
-  getJob(jobId: string): ProcessingJob | undefined {
-    return this.jobs.get(jobId);
+  getJob(internalJobId: string): ProcessingJob | undefined {
+    return this.jobs.get(internalJobId);
   }
 
   getJobsByKnowledgeBase(knowledgeBaseId: string): ProcessingJob[] {
@@ -130,34 +136,10 @@ export class KBProcessingQueueService {
     );
   }
 
-  private async processQueue() {
-    if (this.processing) return;
-    this.processing = true;
-
-    while (this.queue.length > 0 && this.activeJobs.size < this.maxConcurrent) {
-      const jobId = this.queue.shift();
-      if (!jobId) continue;
-
-      const job = this.jobs.get(jobId);
-      if (!job) continue;
-    }
-
-    this.processing = false;
-  }
-
-  getNextJob(): ProcessingJob | undefined {
-    if (this.activeJobs.size >= this.maxConcurrent) return undefined;
-
-    const jobId = this.queue.shift();
-    if (!jobId) return undefined;
-
-    return this.jobs.get(jobId);
-  }
-
-  setJobDocumentName(jobId: string, documentName: string) {
-    const job = this.jobs.get(jobId);
+  setJobDocumentName(internalJobId: string, documentName: string) {
+    const job = this.jobs.get(internalJobId);
     if (job) {
-      (job as any).documentName = documentName;
+      job.documentName = documentName;
     }
   }
 
@@ -165,7 +147,7 @@ export class KBProcessingQueueService {
     const payload = {
       jobId: job.id,
       documentId: job.documentId,
-      documentName: (job as any).documentName,
+      documentName: job.documentName,
       knowledgeBaseId: job.knowledgeBaseId,
       status: job.status,
       progress: job.progress,
@@ -176,7 +158,7 @@ export class KBProcessingQueueService {
     };
 
     this.logger.log(
-      `ðŸ”” Emitting job update: ${job.status} ${job.progress}% (${payload.documentName})`,
+      `🔔 Emitting job update: ${job.status} ${job.progress}% (${payload.documentName || job.id})`,
     );
 
     this.eventEmitter.emit('kb.processing.update', payload);

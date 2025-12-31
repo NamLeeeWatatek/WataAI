@@ -7,6 +7,8 @@ import { AuditModule } from '../audit/audit.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 
+import { BullModule } from '@nestjs/bullmq';
+
 import { KnowledgeBaseController } from './knowledge-base.controller';
 import { KnowledgeBaseDocumentsController } from './knowledge-base-documents.controller';
 import { KnowledgeBaseFoldersController } from './knowledge-base-folders.controller';
@@ -24,6 +26,7 @@ import { KBRagService } from './services/kb-rag.service';
 import { KBProcessingQueueService } from './services/kb-processing-queue.service';
 import { KBSyncService } from './services/kb-sync.service';
 import { KBCrawlerService } from './services/kb-crawler.service';
+import { KBProcessor } from './services/kb-processor.service';
 
 import {
   BotEntity,
@@ -50,6 +53,9 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
       BotEntity,
       BotKnowledgeBaseEntity,
     ]),
+    BullModule.registerQueue({
+      name: 'kb-processing',
+    }),
     forwardRef(() => BotsModule),
     AiProvidersModule,
     FilesModule,
@@ -76,6 +82,7 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     KBProcessingQueueService,
     KBSyncService,
     KBCrawlerService,
+    KBProcessor,
     KnowledgeBaseGateway,
   ],
   exports: [

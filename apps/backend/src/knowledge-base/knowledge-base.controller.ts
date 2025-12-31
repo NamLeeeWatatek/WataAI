@@ -54,7 +54,7 @@ export class KnowledgeBaseController {
     private readonly kbRagService: KBRagService,
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
-  ) {}
+  ) { }
 
   @Permissions('kb:List')
   @Get()
@@ -108,6 +108,45 @@ export class KnowledgeBaseController {
   async getOne(@Param('id') id: string, @Request() req) {
     const userId = req.user.id;
     return this.kbService.findOne(id, userId);
+  }
+
+  @Permissions('kb:Get')
+  @Get(':id/content')
+  @ApiOperation({
+    summary: 'Get folders and documents in a specific level',
+  })
+  async getContent(
+    @Param('id') kbId: string,
+    @Query('folderId') folderId: string,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    const effectiveFolderId =
+      folderId === 'null' || !folderId ? null : folderId;
+
+    const folders = await this.foldersService.findAllByParent(
+      kbId,
+      effectiveFolderId,
+      userId,
+    );
+
+    const { data: documents, total } =
+      await this.documentsService.findManyWithPagination({
+        kbId,
+        filterOptions: { folderId: effectiveFolderId },
+        paginationOptions: { page: 1, limit: 100 },
+        userId,
+      });
+
+    const breadcrumbs = effectiveFolderId
+      ? await this.foldersService.getBreadcrumbs(effectiveFolderId, userId)
+      : [];
+
+    return {
+      folders,
+      documents: { data: documents, total },
+      breadcrumbs,
+    };
   }
 
   @Permissions('kb:Update')

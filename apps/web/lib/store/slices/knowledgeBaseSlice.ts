@@ -11,7 +11,6 @@ import type {
 } from '@/lib/types/knowledge-base'
 import {
   getKnowledgeBase,
-  getKBFolders,
   getKBDocuments,
   getKnowledgeBaseStats,
   createKBFolder,
@@ -25,6 +24,7 @@ import {
   uploadKBDocument,
   deleteKBBatch,
   moveKBBatch,
+  getKBContent,
 } from '@/lib/api/knowledge-base'
 import { setGlobalLoading } from './uiSlice'
 
@@ -81,53 +81,61 @@ const initialState: KnowledgeBaseState = {
 
 export const loadKnowledgeBase = createAsyncThunk(
   'knowledgeBase/load',
-  async ({ kbId, folderId, params }: { kbId: string; folderId?: string | null; params?: any }) => {
-    const [kbRes, statsRes, foldersRes, documentsRes] = await Promise.all([
+  async ({ kbId, folderId }: { kbId: string; folderId?: string | null }) => {
+    const [kbRes, statsRes, contentRes] = await Promise.all([
       getKnowledgeBase(kbId),
       getKnowledgeBaseStats(kbId),
-      getKBFolders(kbId),
-      getKBDocuments(kbId, {
-        ...params,
-        filters: JSON.stringify({
-          ...(typeof params?.filters === 'string' ? JSON.parse(params.filters) : params?.filters),
-          folderId: folderId ?? 'null'
-        })
-      }),
+      getKBContent(kbId, folderId),
     ])
 
     const kb = (kbRes as any)?.data || kbRes
     const stats = (statsRes as any)?.data || statsRes
-    const folders = Array.isArray(foldersRes) ? foldersRes : ((foldersRes as any)?.data || [])
+    const { folders, documents, breadcrumbs } = contentRes
 
-    // docs can be paginated or array
-    const docData = (documentsRes as any)?.data || (Array.isArray(documentsRes) ? documentsRes : [])
-    const docTotal = (documentsRes as any)?.total ?? (Array.isArray(documentsRes) ? documentsRes.length : 0)
-
-    return { kb, stats, folders, documents: docData, total: docTotal, folderId: folderId || null }
+    return {
+      kb,
+      stats,
+      folders,
+      documents: documents.data,
+      total: documents.total + folders.length,
+      breadcrumbs,
+      folderId: folderId || null
+    }
   }
 )
 
 export const refreshData = createAsyncThunk(
   'knowledgeBase/refresh',
-  async ({ kbId, folderId, params }: { kbId: string; folderId?: string | null; params?: any }) => {
-    const [statsRes, foldersRes, documentsRes] = await Promise.all([
+  async ({ kbId, folderId }: { kbId: string; folderId?: string | null }) => {
+    const [statsRes, contentRes] = await Promise.all([
       getKnowledgeBaseStats(kbId),
-      getKBFolders(kbId),
-      getKBDocuments(kbId, {
-        ...params,
-        filters: JSON.stringify({
-          ...(typeof params?.filters === 'string' ? JSON.parse(params.filters) : params?.filters),
-          folderId: folderId ?? 'null'
-        })
-      }),
+      getKBContent(kbId, folderId),
     ])
 
     const stats = (statsRes as any)?.data || statsRes
-    const folders = Array.isArray(foldersRes) ? foldersRes : ((foldersRes as any)?.data || [])
-    const docData = (documentsRes as any)?.data || (Array.isArray(documentsRes) ? documentsRes : [])
-    const docTotal = (documentsRes as any)?.total ?? (Array.isArray(documentsRes) ? documentsRes.length : 0)
+    const { folders, documents, breadcrumbs } = contentRes
 
-    return { stats, folders, documents: docData, total: docTotal }
+    return {
+      stats,
+      folders,
+      documents: documents.data,
+      total: documents.total + folders.length,
+      breadcrumbs,
+      folderId: folderId || null
+    }
+  }
+)
+
+export const fetchChildDocuments = createAsyncThunk(
+  'knowledgeBase/fetchChildDocuments',
+  async ({ kbId, folderId }: { kbId: string; folderId: string }, { dispatch }) => {
+    const contentRes = await getKBContent(kbId, folderId);
+
+    // Append unique folders and documents to state
+    dispatch(appendFolders(contentRes.folders));
+    dispatch(appendDocuments(contentRes.documents.data));
+
+    return contentRes;
   }
 )
 
@@ -390,6 +398,13 @@ const knowledgeBaseSlice = createSlice({
       state.documents = [...state.documents, ...uniqueDocs]
     },
 
+    appendFolders: (state, action: PayloadAction<KBFolder[]>) => {
+      const newFolders = action.payload
+      const existingIds = new Set(state.allFolders.map(f => f.id))
+      const uniqueFolders = newFolders.filter(f => !existingIds.has(f.id))
+      state.allFolders = [...state.allFolders, ...uniqueFolders]
+    },
+
     resetState: () => initialState,
   },
 
@@ -404,20 +419,16 @@ const knowledgeBaseSlice = createSlice({
         state.currentKB = action.payload.kb
         state.stats = action.payload.stats
         state.currentFolderId = action.payload.folderId
+        state.breadcrumbs = action.payload.breadcrumbs
 
-        const folders = Array.isArray(action.payload.folders) ? action.payload.folders : []
-        state.allFolders = folders
-
-        if (action.payload.folderId === null) {
-          state.folders = folders.filter(f => !f.parentId && !f.parentFolderId)
-        } else {
-          state.folders = folders.filter(
-            f => f.parentId === action.payload.folderId || f.parentFolderId === action.payload.folderId
-          )
-        }
-
+        state.folders = action.payload.folders
         state.documents = action.payload.documents
         state.totalCount = action.payload.total
+
+        // Populate allFolders cache
+        const newFolders = action.payload.folders
+        const existingIds = new Set(state.allFolders.map(f => f.id))
+        state.allFolders = [...state.allFolders, ...newFolders.filter(f => !existingIds.has(f.id))]
       })
       .addCase(loadKnowledgeBase.rejected, (state, action) => {
         state.loading = false
@@ -427,20 +438,16 @@ const knowledgeBaseSlice = createSlice({
     builder
       .addCase(refreshData.fulfilled, (state, action) => {
         state.stats = action.payload.stats
-
-        const folders = Array.isArray(action.payload.folders) ? action.payload.folders : []
-        state.allFolders = folders
-
-        if (state.currentFolderId === null) {
-          state.folders = folders.filter(f => !f.parentId && !f.parentFolderId)
-        } else {
-          state.folders = folders.filter(
-            f => f.parentId === state.currentFolderId || f.parentFolderId === state.currentFolderId
-          )
-        }
-
+        state.folders = action.payload.folders
         state.documents = action.payload.documents
         state.totalCount = action.payload.total
+        state.breadcrumbs = action.payload.breadcrumbs
+        state.currentFolderId = action.payload.folderId
+
+        // Sync allFolders cache
+        const newFolders = action.payload.folders
+        const existingIds = new Set(state.allFolders.map(f => f.id))
+        state.allFolders = [...state.allFolders, ...newFolders.filter(f => !existingIds.has(f.id))]
       })
 
     builder
@@ -485,8 +492,10 @@ const knowledgeBaseSlice = createSlice({
 
     builder
       .addCase(removeFolder.fulfilled, (state, action) => {
-        state.folders = state.folders.filter(f => f.id !== action.payload)
-        state.selectedIds = state.selectedIds.filter(id => id !== action.payload)
+        const id = action.payload
+        state.folders = state.folders.filter(f => f.id !== id)
+        state.allFolders = state.allFolders.filter(f => f.id !== id)
+        state.selectedIds = state.selectedIds.filter(_id => _id !== id)
       })
       .addCase(removeFolder.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to delete folder'
@@ -494,8 +503,9 @@ const knowledgeBaseSlice = createSlice({
 
     builder
       .addCase(removeDocument.fulfilled, (state, action) => {
-        state.documents = state.documents.filter(d => d.id !== action.payload)
-        state.selectedIds = state.selectedIds.filter(id => id !== action.payload)
+        const id = action.payload
+        state.documents = state.documents.filter(d => d.id !== id)
+        state.selectedIds = state.selectedIds.filter(_id => _id !== id)
       })
       .addCase(removeDocument.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to delete document'
@@ -504,14 +514,12 @@ const knowledgeBaseSlice = createSlice({
     builder
       .addCase(removeBatchItems.fulfilled, (state, action) => {
         const { folderIds, documentIds } = action.payload
-        if (folderIds?.length) {
-          state.folders = state.folders.filter(f => !folderIds.includes(f.id))
-          state.selectedIds = state.selectedIds.filter(id => !folderIds.includes(id))
-        }
-        if (documentIds?.length) {
-          state.documents = state.documents.filter(d => !documentIds.includes(d.id))
-          state.selectedIds = state.selectedIds.filter(id => !documentIds.includes(id))
-        }
+        const removedIds = new Set([...folderIds, ...documentIds])
+
+        state.folders = state.folders.filter(f => !removedIds.has(f.id))
+        state.allFolders = state.allFolders.filter(f => !removedIds.has(f.id))
+        state.documents = state.documents.filter(d => !removedIds.has(d.id))
+        state.selectedIds = state.selectedIds.filter(id => !removedIds.has(id))
       })
       .addCase(removeBatchItems.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to batch delete items'
@@ -552,26 +560,8 @@ export const {
   setCurrentPage,
   resetState,
   appendDocuments,
+  appendFolders,
 } = knowledgeBaseSlice.actions
-
-export const fetchChildDocuments = createAsyncThunk(
-  'knowledgeBase/fetchChildDocuments',
-  async ({ kbId, folderId }: { kbId: string; folderId: string }, { dispatch }) => {
-    // We assume no pagination for child folders/tree view expansion for simplicity usually, or use default limit
-    const documentsRes = await getKBDocuments(kbId, {
-      limit: 100, // Fetch reasonable amount
-      filters: JSON.stringify({
-        folderId: folderId
-      })
-    })
-
-    // Check if response is array or object
-    const docData: KBDocument[] = (documentsRes as any)?.data || (Array.isArray(documentsRes) ? documentsRes : [])
-
-    dispatch(appendDocuments(docData))
-    return docData
-  }
-)
 
 export const selectCurrentKB = (state: { knowledgeBase: KnowledgeBaseState }) => state.knowledgeBase.currentKB
 export const selectStats = (state: { knowledgeBase: KnowledgeBaseState }) => state.knowledgeBase.stats

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Progress } from '@/components/ui/Progress'
 import { Badge } from '@/components/ui/Badge'
-import { FiClock, FiLoader } from 'react-icons/fi'
+import { Clock, Loader2 } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
+import { cn } from '@/lib/utils'
 
 interface ProcessingJob {
     jobId?: string
@@ -48,14 +49,14 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
 
             if (data.knowledgeBaseId !== knowledgeBaseId) return
 
-            setJobs(prevJobs => {
+            setJobs((prevJobs: ProcessingJob[]) => {
                 if (data.status === 'completed' || data.status === 'failed') {
                     setTimeout(() => {
-                        setJobs(prev => prev.filter(j => j.documentId !== data.documentId))
+                        setJobs((prev: ProcessingJob[]) => prev.filter((j: ProcessingJob) => j.documentId !== data.documentId))
                     }, 2000)
                 }
 
-                const existingIndex = prevJobs.findIndex(j => j.documentId === data.documentId)
+                const existingIndex = prevJobs.findIndex((j: ProcessingJob) => j.documentId === data.documentId)
 
                 if (existingIndex >= 0) {
                     const updated = [...prevJobs]
@@ -82,45 +83,62 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
     if (jobs.length === 0) return null
 
     return (
-        <Card className="p-4 mb-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-            <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                    <FiLoader className="w-4 h-4 animate-spin text-blue-600" />
-                    <h4 className="font-medium text-sm">
-                        Processing {jobs.length} document{jobs.length > 1 ? 's' : ''}
-                    </h4>
+        <Card className="p-5 mb-6 bg-card/40 backdrop-blur-md border border-border/50 shadow-premium overflow-hidden relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
+            <div className="relative space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm tracking-tight text-foreground">
+                                Active Processing Queue
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
+                                {jobs.length} Object{jobs.length > 1 ? 's' : ''} in progress
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {jobs.map(job => (
-                    <div key={job.documentId} className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                {job.status === 'queued' && (
-                                    <Badge variant="secondary" className="gap-1 shrink-0">
-                                        <FiClock className="w-3 h-3" />
-                                        Queued
-                                    </Badge>
-                                )}
-                                {job.status === 'processing' && (
-                                    <Badge variant="default" className="gap-1 shrink-0">
-                                        <FiLoader className="w-3 h-3 animate-spin" />
-                                        {job.type === 'crawl' ? 'Crawling' : 'Processing'}
-                                    </Badge>
-                                )}
-                                <span className="text-muted-foreground truncate">
-                                    {job.documentName || 'Document'}
-                                </span>
-                                {job.totalChunks > 0 && (
-                                    <span className="text-xs text-muted-foreground shrink-0">
-                                        {job.processedChunks}/{job.totalChunks} {job.type === 'crawl' ? 'pages' : 'chunks'}
+                <div className="grid gap-4">
+                    {jobs.map((job: ProcessingJob) => (
+                        <div key={job.documentId} className="space-y-2.5 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    {job.status === 'queued' ? (
+                                        <Badge variant="secondary" className="gap-1.5 h-6 bg-amber-500/10 text-amber-500 border-amber-500/20 font-black text-[9px] uppercase tracking-widest">
+                                            <Clock className="w-3 h-3" />
+                                            Queued
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="default" className="gap-1.5 h-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-black text-[9px] uppercase tracking-widest">
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            {job.type === 'crawl' ? 'Crawling' : 'Embedding'}
+                                        </Badge>
+                                    )}
+                                    <span className="font-bold truncate text-foreground/80">
+                                        {job.documentName || 'Processing object...'}
                                     </span>
-                                )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {job.totalChunks > 0 && (
+                                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full">
+                                            {job.processedChunks}/{job.totalChunks}
+                                        </span>
+                                    )}
+                                    <span className="font-black text-primary font-mono">{job.progress}%</span>
+                                </div>
                             </div>
-                            <span className="font-medium shrink-0 ml-2">{job.progress}%</span>
+                            <Progress
+                                value={job.progress}
+                                className="h-2 bg-primary/5 rounded-full overflow-hidden"
+                                indicatorClassName="bg-gradient-to-r from-primary via-primary/80 to-primary/60 transition-all duration-500 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                            />
                         </div>
-                        <Progress value={job.progress} className="h-2" />
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </Card>
     )
