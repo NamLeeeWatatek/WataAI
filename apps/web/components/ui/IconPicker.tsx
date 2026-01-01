@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/Popover"
 import { Input } from "@/components/ui/Input"
 import { ScrollArea } from "@/components/ui/ScrollArea"
-import { icons, Search, Folder } from 'lucide-react'
+import { icons, Folder } from 'lucide-react'
+import { Search } from "@/components/ui/Search"
 import { cn } from "@/lib/utils"
 
 interface IconPickerProps {
@@ -101,17 +102,16 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                     <span className="opacity-80">{value || "Select icon..."}</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 rounded-lg shadow-md animate-in zoom-in-95 duration-200" align="start">
+            <PopoverContent className="w-80 p-0 rounded-xl shadow-md animate-in zoom-in-95 duration-200" align="start">
                 <div className="p-4 border-b border-border">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-                        <Input
-                            placeholder="Search icons..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-10 pl-9 font-medium text-xs rounded-lg border-none focus-visible:ring-0 shadow-none bg-muted/50"
-                        />
-                    </div>
+                    <Search
+                        placeholder="Search icons..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onClear={() => setSearch("")}
+                        variant="ghost"
+                        className="bg-muted/50 rounded-lg"
+                    />
                 </div>
                 <ScrollArea className="h-72">
                     <div className="grid grid-cols-5 gap-2 p-4">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Template } from '@/lib/types/template';
-import { useFileUpload } from '@/lib/hooks/use-file-upload';
+import { CoverUpload } from '@/components/ui/FileUpload';
 import {
     Dialog,
     DialogContent,
@@ -17,11 +17,9 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
-import { Upload, X, Loader2, Image as ImageIcon, Film } from 'lucide-react';
+import { Film, ImageIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { creationToolsApi } from '@/lib/api/creation-tools';
-import { Media } from '@/components/ui/Media';
-import { isVideoUrl } from '@/lib/utils/media';
 import { IconPicker } from '@/components/ui/IconPicker';
 
 interface TemplateDialogProps {
@@ -108,24 +106,11 @@ export function TemplateDialog({
         setPreviewUrl(url);
     };
 
-    const { uploadFile: uploadFileService, uploading: hookUploading } = useFileUpload({
-        bucket: 'images',
-        onSuccess: (url) => {
-            console.log('Upload success, url:', url);
-        }
-    });
+
 
     // ... existing code ...
 
-    const uploadFile = async (file: File): Promise<string> => {
-        try {
-            const result = await uploadFileService(file);
-            return result?.fileUrl || '';
-        } catch (error) {
-            console.error('Upload failed', error);
-            throw error;
-        }
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -134,12 +119,7 @@ export function TemplateDialog({
         try {
             let finalThumbnailUrl = thumbnailUrl;
 
-            // Upload file if selected
-            if (previewFile) {
-                setUploading(true);
-                finalThumbnailUrl = await uploadFile(previewFile);
-                setUploading(false);
-            }
+
 
             await onSave({
                 id: template?.id,
@@ -176,7 +156,7 @@ export function TemplateDialog({
         resetForm();
     };
 
-    const isVideo = isVideoUrl(previewUrl);
+
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -238,62 +218,23 @@ export function TemplateDialog({
                                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                                     {/* Upload Area - Spans 3 cols */}
                                     <div className="sm:col-span-3">
-                                        <label
-                                            htmlFor="thumbnail-upload"
-                                            className={cn(
-                                                'relative flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed transition-all cursor-pointer overflow-hidden',
-                                                'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:bg-accent/50',
-                                                previewUrl ? 'border-solid border-border' : ''
-                                            )}
-                                        >
-                                            {previewUrl ? (
-                                                <div className="relative w-full h-full group">
-                                                    <Media
-                                                        src={previewUrl}
-                                                        alt="Preview"
-                                                        containerClassName="w-full h-full"
-                                                        className="w-full h-full object-cover"
-                                                        autoPlay
-                                                        loop
-                                                        muted
-                                                        playsInline
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                        <Upload className="w-6 h-6 text-white" />
-                                                        <span className="text-white font-medium text-sm">Change</span>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation(); // Stop clicking label
-                                                            setPreviewUrl('');
-                                                            setPreviewFile(null);
-                                                        }}
-                                                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/10 text-white hover:bg-destructive hover:text-white opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
-                                                    >
-                                                        <X className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-4 gap-2">
-                                                    <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                                                        <Upload className="w-5 h-5 text-muted-foreground" />
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-sm font-medium text-foreground">Click to upload</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5">JPG, PNG, GIF, MP4 (Max 10MB)</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </label>
-                                        <input
-                                            id="thumbnail-upload"
-                                            type="file"
+                                        <CoverUpload
+                                            value={previewUrl}
+                                            onUpload={(url, file) => {
+                                                setPreviewUrl(url);
+                                                setThumbnailUrl(url);
+                                                setPreviewFile(file);
+                                            }}
+                                            onDelete={() => {
+                                                setPreviewUrl('');
+                                                setThumbnailUrl('');
+                                                setPreviewFile(null);
+                                            }}
+                                            aspectRatio={16 / 9}
+                                            description="JPG, PNG, GIF, MP4 (Max 10MB)"
                                             accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
-                                            onChange={handleFileSelect}
-                                            className="hidden"
                                         />
+
                                     </div>
 
                                     {/* Info - Spans 2 cols */}

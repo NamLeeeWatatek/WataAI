@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { Search } from '@/components/ui/Search'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Search, MessageSquare } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 import type { QueryResult } from '@/lib/types/knowledge-base'
 
 interface KBQueryDialogProps {
@@ -38,14 +38,15 @@ export function KBQueryDialog({ open, onOpenChange, onQuery }: KBQueryDialogProp
                 </DialogHeader>
                 <div className="space-y-4 flex-1 overflow-auto">
                     <div className="flex gap-2">
-                        <Input
+                        <Search
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e: any) => setQuery(e.target.value)}
                             placeholder="Ask a question..."
                             onKeyDown={(e) => e.key === 'Enter' && handleQuery()}
+                            onClear={() => setQuery('')}
                         />
                         <Button onClick={handleQuery} loading={searching}>
-                            <Search className="w-4 h-4" />
+                            Ask
                         </Button>
                     </div>
 

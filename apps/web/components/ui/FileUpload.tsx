@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { Upload, X, File, Image as ImageIcon, Video, Music, FileText } from 'lucide-react';
+import { Upload, X, File, Image as ImageIcon, Video, Music, FileText, Trash2 } from 'lucide-react';
 import { fileUploadService, type FileUploadOptions } from '@/lib/api/files';
 import { Button } from './Button';
 import { Progress } from './Progress';
@@ -408,6 +408,256 @@ export function FileDropzone({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// --- New Components based on ReUI / User Request ---
+
+interface CoverUploadProps {
+  value?: string;
+  onUpload?: (url: string, file: File) => void;
+  onDelete?: () => void;
+  isLoading?: boolean;
+  className?: string;
+  maxSize?: number;
+  bucket?: FileUploadOptions['bucket'];
+  accept?: string;
+  aspectRatio?: number; // e.g. 21/9 for ultra-wide cover
+  description?: string;
+}
+
+export function CoverUpload({
+  value,
+  onUpload,
+  onDelete,
+  isLoading,
+  className,
+  maxSize = 10 * 1024 * 1024, // 10MB
+  bucket = 'images',
+  accept = 'image/*',
+  aspectRatio = 21 / 9,
+  description = "Recommended size: 1200x514px • Max size: 10MB"
+}: CoverUploadProps) {
+  const [internalLoading, setInternalLoading] = useState(false);
+  const [internalProgress, setInternalProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loading = isLoading || internalLoading;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setInternalLoading(true);
+    setInternalProgress(0);
+
+    try {
+      const options: FileUploadOptions = {
+        bucket,
+        onProgress: (p) => setInternalProgress(p)
+      };
+
+      // Validate
+      const validation = fileUploadService.validateFile(file, { maxSize });
+      if (!validation.valid) throw new Error(validation.error);
+
+      // Upload
+      const result = await fileUploadService.uploadFile(file, options);
+      const fileUrl = result.downloadSignedUrl || result.uploadSignedUrl || fileUploadService.getFileUrl(result.file.path, bucket);
+
+      onUpload?.(fileUrl, result.file as any);
+    } catch (error) {
+      console.error("Upload failed", error);
+      // Ideally use toast here, but keeping dependency minimal inside UI component if possible
+    } finally {
+      setInternalLoading(false);
+      setInternalProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className={cn("w-full group relative overflow-hidden rounded-xl border-2 border-dashed border-muted transition-all hover:bg-muted/5", className)}>
+      {/* Aspect Ratio Container */}
+      <div style={{ aspectRatio }} className="w-full relative bg-muted/20">
+
+        {value ? (
+          <>
+            <img
+              src={value}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-60"
+            />
+
+            {/* Overlay Actions */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="shadow-lg font-semibold"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImageIcon className="mr-2 h-4 w-4" /> Change Cover
+              </Button>
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="shadow-lg h-9 w-9"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer p-6 text-center hover:bg-muted/10 transition-colors"
+            onClick={() => !loading && fileInputRef.current?.click()}
+          >
+            {loading ? (
+              <div className="space-y-4 w-full max-w-xs">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  Uploading... {internalProgress}%
+                </div>
+                <Progress value={internalProgress} className="h-2" />
+              </div>
+            ) : (
+              <>
+                <div className="mb-4 rounded-full bg-muted p-4 ring-1 ring-border shadow-sm group-hover:scale-110 transition-transform">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h4 className="text-sm font-semibold">Click to upload cover</h4>
+                <p className="text-xs text-muted-foreground mt-2 max-w-sm">
+                  {description}
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
+
+interface MultiImageUploadProps {
+  files?: string[]; // Array of URLs
+  onUpload?: (urls: string[]) => void; // Returns updated array
+  onRemove?: (url: string) => void;
+  maxFiles?: number;
+  className?: string;
+  bucket?: FileUploadOptions['bucket'];
+  loading?: boolean;
+}
+
+export function MultiImageUpload({
+  files = [],
+  onUpload,
+  onRemove,
+  maxFiles = 5,
+  className,
+  bucket = 'images',
+  loading
+}: MultiImageUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFiles = e.target.files;
+    if (!rawFiles?.length) return;
+
+    if (files.length + rawFiles.length > maxFiles) {
+      // Handle max files error
+      return;
+    }
+
+    setUploading(true);
+    const newUrls: string[] = [];
+
+    // Simple sequential upload for better error handling visibility
+    for (const file of Array.from(rawFiles)) {
+      try {
+        const validation = fileUploadService.validateFile(file);
+        if (!validation.valid) continue;
+
+        const res = await fileUploadService.uploadFile(file, { bucket });
+        const url = res.downloadSignedUrl || res.uploadSignedUrl || fileUploadService.getFileUrl(res.file.path, bucket);
+        newUrls.push(url);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    if (onUpload) {
+      onUpload([...files, ...newUrls]);
+    }
+
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {files.map((url, idx) => (
+          <div key={idx} className="group relative aspect-square rounded-xl overflow-hidden border bg-background">
+            <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onRemove ? onRemove(url) : onUpload?.(files.filter(f => f !== url))}
+              className="absolute top-1 right-1 p-1.5 bg-background/80 hover:bg-destructive hover:text-white rounded-full text-muted-foreground opacity-0 group-hover:opacity-100 transition-all shadow-sm backdrop-blur-sm"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+
+        {files.length < maxFiles && (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "aspect-square rounded-xl border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-2",
+              uploading && "opacity-50 pointer-events-none"
+            )}
+          >
+            {uploading ? (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <>
+                <Upload className="h-6 w-6 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Upload</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleFiles}
+      />
+      <div className="flex justify-between text-xs text-muted-foreground px-1">
+        <span>{files.length} / {maxFiles} images</span>
+        <span>Max 10MB per file</span>
       </div>
     </div>
   );

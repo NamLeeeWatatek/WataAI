@@ -9,9 +9,9 @@ import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
 import { Template } from '@/lib/types/template';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Search, Sparkles, Filter, icons, Folder, X } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Sparkles, Filter, icons, Folder, X } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { AssignToolDialog } from '@/components/features/creation-tools/AssignToolDialog';
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
 import toast from '@/lib/toast';
@@ -225,7 +225,6 @@ export default function TemplatesPage() {
         <PageShell
             title="Template Library"
             description="Manage reusable templates for your creation tools"
-            icon={Sparkles}
             actions={
                 <Button
                     onClick={() => {
@@ -242,11 +241,10 @@ export default function TemplatesPage() {
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 p-1">
                     <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+                        <Search
                             placeholder="Search templates..."
                             value={searchQuery}
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 const value = e.target.value
                                 setSearchQuery(value)
 
@@ -256,7 +254,11 @@ export default function TemplatesPage() {
                                     setCurrentPage(1)
                                 }, 500)
                             }}
-                            className="pl-9 bg-card/50"
+                            onClear={() => {
+                                setSearchQuery('')
+                                setQuerySearch('')
+                                setCurrentPage(1)
+                            }}
                         />
                     </div>
                     <div className="w-full sm:w-[200px]">

@@ -21,6 +21,7 @@ import { Label } from './Label'
 import { Progress } from './Progress'
 import { cn } from '@/lib/utils'
 import { KeyValueEditor } from './KeyValueEditor'
+import { MultiSelect } from './MultiSelect'
 import { Media } from './Media'
 import { ImagePreview } from './FilePreview'
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media'
@@ -505,55 +506,22 @@ export const DynamicFormField = memo(function DynamicFormField({
                     ? dynamicOptions
                     : (field.options as any[]) || []
 
-                const selectedValues = Array.isArray(currentValue) ? currentValue : []
+                // Format options for MultiSelect component
+                const formattedOptions = multiOptions.map(opt => ({
+                    value: String(typeof opt === 'string' ? opt : opt.value),
+                    label: String(typeof opt === 'string' ? opt : opt.label)
+                }));
+
+                const selectedValues = Array.isArray(currentValue) ? currentValue.map(String) : []
 
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-full justify-between font-normal hover:bg-accent hover:text-accent-foreground"
-                            >
-                                <span className={selectedValues.length === 0 ? "text-muted-foreground" : "text-foreground"}>
-                                    {selectedValues.length === 0
-                                        ? "Select options"
-                                        : `${selectedValues.length} selected`}
-                                </span>
-                                <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto">
-                            {multiOptions.length === 0 && !loadingOptions && (
-                                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                    No options available
-                                </div>
-                            )}
-                            {multiOptions.map((opt: any) => {
-                                const optValue = typeof opt === 'string' ? opt : opt.value
-                                const optLabel = typeof opt === 'string' ? opt : opt.label
-                                const isChecked = selectedValues.includes(String(optValue))
-
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={optValue}
-                                        checked={isChecked}
-                                        onCheckedChange={(checked) => {
-                                            let newValues
-                                            if (checked) {
-                                                newValues = [...selectedValues, String(optValue)]
-                                            } else {
-                                                newValues = selectedValues.filter((v: string) => v !== String(optValue))
-                                            }
-                                            onChange(field.name, newValues)
-                                        }}
-                                    >
-                                        {optLabel}
-                                    </DropdownMenuCheckboxItem>
-                                )
-                            })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <MultiSelect
+                        options={formattedOptions}
+                        value={selectedValues}
+                        onChange={(newValues) => onChange(field.name, newValues)}
+                        placeholder={field.placeholder || "Select options"}
+                        disabled={loadingOptions || field.disabled}
+                    />
                 )
             }
 

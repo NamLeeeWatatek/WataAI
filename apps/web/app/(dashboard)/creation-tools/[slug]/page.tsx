@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { Loader2, ArrowLeft, Sparkles, Check, Search, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X, Eye } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles, Check, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X, Eye } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { useToast } from '@/lib/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
@@ -89,7 +90,10 @@ export default function CreationToolDetailPage() {
                     } else if (field.type === 'checkbox') {
                         schema = z.boolean();
                     } else if (field.type === 'channel-selector') {
-                        schema = z.array(z.string()).min(1, "Please select at least one channel");
+                        schema = z.array(z.string());
+                        if (field.validation?.required) {
+                            schema = (schema as z.ZodArray<any>).min(1, "Please select at least one channel");
+                        }
                         requiresChannels = true;
                     } else if (field.type === 'file') {
                         schema = z.any().refine((val) => val && val.url, "File is required");
@@ -335,12 +339,12 @@ export default function CreationToolDetailPage() {
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                                     <div className="relative w-full sm:max-w-[240px]">
-                                        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-                                        <Input
+                                        <Search
                                             placeholder="Search templates..."
-                                            className="pl-9 h-9"
                                             value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onChange={(e: any) => setSearchQuery(e.target.value)}
+                                            onClear={() => setSearchQuery("")}
+                                            className="h-9"
                                         />
                                     </div>
 
@@ -470,18 +474,7 @@ export default function CreationToolDetailPage() {
                             <ScrollArea className="flex-1 p-5">
                                 <Form {...form}>
                                     <form id="creation-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                        {!selectedTemplate && (
-                                            <div className="p-8 rounded-3xl bg-primary/5 border border-dashed border-primary/20 text-foreground flex flex-col items-center justify-center text-center gap-4 py-16 animate-pulse">
-                                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center relative">
-                                                    <LayoutGrid className="w-8 h-8 text-primary" />
-                                                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping opacity-20" />
-                                                </div>
-                                                <div className="max-w-[200px]">
-                                                    <p className="font-black text-lg tracking-tight">System Ready</p>
-                                                    <p className="text-muted-foreground text-xs mt-1 font-medium italic">Select a structural template to pre-fill variables or accelerate your workflow</p>
-                                                </div>
-                                            </div>
-                                        )}
+
 
                                         {tool.formConfig.fields.map((field) => (
                                             <div key={field.name} className="animate-in fade-in slide-in-from-bottom-2 duration-500">

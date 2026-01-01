@@ -496,7 +496,7 @@ export function ChannelConfigurationsTab({
                         <div className="flex items-center gap-2">
                           <Input
                             readOnly
-                            value={`${origin}/channels/callback`}
+                            value={`${origin}/channels/callback?provider=${configForm.provider || 'facebook'}`}
                             className="bg-background/50 font-mono text-[10px] h-8 truncate"
                           />
                           <Button
@@ -505,7 +505,7 @@ export function ChannelConfigurationsTab({
                             variant="outline"
                             className="h-8 w-8 shrink-0"
                             onClick={() => {
-                              navigator.clipboard.writeText(`${origin}/channels/callback`);
+                              navigator.clipboard.writeText(`${origin}/channels/callback?provider=${configForm.provider || 'facebook'}`);
                               toast.success("Copied OAuth URL");
                             }}
                           >
@@ -519,7 +519,7 @@ export function ChannelConfigurationsTab({
                         <div className="flex items-center gap-2">
                           <Input
                             readOnly
-                            value={`${(process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com').replace(/\/$/, '')}/webhooks/facebook`}
+                            value={`${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '').includes('/v1') ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '') : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '') + '/v1'}/webhooks/facebook`}
                             className="bg-background/50 font-mono text-[10px] h-8 truncate"
                           />
                           <Button
@@ -528,7 +528,8 @@ export function ChannelConfigurationsTab({
                             variant="outline"
                             className="h-8 w-8 shrink-0"
                             onClick={() => {
-                              const url = `${(process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com').replace(/\/$/, '')}/webhooks/facebook`;
+                              const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
+                              const url = `${base.includes('/v1') ? base : base + '/v1'}/webhooks/facebook`;
                               navigator.clipboard.writeText(url);
                               toast.success("Copied Webhook URL");
                             }}

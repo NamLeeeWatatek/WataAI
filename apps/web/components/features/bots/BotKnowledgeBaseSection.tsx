@@ -13,7 +13,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/Dialog';
-import { Database, Plus, Search, Trash2, BookOpen, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Database, Plus, Trash2, BookOpen, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { toast } from 'sonner';
 import axiosClient from '@/lib/axios-client';
 import { cn } from '@/lib/utils';
@@ -228,15 +229,12 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             </DialogHeader>
 
                             <div className="space-y-6 pt-4">
-                                <div className="relative group">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    <Input
-                                        placeholder="Search available knowledge bases..."
-                                        className="pl-10"
-                                        value={availableSearch}
-                                        onChange={(e) => setAvailableSearch(e.target.value)}
-                                    />
-                                </div>
+                                <Search
+                                    placeholder="Search available knowledge bases..."
+                                    value={availableSearch}
+                                    onChange={(e: any) => setAvailableSearch(e.target.value)}
+                                    onClear={() => setAvailableSearch("")}
+                                />
                                 <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                     <DataTable
                                         data={availableToLink.filter(kb =>

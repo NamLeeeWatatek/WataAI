@@ -9,7 +9,6 @@ interface PageShellProps {
     titleClassName?: string
     description?: string
     actions?: React.ReactNode
-    icon?: LucideIcon
     onRefresh?: () => void
     refreshing?: boolean
     className?: string
@@ -23,7 +22,6 @@ export const PageShell = ({
     titleClassName,
     description,
     actions,
-    icon,
     onRefresh,
     refreshing,
     className,
@@ -36,7 +34,6 @@ export const PageShell = ({
                 <PageHeader
                     title={title}
                     description={description}
-                    icon={icon}
                     onRefresh={onRefresh}
                     refreshing={refreshing}
                     className="mb-6 px-1"

@@ -79,18 +79,7 @@ const config: Config = {
 				wide: '0.01em',
 				wider: '0.02em',
 			},
-			fontSize: {
-				'xs': ['0.75rem', { lineHeight: '1.1', letterSpacing: '0' }],
-				'sm': ['0.875rem', { lineHeight: '1.43', letterSpacing: '0.01em' }],
-				'base': ['1rem', { lineHeight: '1.6', letterSpacing: '0' }],
-				'lg': ['1.125rem', { lineHeight: '1.56', letterSpacing: '0.01em' }],
-				'xl': ['1.25rem', { lineHeight: '1.5', letterSpacing: '0' }],
-				'2xl': ['1.5rem', { lineHeight: '1.33', letterSpacing: '0.01em' }],
-				'3xl': ['1.875rem', { lineHeight: '1.27', letterSpacing: '-0.01em' }],
-				'4xl': ['2.25rem', { lineHeight: '1.21', letterSpacing: '-0.02em' }],
-				'5xl': ['3rem', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
-				'6xl': ['3.5rem', { lineHeight: '1.04', letterSpacing: '-0.04em' }],
-			},
+
 			boxShadow: {
 				sm: 'var(--shadow-sm)',
 				DEFAULT: 'var(--shadow)',

@@ -18,7 +18,8 @@ import {
 } from '@/components/ui/Select';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
+import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -476,15 +477,12 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
                     <DialogTitle className="text-base font-semibold">Select Prompt Template</DialogTitle>
                 </DialogHeader>
                 <div className="p-4 space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search templates..."
-                            className="pl-9"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                    <Search
+                        placeholder="Search templates..."
+                        value={search}
+                        onChange={(e: any) => setSearch(e.target.value)}
+                        onClear={() => setSearch('')}
+                    />
                     <div className="h-[300px] overflow-y-auto border rounded-md divide-y">
                         {loading ? (
                             <div className="flex h-full items-center justify-center">

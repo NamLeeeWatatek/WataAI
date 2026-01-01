@@ -4,16 +4,17 @@ import React, { useState } from 'react';
 import axiosClient from '@/lib/axios-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Plus, Edit2, Trash2, Check, Grid, List, Search, Key, Activity, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Terminal, Shield, RefreshCw, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, Grid, List, Key, Activity, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Terminal, Shield, RefreshCw, Loader2 } from 'lucide-react';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
+
 import { DataTable } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { toast } from 'sonner';
 import { AIProviderDialog } from './AIProviderDialog';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
+import { Search } from '@/components/ui/Search';
 
 // Icon mapping utility
 const getProviderIcon = (iconName?: string) => {
@@ -226,16 +227,14 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
 
       {/* Controls Toolbar */}
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between sticky top-0 z-10 bg-background/60 backdrop-blur-xl py-6 border-b border-border/40 group">
-        <div className="relative flex-1 w-full max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-all group-focus-within:text-primary group-focus-within:scale-110 w-4 h-4" />
-          <Input
-            placeholder="Search providers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-
-            className="pl-12"
-          />
-        </div>
+        <Search
+          placeholder="Search providers..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onClear={() => setSearchQuery('')}
+          variant="dashboard"
+          className="max-w-md"
+        />
 
         <div className="bg-muted/10 p-1 rounded-xl flex border border-border/20 backdrop-blur-md">
           <button

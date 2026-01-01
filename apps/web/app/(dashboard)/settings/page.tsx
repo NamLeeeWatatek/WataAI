@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosClient from '@/lib/axios-client';
 import { PageLoading } from '@/components/ui/PageLoading';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import { AIProvidersTab } from '@/components/features/settings/AIProvidersTab';
 import { AISettingsTab } from '@/components/features/settings/AISettingsTab';
 import { AccountTab } from '@/components/features/settings/AccountTab';
@@ -134,19 +134,20 @@ export default function AIModelsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="flex-1 flex flex-col">
-          <div className="px-6 lg:px-8 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-            <TabsList >
+          <TabsHeader>
+            <TabsList variant="pills" className="grid grid-cols-2 md:flex w-full md:w-auto">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
+                  variant="pills"
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
-          </div>
+          </TabsHeader>
 
           <div className="flex-1 p-6 lg:p-8">
             <div className="max-w-screen-2xl mx-auto">

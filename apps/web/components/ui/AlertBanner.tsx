@@ -1,48 +1,39 @@
 import { ReactNode } from 'react'
 import { Info, AlertTriangle, AlertCircle, CheckCircle2, Lightbulb } from 'lucide-react'
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from '@/lib/utils'
 
-export type AlertVariant = 'info' | 'warning' | 'error' | 'success' | 'tip'
+const alertVariants = cva(
+    "p-4 rounded-xl border flex gap-4 items-start transition-all duration-300",
+    {
+        variants: {
+            variant: {
+                info: "bg-info/5 border-info/20 text-info",
+                warning: "bg-warning/5 border-warning/20 text-warning",
+                error: "bg-destructive/5 border-destructive/20 text-destructive",
+                success: "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+                tip: "bg-primary/5 border-primary/20 text-primary",
+            },
+        },
+        defaultVariants: {
+            variant: "info",
+        },
+    }
+)
 
-interface AlertBannerProps {
-    variant?: AlertVariant
+const ICON_MAP = {
+    info: Info,
+    warning: AlertTriangle,
+    error: AlertCircle,
+    success: CheckCircle2,
+    tip: Lightbulb,
+}
+
+interface AlertBannerProps extends VariantProps<typeof alertVariants> {
     title?: string
     children: ReactNode
     icon?: ReactNode
     className?: string
-}
-
-const variantStyles = {
-    info: {
-        container: 'bg-info/10 border-info/20',
-        icon: 'text-info',
-        title: 'text-info',
-        IconComponent: Info
-    },
-    warning: {
-        container: 'bg-warning/10 border-warning/20',
-        icon: 'text-warning',
-        title: 'text-warning',
-        IconComponent: AlertTriangle
-    },
-    error: {
-        container: 'bg-destructive/10 border-destructive/20',
-        icon: 'text-destructive',
-        title: 'text-destructive',
-        IconComponent: AlertCircle
-    },
-    success: {
-        container: 'bg-success/10 border-success/20',
-        icon: 'text-success',
-        title: 'text-success',
-        IconComponent: CheckCircle2
-    },
-    tip: {
-        container: 'bg-primary/10 border-primary/20',
-        icon: 'text-primary',
-        title: 'text-primary',
-        IconComponent: Lightbulb
-    }
 }
 
 export function AlertBanner({
@@ -52,25 +43,20 @@ export function AlertBanner({
     icon,
     className
 }: AlertBannerProps) {
-    const styles = variantStyles[variant]
-    const IconComponent = styles.IconComponent
+    const IconComponent = ICON_MAP[variant as keyof typeof ICON_MAP] || Info
 
     return (
-        <div className={cn(
-            'p-4 rounded-lg border flex gap-3 items-start',
-            styles.container,
-            className
-        )}>
-            <div className={cn('flex-shrink-0 mt-0.5', styles.icon)}>
+        <div className={cn(alertVariants({ variant, className }))}>
+            <div className="flex-shrink-0 mt-0.5">
                 {icon || <IconComponent className="w-5 h-5" />}
             </div>
             <div className="flex-1 min-w-0">
                 {title && (
-                    <h4 className={cn('font-semibold mb-1', styles.title)}>
+                    <h4 className="font-bold mb-1 tracking-tight">
                         {title}
                     </h4>
                 )}
-                <div className="text-sm text-muted-foreground leading-relaxed">
+                <div className="text-sm font-medium opacity-90 leading-relaxed">
                     {children}
                 </div>
             </div>
@@ -78,24 +64,22 @@ export function AlertBanner({
     )
 }
 
-interface AlertInlineProps {
-    variant?: AlertVariant
+interface AlertInlineProps extends VariantProps<typeof alertVariants> {
     children: ReactNode
     className?: string
 }
 
 export function AlertInline({ variant = 'info', children, className }: AlertInlineProps) {
-    const styles = variantStyles[variant]
-    const IconComponent = styles.IconComponent
+    const IconComponent = ICON_MAP[variant as keyof typeof ICON_MAP] || Info
 
     return (
         <div className={cn(
-            'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm',
-            styles.container,
+            "inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all",
+            alertVariants({ variant }),
             className
         )}>
-            <IconComponent className={cn('w-4 h-4 flex-shrink-0', styles.icon)} />
-            <span className="text-muted-foreground">{children}</span>
+            <IconComponent className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="opacity-90">{children}</span>
         </div>
     )
 }
@@ -108,13 +92,13 @@ interface CodeBlockProps {
 
 export function CodeBlock({ children, label, className }: CodeBlockProps) {
     return (
-        <div className={cn('p-4 bg-muted border border-border rounded-lg', className)}>
+        <div className={cn('p-4 bg-muted/30 border border-border/40 rounded-xl overflow-hidden', className)}>
             {label && (
-                <p className="text-xs font-medium text-muted-foreground mb-2">
+                <p className="text-[10px] font-black text-muted-foreground/60 mb-2 uppercase tracking-widest">
                     {label}
                 </p>
             )}
-            <code className="text-sm break-all font-mono">
+            <code className="text-sm break-all font-mono leading-relaxed">
                 {children}
             </code>
         </div>

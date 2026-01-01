@@ -4,13 +4,12 @@ import * as React from 'react'
 import {
   ChevronDown,
   ChevronRight,
-  Search,
   SortAsc,
   SortDesc
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Pagination, type PaginationInfo } from "./Pagination"
-import { Input } from "./Input"
+import { Search as SearchInput } from "./Search"
 import { LoadingLogo } from "./LoadingLogo"
 import { Checkbox } from "./Checkbox"
 
@@ -334,12 +333,11 @@ export function DataTable<T = any>({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {searchable && (
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+              <SearchInput
                 placeholder={searchPlaceholder}
                 value={localSearchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9"
+                onChange={(e: any) => handleSearchChange(e.target.value)}
+                onClear={() => handleSearchChange('')}
               />
             </div>
           )}

@@ -21,9 +21,7 @@ import { useCategories } from '@/lib/hooks/useCategories';
 import { Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { IconPicker } from '@/components/ui/IconPicker';
-import { useFileUpload } from '@/lib/hooks/use-file-upload';
-import { Image } from '@/components/ui/Image';
-import { Upload, X } from 'lucide-react';
+import { CoverUpload } from '@/components/ui/FileUpload';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -99,9 +97,7 @@ export function ToolDialog({
         setActiveTab('general');
     };
 
-    const { uploadFile: uploadFileService } = useFileUpload({
-        bucket: 'images',
-    });
+
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -129,12 +125,7 @@ export function ToolDialog({
         try {
             let finalCoverImage = coverImage;
 
-            if (previewFile) {
-                setUploading(true);
-                const result = await uploadFileService(previewFile);
-                finalCoverImage = result?.fileUrl || '';
-                setUploading(false);
-            }
+
 
             await onSave({
                 id: tool?.id,
@@ -239,61 +230,21 @@ export function ToolDialog({
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Cover Image</Label>
-                                        <div className="flex gap-4 items-start">
-                                            <label
-                                                htmlFor="tool-cover"
-                                                className={cn(
-                                                    "relative flex flex-col items-center justify-center w-full aspect-video rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden",
-                                                    "border-border hover:border-primary/50 hover:bg-muted/50",
-                                                    previewUrl ? "border-solid" : ""
-                                                )}
-                                            >
-                                                {previewUrl ? (
-                                                    <div className="relative w-full h-full group">
-                                                        <Image
-                                                            src={previewUrl}
-                                                            alt="Cover"
-                                                            fill
-                                                            unoptimized
-                                                            className="object-cover"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <Upload className="w-8 h-8 text-white" />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                e.stopPropagation();
-                                                                setPreviewUrl('');
-                                                                setPreviewFile(null);
-                                                                setCoverImage('');
-                                                            }}
-                                                            className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-destructive transition-colors"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex flex-col items-center gap-2 text-muted-foreground p-4">
-                                                        <div className="p-3 rounded-full bg-secondary">
-                                                            <Upload className="w-6 h-6" />
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <p className="text-sm font-medium">Upload Cover</p>
-                                                            <p className="text-[10px]">16:9 Recommended</p>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </label>
-                                            <input
-                                                id="tool-cover"
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleFileSelect}
-                                                className="hidden"
-                                            />
-                                        </div>
+                                        <CoverUpload
+                                            value={previewUrl}
+                                            onUpload={(url, file) => {
+                                                setPreviewUrl(url);
+                                                setCoverImage(url);
+                                                setPreviewFile(file);
+                                            }}
+                                            onDelete={() => {
+                                                setPreviewUrl('');
+                                                setCoverImage('');
+                                                setPreviewFile(null);
+                                            }}
+                                            aspectRatio={16 / 9}
+                                            description="16:9 Recommended"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Description</Label>

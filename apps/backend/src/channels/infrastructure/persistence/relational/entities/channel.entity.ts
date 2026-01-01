@@ -15,9 +15,9 @@ export class ChannelEntity extends WorkspaceOwnedEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'bot_id', type: 'uuid' })
+  @Column({ name: 'bot_id', type: 'uuid', nullable: true })
   @Index()
-  botId: string;
+  botId?: string | null;
 
   @Column({ name: 'connection_id', type: 'uuid', nullable: true })
   @Index()
