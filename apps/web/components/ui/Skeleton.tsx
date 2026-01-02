@@ -15,7 +15,7 @@ function Skeleton({ className, ...props }: SkeletonProps) {
     return (
         <div
             className={cn(
-                'animate-pulse rounded-lg bg-gradient-to-r from-muted/60 via-muted/40 to-muted/60 bg-[length:200%_100%]',
+                'animate-pulse rounded-md bg-gradient-to-r from-muted/60 via-muted/40 to-muted/60 bg-[length:200%_100%]',
                 'animate-shimmer',
                 className
             )}
@@ -56,7 +56,7 @@ export function TableSkeleton({ rows = 5, columns = 4 }: { rows?: number; column
  */
 export function CardSkeleton() {
     return (
-        <div className="p-6 border rounded-xl bg-card shadow-sm">
+        <div className="p-6 border rounded-md bg-card shadow-sm">
             <div className="space-y-4">
                 {/* Title */}
                 <Skeleton className="h-7 w-2/5" />
@@ -135,7 +135,7 @@ export function StatsSkeleton({ count = 4 }: { count?: number }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: count }).map((_, i) => (
-                <div key={`stat-${i}`} className="p-6 border rounded-xl bg-card shadow-sm">
+                <div key={`stat-${i}`} className="p-6 border rounded-md bg-card shadow-sm">
                     <div className="space-y-3">
                         {/* Icon + Label */}
                         <div className="flex items-center gap-2">

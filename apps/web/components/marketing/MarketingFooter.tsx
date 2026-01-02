@@ -28,42 +28,29 @@ const socialLinks = [
 
 export function MarketingFooter() {
     return (
-        <footer className="border-t border-border/40 bg-background/50">
-            <div className="container mx-auto px-4 md:px-8 py-12 md:py-16">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+        <footer className="border-t border-border/50 bg-background pt-20 pb-10">
+            <div className="container mx-auto px-4 md:px-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
                     {/* Brand */}
                     <div className="col-span-2 md:col-span-1">
-                        <Link href="/" className="flex items-center gap-2 mb-4">
-                            <div className="p-2 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-purple-600">
-                                <Sparkles className="w-4 h-4 text-white" />
+                        <Link href="/" className="flex items-center gap-2 mb-6 group">
+                            <div className="p-2 rounded-xl bg-primary/5 border border-border/50 group-hover:bg-primary/10 transition-colors">
+                                <Sparkles className="w-4 h-4 text-primary" />
                             </div>
-                            <span className="font-display font-bold text-lg tracking-tight">
-                                Wata<span className="text-gradient">AI</span>
+                            <span className="font-display font-bold text-xl tracking-tight text-foreground">
+                                WataAI
                             </span>
                         </Link>
-                        <p className="text-sm text-muted-foreground max-w-xs">
-                            Nền tảng AI tự động hóa thông minh cho doanh nghiệp của bạn.
+                        <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+                            The intelligent automation platform for modern businesses. Connect, automate, and scale.
                         </p>
-                        <div className="flex items-center gap-3 mt-4">
-                            {socialLinks.map((social) => (
-                                <a
-                                    key={social.label}
-                                    href={social.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-2 rounded-lg bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                >
-                                    <social.icon className="w-4 h-4" />
-                                    <span className="sr-only">{social.label}</span>
-                                </a>
-                            ))}
-                        </div>
+
                     </div>
 
                     {/* Product Links */}
                     <div>
-                        <h4 className="font-semibold text-sm mb-4">Sản phẩm</h4>
-                        <ul className="space-y-3">
+                        <h4 className="font-semibold text-sm text-foreground mb-6">Product</h4>
+                        <ul className="space-y-4">
                             {footerLinks.product.map((link) => (
                                 <li key={link.href}>
                                     <a
@@ -79,8 +66,8 @@ export function MarketingFooter() {
 
                     {/* Company Links */}
                     <div>
-                        <h4 className="font-semibold text-sm mb-4">Công ty</h4>
-                        <ul className="space-y-3">
+                        <h4 className="font-semibold text-sm text-foreground mb-6">Company</h4>
+                        <ul className="space-y-4">
                             {footerLinks.company.map((link) => (
                                 <li key={link.href}>
                                     <a
@@ -96,8 +83,8 @@ export function MarketingFooter() {
 
                     {/* Legal Links */}
                     <div>
-                        <h4 className="font-semibold text-sm mb-4">Pháp lý</h4>
-                        <ul className="space-y-3">
+                        <h4 className="font-semibold text-sm text-foreground mb-6">Legal</h4>
+                        <ul className="space-y-4">
                             {footerLinks.legal.map((link) => (
                                 <li key={link.href}>
                                     <a
@@ -113,10 +100,24 @@ export function MarketingFooter() {
                 </div>
 
                 {/* Copyright */}
-                <div className="border-t border-border/40 mt-12 pt-8 text-center">
+                <div className="border-t border-border/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
-                        © {new Date().getFullYear()} WataAI. All rights reserved.
+                        © {new Date().getFullYear()} WataAI Inc. All rights reserved.
                     </p>
+                    <div className="flex items-center gap-6">
+                        {socialLinks.map((social) => (
+                            <a
+                                key={social.label}
+                                href={social.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <social.icon className="w-5 h-5" />
+                                <span className="sr-only">{social.label}</span>
+                            </a>
+                        ))}
+                    </div>
                 </div>
             </div>
         </footer>

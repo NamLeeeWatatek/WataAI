@@ -5,8 +5,10 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Line, LineChart } from "recharts"
 import { motion } from "framer-motion"
 
+import { AdminStats } from "@/lib/types"
+
 interface AdminChartsProps {
-    stats: any
+    stats: AdminStats
 }
 
 export function AdminCharts({ stats }: AdminChartsProps) {
@@ -31,7 +33,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
     }
 
     // Prepare Activity Trend Data
-    const activityData = stats?.activityTrend?.map((item: any) => ({
+    const activityData = stats?.activityTrend?.map((item) => ({
         date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         value: item.value,
     })) || []
@@ -43,7 +45,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
     ]
 
     // Top Tools Data
-    const toolsData = stats?.topCreationTools?.map((tool: any) => ({
+    const toolsData = stats?.topCreationTools?.map((tool) => ({
         name: tool.name,
         count: tool.count,
     })) || []
@@ -194,7 +196,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
                                         fill="hsl(var(--primary))"
                                         barSize={30}
                                     >
-                                        {toolsData.map((entry: any, index: number) => (
+                                        {toolsData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fillOpacity={1 - index * 0.15} />
                                         ))}
                                     </Bar>

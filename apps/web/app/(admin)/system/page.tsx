@@ -50,7 +50,6 @@ export default function AdminDashboardPage() {
         <PageShell
             title="System Administration"
             description="Global platform oversight and configuration"
-            icon={Activity}
         >
             <div className="space-y-10 pt-4 pb-20">
                 {/* 1. Quick Actions / Navigation (Streamlined) */}

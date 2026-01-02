@@ -54,12 +54,8 @@ export function ChatInterface({
 
     // Socket for real-time messages - use stable callbacks
     const onNewMessageCallback = useCallback((message: any) => {
-        console.log('[Socket] New message received:', message);
-
         // Only add if it's for this conversation
         if (message.conversationId === conversationId) {
-            console.log('[Socket] Adding new message to Redux store:', message.id);
-
             dispatch(appendMessage({
                 conversationId,
                 message: {
@@ -70,8 +66,6 @@ export function ChatInterface({
                     createdAt: message.sentAt || message.createdAt || new Date().toISOString()
                 }
             }));
-        } else {
-            console.log('[Socket] Message for different conversation, skipping');
         }
     }, [conversationId, dispatch]);
 
@@ -95,13 +89,11 @@ export function ChatInterface({
 
         // Leave previous conversation if exists
         if (currentConversationRef.current && leaveConversation) {
-            console.log('[ChatInterface] Leaving previous conversation:', currentConversationRef.current);
             leaveConversation(currentConversationRef.current);
         }
 
         // Join new conversation
         if (conversationId && joinConversation) {
-            console.log('[ChatInterface] Joining conversation:', conversationId);
             joinConversation(conversationId);
             currentConversationRef.current = conversationId;
         }
@@ -109,7 +101,6 @@ export function ChatInterface({
         return () => {
             // Cleanup on unmount
             if (currentConversationRef.current && leaveConversation) {
-                console.log('[ChatInterface] Leaving conversation on cleanup:', currentConversationRef.current);
                 leaveConversation(currentConversationRef.current);
                 currentConversationRef.current = null;
             }

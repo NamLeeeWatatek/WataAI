@@ -7,10 +7,11 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/Popover"
-import { Input } from "@/components/ui/Input"
 import { ScrollArea } from "@/components/ui/ScrollArea"
-import { icons, Search, Folder } from 'lucide-react'
+import { icons, Folder, LucideIcon } from 'lucide-react'
+import { Search } from "@/components/ui/Search"
 import { cn } from "@/lib/utils"
+import { commonIcons } from "@/lib/constants/icons"
 
 interface IconPickerProps {
     value?: string
@@ -18,73 +19,19 @@ interface IconPickerProps {
     className?: string
 }
 
-const commonIcons = [
-    'Folder',
-    'File',
-    'FileText',
-    'Book',
-    'BookOpen',
-    'Database',
-    'Archive',
-    'Box',
-    'Briefcase',
-    'Clipboard',
-    'Code',
-    'Coffee',
-    'Cpu',
-    'CreditCard',
-    'DollarSign',
-    'Globe',
-    'Grid',
-    'HardDrive',
-    'Hash',
-    'Heart',
-    'Home',
-    'Image',
-    'Inbox',
-    'Layers',
-    'Layout',
-    'LifeBuoy',
-    'List',
-    'Lock',
-    'Mail',
-    'Map',
-    'MessageSquare',
-    'Monitor',
-    'Music',
-    'Package',
-    'Paperclip',
-    'PieChart',
-    'Settings',
-    'ShoppingBag',
-    'ShoppingCart',
-    'Star',
-    'Tag',
-    'Target',
-    'Tool',
-    'TrendingUp',
-    'Truck',
-    'Tv',
-    'User',
-    'Users',
-    'Video',
-    'Zap',
-    'Bot',
-    'Globe2',
-    'Library',
-    'Brain',
-    'Sparkles'
-]
-
 export function IconPicker({ value, onChange, className }: IconPickerProps) {
     const [open, setOpen] = React.useState(false)
     const [search, setSearch] = React.useState("")
 
-    const filteredIcons = commonIcons.filter(icon =>
-        icon.toLowerCase().includes(search.toLowerCase())
-    )
+    const filteredIcons = React.useMemo(() => {
+        return commonIcons.filter(icon =>
+            icon.toLowerCase().includes(search.toLowerCase())
+        )
+    }, [search])
 
-    const SelectedIcon = value && (icons as any)[value] ? (icons as any)[value] : Folder
+    const SelectedIcon = (value && (icons as unknown as Record<string, LucideIcon>)[value])
+        ? (icons as unknown as Record<string, LucideIcon>)[value]
+        : Folder
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -93,7 +40,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-start h-12 pl-4 font-medium hover:bg-accent transition-all rounded-lg", className)}
+                    className={cn("w-full justify-start h-12 pl-4 font-medium hover:bg-accent transition-all rounded-md", className)}
                 >
                     <div className="p-2 rounded bg-primary/10 text-primary mr-3">
                         <SelectedIcon className="w-4 h-4" />
@@ -101,22 +48,21 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                     <span className="opacity-80">{value || "Select icon..."}</span>
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 rounded-lg shadow-md animate-in zoom-in-95 duration-200" align="start">
+            <PopoverContent className="w-80 p-0 rounded-md shadow-md animate-in zoom-in-95 duration-200" align="start">
                 <div className="p-4 border-b border-border">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-                        <Input
-                            placeholder="Search icons..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="h-10 pl-9 font-medium text-xs rounded-lg border-none focus-visible:ring-0 shadow-none bg-muted/50"
-                        />
-                    </div>
+                    <Search
+                        placeholder="Search icons..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onClear={() => setSearch("")}
+                        variant="ghost"
+                        className="bg-muted/50 rounded-md"
+                    />
                 </div>
                 <ScrollArea className="h-72">
                     <div className="grid grid-cols-5 gap-2 p-4">
                         {filteredIcons.map((iconName) => {
-                            const IconComponent = (icons as any)[iconName]
+                            const IconComponent = (icons as unknown as Record<string, LucideIcon>)[iconName]
                             if (!IconComponent) return null;
 
                             return (
@@ -128,7 +74,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                                         setOpen(false)
                                     }}
                                     className={cn(
-                                        "h-auto w-auto aspect-square p-0 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center group relative",
+                                        "h-auto w-auto aspect-square p-0 rounded-md hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center group relative",
                                         value === iconName ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/10 border border-border/50"
                                     )}
                                     title={iconName}

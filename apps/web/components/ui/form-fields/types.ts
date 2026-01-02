@@ -23,6 +23,7 @@ export type NodeProperty = Omit<ApiFormField, 'type' | 'options'> & {
     step?: number
     maxLength?: number
     pattern?: string
+    disabled?: boolean
     properties?: NodeProperty[]
 }
 

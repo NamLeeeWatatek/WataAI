@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { PageShell } from '@/components/layout/PageShell'
 import { CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
 import { Label } from '@/components/ui/Label'
 import { Badge } from '@/components/ui/Badge'
@@ -14,7 +13,8 @@ import { adminApi } from '@/lib/api/admin'
 import { User } from '@/lib/types/user'
 import { RoleEntity } from '@/lib/types/permissions'
 import toast from '@/lib/toast'
-import { Search, MoreHorizontal, Shield, User as UserIcon, CheckCircle } from 'lucide-react'
+import { MoreHorizontal, Shield, User as UserIcon, CheckCircle } from 'lucide-react'
+import { Search } from '@/components/ui/Search'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -201,7 +201,6 @@ export default function AdminUsersPage() {
         <PageShell
             title="User Directory"
             description="Manage your organization's users, roles, and access permissions."
-            icon={UserIcon}
             actions={
                 <Button className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-4">
                     <UserIcon className="w-4 h-4" />
@@ -228,13 +227,12 @@ export default function AdminUsersPage() {
                 {/* Main Content Card */}
                 <div className="rounded-xl border bg-card shadow-sm overflow-hidden flex flex-col">
                     <div className="p-4 border-b bg-muted/20 flex items-center justify-between gap-4">
-                        <div className="relative flex-1 max-w-sm">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
+                        <div className="max-w-sm flex-1">
+                            <Search
                                 placeholder="Search users by name or email..."
-                                className="pl-9 h-9 bg-background border-muted-foreground/20 focus-visible:ring-primary/30"
+                                className="h-9"
                                 value={search}
-                                onChange={(e) => {
+                                onChange={(e: any) => {
                                     const value = e.target.value
                                     setSearch(value)
 
@@ -243,6 +241,11 @@ export default function AdminUsersPage() {
                                         setQuerySearch(value)
                                         setPage(1)
                                     }, 500)
+                                }}
+                                onClear={() => {
+                                    setSearch('')
+                                    setQuerySearch('')
+                                    setPage(1)
                                 }}
                             />
                         </div>

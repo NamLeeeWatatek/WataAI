@@ -96,12 +96,7 @@ function RegisterPageContent() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-sans selection:bg-primary/30 py-12 px-6">
-            {/* Ambient Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000" />
-                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000 delay-700" />
-            </div>
+        <div className="w-full h-full flex items-center justify-center font-sans selection:bg-primary/30 p-6">
 
             <div className="w-full max-w-xl relative z-10 animate-in fade-in zoom-in duration-700">
                 <Card className="p-10 md:p-12 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">

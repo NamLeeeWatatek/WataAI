@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/Badge';
 import {
   Grid,
   List,
-  Search,
   CheckCircle2,
   Settings,
   Trash2,
@@ -38,6 +37,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/date';
+import { Search } from '@/components/ui/Search';
 
 interface Channel {
   id: string;
@@ -167,13 +167,16 @@ export function ConnectedChannelsTab({
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Controls Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
+
+
         <div className="relative flex-1 w-full max-w-sm group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
-          <Input
+          <Search
             placeholder="Search connected channels..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 h-11"
+            onChange={(e: any) => onSearchChange(e.target.value)}
+            onClear={() => onSearchChange("")}
+            className="w-full"
+
           />
         </div>
 

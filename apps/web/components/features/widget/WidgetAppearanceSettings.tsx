@@ -417,6 +417,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                 <div
                                     className={cn(
                                         "absolute flex flex-col shadow-2xl overflow-hidden transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto",
+                                        "font-[family-name:var(--widget-font)] bg-[var(--widget-bg)]",
                                         isPreviewOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"
                                     )}
                                     style={{
@@ -426,14 +427,18 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
                                         width: '310px',
                                         height: '420px',
-                                        fontFamily: settings.fontFamily,
-                                        backgroundColor: settings.backgroundColor,
                                         borderRadius: '24px',
-                                        border: '1px solid rgba(0,0,0,0.05)'
-                                    }}
+                                        border: '1px solid rgba(0,0,0,0.05)',
+                                        // Dynamic Theme Variables
+                                        '--widget-primary': settings.primaryColor,
+                                        '--widget-bg': settings.backgroundColor,
+                                        '--widget-bot-bg': settings.botMessageColor,
+                                        '--widget-bot-text': settings.botMessageTextColor,
+                                        '--widget-font': settings.fontFamily,
+                                    } as React.CSSProperties}
                                 >
                                     {/* Header */}
-                                    <div className="px-5 py-4 flex items-center justify-between text-white shrink-0 shadow-lg relative z-20" style={{ backgroundColor: settings.primaryColor }}>
+                                    <div className="px-5 py-4 flex items-center justify-between text-white shrink-0 shadow-lg relative z-20 bg-[var(--widget-primary)]">
                                         <div className="flex items-center gap-3">
                                             <div className="relative">
                                                 {settings.showAvatar && (
@@ -459,19 +464,14 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="flex gap-3 animate-in slide-in-from-left duration-300">
                                             {settings.showAvatar && (
                                                 <div
-                                                    className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black text-white shadow-lg"
-                                                    style={{ backgroundColor: settings.primaryColor }}
+                                                    className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black text-white shadow-lg bg-[var(--widget-primary)]"
                                                 >
                                                     AI
                                                 </div>
                                             )}
                                             <div className="space-y-1.5 max-w-[85%]">
                                                 <div
-                                                    className="p-3.5 rounded-2xl rounded-tl-none text-sm font-medium shadow-sm border border-black/[0.03]"
-                                                    style={{
-                                                        backgroundColor: settings.botMessageColor,
-                                                        color: settings.botMessageTextColor
-                                                    }}
+                                                    className="p-3.5 rounded-2xl rounded-tl-none text-sm font-medium shadow-sm border border-black/[0.03] bg-[var(--widget-bot-bg)] text-[var(--widget-bot-text)]"
                                                 >
                                                     {settings.welcomeMessage}
                                                 </div>
@@ -485,8 +485,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="flex gap-3 flex-row-reverse animate-in slide-in-from-right duration-300 delay-150">
                                             <div className="space-y-1.5 max-w-[85%]">
                                                 <div
-                                                    className="p-3.5 rounded-2xl rounded-tr-none text-sm font-bold text-white shadow-xl shadow-primary/20"
-                                                    style={{ backgroundColor: settings.primaryColor }}
+                                                    className="p-3.5 rounded-2xl rounded-tr-none text-sm font-bold text-white shadow-xl shadow-primary/20 bg-[var(--widget-primary)]"
                                                 >
                                                     How can you help my business?
                                                 </div>
@@ -503,10 +502,9 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 readOnly
                                             />
                                             <div
-                                                className="absolute right-1.5 top-1.5 bottom-1.5 w-10 flex items-center justify-center transition-all opacity-80 group-focus-within/input:opacity-100 rounded-xl"
-                                                style={{ backgroundColor: settings.primaryColor + '10' }}
+                                                className="absolute right-1.5 top-1.5 bottom-1.5 w-10 flex items-center justify-center transition-all opacity-80 group-focus-within/input:opacity-100 rounded-xl bg-[var(--widget-primary)]/10"
                                             >
-                                                <Send className="w-4 h-4" style={{ color: settings.primaryColor }} />
+                                                <Send className="w-4 h-4 text-[var(--widget-primary)]" />
                                             </div>
                                         </div>
                                         <div className="mt-3 flex items-center justify-center gap-1.5 opacity-30 group-hover:opacity-60 transition-opacity">
@@ -531,7 +529,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                     left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
                                     width: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '52px' : '60px',
                                     height: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '52px' : '60px',
-                                    backgroundColor: settings.primaryColor,
+                                    backgroundColor: settings.primaryColor, // Keep for now as it's separate from container scope
                                     borderRadius: '24px',
                                     color: '#ffffff'
                                 }}

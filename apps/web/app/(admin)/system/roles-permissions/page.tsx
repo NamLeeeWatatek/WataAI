@@ -10,13 +10,13 @@ import {
     Shield,
     ShieldCheck,
     Plus,
-    Search,
     Edit2,
     CheckCircle2,
     Boxes,
     Save,
     Trash2
 } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -231,7 +231,6 @@ export default function RolesPermissionsPage() {
         <PageShell
             title="IAM - Identity & Access Management"
             description="Manage system access control via Roles and Permissions."
-            icon={ShieldCheck}
             actions={
                 activeTab === 'roles' ? (
                     <Button onClick={handleOpenCreateDialog} className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 font-bold rounded-xl">
@@ -272,12 +271,10 @@ export default function RolesPermissionsPage() {
                                 <Card className="flex flex-col h-full border-muted-foreground/20 shadow-sm">
                                     <CardHeader className="p-4 border-b bg-muted/20 shrink-0">
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                            <Input
+                                            <Search
                                                 placeholder="Find role..."
-                                                className="pl-9 h-9 bg-background"
                                                 value={search}
-                                                onChange={(e) => {
+                                                onChange={(e: any) => {
                                                     const val = e.target.value
                                                     setSearch(val)
                                                     if (roleSearchTimerRef.current) clearTimeout(roleSearchTimerRef.current)
@@ -285,6 +282,11 @@ export default function RolesPermissionsPage() {
                                                         setQuerySearch(val)
                                                     }, 500)
                                                 }}
+                                                onClear={() => {
+                                                    setSearch('')
+                                                    setQuerySearch('')
+                                                }}
+                                                className="h-9"
                                             />
                                         </div>
                                     </CardHeader>
@@ -420,12 +422,10 @@ export default function RolesPermissionsPage() {
                                     </CardDescription>
                                 </div>
                                 <div className="relative w-64">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                    <Input
+                                    <Search
                                         placeholder="Search permissions..."
-                                        className="pl-9 h-9 bg-background"
                                         value={permissionSearch}
-                                        onChange={(e) => {
+                                        onChange={(e: any) => {
                                             const val = e.target.value
                                             setPermissionSearch(val)
                                             if (permissionSearchTimerRef.current) clearTimeout(permissionSearchTimerRef.current)
@@ -433,6 +433,11 @@ export default function RolesPermissionsPage() {
                                                 setQueryPermissionSearch(val)
                                             }, 500)
                                         }}
+                                        onClear={() => {
+                                            setPermissionSearch('')
+                                            setQueryPermissionSearch('')
+                                        }}
+                                        className="h-9"
                                     />
                                 </div>
                             </CardHeader>

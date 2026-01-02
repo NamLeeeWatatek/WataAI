@@ -5,28 +5,16 @@ import { MessageCircle, X, Send } from 'lucide-react'
 import { MessageRole } from '@/lib/types/conversations'
 import { Media } from '@/components/ui/Media'
 
+import { BotWidgetConfig } from '@/lib/types/bots'
+
 interface Message {
     role: MessageRole
     content: string
     timestamp: string
-    metadata?: any
+    metadata?: Record<string, unknown>
 }
 
-interface BotConfig {
-    botId: string
-    name: string
-    description?: string
-    avatarUrl?: string
-    welcomeMessage: string
-    placeholderText: string
-    theme: {
-        primaryColor: string
-        position: string
-        buttonSize: string
-        showAvatar: boolean
-        showTimestamp: boolean
-    }
-}
+// BotConfig interface replaced by imported BotWidgetConfig
 
 interface ChatWidgetProps {
     botId: string
@@ -35,7 +23,7 @@ interface ChatWidgetProps {
 
 export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [config, setConfig] = useState<BotConfig | null>(null)
+    const [config, setConfig] = useState<BotWidgetConfig | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -149,14 +137,14 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
             { }
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="fixed z-50 rounded-full shadow-lg transition-all hover:scale-110"
+                className="fixed z-50 rounded-full shadow-lg transition-all hover:scale-110 bg-[var(--widget-primary)]"
                 style={{
-                    backgroundColor: primaryColor,
+                    '--widget-primary': primaryColor,
                     [position.includes('right') ? 'right' : 'left']: '20px',
                     [position.includes('bottom') ? 'bottom' : 'top']: '20px',
                     width: config.theme.buttonSize === 'large' ? '64px' : config.theme.buttonSize === 'small' ? '48px' : '56px',
                     height: config.theme.buttonSize === 'large' ? '64px' : config.theme.buttonSize === 'small' ? '48px' : '56px',
-                }}
+                } as React.CSSProperties}
             >
                 {isOpen ? (
                     <X className="w-6 h-6 text-white mx-auto" />
@@ -170,17 +158,17 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                 <div
                     className="fixed z-50 bg-white rounded-lg shadow-2xl flex flex-col"
                     style={{
+                        '--widget-primary': primaryColor,
                         [position.includes('right') ? 'right' : 'left']: '20px',
                         [position.includes('bottom') ? 'bottom' : 'top']: '100px',
                         width: '380px',
                         height: '600px',
                         maxHeight: 'calc(100vh - 120px)',
-                    }}
+                    } as React.CSSProperties}
                 >
                     { }
                     <div
-                        className="p-4 rounded-t-lg text-white flex items-center gap-3"
-                        style={{ backgroundColor: primaryColor }}
+                        className="p-4 rounded-t-lg text-white flex items-center gap-3 bg-[var(--widget-primary)]"
                     >
                         {config.theme.showAvatar && (
                             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -273,8 +261,9 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                             </button>
                         </div>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
         </>
     )
 }

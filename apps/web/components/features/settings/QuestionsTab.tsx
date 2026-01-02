@@ -3,17 +3,16 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { HelpCircle, Book, MessageCircle, FileText, Search, ExternalLink, Terminal } from 'lucide-react';
-import { Input } from '@/components/ui/Input';
+import { HelpCircle, Book, MessageCircle, FileText, ExternalLink, Terminal } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 
 export function QuestionsTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 transition-colors group-focus-within:text-primary" />
-        <Input
+        <Search
           placeholder="Query the system documentation..."
-          className="pl-12 h-14 text-lg rounded-2xl border-border/50 bg-muted/20 focus:bg-background transition-all shadow-lg shadow-primary/5"
+          inputClassName="pl-12 h-14 text-lg rounded-2xl border-border/50 bg-muted/20 focus-visible:bg-background transition-all shadow-lg shadow-primary/5"
         />
       </div>
 

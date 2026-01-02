@@ -1,7 +1,7 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
- * Channel domain entity - theo schema má»›i
+ * Channel domain entity - theo schema mới
  * Table: channels
  * Fields: id, bot_id, type, name, config, is_active, connected_at, created_by, created_at, updated_at
  */
@@ -9,8 +9,8 @@ export class Channel {
   @ApiProperty({ type: String })
   id: string;
 
-  @ApiProperty({ type: String })
-  botId: string;
+  @ApiPropertyOptional({ type: String })
+  botId?: string | null;
 
   @ApiProperty({
     type: String,

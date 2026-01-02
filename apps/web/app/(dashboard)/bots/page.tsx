@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { PageLoading } from '@/components/ui/PageLoading'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Search } from '@/components/ui/Search'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { IconPicker } from '@/components/ui/IconPicker'
@@ -42,7 +43,6 @@ import {
     RefreshCw,
     Settings,
     Bot as BotIcon,
-    Search,
     LayoutGrid,
     MoreHorizontal
 } from 'lucide-react'
@@ -220,18 +220,19 @@ export default function BotsPage() {
             </PageHeader>
 
             <div className="flex items-center gap-2 max-w-sm">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search bots..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value)
-                            setCurrentPage(1)
-                        }}
-                        className="pl-9 bg-card/40 border-border/40 rounded-xl h-10"
-                    />
-                </div>
+                <Search
+                    placeholder="Search bots..."
+                    value={searchQuery}
+                    onChange={(e: any) => {
+                        setSearchQuery(e.target.value)
+                        setCurrentPage(1)
+                    }}
+                    onClear={() => {
+                        setSearchQuery('')
+                        setCurrentPage(1)
+                    }}
+                    className="w-full"
+                />
             </div>
 
             {loading && bots.length === 0 ? (

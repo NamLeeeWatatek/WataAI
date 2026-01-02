@@ -10,6 +10,7 @@ import { handleFormError } from '@/lib/utils/form-errors'
 export const botFormSchema = z.object({
   name: z.string().min(1, 'Tên bot là bắt buộc'),
   description: z.string().optional(),
+  avatarUrl: z.string().optional().nullable(),
   workspaceId: z.string(),
   defaultLanguage: z.string(),
   timezone: z.string(),
@@ -31,6 +32,7 @@ export function useBotForm(workspaceId: string, bot?: {
   id: string
   name: string
   description?: string
+  avatarUrl?: string | null
   workspaceId: string
   defaultLanguage?: string
   timezone?: string
@@ -42,6 +44,7 @@ export function useBotForm(workspaceId: string, bot?: {
     defaultValues: {
       name: '',
       description: '',
+      avatarUrl: '',
       workspaceId,
       defaultLanguage: 'en',
       timezone: 'UTC',
@@ -54,6 +57,7 @@ export function useBotForm(workspaceId: string, bot?: {
       form.reset({
         name: bot.name || '',
         description: bot.description || '',
+        avatarUrl: bot.avatarUrl || '',
         workspaceId: bot.workspaceId || workspaceId,
         defaultLanguage: bot.defaultLanguage || 'en',
         timezone: bot.timezone || 'UTC',

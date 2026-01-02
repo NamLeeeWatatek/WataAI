@@ -7,7 +7,6 @@ import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useNotificationPreferences } from '@/components/features/notifications/NotificationSettings';
 import {
   MessageSquare,
-  Search,
   Clock,
   CheckCircle2,
   Circle,
@@ -33,6 +32,7 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
 import { Button } from '@/components/ui/Button';
+import { Search } from '@/components/ui/Search';
 import { Input } from '@/components/ui/Input';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
@@ -621,13 +621,13 @@ function ConversationsPageContent() {
             </div>
           </div>
 
-          <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
-            <Input
+          <div className="relative group p-0">
+            <Search
               placeholder="Search conversations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 bg-muted/30 border-border/40 rounded-xl focus:bg-background transition-all"
+              onChange={(e: any) => setSearchQuery(e.target.value)}
+              onClear={() => setSearchQuery("")}
+              className="w-full"
             />
           </div>
 

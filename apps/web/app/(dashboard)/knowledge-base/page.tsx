@@ -7,7 +7,6 @@ import { KBCollectionDialog } from '@/components/features/knowledge-base';
 import {
     Database,
     Plus,
-    Search,
     MoreVertical,
     Edit2,
     Trash2,
@@ -17,6 +16,7 @@ import {
     ChevronRight,
     SearchX
 } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import toast from '@/lib/toast';
 
 import { getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase } from '@/lib/api/knowledge-base';
@@ -149,12 +149,11 @@ export default function KnowledgeBasePage() {
             </PageHeader>
 
             <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-sm group">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors group-focus-within:text-primary" />
-                    <Input
+                <div className="flex items-center gap-4">
+                    <Search
                         placeholder="Search system intelligence..."
                         value={searchQuery}
-                        onChange={(e) => {
+                        onChange={(e: any) => {
                             const val = e.target.value;
                             setSearchQuery(val);
 
@@ -164,7 +163,14 @@ export default function KnowledgeBasePage() {
                                 setCurrentPage(1);
                             }, 500);
                         }}
-                        className="pl-10"
+                        onClear={() => {
+                            setSearchQuery("");
+                            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+                            setQuerySearch("");
+                            setCurrentPage(1);
+                        }}
+                        className="max-w-sm"
+
                     />
                 </div>
             </div>

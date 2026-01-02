@@ -157,7 +157,6 @@ export default function CategoriesPage() {
         <PageShell
             title="Categories"
             description="Manage system-wide categories for tools and content."
-            icon={Folder}
             actions={
                 <Button onClick={() => {
                     setEditingCategory(null)

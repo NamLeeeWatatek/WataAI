@@ -4,13 +4,12 @@ import * as React from 'react'
 import {
   ChevronDown,
   ChevronRight,
-  Search,
   SortAsc,
   SortDesc
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Pagination, type PaginationInfo } from "./Pagination"
-import { Input } from "./Input"
+import { Search as SearchInput } from "./Search"
 import { LoadingLogo } from "./LoadingLogo"
 import { Checkbox } from "./Checkbox"
 
@@ -28,7 +27,7 @@ import {
 // Types for DataTable
 export type SortDirection = 'asc' | 'desc' | null
 
-export interface Column<T = any> {
+export interface Column<T> {
   key: string
   label: React.ReactNode
   sortable?: boolean
@@ -39,7 +38,7 @@ export interface Column<T = any> {
 }
 
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T> {
   // Data from Redux
   data: T[]
   loading?: boolean
@@ -98,7 +97,7 @@ export interface DataTableProps<T = any> {
   getRowCanExpand?: (row: T) => boolean
 }
 
-export function DataTable<T = any>({
+export function DataTable<T>({
   data,
   loading = false,
   error = null,
@@ -334,12 +333,11 @@ export function DataTable<T = any>({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {searchable && (
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+              <SearchInput
                 placeholder={searchPlaceholder}
                 value={localSearchValue}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9"
+                onChange={(e: any) => handleSearchChange(e.target.value)}
+                onClear={() => handleSearchChange('')}
               />
             </div>
           )}
@@ -348,7 +346,7 @@ export function DataTable<T = any>({
       )}
 
       {/* Table */}
-      <div className={cn("rounded-lg border bg-card shadow-sm overflow-hidden", tableClassName)}>
+      <div className={cn("rounded-md border bg-card shadow-sm overflow-hidden", tableClassName)}>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

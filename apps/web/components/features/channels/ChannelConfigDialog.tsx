@@ -50,10 +50,14 @@ export function ChannelConfigDialog({
 
     // Construct simplified callback URL (assuming standard API structure)
     // In a real app, this might come from configuration
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.yourdomain.com';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
     // Remove trailing slash if present
     const cleanApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
-    const callbackUrl = `${cleanApiUrl}/webhooks/facebook`;
+
+    // Ensure the callback URL points to the v1 endpoint where the raw body parser is active
+    const callbackUrl = cleanApiUrl.includes('/v1')
+        ? `${cleanApiUrl}/webhooks/facebook`
+        : `${cleanApiUrl}/v1/webhooks/facebook`;
 
     const form = useForm<z.infer<typeof channelConfigSchema>>({
         resolver: zodResolver(channelConfigSchema),
@@ -105,8 +109,8 @@ export function ChannelConfigDialog({
         setTimeout(() => setCopied(false), 2000)
     }
 
-    // Redirect URL for OAuth
-    const redirectUrl = `${origin}/channels/callback`
+    // Redirect URL for OAuth - must include provider for matching in backend
+    const redirectUrl = `${origin}/channels/callback?provider=${form.watch('provider') || 'facebook'}`
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
     ExecutionFlow,
     ExecutionType,
@@ -18,7 +19,8 @@ import {
 } from '@/components/ui/Select';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, Search, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
+import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -39,6 +41,15 @@ interface ExecutionConfigProps {
     config: ExecutionFlow;
     onChange: (config: ExecutionFlow) => void;
     availableFields?: FormField[];
+}
+
+interface AiModelProvider {
+    providerId: string;
+    providerKey: string;
+    providerName: string;
+    displayName: string;
+    configId?: string;
+    models: string[];
 }
 
 export function ExecutionConfig({ config, onChange, availableFields = [] }: ExecutionConfigProps) {
@@ -228,24 +239,19 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
 
 function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onChange: (c: AiExecutionConfig) => void }) {
     const { workspaceId } = useWorkspace();
-    const [providers, setProviders] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadProviders = async () => {
-            try {
-                const data = workspaceId
-                    ? await aiProvidersApi.getWorkspaceModels(workspaceId)
-                    : await aiProvidersApi.getAvailableModels();
-                setProviders(data);
-            } catch (error) {
-                console.error('Failed to load AI providers:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadProviders();
-    }, []);
+    const fetchProviders = async () => {
+        const data = workspaceId
+            ? await aiProvidersApi.getWorkspaceModels(workspaceId)
+            : await aiProvidersApi.getAvailableModels();
+        return data as AiModelProvider[];
+    };
+
+    const { data: providers = [], isLoading: loading } = useQuery({
+        queryKey: ['ai-providers', 'models', workspaceId],
+        queryFn: fetchProviders,
+        staleTime: 5 * 60 * 1000,
+    });
 
     const selectedProviderData = providers.find(p => p.providerKey === config.provider || p.providerId === config.provider);
     const availableModels = selectedProviderData?.models || [];
@@ -351,7 +357,7 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                         <Label>Method</Label>
                         <Select
                             value={config.method}
-                            onValueChange={(val) => onChange({ ...config, method: val as any })}
+                            onValueChange={(val) => onChange({ ...config, method: val as 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' })}
                         >
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -434,34 +440,24 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
 
 function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) => void }) {
     const [open, setOpen] = useState(false);
-    const [templates, setTemplates] = useState<Template[]>([]);
-    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 500);
     const { workspaceId } = useWorkspace();
 
-    useEffect(() => {
-        if (open && workspaceId) {
-            loadTemplates();
-        }
-    }, [open, debouncedSearch, workspaceId]);
-
-    const loadTemplates = async () => {
-        setLoading(true);
-        try {
+    const { data: templates = [], isLoading: loading } = useQuery({
+        queryKey: ['templates', workspaceId, debouncedSearch],
+        queryFn: async () => {
             const result = await templatesApi.findAll({
                 page: 1,
                 limit: 20,
                 workspaceId,
                 search: debouncedSearch
             });
-            setTemplates(result.data || []);
-        } catch (error) {
-            console.error('Failed to load templates', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return result.data || [];
+        },
+        enabled: open && !!workspaceId,
+        staleTime: 60000,
+    });
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -476,15 +472,12 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
                     <DialogTitle className="text-base font-semibold">Select Prompt Template</DialogTitle>
                 </DialogHeader>
                 <div className="p-4 space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search templates..."
-                            className="pl-9"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+                    <Search
+                        placeholder="Search templates..."
+                        value={search}
+                        onChange={(e: any) => setSearch(e.target.value)}
+                        onClear={() => setSearch('')}
+                    />
                     <div className="h-[300px] overflow-y-auto border rounded-md divide-y">
                         {loading ? (
                             <div className="flex h-full items-center justify-center">

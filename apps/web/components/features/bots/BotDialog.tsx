@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useBotForm } from '@/lib/hooks/useBotForm'
+import { AvatarUpload } from '@/components/ui/AvatarUpload'
 
 interface Bot {
     id: string
@@ -20,6 +21,7 @@ interface Bot {
     workspaceId: string
     defaultLanguage?: string
     timezone?: string
+    avatarUrl?: string | null
 }
 
 interface BotDialogProps {
@@ -52,6 +54,23 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                 {form.formState.errors.root.message}
                             </div>
                         )}
+                        <FormField
+                            control={form.control}
+                            name="avatarUrl"
+                            render={({ field }) => (
+                                <FormItem className="flex flex-col items-center justify-center mb-6">
+                                    <div className="w-32 h-32">
+                                        <AvatarUpload
+                                            value={field.value}
+                                            onChange={(url) => field.onChange(url)}
+                                            size="xl"
+                                            fallback={form.getValues('name') || 'Bot'}
+                                        />
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="name"

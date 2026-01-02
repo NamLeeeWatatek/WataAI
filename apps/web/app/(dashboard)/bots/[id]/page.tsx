@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { Badge } from '@/components/ui/Badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import {
     Save,
     AlertCircle,
@@ -195,7 +195,6 @@ export default function BotDetailPage() {
                 <PageHeader
                     title={bot.name}
                     description="Configure and manage your chatbot settings"
-                    icon={BotIcon}
                     onRefresh={loadBot}
                     refreshing={loading}
                     premium
@@ -233,128 +232,133 @@ export default function BotDetailPage() {
                     </Card>
                 )}
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
-                    <TabsList className="flex flex-wrap h-auto">
-                        {[
-                            { value: 'configuration', label: 'Configuration', icon: BotIcon },
-                            { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
-                            { value: 'channels', label: 'Channels', icon: Palette },
-                            { value: 'widget', label: 'Widget', icon: History },
-                            { value: 'settings', label: 'Settings', icon: Clock }
-                        ].map((tab) => (
-                            <TabsTrigger
-                                key={tab.value}
-                                value={tab.value}
-                            >
-                                <tab.icon className="w-4 h-4 mr-2" />
-                                {tab.label}
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+                    <TabsHeader>
+                        <TabsList variant="pills" className="grid grid-cols-2 md:flex w-full md:w-auto">
+                            {[
+                                { value: 'configuration', label: 'Configuration', icon: BotIcon },
+                                { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
+                                { value: 'channels', label: 'Channels', icon: Palette },
+                                { value: 'widget', label: 'Widget', icon: History },
+                                { value: 'settings', label: 'Settings', icon: Clock }
+                            ].map((tab) => (
+                                <TabsTrigger
+                                    key={tab.value}
+                                    value={tab.value}
+                                    variant="pills"
+                                >
+                                    <tab.icon className="w-4 h-4" />
+                                    {tab.label}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </TabsHeader>
 
-                    <TabsContent value="configuration" className="mt-6">
-                        <BotConfigurationTab formData={formData} onChange={handleChange} workspaceId={bot?.workspaceId} />
-                    </TabsContent>
+                    <div className="space-y-6">
+                        <TabsContent value="configuration" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <BotConfigurationTab formData={formData} onChange={handleChange} workspaceId={bot?.workspaceId} />
+                        </TabsContent>
 
-                    <TabsContent value="knowledge-base" className="mt-6">
-                        <BotKnowledgeBaseSection
-                            botId={botId}
-                            workspaceId={bot?.workspaceId}
-                            onRefresh={loadBot}
-                        />
-                    </TabsContent>
+                        <TabsContent value="knowledge-base" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <BotKnowledgeBaseSection
+                                botId={botId}
+                                workspaceId={bot?.workspaceId}
+                                onRefresh={loadBot}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="channels" className="mt-6">
-                        <BotChannelsSection
-                            botId={botId}
-                            botChannels={botChannels}
-                            onRefresh={loadBot}
-                        />
-                    </TabsContent>
+                        <TabsContent value="channels" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <BotChannelsSection
+                                botId={botId}
+                                botChannels={botChannels}
+                                onRefresh={loadBot}
+                            />
+                        </TabsContent>
 
-                    <TabsContent value="widget" className="mt-6">
-                        <div className="space-y-8">
-                            <div>
-                                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                                    <Palette className="w-6 h-6 text-primary" />
-                                    Appearance
-                                </h2>
-                                <p className="text-muted-foreground mb-6">Customize the visual appearance and messaging of your chat widget</p>
+                        <TabsContent value="widget" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="space-y-8">
+                                <div>
+                                    <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3">
+                                        <Palette className="w-6 h-6 text-primary" />
+                                        Widget Appearance
+                                    </h2>
+                                    <p className="text-sm font-medium text-muted-foreground/60 mb-8">Customize the visual identity and messaging protocol of your chat widget</p>
 
-                                {!botSettings ? (
-                                    <Card>
-                                        <CardContent className="py-8">
-                                            <div className="text-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                                                <p className="text-muted-foreground">Loading appearance settings...</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ) : (
-                                    <WidgetAppearanceSettings
-                                        botId={botId}
-                                        currentSettings={{
-                                            primaryColor: botSettings.primaryColor,
-                                            backgroundColor: botSettings.backgroundColor,
-                                            botMessageColor: botSettings.botMessageColor,
-                                            botMessageTextColor: botSettings.botMessageTextColor,
-                                            fontFamily: botSettings.fontFamily,
-                                            widgetPosition: botSettings.widgetPosition,
-                                            widgetButtonSize: botSettings.widgetButtonSize,
-                                            welcomeMessage: botSettings.welcomeMessage,
-                                            placeholderText: botSettings.placeholderText,
-                                            showAvatar: botSettings.showAvatar,
-                                            showTimestamp: botSettings.showTimestamp,
-                                        }}
-                                        onSave={handleSaveAppearance}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div>
-                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                            <Code className="w-5 h-5 text-primary" />
-                                            Embed Code
-                                        </h3>
-                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Copy this code to install your widget on any website</p>
-                                        <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
-                                    </div>
+                                    {!botSettings ? (
+                                        <Card className="border-dashed">
+                                            <CardContent className="py-16">
+                                                <div className="text-center">
+                                                    <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
+                                                    <p className="text-sm font-bold text-muted-foreground tracking-tight">Synchronizing appearance protocol...</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ) : (
+                                        <WidgetAppearanceSettings
+                                            botId={botId}
+                                            currentSettings={{
+                                                primaryColor: botSettings.primaryColor,
+                                                backgroundColor: botSettings.backgroundColor,
+                                                botMessageColor: botSettings.botMessageColor,
+                                                botMessageTextColor: botSettings.botMessageTextColor,
+                                                fontFamily: botSettings.fontFamily,
+                                                widgetPosition: botSettings.widgetPosition,
+                                                widgetButtonSize: botSettings.widgetButtonSize,
+                                                welcomeMessage: botSettings.welcomeMessage,
+                                                placeholderText: botSettings.placeholderText,
+                                                showAvatar: botSettings.showAvatar,
+                                                showTimestamp: botSettings.showTimestamp,
+                                            }}
+                                            onSave={handleSaveAppearance}
+                                        />
+                                    )}
                                 </div>
 
-                                <div className="lg:col-span-1 space-y-8">
-                                    <div>
-                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                            <History className="w-5 h-5 text-primary" />
-                                            Versions
-                                        </h3>
-                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Manage historical iterations</p>
-                                        <WidgetVersionsList botId={botId} versions={versions || []} isLoading={versionsLoading} onRefresh={mutateVersions} />
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8 border-t border-border/40">
+                                    <div className="lg:col-span-2 space-y-6">
+                                        <div>
+                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                                                <Code className="w-5 h-5 text-primary" />
+                                                Integration Protocol
+                                            </h3>
+                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Deploy this script to your host environment to enable the widget</p>
+                                            <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                            <Clock className="w-5 h-5 text-primary" />
-                                            Deployments
-                                        </h3>
-                                        <p className="text-sm font-medium text-muted-foreground/60 mb-6">Recent distribution activity</p>
-                                        <WidgetDeploymentHistory deployments={deployments || []} isLoading={deploymentsLoading} />
+                                    <div className="lg:col-span-1 space-y-8">
+                                        <div>
+                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                                                <History className="w-5 h-5 text-primary" />
+                                                Version Control
+                                            </h3>
+                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Historical iterations and snapshots</p>
+                                            <WidgetVersionsList botId={botId} versions={versions || []} isLoading={versionsLoading} onRefresh={mutateVersions} />
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
+                                                <Clock className="w-5 h-5 text-primary" />
+                                                Deployment Ledger
+                                            </h3>
+                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Recent distribution and traffic activity</p>
+                                            <WidgetDeploymentHistory deployments={deployments || []} isLoading={deploymentsLoading} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </TabsContent>
+                        </TabsContent>
 
-                    <TabsContent value="settings" className="mt-6">
-                        <BotSettingsTab
-                            enableAutoLearn={formData.enableAutoLearn}
-                            onChange={(enableAutoLearn) => handleChange({ enableAutoLearn })}
-                            onDelete={() => {
-                                router.push('/bots');
-                            }}
-                        />
-                    </TabsContent>
+                        <TabsContent value="settings" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <BotSettingsTab
+                                enableAutoLearn={formData.enableAutoLearn}
+                                onChange={(enableAutoLearn) => handleChange({ enableAutoLearn })}
+                                onDelete={() => {
+                                    router.push('/bots');
+                                }}
+                            />
+                        </TabsContent>
+                    </div>
                 </Tabs>
             </div>
         </div>

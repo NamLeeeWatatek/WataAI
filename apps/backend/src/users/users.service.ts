@@ -14,12 +14,14 @@ import { RoleEnum } from '../roles/roles.enum';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { FilesService } from '../files/files.service';
 
+import { UpdateUserDto } from './dto/update-user.dto';
+
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UserRepository,
     private readonly filesService: FilesService,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const clonedPayload = {
@@ -45,13 +47,13 @@ export class UsersService {
       }
     }
 
+    // Role assignment refactor
     if (clonedPayload.role) {
-      clonedPayload.role = {
-        id: RoleEnum[clonedPayload.role as keyof typeof RoleEnum],
-      } as Role;
+      clonedPayload.role = this.transformRole(clonedPayload.role);
     } else {
       clonedPayload.role = {
         id: RoleEnum.user,
+        name: 'user',
       } as Role;
     }
 
@@ -59,12 +61,7 @@ export class UsersService {
       ...clonedPayload,
       provider: clonedPayload.provider || 'email',
       isActive: clonedPayload.isActive ?? true,
-      role: clonedPayload.role
-        ? (clonedPayload.role as Role)
-        : ({
-            id: RoleEnum.user,
-            name: 'user',
-          } as Role),
+      role: clonedPayload.role as Role,
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       socialId: createUserDto.socialId,
@@ -116,7 +113,10 @@ export class UsersService {
     });
   }
 
-  async update(id: User['id'], updateUserDto: any): Promise<User | null> {
+  async update(
+    id: User['id'],
+    updateUserDto: UpdateUserDto, // Strict typing
+  ): Promise<User | null> {
     const currentUser = await this.usersRepository.findById(id);
 
     let password = updateUserDto.password;
@@ -155,23 +155,21 @@ export class UsersService {
       name = [firstName, lastName].filter(Boolean).join(' ') || null;
     }
 
+    // Role transformation
+    const role =
+      updateUserDto.role !== undefined
+        ? this.transformRole(updateUserDto.role)
+        : undefined;
+
     const updatedUser = await this.usersRepository.update(id, {
       email,
       name,
-      avatarUrl: updateUserDto.avatarUrl ?? updateUserDto.photo?.path,
+      avatarUrl: updateUserDto.avatarUrl,
       password,
       provider: updateUserDto.provider,
       providerId: updateUserDto.providerId ?? updateUserDto.socialId,
       isActive: updateUserDto.isActive,
-      role:
-        updateUserDto.role !== undefined
-          ? typeof updateUserDto.role === 'string'
-            ? ({
-                id: RoleEnum[updateUserDto.role as keyof typeof RoleEnum],
-                name: updateUserDto.role,
-              } as Role)
-            : (updateUserDto.role as Role | null)
-          : undefined,
+      role,
       roleId: updateUserDto.roleId,
       emailVerifiedAt: updateUserDto.emailVerifiedAt,
       firstName: updateUserDto.firstName,
@@ -180,12 +178,10 @@ export class UsersService {
     });
 
     if (updatedUser) {
-      // Confirm new avatar if it exists
       if (updatedUser.avatarUrl) {
         await this.filesService.confirmFromUrl(updatedUser.avatarUrl);
       }
 
-      // Cleanup old avatar if it changed and was different from new one
       if (
         currentUser?.avatarUrl &&
         currentUser.avatarUrl !== updatedUser.avatarUrl
@@ -217,5 +213,22 @@ export class UsersService {
     return this.usersRepository.update(id, {
       isActive: true,
     });
+  }
+
+  // Private helper to isolate fragile role logic
+  private transformRole(roleInput: string | Role | null): Role | null {
+    if (roleInput === null) return null;
+    if (typeof roleInput === 'string') {
+      const roleId = RoleEnum[roleInput as keyof typeof RoleEnum];
+      if (roleId) {
+        return {
+          id: roleId,
+          name: roleInput,
+        } as Role;
+      }
+      // Fallback or should throw? For backward compat keeping loose for now but properly typed return
+      return { id: RoleEnum.user, name: 'user' } as Role;
+    }
+    return roleInput as Role;
   }
 }

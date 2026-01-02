@@ -49,17 +49,14 @@ export function useConversationsSocket({
     if (!isConnected || !socket) return;
 
     const handleConversationUpdate = (conversation: any) => {
-      console.log('[WebSocket] 📥 conversation-update:', conversation);
       handlersRef.current.onConversationUpdate?.(conversation);
     };
 
     const handleNewConversation = (conversation: any) => {
-      console.log('[WebSocket] 📥 new-conversation:', conversation);
       handlersRef.current.onNewConversation?.(conversation);
     };
 
     const handleNewMessage = (message: any) => {
-      console.log('[WebSocket] 📥 new-message:', message);
       handlersRef.current.onNewMessage?.(message);
     };
 
@@ -82,21 +79,17 @@ export function useConversationsSocket({
     }
 
     if (isConnected) {
-      console.log('[WebSocket] 🚪 Joining conversation:', conversationId);
       emit('join-conversation', conversationId);
     } else {
-      console.log('[WebSocket] ⏳ Conversation join queued:', conversationId);
       // Will join when connection is established via effect above
     }
   }, [isConnected, emit]);
 
   const leaveConversation = useCallback((conversationId: string) => {
     if (!conversationId || typeof conversationId !== 'string') {
-      console.warn('[WebSocket] Invalid conversationId provided to leaveConversation:', conversationId);
       return;
     }
 
-    console.log('[WebSocket] 🚪 Leaving conversation:', conversationId);
     emit('leave-conversation', conversationId);
   }, [emit]);
 

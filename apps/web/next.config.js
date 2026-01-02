@@ -31,7 +31,7 @@ const nextConfig = {
     typedRoutes: true,
     optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', '@tanstack/react-query'],
   },
-  output: 'standalone',
+  // output: 'standalone',
 }
 
 module.exports = nextConfig

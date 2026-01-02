@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Search, Wrench, LayoutTemplate, icons, Folder } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Folder } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { ToolDialog } from '@/components/features/creation-tools/ToolDialog';
 import { PageLoading } from '@/components/ui/PageLoading';
 import toast from '@/lib/toast';
@@ -120,7 +120,6 @@ export default function CreationToolsPage() {
         <PageShell
             title="Creation Tools"
             description="Configure and manage your AI creation tools"
-            icon={Wrench}
             actions={
                 <Button
                     onClick={() => {
@@ -138,11 +137,10 @@ export default function CreationToolsPage() {
                 {/* Search & Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 p-1">
                     <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+                        <Search
                             placeholder="Search tools..."
                             value={searchQuery}
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                                 const value = e.target.value
                                 setSearchQuery(value);
 
@@ -152,7 +150,11 @@ export default function CreationToolsPage() {
                                     setCurrentPage(1)
                                 }, 500)
                             }}
-                            className="pl-9 bg-card/50"
+                            onClear={() => {
+                                setSearchQuery('')
+                                setQuerySearch('')
+                                setCurrentPage(1)
+                            }}
                         />
                     </div>
                 </div>

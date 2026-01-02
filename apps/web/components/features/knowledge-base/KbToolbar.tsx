@@ -3,7 +3,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Grid, List, Search, RefreshCw, Plus, FolderPlus, Upload, Globe } from 'lucide-react';
+import { Grid, List, RefreshCw, Plus, FolderPlus, Upload, Globe } from 'lucide-react';
+import { Search } from '@/components/ui/Search';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/Separator';
 
@@ -38,16 +39,14 @@ export function KbToolbar({
   return (
     <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 bg-background/80 backdrop-blur-md py-4 transition-all">
       {/* Search */}
-      <div className="relative flex-1 w-full max-w-sm group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary w-4 h-4" />
-        <Input
-          type="text"
-          placeholder="Search items..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 h-10 bg-muted/30 border-border/50 focus-visible:ring-primary focus-visible:bg-background transition-all"
-        />
-      </div>
+      <Search
+        placeholder="Search items..."
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        onClear={() => onSearchChange('')}
+
+        className="max-w-sm"
+      />
 
       {/* Controls */}
       <div className="flex items-center gap-2 flex-wrap justify-end w-full md:w-auto">

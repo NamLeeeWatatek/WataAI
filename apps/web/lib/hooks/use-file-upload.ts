@@ -30,7 +30,7 @@ export function useFileUpload(options: UseFileUploadOptions = {}) {
         options.bucket || 'images'
       );
 
-      console.log('?? useFileUpload returning:', { fileUrl, fileData: result.file });
+
 
       options.onSuccess?.(fileUrl, result.file);
       return { fileUrl, fileData: result.file };

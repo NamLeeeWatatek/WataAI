@@ -16,7 +16,7 @@ import { authApi } from '@/lib/api/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fileUploadService } from '@/lib/api/files';
 import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { AvatarUpload } from '@/components/ui/AvatarUpload';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -41,8 +41,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export function AccountTab() {
   const queryClient = useQueryClient();
   const { update: updateSession } = useSession();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -119,29 +118,7 @@ export function AccountTab() {
     },
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const validation = fileUploadService.validateFile(file, { maxSize: 2 * 1024 * 1024 });
-    if (!validation.valid) {
-      toast.error(validation.error);
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const result = await fileUploadService.uploadFile(file, { bucket: 'avatars' });
-      const url = fileUploadService.getFileUrl(result.file.path, 'avatars');
-      form.setValue('avatarUrl', url, { shouldDirty: true });
-      toast.success('Profile picture uploaded.');
-    } catch (error) {
-      toast.error('Could not upload your profile picture.');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   const onSubmit = (data: ProfileFormValues) => {
     updateProfileMutation.mutate(data);
@@ -181,56 +158,25 @@ export function AccountTab() {
 
                 <div className="space-y-8 pt-2">
                   {/* Avatar upload */}
-                  <div className="flex items-center gap-6">
-                    <div className="relative group">
-                      <Avatar className="h-28 w-28 ring-4 ring-border/30 ring-offset-4 ring-offset-background transition-all group-hover:ring-primary/20">
-                        <AvatarImage src={avatarUrl || ''} className="object-cover" />
-                        <AvatarFallback className="text-2xl font-black bg-muted text-muted-foreground/60">
-                          {userInitial}
-                        </AvatarFallback>
-                      </Avatar>
-                      {uploading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-full">
-                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        </div>
-                      )}
+                  <div className="flex items-start gap-8">
+                    <div className="w-40 h-40 flex-shrink-0">
+                      <AvatarUpload
+                        value={avatarUrl}
+                        onChange={(url) => form.setValue('avatarUrl', url, { shouldDirty: true })}
+                        size="2xl"
+                        fallback={userInitial}
+                      />
                     </div>
 
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-9 font-bold shadow-sm"
-                          disabled={uploading}
-                          onClick={() => fileInputRef.current?.click()}
-                        >
-                          <Camera className="mr-2 h-4 w-4 opacity-70" />
-                          Update photo
-                        </Button>
-                        {avatarUrl && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 text-destructive hover:bg-destructive/10 font-bold"
-                            onClick={() => form.setValue('avatarUrl', null, { shouldDirty: true })}
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-muted-foreground leading-relaxed max-w-[200px]">
-                        Square JPG, PNG or WebP recommended. Maximum file size: 2MB.
+                    <div className="flex flex-col pt-2 gap-2">
+                      <h4 className="text-sm font-semibold text-foreground">Profile Picture</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
+                        Upload a square image to be used as your avatar.
+                        <br />
+                        Recommended size: 500x500px.
+                        <br />
+                        Max file size: 2MB.
                       </p>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
                     </div>
                   </div>
 

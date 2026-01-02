@@ -11,7 +11,6 @@ import { DashboardTopBots } from '@/components/features/dashboard/DashboardTopBo
 import { DashboardWorkspaceOverview } from '@/components/features/dashboard/DashboardWorkspaceOverview'
 import { useDashboardStats } from '@/lib/hooks/useDashboardStats'
 import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts'
-import { AlertTriangle, Database, LayoutDashboard } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useAuth } from '@/lib/hooks/useAuth'
 
@@ -65,7 +64,6 @@ export function DashboardClient() {
                 <PageHeader
                     title={t('dashboard.title')}
                     description={t('dashboard.welcomeBack', { name: user?.name || t('welcome') })}
-                    icon={LayoutDashboard}
                     className="mb-10 px-2"
                 >
                     <Button className="shadow-lg shadow-primary/10">
