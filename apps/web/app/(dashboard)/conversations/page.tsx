@@ -627,7 +627,6 @@ function ConversationsPageContent() {
               value={searchQuery}
               onChange={(e: any) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery("")}
-              variant="dashboard"
               className="w-full"
             />
           </div>

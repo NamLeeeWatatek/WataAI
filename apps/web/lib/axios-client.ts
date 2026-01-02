@@ -132,7 +132,7 @@ axiosClient.interceptors.response.use(
             cachedToken = null;
             // Optional: Force reload to reset application state
             if (typeof window !== 'undefined') {
-              // window.location.reload(); 
+              window.location.href = '/login';
             }
             return Promise.reject(error);
           }
@@ -149,6 +149,9 @@ axiosClient.interceptors.response.use(
           return axiosClient(originalRequest);
         } else {
           // Refresh failed - Reject all
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
           throw new Error("Session refresh failed");
         }
       } catch (err) {

@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from '@/lib/utils'
 
 const alertVariants = cva(
-    "p-4 rounded-xl border flex gap-4 items-start transition-all duration-300",
+    "p-4 rounded-md border flex gap-4 items-start transition-all duration-300",
     {
         variants: {
             variant: {
@@ -74,7 +74,7 @@ export function AlertInline({ variant = 'info', children, className }: AlertInli
 
     return (
         <div className={cn(
-            "inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all",
+            "inline-flex items-center gap-2.5 px-3 py-1.5 rounded-md border text-xs font-bold transition-all",
             alertVariants({ variant }),
             className
         )}>
@@ -92,7 +92,7 @@ interface CodeBlockProps {
 
 export function CodeBlock({ children, label, className }: CodeBlockProps) {
     return (
-        <div className={cn('p-4 bg-muted/30 border border-border/40 rounded-xl overflow-hidden', className)}>
+        <div className={cn('p-4 bg-muted/30 border border-border/40 rounded-md overflow-hidden', className)}>
             {label && (
                 <p className="text-[10px] font-black text-muted-foreground/60 mb-2 uppercase tracking-widest">
                     {label}

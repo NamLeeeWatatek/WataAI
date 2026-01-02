@@ -159,7 +159,7 @@ export function AccountTab() {
                 <div className="space-y-8 pt-2">
                   {/* Avatar upload */}
                   <div className="flex items-start gap-8">
-                    <div className="w-32 h-32 flex-shrink-0">
+                    <div className="w-40 h-40 flex-shrink-0">
                       <AvatarUpload
                         value={avatarUrl}
                         onChange={(url) => form.setValue('avatarUrl', url, { shouldDirty: true })}

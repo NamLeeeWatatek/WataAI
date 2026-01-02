@@ -56,55 +56,55 @@
   }
 
   .dark {
-    /* Dark Mode - High Contrast, Deep Blue-Gray (Dev.to inspired but softer) */
-    --background: 222 15% 11%;
-    /* #181a1f - Rich dark slate, not pitch black */
-    --foreground: 210 40% 98%;
-    /* Bright white-blue for high contrast text */
+    /* "Obsidian" Premium Dark Mode - Deep, Neutral, Luxurious */
+    /* Base: Pure depth, not just grey */
+    --background: 0 0% 4%;
+    /* #0a0a0a - Deepest charcoal, almost black */
+    --foreground: 0 0% 98%;
+    /* #fafafa - Crisp white */
 
-    --card: 222 15% 14%;
-    /* #20232a - distinct surface */
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 7%;
+    /* #121212 - Slightly lighter for depth */
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 15% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
 
-    /* Vibrant Primary - Electric Indigo */
-    --primary: 263 75% 60%;
+    /* Vivid Primary - Electric Indigo/Violet to pop against black */
+    --primary: 263 80% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    /* Higher contrast secondary */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 11%;
+    /* Subtle differentiation */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 217 33% 17%;
-    /* Hover state */
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 11%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 217 33% 20%;
-    /* Visible borders for "High Contrast" feel */
-    --input: 217 33% 20%;
-    --ring: 263 75% 60%;
+    --border: 0 0% 15%;
+    /* Subtle borders */
+    --input: 0 0% 15%;
+    --ring: 263 80% 60%;
 
-    /* Chart colors - Vivid and distinguishable */
+    /* Chart colors - Neon/Vibrant for dark mode contrast */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    /* Enhanced Shadows/Glows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
-    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6);
-    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+    /* Glow-like shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.8);
   }
 
   /* Animations */
@@ -120,6 +120,24 @@
 
   .animate-shimmer {
     animation: shimmer 2s infinite;
+  }
+
+  @keyframes pulse-slow {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
 
@@ -140,12 +158,15 @@
   .display-heading-1 {
     @apply text-4xl md:text-5xl lg:text-7xl leading-[1.1] tracking-tighter font-display font-bold;
   }
+
   .display-heading-2 {
     @apply text-3xl md:text-4xl lg:text-5xl leading-tight tracking-tight font-display font-bold;
   }
+
   .display-heading-3 {
     @apply text-2xl md:text-3xl lg:text-4xl leading-snug font-display font-bold;
   }
+
   .display-heading-4 {
     @apply text-xl md:text-2xl lg:text-3xl font-display font-bold;
   }

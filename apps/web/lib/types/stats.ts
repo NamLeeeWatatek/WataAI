@@ -82,3 +82,13 @@ export interface StatsQueryParams {
     includeTrend?: boolean
 }
 
+export interface AdminStats {
+    activityTrend: Array<{ date: string; value: number }>;
+    jobs: {
+        successful: number;
+        failed: number;
+        successRate: number;
+    };
+    topCreationTools: Array<{ name: string; count: number }>;
+    topBots: TopItemDto[];
+}

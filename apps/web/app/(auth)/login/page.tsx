@@ -101,13 +101,7 @@ function LoginPageContent() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden font-sans selection:bg-primary/30">
-            {/* Ambient Background Elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000" />
-                <div className="absolute -bottom-[10%] -left-[10%] w-[50%] h-[50%] bg-accent/20 rounded-full blur-[120px] animate-pulse transition-all duration-1000 delay-700" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.08)_0%,transparent_70%)]" />
-            </div>
+        <div className="w-full h-full flex items-center justify-center font-sans selection:bg-primary/30 p-6">
 
             <div className="w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in duration-700">
                 <Card className="p-8 md:p-10 bg-card/40 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem] relative overflow-hidden group">

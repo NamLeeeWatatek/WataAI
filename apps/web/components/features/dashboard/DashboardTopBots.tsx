@@ -29,7 +29,7 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
             <CardContent className="p-8">
                 <div className="space-y-6">
                     {stats?.topBots && stats.topBots.length > 0 ? (
-                        stats.topBots.slice(0, 3).map((bot: any, index: number) => (
+                        stats.topBots.slice(0, 3).map((bot, index) => (
                             <div key={bot.id} className="group cursor-pointer">
                                 <div className="flex items-center gap-5 mb-3">
                                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center text-white font-black transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">

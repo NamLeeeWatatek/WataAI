@@ -12,9 +12,10 @@ import { FileUploadDto } from './dto/file.dto';
 import { FileType } from '../../../domain/file';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../../../config/config.type';
+import { FileDriver } from '../../../domain/file-driver.interface';
 
 @Injectable()
-export class FilesMinioService {
+export class FilesMinioService implements FileDriver {
   private minioClient: Client;
   private readonly logger = new Logger(FilesMinioService.name);
   private minioEndpoint: string;

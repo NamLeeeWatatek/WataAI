@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
-import { CreationTool } from '@/lib/api/creation-tools';
 import {
     Dialog,
     DialogContent,
@@ -14,6 +17,8 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { Loader2 } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/Form';
+import { toast } from 'sonner';
 
 interface AssignToolDialogProps {
     open: boolean;
@@ -22,51 +27,59 @@ interface AssignToolDialogProps {
     count: number;
 }
 
+const assignToolSchema = z.object({
+    toolId: z.string().min(1, 'Please select a tool'),
+});
+
+type AssignToolValues = z.infer<typeof assignToolSchema>;
+
 export function AssignToolDialog({
     open,
     onOpenChange,
     onAssign,
     count,
 }: AssignToolDialogProps) {
-    const [selectedToolId, setSelectedToolId] = useState<string>('');
-    const [tools, setTools] = useState<CreationTool[]>([]);
-    const [loadingTools, setLoadingTools] = useState(true);
-    const [assigning, setAssigning] = useState(false);
+    const form = useForm<AssignToolValues>({
+        resolver: zodResolver(assignToolSchema),
+        defaultValues: {
+            toolId: '',
+        },
+    });
+
+    const { reset, handleSubmit, control, formState: { isSubmitting } } = form;
+
+    const { data: tools = [], isLoading: loadingTools } = useQuery({
+        queryKey: ['creationTools', 'active'],
+        queryFn: creationToolsApi.getActive,
+        enabled: open,
+        staleTime: 5 * 60 * 1000,
+    });
 
     useEffect(() => {
-        if (open) {
-            loadTools();
-            setSelectedToolId('');
+        if (!open) {
+            reset();
         }
-    }, [open]);
+    }, [open, reset]);
 
-    const loadTools = async () => {
+    const onSubmit = async (data: AssignToolValues) => {
         try {
-            setLoadingTools(true);
-            const data = await creationToolsApi.getActive();
-            setTools(Array.isArray(data) ? data : []);
+            await onAssign(data.toolId);
+            onOpenChange(false);
+            reset();
         } catch (error) {
-            console.error('Failed to load tools:', error);
-        } finally {
-            setLoadingTools(false);
+            console.error('Failed to assign tool:', error);
+            toast.error('Failed to assign tool');
         }
     };
 
-    const handleAssign = async () => {
-        if (!selectedToolId) return;
-
-        setAssigning(true);
-        try {
-            await onAssign(selectedToolId);
-            onOpenChange(false);
-        } finally {
-            setAssigning(false);
-        }
+    const handleClose = () => {
+        onOpenChange(false);
+        reset();
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md gap-0 p-0 overflow-hidden bg-card border-border/50 shadow-2xl">
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="max-w-md gap-0 p-0 overflow-hidden bg-background border-border/50 shadow-2xl">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="text-xl">Assign Creation Tool</DialogTitle>
                     <DialogDescription>
@@ -74,44 +87,58 @@ export function AssignToolDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="p-6 space-y-4">
-                    <div className="space-y-2">
-                        <Select
-                            value={selectedToolId}
-                            onValueChange={setSelectedToolId}
-                            disabled={loadingTools}
-                        >
-                            <SelectTrigger className="w-full h-10">
-                                <SelectValue placeholder={loadingTools ? 'Loading tools...' : 'Select a tool to assign'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tools.map((tool) => (
-                                    <SelectItem key={tool.id} value={tool.id}>
-                                        <div className="flex items-center gap-2">
-                                            <span>{tool.name}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                <div className="p-6">
+                    <Form {...form}>
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                            <FormField
+                                control={control}
+                                name="toolId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                value={field.value}
+                                                disabled={loadingTools}
+                                            >
+                                                <SelectTrigger className="w-full h-10">
+                                                    <SelectValue placeholder={loadingTools ? 'Loading tools...' : 'Select a tool to assign'} />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {tools.map((tool) => (
+                                                        <SelectItem key={tool.id} value={tool.id}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span>{tool.name}</span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                <DialogFooter className="p-4 border-t border-border/50 bg-secondary/20">
-                    <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={assigning}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleAssign} disabled={!selectedToolId || assigning}>
-                        {assigning ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Assigning...
-                            </>
-                        ) : (
-                            'Assign Tool'
-                        )}
-                    </Button>
-                </DialogFooter>
+                            <DialogFooter className="pt-4 border-t border-border/50 -mx-6 px-6 -mb-6 pb-6 bg-muted/20">
+                                <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" disabled={!form.formState.isValid || isSubmitting} className="min-w-[100px]">
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Assigning...
+                                        </>
+                                    ) : (
+                                        'Assign Tool'
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </div>
             </DialogContent>
         </Dialog>
     );

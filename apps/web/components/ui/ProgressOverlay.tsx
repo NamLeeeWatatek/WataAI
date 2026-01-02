@@ -66,7 +66,7 @@ export function ProgressOverlay() {
                         <div className="space-y-2 relative z-10">
                             <p className="text-sm font-semibold text-foreground/90">Current step:</p>
                             <div className={cn(
-                                'flex items-center gap-3 p-4 rounded-xl',
+                                'flex items-center gap-3 p-4 rounded-md',
                                 'bg-gradient-to-r from-primary/10 to-primary/5',
                                 'border border-primary/20',
                                 'shadow-lg shadow-primary/5',
@@ -92,7 +92,7 @@ export function ProgressOverlay() {
                                 <div
                                     key={index}
                                     className={cn(
-                                        'flex items-center gap-3 p-3 rounded-lg transition-all duration-300',
+                                        'flex items-center gap-3 p-3 rounded-md transition-all duration-300',
                                         index <= currentStep && 'bg-muted/30',
                                         index === currentStep && 'ring-2 ring-primary/30'
                                     )}
@@ -124,7 +124,7 @@ export function ProgressOverlay() {
                         <button
                             onClick={cancelProgress}
                             className={cn(
-                                'mt-2 px-4 py-2 text-sm rounded-lg',
+                                'mt-2 px-4 py-2 text-sm rounded-md',
                                 'text-muted-foreground hover:text-destructive',
                                 'hover:bg-destructive/10',
                                 'transition-all duration-200',

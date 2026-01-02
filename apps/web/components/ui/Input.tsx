@@ -8,7 +8,6 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: "border-border/50 shadow-sm",
-        dashboard: "bg-muted/30 border-border/20 focus-visible:bg-background focus-visible:border-primary/30",
         ghost: "bg-transparent border-none shadow-none focus-visible:bg-muted/20",
       },
     },

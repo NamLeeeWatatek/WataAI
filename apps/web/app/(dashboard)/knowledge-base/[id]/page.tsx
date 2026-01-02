@@ -416,7 +416,7 @@ export default function KnowledgeBaseDetailPage() {
     }
 
     // DataTable Configuration
-    const columns: Column[] = useMemo(() => [
+    const columns: Column<any>[] = useMemo(() => [
         {
             key: 'selection',
             label: '',

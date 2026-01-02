@@ -232,7 +232,6 @@ export default function BotsPage() {
                         setCurrentPage(1)
                     }}
                     className="w-full"
-                    variant="dashboard"
                 />
             </div>
 

@@ -44,7 +44,7 @@ export function KbToolbar({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         onClear={() => onSearchChange('')}
-        variant="dashboard"
+
         className="max-w-sm"
       />
 

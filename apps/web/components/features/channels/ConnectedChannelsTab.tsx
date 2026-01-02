@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/date';
+import { Search } from '@/components/ui/Search';
 
 interface Channel {
   id: string;
@@ -166,18 +167,16 @@ export function ConnectedChannelsTab({
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Controls Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
-        import {Search} from '@/components/ui/Search';
 
-        // ... (previous code)
 
         <div className="relative flex-1 w-full max-w-sm group">
           <Search
             placeholder="Search connected channels..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(e: any) => onSearchChange(e.target.value)}
             onClear={() => onSearchChange("")}
             className="w-full"
-            variant="dashboard"
+
           />
         </div>
 

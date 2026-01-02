@@ -8,13 +8,14 @@ import { ConfigService } from '@nestjs/config';
 import { FileRepository } from '../../persistence/file.repository';
 import { AllConfigType } from '../../../../config/config.type';
 import { FileType } from '../../../domain/file';
+import { FileDriver } from '../../../domain/file-driver.interface';
 
 @Injectable()
-export class FilesLocalService {
+export class FilesLocalService implements FileDriver {
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
     private readonly fileRepository: FileRepository,
-  ) {}
+  ) { }
 
   async create(file: Express.Multer.File): Promise<{ file: FileType }> {
     if (!file) {
@@ -34,5 +35,13 @@ export class FilesLocalService {
         bucket: 'local',
       }),
     };
+  }
+
+  async deleteFile(fileId: string): Promise<void> {
+    await this.fileRepository.delete(fileId);
+  }
+
+  async generateDownloadUrl(filePath: string): Promise<string> {
+    return filePath;
   }
 }

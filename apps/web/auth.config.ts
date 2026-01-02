@@ -127,8 +127,8 @@ export const authConfig = {
                 }
             }
 
-            // Refresh token 10 minutes before it expires
-            if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 10 * 60 * 1000) {
+            // Refresh token 2 minutes before it expires
+            if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 2 * 60 * 1000) {
                 return token
             }
 

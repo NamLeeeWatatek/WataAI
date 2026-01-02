@@ -64,7 +64,7 @@ export function PageHeader({
                         <Button
                             variant="outline"
                             size="icon"
-                            className="h-10 w-10 shrink-0 border-border/40 hover:bg-muted/50 transition-all hover:rotate-180 duration-500 rounded-xl"
+                            className="h-10 w-10 shrink-0 border-border/40 hover:bg-muted/50 transition-all hover:rotate-180 duration-500 rounded-md"
                             onClick={onRefresh}
                             disabled={refreshing}
                         >

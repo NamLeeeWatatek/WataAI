@@ -54,7 +54,7 @@ export function Media({
 }: MediaProps) {
     if (!src) {
         return (
-            <div className={cn("flex flex-col items-center justify-center bg-muted/30 rounded-xl border border-dashed border-primary/20 p-4", containerClassName)}>
+            <div className={cn("flex flex-col items-center justify-center bg-muted/30 rounded-md border border-dashed border-primary/20 p-4", containerClassName)}>
                 {fallbackIcon || <FileText className="w-8 h-8 text-muted-foreground opacity-20" />}
             </div>
         )

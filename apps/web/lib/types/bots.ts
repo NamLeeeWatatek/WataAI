@@ -221,3 +221,26 @@ export interface AiSuggestWidgetProps {
   className?: string
 }
 
+
+export interface BotWidgetTheme {
+  primaryColor: string
+  position: string
+  buttonSize: string
+  showAvatar: boolean
+  showTimestamp: boolean
+}
+
+export interface BotWidgetConfig {
+  botId: string
+  name: string
+  description?: string
+  avatarUrl?: string
+  welcomeMessage: string
+  placeholderText: string
+  theme: BotWidgetTheme
+}
+
+export interface LinkMetadata {
+  url: string
+  referrer: string
+}

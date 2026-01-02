@@ -10,10 +10,10 @@ export default function MarketingLayout({
         <ThemeProvider
             attribute="class"
             defaultTheme="dark"
-            enableSystem
+            forcedTheme="dark"
             disableTransitionOnChange
         >
-            <div className="min-h-screen flex flex-col bg-background">
+            <div className="dark min-h-screen flex flex-col bg-background text-foreground" style={{ colorScheme: 'dark' }}>
                 <MarketingHeader />
                 <main className="flex-1 pt-16 md:pt-20">
                     {children}

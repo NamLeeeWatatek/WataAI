@@ -170,7 +170,7 @@ export default function KnowledgeBasePage() {
                             setCurrentPage(1);
                         }}
                         className="max-w-sm"
-                        variant="dashboard"
+
                     />
                 </div>
             </div>

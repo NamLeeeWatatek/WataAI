@@ -27,7 +27,7 @@ import {
 // Types for DataTable
 export type SortDirection = 'asc' | 'desc' | null
 
-export interface Column<T = any> {
+export interface Column<T> {
   key: string
   label: React.ReactNode
   sortable?: boolean
@@ -38,7 +38,7 @@ export interface Column<T = any> {
 }
 
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T> {
   // Data from Redux
   data: T[]
   loading?: boolean
@@ -97,7 +97,7 @@ export interface DataTableProps<T = any> {
   getRowCanExpand?: (row: T) => boolean
 }
 
-export function DataTable<T = any>({
+export function DataTable<T>({
   data,
   loading = false,
   error = null,
@@ -346,7 +346,7 @@ export function DataTable<T = any>({
       )}
 
       {/* Table */}
-      <div className={cn("rounded-lg border bg-card shadow-sm overflow-hidden", tableClassName)}>
+      <div className={cn("rounded-md border bg-card shadow-sm overflow-hidden", tableClassName)}>
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">

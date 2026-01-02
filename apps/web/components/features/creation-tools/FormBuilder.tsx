@@ -31,7 +31,9 @@ const FIELD_TYPES = [
     { value: 'color', label: 'Color Picker' },
     { value: 'json', label: 'JSON Editor' },
     { value: 'key-value', label: 'Key-Value Editor' },
-];
+] as const;
+
+type FieldType = typeof FIELD_TYPES[number]['value'];
 
 const slugify = (text: string) => {
     return text
@@ -50,6 +52,9 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
             name: '',
             label: '',
             type: 'text',
+            validation: { required: false },
+            options: [],
+            description: '',
         };
         setEditingField(newField);
         setEditIndex(-1);
@@ -57,7 +62,8 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
     };
 
     const handleEditField = (index: number) => {
-        setEditingField({ ...config.fields[index] });
+        // Deep copy to prevent mutating the original state directly
+        setEditingField(JSON.parse(JSON.stringify(config.fields[index])));
         setEditIndex(index);
         setIsDialogOpen(true);
     };
@@ -71,14 +77,25 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
     const handleSaveField = () => {
         if (!editingField) return;
 
-        // Basic validation
-        if (!editingField.name || !editingField.label) return;
+        // Validation
+        if (!editingField.label.trim()) {
+            toast.error('Label is required');
+            return;
+        }
+
+        const finalName = editingField.name.trim() || slugify(editingField.label);
+        const fieldToSave = { ...editingField, name: finalName };
+
+        if (!fieldToSave.name) {
+            toast.error('Field name is required');
+            return;
+        }
 
         const newFields = [...config.fields];
         if (editIndex >= 0) {
-            newFields[editIndex] = editingField;
+            newFields[editIndex] = fieldToSave;
         } else {
-            newFields.push(editingField);
+            newFields.push(fieldToSave);
         }
 
         onChange({ ...config, fields: newFields });
@@ -95,6 +112,11 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
 
         [newFields[index], newFields[targetIndex]] = [newFields[targetIndex], newFields[index]];
         onChange({ ...config, fields: newFields });
+    };
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success(`Copied ${text} to clipboard`);
     };
 
     return (
@@ -139,10 +161,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                             {`{{${field.name}}}`}
                                         </code>
                                         <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(`{{${field.name}}}`);
-                                                toast.success(`Copied {{${field.name}}} to clipboard`);
-                                            }}
+                                            onClick={() => copyToClipboard(`{{${field.name}}}`)}
                                             className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
                                         >
                                             Copy
@@ -187,12 +206,16 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                         value={editingField.label}
                                         onChange={(e) => {
                                             const label = e.target.value;
-                                            const update: any = { label };
-                                            // Auto-slugify name if name is empty or matches previous slugified label
-                                            if (!editingField.name || editingField.name === slugify(editingField.label)) {
-                                                update.name = slugify(label);
-                                            }
-                                            setEditingField({ ...editingField, ...update });
+                                            const isNameEmptyOrAuto = !editingField.name || editingField.name === slugify(editingField.label);
+
+                                            setEditingField(prev => {
+                                                if (!prev) return null;
+                                                return {
+                                                    ...prev,
+                                                    label,
+                                                    name: isNameEmptyOrAuto ? slugify(label) : prev.name
+                                                };
+                                            });
                                         }}
                                         placeholder="Display Label"
                                     />
@@ -201,7 +224,10 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                     <Label>Field Name (Key) *</Label>
                                     <Input
                                         value={editingField.name}
-                                        onChange={(e) => setEditingField({ ...editingField, name: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })}
+                                        onChange={(e) => setEditingField({
+                                            ...editingField,
+                                            name: e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                                        })}
                                         placeholder="variable_name"
                                     />
                                 </div>
@@ -211,7 +237,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 <Label>Field Type</Label>
                                 <Select
                                     value={editingField.type}
-                                    onValueChange={(val: any) => setEditingField({ ...editingField, type: val })}
+                                    onValueChange={(val: string) => setEditingField({ ...editingField, type: val as FieldType })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -249,12 +275,13 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 <div className="space-y-3 pt-2">
                                     <Label>Options</Label>
                                     <div className="space-y-2">
-                                        {(editingField.options || []).map((option, index) => (
+                                        {Array.isArray(editingField.options) && editingField.options.map((option, index) => (
                                             <div key={index} className="flex items-center gap-2">
                                                 <Input
                                                     value={option.label}
                                                     onChange={(e) => {
-                                                        const newOptions = [...(editingField.options || [])];
+                                                        const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
+                                                        const newOptions = [...currentOptions];
                                                         newOptions[index] = { label: e.target.value, value: e.target.value };
                                                         setEditingField({ ...editingField, options: newOptions });
                                                     }}
@@ -265,7 +292,8 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                                     size="icon"
                                                     className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                     onClick={() => {
-                                                        const newOptions = [...(editingField.options || [])];
+                                                        const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
+                                                        const newOptions = [...currentOptions];
                                                         newOptions.splice(index, 1);
                                                         setEditingField({ ...editingField, options: newOptions });
                                                     }}
@@ -280,7 +308,8 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                             size="sm"
                                             className="w-full border-dashed"
                                             onClick={() => {
-                                                const newOptions = [...(editingField.options || [])];
+                                                const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
+                                                const newOptions = [...currentOptions];
                                                 newOptions.push({ label: '', value: '' });
                                                 setEditingField({ ...editingField, options: newOptions });
                                             }}

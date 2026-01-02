@@ -303,7 +303,7 @@ export function NotificationDropdown({
                   onClick={() => {
                     // Open settings
                     // You could integrate with your settings modal here
-                    console.log('Open notification settings');
+                    // Open notification settings logic would go here
                   }}
                 >
                   <Settings className="w-4 h-4" />
@@ -341,6 +341,6 @@ function formatTimeAgo(dateString: string): string {
 
 // Toast notification (you can import this from your toast library)
 const toast = {
-  success: (message: string) => console.log('SUCCESS:', message),
-  error: (message: string) => console.log('ERROR:', message),
+  success: (message: string) => { }, // Changed to no-op for production
+  error: (message: string) => { },   // Changed to no-op for production
 };

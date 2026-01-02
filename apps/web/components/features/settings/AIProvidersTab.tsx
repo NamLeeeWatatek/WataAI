@@ -232,7 +232,7 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery('')}
-          variant="dashboard"
+
           className="max-w-md"
         />
 

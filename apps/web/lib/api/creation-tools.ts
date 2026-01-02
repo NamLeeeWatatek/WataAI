@@ -49,7 +49,7 @@ export interface FormField {
     placeholder?: string;
     description?: string;
     defaultValue?: any;
-    options?: Array<{ label: string; value: any; icon?: string }>;
+    options?: string | Array<{ label: string; value: any; icon?: string }>;
     validation?: {
         required?: boolean;
         min?: number;
