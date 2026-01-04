@@ -53,5 +53,9 @@ export default registerAs<FileConfig>('file', () => {
     awsS3Region: process.env.AWS_S3_REGION,
     minioEndpoint: process.env.MINIO_ENDPOINT,
     maxFileSize: 52428800, // 50MB
+    bucketImages: process.env.FILE_BUCKET_IMAGES || 'images',
+    bucketVideos: process.env.FILE_BUCKET_VIDEOS || 'videos',
+    bucketAudios: process.env.FILE_BUCKET_AUDIOS || 'audios',
+    bucketDocuments: process.env.FILE_BUCKET_DOCUMENTS || 'documents',
   };
 });

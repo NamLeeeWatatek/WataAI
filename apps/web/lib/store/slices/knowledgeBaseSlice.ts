@@ -81,11 +81,11 @@ const initialState: KnowledgeBaseState = {
 
 export const loadKnowledgeBase = createAsyncThunk(
   'knowledgeBase/load',
-  async ({ kbId, folderId }: { kbId: string; folderId?: string | null }) => {
+  async ({ kbId, folderId, page = 1, limit = 10 }: { kbId: string; folderId?: string | null; page?: number; limit?: number }) => {
     const [kbRes, statsRes, contentRes] = await Promise.all([
       getKnowledgeBase(kbId),
       getKnowledgeBaseStats(kbId),
-      getKBContent(kbId, folderId),
+      getKBContent(kbId, folderId, page, limit),
     ])
 
     const kb = (kbRes as any)?.data || kbRes
@@ -97,7 +97,7 @@ export const loadKnowledgeBase = createAsyncThunk(
       stats,
       folders,
       documents: documents.data,
-      total: documents.total + folders.length,
+      total: documents.total,
       breadcrumbs,
       folderId: folderId || null
     }
@@ -106,10 +106,10 @@ export const loadKnowledgeBase = createAsyncThunk(
 
 export const refreshData = createAsyncThunk(
   'knowledgeBase/refresh',
-  async ({ kbId, folderId }: { kbId: string; folderId?: string | null }) => {
+  async ({ kbId, folderId, page = 1, limit = 10 }: { kbId: string; folderId?: string | null; page?: number; limit?: number }) => {
     const [statsRes, contentRes] = await Promise.all([
       getKnowledgeBaseStats(kbId),
-      getKBContent(kbId, folderId),
+      getKBContent(kbId, folderId, page, limit),
     ])
 
     const stats = (statsRes as any)?.data || statsRes
@@ -119,7 +119,7 @@ export const refreshData = createAsyncThunk(
       stats,
       folders,
       documents: documents.data,
-      total: documents.total + folders.length,
+      total: documents.total,
       breadcrumbs,
       folderId: folderId || null
     }

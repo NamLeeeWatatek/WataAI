@@ -63,13 +63,25 @@ export function KBCollectionDialog({
             color: '#3B82F6',
             isPublic: false,
             aiProviderId: undefined,
-            embeddingModel: 'text-embedding-004',
+            embeddingModel: undefined,
             ragModel: undefined,
         },
     })
 
-    const selectedProvider = providers.find(p => p.id === form.watch('aiProviderId'))
+    const selectedProviderId = form.watch('aiProviderId')
+    const selectedProvider = providers.find(p => p.id === selectedProviderId)
     const availableModels = selectedProvider?.modelList || []
+
+    // Auto-select embedding model when provider changes
+    useEffect(() => {
+        if (selectedProvider && availableModels.length > 0) {
+            const currentModel = form.getValues('embeddingModel')
+            // If current model is not in the new provider's list, select the first one
+            if (!currentModel || !availableModels.includes(currentModel)) {
+                form.setValue('embeddingModel', availableModels[0])
+            }
+        }
+    }, [selectedProviderId, availableModels, form])
 
     useEffect(() => {
         if (open) {
@@ -85,7 +97,7 @@ export function KBCollectionDialog({
                 color: knowledgeBase.color || '#3B82F6',
                 isPublic: knowledgeBase.isPublic || false,
                 aiProviderId: knowledgeBase.aiProviderId || undefined,
-                embeddingModel: knowledgeBase.embeddingModel || 'text-embedding-004',
+                embeddingModel: knowledgeBase.embeddingModel || '',
                 ragModel: knowledgeBase.ragModel || undefined,
             })
         } else if (!open) {
@@ -95,7 +107,7 @@ export function KBCollectionDialog({
                 color: '#3B82F6',
                 isPublic: false,
                 aiProviderId: undefined,
-                embeddingModel: 'text-embedding-004',
+                embeddingModel: undefined,
                 ragModel: undefined,
             })
         }
@@ -203,22 +215,32 @@ export function KBCollectionDialog({
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Embedding Model</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || "system_default"}
+                                        >
                                             <FormControl>
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Select embedding model" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {availableModels.map(model => (
-                                                    <SelectItem key={model} value={model}>
-                                                        {model}
+                                                <SelectItem value="system_default">Select a model...</SelectItem>
+                                                {availableModels.length > 0 ? (
+                                                    availableModels.map(model => (
+                                                        <SelectItem key={model} value={model}>
+                                                            {model}
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <SelectItem value="no_models" disabled>
+                                                        No models available
                                                     </SelectItem>
-                                                ))}
+                                                )}
                                             </SelectContent>
                                         </Select>
                                         <FormDescription>
-                                            Model used for generating document embeddings
+                                            Model used for generating document embeddings.
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>

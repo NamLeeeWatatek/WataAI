@@ -10,6 +10,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +19,7 @@ import {
   ApiParam,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BotsService } from '../bots.service';
@@ -29,13 +31,17 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/channels', version: '1' })
 export class BotChannelsController {
-  constructor(private readonly botsService: BotsService) {}
+  constructor(private readonly botsService: BotsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get bot channels' })
   @ApiParam({ name: 'id', type: String, description: 'Bot ID' })
-  getBotChannels(@Param('id') id: string) {
-    return this.botsService.getBotChannels(id);
+  @ApiQuery({ name: 'validated', required: false, type: Boolean })
+  getBotChannels(
+    @Param('id') id: string,
+    @Query('validated') validated?: boolean,
+  ) {
+    return this.botsService.getBotChannels(id, { validated });
   }
 
   @Post()

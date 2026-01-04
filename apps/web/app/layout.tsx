@@ -8,7 +8,6 @@ import { QueryProvider } from '@/components/providers/QueryProvider'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { SessionProvider } from 'next-auth/react'
 import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper'
-import { GlobalLoadingOverlay } from '@/components/providers/GlobalLoadingOverlay'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { SessionWatcher } from '@/components/providers/SessionWatcher'
 
@@ -38,7 +37,7 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
+        <html lang="en" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
             <body className="font-sans antialiased">
                 <QueryProvider>
                     <I18nProvider>
@@ -49,7 +48,6 @@ export default function RootLayout({
                                         <SessionWatcher />
                                         {children}
                                     </ErrorBoundary>
-                                    <GlobalLoadingOverlay />
                                     <Toaster />
                                 </ReduxProvider>
                             </ThemeProviderWrapper>

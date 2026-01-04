@@ -1,5 +1,7 @@
 ﻿import { Injectable, Logger } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
+import { ConfigService } from '@nestjs/config';
+import { AllConfigType } from '../../config/config.type';
 
 export interface VectorPoint {
   id: string;
@@ -17,10 +19,15 @@ export interface SearchResult {
 export class KBVectorService {
   private readonly logger = new Logger(KBVectorService.name);
   private qdrantClient: QdrantClient | null = null;
-  private readonly collectionName = 'knowledge-base';
+  private readonly collectionPrefix: string;
   private readonly isAvailable: boolean;
+  private activeCreations = new Map<string, Promise<string>>();
 
-  constructor() {
+  constructor(private readonly configService: ConfigService<AllConfigType>) {
+    this.collectionPrefix =
+      this.configService.get('kb.vectorCollectionName', { infer: true }) ||
+      'kb';
+
     const qdrantUrl = process.env.QDRANT_URL;
     const qdrantApiKey = process.env.QDRANT_API_KEY;
     if (qdrantUrl && qdrantApiKey) {
@@ -30,100 +37,87 @@ export class KBVectorService {
           apiKey: qdrantApiKey,
         });
         this.isAvailable = true;
-        this.logger.log('[SUCCESS] Qdrant vector service initialized');
-        this.initializeCollection().catch((error) => {
-          this.logger.error(
-            `Failed to initialize collection: ${error.message}`,
-          );
-        });
+        this.logger.log('🚀 Qdrant vector service initialized (ready for lazy init)');
       } catch (error) {
         this.isAvailable = false;
         this.logger.error(
-          `[ERROR] Failed to initialize Qdrant: ${error.message}`,
+          `❌ Failed to initialize Qdrant client: ${error.message}`,
         );
       }
     } else {
       this.isAvailable = false;
       this.logger.warn(
-        '[WARNING] Qdrant credentials not found - Vector search disabled',
+        '⚠️ Qdrant credentials not found - Vector search disabled',
       );
     }
   }
 
-  private async initializeCollection(): Promise<void> {
-    if (!this.qdrantClient) {
-      this.logger.warn(
-        'Cannot initialize collection: Qdrant client not available',
-      );
-      return;
+  /**
+   * Derives the collection name from the dimension.
+   * Format: {prefix}_dim_{dimension} (standardizes names)
+   */
+  public getCollectionName(dimension: number): string {
+    // Backwards compatibility for the original name if it's 768 (optional but helpful)
+    if (this.collectionPrefix === 'knowledge-base' && dimension === 768) {
+      return 'knowledge-base';
+    }
+    return `${this.collectionPrefix}_dim_${dimension}`;
+  }
+
+  /**
+   * Ensures the collection exists with the correct dimension.
+   * If it exists with a DIFFERENT dimension, it throws a specific error.
+   */
+  public async ensureCollection(dimension: number): Promise<string> {
+    if (!this.qdrantClient) throw new Error('Qdrant not available');
+
+    const collectionName = this.getCollectionName(dimension);
+
+    // Concurrency Lock: If already creating this collection, wait for it
+    const existingCreation = this.activeCreations.get(collectionName);
+    if (existingCreation) {
+      return existingCreation;
     }
 
-    try {
-      this.logger.log('Checking Qdrant connection and collection...');
-
-      this.logger.log(
-        '[INFO] Testing Qdrant connection by listing collections...',
-      );
-      const collections = await this.qdrantClient.getCollections();
-      this.logger.log(
-        `[SUCCESS] Successfully connected to Qdrant. Found ${collections.collections.length} collections`,
-      );
-
-      const exists = collections.collections.some(
-        (c) => c.name === this.collectionName,
-      );
-      console.log('collections', collections);
-      if (!exists) {
-        this.logger.log(`Creating collection '${this.collectionName}'...`);
-        await this.qdrantClient.createCollection(this.collectionName, {
-          vectors: {
-            size: 768,
-            distance: 'Cosine',
-          },
-        });
-        this.logger.log(
-          `[SUCCESS] Collection '${this.collectionName}' created successfully`,
+    const creationPromise = (async () => {
+      try {
+        const collections = await this.qdrantClient!.getCollections();
+        const exists = collections.collections.some(
+          (c) => c.name === collectionName,
         );
-      } else {
-        this.logger.log(
-          `[SUCCESS] Collection '${this.collectionName}' already exists`,
-        );
+
+        if (!exists) {
+          this.logger.log(`🏗️ Creating collection '${collectionName}' with dimension ${dimension}...`);
+          await this.qdrantClient!.createCollection(collectionName, {
+            vectors: {
+              size: dimension,
+              distance: 'Cosine',
+            },
+          });
+          return collectionName;
+        }
+
+        // Check existing dimension
+        const info = await this.qdrantClient!.getCollection(collectionName);
+        const config = (info.config?.params as any) || {};
+        const vectors = config.vectors || {};
+        const currentSize = typeof vectors.size === 'number' ? vectors.size : vectors.default?.size;
+
+        if (currentSize && currentSize !== dimension) {
+          const errorMsg = `Dimension mismatch in collection '${collectionName}'. Expected ${currentSize}, but received ${dimension}.`;
+          this.logger.error(`❌ ${errorMsg}`);
+          throw new Error(errorMsg);
+        }
+
+        return collectionName;
+      } finally {
+        // Clear the lock after completion (success or failure)
+        this.activeCreations.delete(collectionName);
       }
-    } catch (error) {
-      this.logger.error(
-        `[ERROR] Failed to initialize Qdrant collection: ${error.message}`,
-      );
+    })();
 
-      // Provide specific troubleshooting info
-      if (error.message.includes('fetch')) {
-        this.logger.error(
-          '[WARNING] NETWORK ERROR: Cannot connect to Qdrant server',
-        );
-        this.logger.error(`   URL: ${process.env.QDRANT_URL}`);
-        this.logger.error('   Possible causes:');
-        this.logger.error('   - Qdrant server is down');
-        this.logger.error('   - Firewall blocking outbound connections');
-        this.logger.error('   - DNS resolution issues');
-        this.logger.error('   - HTTPS certificate validation failed');
-        this.logger.error(
-          '   [TIP] Test API access: curl -H "api-key: ' +
-            process.env.QDRANT_API_KEY +
-            '" ' +
-            process.env.QDRANT_URL +
-            '/collections',
-        );
-        this.logger.error(
-          '   [TIP] Test with different API endpoints to check permissions',
-        );
-      }
-
-      this.logger.error(
-        '[WARNING] Knowledge base vector search will not work until Qdrant is accessible',
-      );
-      this.logger.error(
-        '[WARNING] Document upload will create records but skip vectorization',
-      );
-    }
+    this.activeCreations.set(collectionName, creationPromise);
+    return creationPromise;
   }
 
   async upsertVector(point: VectorPoint, workspaceId: string): Promise<string> {
@@ -132,6 +126,13 @@ export class KBVectorService {
     }
 
     try {
+      const dimension = point.vector.length;
+      const collectionName = await this.ensureCollection(dimension);
+
+      this.logger.debug(
+        `Upserting vector to ${collectionName}: ID=${point.id}, Dim=${dimension}`,
+      );
+
       const sanitizedPayload = {
         ...point.payload,
         workspace_id: workspaceId,
@@ -140,7 +141,7 @@ export class KBVectorService {
           : '',
       };
 
-      await this.qdrantClient.upsert(this.collectionName, {
+      await this.qdrantClient.upsert(collectionName, {
         points: [
           {
             id: point.id,
@@ -153,6 +154,9 @@ export class KBVectorService {
       return point.id;
     } catch (error) {
       this.logger.error(`Error upserting vector: ${error.message}`);
+      if (error.data) {
+        this.logger.error(`Qdrant error details: ${JSON.stringify(error.data)}`);
+      }
       throw error;
     }
   }
@@ -169,12 +173,21 @@ export class KBVectorService {
     }
 
     try {
+      const dimension = vector.length;
+      const collectionName = this.getCollectionName(dimension);
+
       const searchFilter = {
         ...filter,
         workspace_id: workspaceId,
       };
 
-      const searchResult = await this.qdrantClient.search(this.collectionName, {
+      this.logger.debug(
+        `Searching vectors in ${collectionName}: Dim=${dimension}, Filter=${JSON.stringify(
+          searchFilter,
+        )}`,
+      );
+
+      const searchResult = await this.qdrantClient.search(collectionName, {
         vector,
         limit,
         filter: this.buildFilter(searchFilter),
@@ -191,18 +204,19 @@ export class KBVectorService {
     }
   }
 
-  async deleteVector(id: string): Promise<void> {
+  async deleteVector(id: string, dimension: number): Promise<void> {
     if (!this.qdrantClient) {
       this.logger.warn('Qdrant client not available - skipping delete');
       return;
     }
 
     try {
-      await this.qdrantClient.delete(this.collectionName, {
+      const collectionName = this.getCollectionName(dimension);
+      await this.qdrantClient.delete(collectionName, {
         points: [id],
       });
     } catch (error) {
-      this.logger.error(`Error deleting vector: ${error.message}`);
+      this.logger.error(`Error deleting vector from ${this.getCollectionName(dimension)}: ${error.message}`);
       throw error;
     }
   }
@@ -210,6 +224,7 @@ export class KBVectorService {
   async deleteByFilter(
     workspaceId: string,
     filter: Record<string, any>,
+    dimension: number,
   ): Promise<void> {
     if (!this.qdrantClient) {
       this.logger.warn('Qdrant client not available - skipping delete');
@@ -217,16 +232,17 @@ export class KBVectorService {
     }
 
     try {
+      const collectionName = this.getCollectionName(dimension);
       const deleteFilter = {
         ...filter,
         workspace_id: workspaceId,
       };
 
-      await this.qdrantClient.delete(this.collectionName, {
+      await this.qdrantClient.delete(collectionName, {
         filter: this.buildFilter(deleteFilter),
       });
     } catch (error) {
-      this.logger.error(`Error deleting by filter: ${error.message}`);
+      this.logger.error(`Error deleting by filter in ${this.getCollectionName(dimension)}: ${error.message}`);
       throw error;
     }
   }
@@ -297,29 +313,135 @@ export class KBVectorService {
     }
   }
 
-  async ensureCollection(): Promise<boolean> {
+  async recreateCollection(dimension: number): Promise<void> {
     if (!this.qdrantClient) {
-      return false;
+      throw new Error('Qdrant client not available');
     }
 
     try {
-      const collections = await this.qdrantClient.getCollections();
-      const exists = collections.collections.some(
-        (c) => c.name === this.collectionName,
+      const collectionName = this.getCollectionName(dimension);
+      this.logger.log(
+        `Recreating collection '${collectionName}' with dimension ${dimension}...`,
       );
 
-      if (!exists) {
-        await this.qdrantClient.createCollection(this.collectionName, {
-          vectors: {
-            size: 768,
-            distance: 'Cosine',
-          },
-        });
+      // Check if exists first to avoid error on delete
+      const collections = await this.qdrantClient.getCollections();
+      const exists = collections.collections.some(
+        (c) => c.name === collectionName,
+      );
+
+      if (exists) {
+        await this.qdrantClient.deleteCollection(collectionName);
+        this.logger.log(`Deleted existing collection '${collectionName}'`);
       }
-      return true;
+
+      await this.qdrantClient.createCollection(collectionName, {
+        vectors: {
+          size: dimension,
+          distance: 'Cosine',
+        },
+      });
+
+      this.logger.log(
+        `[SUCCESS] Collection '${collectionName}' recreated with dimension ${dimension}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to ensure collection: ${error.message}`);
-      return false;
+      this.logger.error(`Failed to recreate collection: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Clears ALL collections from Qdrant.
+   * USE WITH CAUTION.
+   */
+  async clearAllCollections(): Promise<string[]> {
+    if (!this.qdrantClient) {
+      throw new Error('Qdrant client not available');
+    }
+
+    try {
+      const { collections } = await this.qdrantClient.getCollections();
+      const deleted: string[] = [];
+
+      for (const collection of collections) {
+        this.logger.warn(`🔥 Deleting collection: ${collection.name}`);
+        await this.qdrantClient.deleteCollection(collection.name);
+        deleted.push(collection.name);
+      }
+
+      this.logger.log(`🧹 Cleaned up ${deleted.length} collections`);
+      return deleted;
+    } catch (error) {
+      this.logger.error(`Failed to clear collections: ${error.message}`);
+      throw error;
+    }
+  }
+  /**
+   * Creates a Full-Text Index on the 'content' payload field.
+   * Required for performant keyword search.
+   */
+  async createPayloadIndex(dimension: number): Promise<void> {
+    if (!this.qdrantClient) return;
+
+    const collectionName = this.getCollectionName(dimension);
+    this.logger.log(`Creating payload index for 'content' in ${collectionName}...`);
+
+    try {
+      await this.qdrantClient.createPayloadIndex(collectionName, {
+        field_name: 'content',
+        field_schema: 'text', // Full-Text Index
+      });
+      this.logger.log(`✅ Payload index created for ${collectionName}`);
+    } catch (error) {
+      this.logger.warn(`Failed to create payload index: ${error.message}`);
+    }
+  }
+
+  /**
+   * Search for chunks containing specific keywords using Qdrant Payload Search.
+   * Replaces slow Postgres ILike.
+   */
+  async searchByPayload(
+    query: string,
+    workspaceId: string,
+    limit: number = 5,
+    dimension: number = 1536 // Default to common dim if unknown
+  ): Promise<SearchResult[]> {
+    if (!this.qdrantClient) return [];
+
+    const collectionName = this.getCollectionName(dimension);
+
+    try {
+      // Qdrant Scroll API with Filter
+      const result = await this.qdrantClient.scroll(collectionName, {
+        limit,
+        with_payload: true,
+        with_vector: false,
+        filter: {
+          must: [
+            {
+              key: 'workspace_id',
+              match: { value: workspaceId }
+            },
+            {
+              key: 'content',
+              match: { text: query } // Full-Text Match
+            }
+          ]
+        }
+      });
+
+      return result.points.map(point => ({
+        id: point.id as string,
+        score: 1.0, // Payload matching doesn't score by default unless we use 'recommend' or newer APIs. RRF handles ranking.
+        payload: point.payload as Record<string, any>
+      }));
+
+    } catch (error) {
+      // Fallback: If collection doesn't exist (e.g. wrong dimension), return empty
+      this.logger.debug(`Payload search failed (likely collection miss): ${error.message}`);
+      return [];
     }
   }
 }

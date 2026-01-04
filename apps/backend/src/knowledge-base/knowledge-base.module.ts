@@ -6,6 +6,8 @@ import { FilesModule } from '../files/files.module';
 import { AuditModule } from '../audit/audit.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { ConfigModule } from '@nestjs/config';
+import kbConfig from './config/kb.config';
 
 import { BullModule } from '@nestjs/bullmq';
 
@@ -27,6 +29,7 @@ import { KBProcessingQueueService } from './services/kb-processing-queue.service
 import { KBSyncService } from './services/kb-sync.service';
 import { KBCrawlerService } from './services/kb-crawler.service';
 import { KBProcessor } from './services/kb-processor.service';
+import { KBTextExtractorService } from './services/kb-text-extractor.service';
 
 import {
   BotEntity,
@@ -62,6 +65,7 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     AuditModule,
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    ConfigModule.forFeature(kbConfig),
   ],
   controllers: [
     KnowledgeBaseController,
@@ -83,6 +87,7 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     KBSyncService,
     KBCrawlerService,
     KBProcessor,
+    KBTextExtractorService,
     KnowledgeBaseGateway,
   ],
   exports: [

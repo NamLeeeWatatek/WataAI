@@ -13,6 +13,7 @@ import {
 import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 import { KBChunkEntity } from '../infrastructure/persistence/relational/entities/kb-chunk.entity';
 import { ILike } from 'typeorm';
+import { KbAiConfig } from '../config/kb-ai.config';
 
 export interface RAGResult {
   answer: string;
@@ -40,7 +41,7 @@ export class KBRagService {
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -109,7 +110,7 @@ export class KBRagService {
     similarityThreshold: number = 0.7,
   ) {
     try {
-      this.logger.log(`ðŸ”„ Performing Hybrid Search for: "${query}"`);
+      this.logger.log(`🔄 Performing Hybrid Search for: "${query}"`);
 
       // 1. Vector Search (Semantic)
       const queryEmbedding =
@@ -125,14 +126,13 @@ export class KBRagService {
         knowledgeBaseId ? { knowledgeBaseId } : undefined,
       );
 
-      // 2. Keyword Search (Relational)
-      const keywordResults = await this.chunkRepository.find({
-        where: {
-          knowledgeBaseId: knowledgeBaseId || undefined,
-          content: ILike(`%${query}%`),
-        },
-        take: limit * 2,
-      });
+      // 2. Keyword Search (Qdrant Payload Search)
+      const keywordResults = await this.vectorService.searchByPayload(
+        query,
+        workspaceId,
+        limit * 2,
+        queryEmbedding.length // Dynamic dimension from the actual embedding model
+      );
 
       // 3. Merging with Reciprocal Rank Fusion (RRF)
       const rrfResults = new Map<string, { chunk: any; score: number }>();
@@ -152,19 +152,20 @@ export class KBRagService {
         });
       });
 
-      // Process Keyword Results
-      keywordResults.forEach((chunk, rank) => {
+      // Process Keyword Results (from Qdrant)
+      keywordResults.forEach((result, rank) => {
         const score = 1 / (k + rank);
-        const existing = rrfResults.get(chunk.id);
+        const existing = rrfResults.get(result.id);
         if (existing) {
           existing.score += score;
         } else {
-          rrfResults.set(chunk.id, {
+          rrfResults.set(result.id, {
             chunk: {
-              content: chunk.content,
-              metadata: chunk.metadata,
-              documentId: chunk.documentId,
-              chunkIndex: chunk.chunkIndex,
+              content: result.payload.content,
+              metadata: result.payload.metadata,
+              documentId: result.payload.documentId,
+              chunkIndex: result.payload.chunkIndex,
+              score: score,
             },
             score: score,
           });
@@ -187,7 +188,7 @@ export class KBRagService {
       this.logger.error(`Error in hybrid query: ${error.message}`);
       // Fallback to simple vector search if hybrid fails
       // Cast to any to bypass the missing hybridQuery error if it still exists during application
-      return (this as any).query(
+      return this.query(
         query,
         workspaceId,
         knowledgeBaseId,
@@ -221,7 +222,7 @@ export class KBRagService {
 
       if (relevantChunks.length === 0) {
         this.logger.warn(
-          `âš ï¸ No relevant chunks found for question: "${question}"`,
+          `⚠️ No relevant chunks found for question: "${question}"`,
         );
         const lang = I18nContext.current()?.lang;
         return {
@@ -231,7 +232,7 @@ export class KBRagService {
       }
 
       this.logger.log(
-        `âœ… Using ${relevantChunks.length} chunks for answer generation`,
+        `✅ Using ${relevantChunks.length} chunks for answer generation`,
       );
 
       const context = relevantChunks
@@ -241,7 +242,7 @@ export class KBRagService {
       const lang = I18nContext.current()?.lang;
       const prompt = `${this.i18n.t('ai.ragPromptPrefix', { lang })}\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
 
-      // âœ… Use configured AI provider for the knowledge base if available
+      // ✅ Use configured AI provider for the knowledge base if available
       let answer: string;
       if (knowledgeBaseId) {
         // Try to get knowledge base and use its configured AI provider
@@ -254,7 +255,7 @@ export class KBRagService {
         // Fallback to default provider
         answer = await this.aiProvidersService.chat(
           prompt,
-          model || 'gemini-2.0-flash',
+          model || KbAiConfig.defaults.model,
         );
       }
 
@@ -286,7 +287,7 @@ export class KBRagService {
       });
 
       // Use KB's RAG model if configured, otherwise fall back to the model parameter or default
-      const finalModel = kb?.ragModel || model || 'gemini-2.0-flash';
+      const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
 
       if (kb && kb.aiProviderId) {
         const userId = kb.createdBy || 'system';
@@ -302,7 +303,7 @@ export class KBRagService {
           kb.workspaceId
         ) {
           this.logger.log(
-            `ðŸ”Ž Using KB's workspace AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
+            `🔎 Using KB's workspace AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
           );
           return await this.aiProvidersService.chatWithHistoryUsingProvider(
             [{ role: 'user', content: prompt }],
@@ -319,7 +320,7 @@ export class KBRagService {
           )
         ) {
           this.logger.log(
-            `ðŸ”Ž Using KB's user AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
+            `🔎 Using KB's user AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
           );
           return await this.aiProvidersService.chatWithHistoryUsingProvider(
             [{ role: 'user', content: prompt }],
@@ -330,13 +331,13 @@ export class KBRagService {
           );
         } else {
           this.logger.log(
-            `ðŸ”Ž KB AI provider ${kb.aiProviderId} not found, using default with model: ${finalModel}`,
+            `🔎 KB AI provider ${kb.aiProviderId} not found, using default with model: ${finalModel}`,
           );
           return await this.aiProvidersService.chat(prompt, finalModel);
         }
       } else {
         this.logger.log(
-          `ðŸ”Ž KB provider config incomplete, using default with model: ${finalModel}`,
+          `🔎 KB provider config incomplete, using default with model: ${finalModel}`,
         );
         return await this.aiProvidersService.chat(prompt, finalModel);
       }
@@ -346,7 +347,7 @@ export class KBRagService {
       );
       return await this.aiProvidersService.chat(
         prompt,
-        model || 'gemini-2.0-flash',
+        model || KbAiConfig.defaults.model,
       );
     }
   }
@@ -380,10 +381,10 @@ export class KBRagService {
 
       const workspaceId = bot.workspaceId ?? undefined;
       const aiProviderId = bot.aiProviderId ?? undefined;
-      const modelName = model || bot.aiModelName || 'gemini-2.0-flash';
+      const modelName = model || bot.aiModelName || KbAiConfig.defaults.model;
 
       this.logger.log(
-        `ðŸ¤– Bot: ${bot.name}, Workspace: ${workspaceId}, AI Provider: ${aiProviderId || 'auto'}, Model: ${modelName}`,
+        `🤖 Bot: ${bot.name}, Workspace: ${workspaceId}, AI Provider: ${aiProviderId || 'auto'}, Model: ${modelName}`,
       );
 
       let relevantChunks: any[] = [];
@@ -421,16 +422,16 @@ export class KBRagService {
             .slice(0, 5);
 
           this.logger.log(
-            `âœ… Found ${relevantChunks.length} relevant chunks from ${knowledgeBaseIds.length} linked KBs`,
+            `✅ Found ${relevantChunks.length} relevant chunks from ${knowledgeBaseIds.length} linked KBs`,
           );
         } catch (kbError) {
           this.logger.warn(
-            `âš ï¸ Knowledge base query failed: ${kbError.message}. Continuing without KB context.`,
+            `⚠️ Knowledge base query failed: ${kbError.message}. Continuing without KB context.`,
           );
           // Continue without KB context
         }
       } else {
-        this.logger.log(`âš ï¸ No linked knowledge bases for bot ${bot.name}`);
+        this.logger.log(`⚠️ No linked knowledge bases for bot ${bot.name}`);
       }
 
       let systemPrompt = botSystemPrompt || 'You are a helpful assistant.';
@@ -441,9 +442,9 @@ export class KBRagService {
           .join('\n\n');
 
         systemPrompt += `\n\nUse the following context from the knowledge base to answer questions:\n\n${context}`;
-        this.logger.log(`ðŸ“š Using KB context (${context.length} chars)`);
+        this.logger.log(`📚 Using KB context (${context.length} chars)`);
       } else {
-        this.logger.log(`ðŸ’¬ No KB context available, using AI only`);
+        this.logger.log(`💬 No KB context available, using AI only`);
       }
 
       const messages = [
@@ -458,15 +459,15 @@ export class KBRagService {
         },
       ];
 
-      // âœ… Use chatWithHistoryUsingProvider to properly get API key from user settings
+      // Use chatWithHistoryUsingProvider to properly get API key from user settings
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiProviderId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiProviderId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -509,7 +510,7 @@ export class KBRagService {
 
       return await this.aiProvidersService.chatWithHistory(
         messages,
-        model || 'gemini-2.0-flash',
+        model || KbAiConfig.defaults.model,
       );
     } catch (error) {
       this.logger.error(`Error in chat: ${error.message}`);
@@ -528,35 +529,28 @@ export class KBRagService {
     model?: string,
   ): Promise<RAGResult> {
     try {
-      // Load bot configuration first (if provided)
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiProviderId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiProviderId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
-
-      if (!bot && botId) {
-        throw new Error(`Bot ${botId} not found`);
-      }
 
       if (botId && !bot) {
         throw new Error(`Bot ${botId} not found`);
       }
 
-      // Set system prompt and model (prioritize bot config, then parameters)
       const systemPrompt = bot?.systemPrompt || 'You are a helpful assistant.';
-      const botModel = bot?.aiModelName || model || 'gemini-2.0-flash';
+      const defaultModel = bot?.aiModelName || model || KbAiConfig.defaults.model;
 
-      // Determine which knowledge bases to use
       let effectiveKnowledgeBaseIds = knowledgeBaseIds;
 
       // If no explicit knowledge bases provided but we have a bot, use the bot's linked knowledge bases
@@ -571,14 +565,7 @@ export class KBRagService {
         });
 
         effectiveKnowledgeBaseIds = linkedKBs.map((lkb) => lkb.knowledgeBaseId);
-        this.logger.log(
-          `🔗 Using ${effectiveKnowledgeBaseIds.length} linked knowledge bases for bot ${bot?.name}`,
-        );
       }
-
-      this.logger.log(
-        `🤖 Bot: ${bot?.name || 'No bot'} | Model: ${botModel} | KB Count: ${effectiveKnowledgeBaseIds?.length || 0}`,
-      );
 
       // Handle RAG context gathering (if knowledge bases available)
       let ragContext = '';
@@ -602,13 +589,8 @@ export class KBRagService {
             .map((chunk, i) => `[Source ${i + 1}]\n${chunk.content}`)
             .join('\n\n');
         }
-
-        this.logger.log(
-          `📚 RAG Context gathered: ${ragSources.length} sources`,
-        );
       }
 
-      // Build messages with system prompt + RAG context + conversation history
       const messages = this.buildMessages(
         systemPrompt,
         ragContext,
@@ -616,7 +598,7 @@ export class KBRagService {
         message,
       );
 
-      // Get AI provider using proper hierarchy: Bot > KB Workspace > KB User > User Configs > Error
+      // Get AI provider using proper hierarchy: KB Workspace > KB User > Bot Provider > User Configs > Error
       const providerConfig = await this.resolveAIProvider(
         bot,
         effectiveKnowledgeBaseIds?.[0],
@@ -624,20 +606,19 @@ export class KBRagService {
 
       if (!providerConfig) {
         throw new Error(
-          `No AI provider configured for bot. Please configure an AI provider in Settings first.`,
+          `No AI provider configured. Please configure an AI provider in Settings first.`,
         );
       }
 
-      // Chat with resolved provider
+      const finalModel = providerConfig.modelName || defaultModel;
+
       const answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
         messages,
-        botModel,
+        finalModel,
         providerConfig.providerId,
         providerConfig.scope,
         providerConfig.scopeId,
       );
-
-      this.logger.log(`💬 RAG Answer generated (${answer.length} chars)`);
 
       return {
         answer,
@@ -720,7 +701,7 @@ export class KBRagService {
 
   /**
    * Resolve AI provider with proper hierarchy
-   * Priority: Bot Provider > KB Workspace Provider > KB User Provider > User Configs > Fail
+   * Priority: KB Workspace Provider > KB User Provider > Bot Provider > User Configs > Fail
    */
   private async resolveAIProvider(
     bot?: BotEntity | null,
@@ -729,8 +710,52 @@ export class KBRagService {
     providerId: string;
     scope: 'workspace' | 'user';
     scopeId: string;
+    modelName?: string;
   } | null> {
-    // 1. Bot's AI provider (highest priority)
+    // 1. Knowledge Base AI provider (Highest priority)
+    if (knowledgeBaseId) {
+      const kb = await this.kbRepository.findOne({
+        where: { id: knowledgeBaseId },
+      });
+
+      if (kb?.aiProviderId) {
+        // Try KB Workspace Provider
+        if (
+          kb.workspaceId &&
+          (await this.aiProvidersService.configExists(
+            kb.aiProviderId,
+            'workspace',
+            kb.workspaceId,
+          ))
+        ) {
+          return {
+            providerId: kb.aiProviderId,
+            scope: 'workspace',
+            scopeId: kb.workspaceId,
+            modelName: kb.ragModel || undefined,
+          };
+        }
+
+        // Try KB User Provider
+        const userId = kb.createdBy || 'system';
+        if (
+          await this.aiProvidersService.configExists(
+            kb.aiProviderId,
+            'user',
+            userId,
+          )
+        ) {
+          return {
+            providerId: kb.aiProviderId,
+            scope: 'user',
+            scopeId: userId as string,
+            modelName: kb.ragModel || undefined,
+          };
+        }
+      }
+    }
+
+    // 2. Bot's AI provider (Secondary priority)
     if (bot?.aiProviderId) {
       if (
         bot.workspaceId &&
@@ -740,13 +765,11 @@ export class KBRagService {
           bot.workspaceId,
         ))
       ) {
-        this.logger.log(
-          `🎯 Using bot's workspace AI provider: ${bot.aiProviderId}`,
-        );
         return {
           providerId: bot.aiProviderId,
           scope: 'workspace',
           scopeId: bot.workspaceId,
+          modelName: bot.aiModelName || undefined,
         };
       }
 
@@ -757,85 +780,38 @@ export class KBRagService {
           bot.createdBy || 'system',
         )
       ) {
-        this.logger.log(`🎯 Using bot's user AI provider: ${bot.aiProviderId}`);
         return {
           providerId: bot.aiProviderId,
           scope: 'user',
           scopeId: bot.createdBy || 'system',
+          modelName: bot.aiModelName || undefined,
         };
       }
     }
 
-    // 2. Knowledge Base AI provider (if KB provided)
-    if (knowledgeBaseId) {
-      const kb = await this.kbRepository.findOne({
-        where: { id: knowledgeBaseId },
-      });
+    // 3. Fallback to Bot's user or system default
+    const fallbackUserId = bot?.createdBy || 'system';
+    const fallbackProviderId = 'gemini'; // Default fallback
 
-      if (kb?.aiProviderId) {
-        const userId = kb.createdBy || 'system';
-
-        if (
-          kb.workspaceId &&
-          (await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'workspace',
-            kb.workspaceId,
-          ))
-        ) {
-          this.logger.log(
-            `📋 Using knowledge base's workspace AI provider: ${kb.aiProviderId}`,
-          );
-          return {
-            providerId: kb.aiProviderId,
-            scope: 'workspace',
-            scopeId: kb.workspaceId,
-          };
-        }
-
-        if (
-          await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'user',
-            userId,
-          )
-        ) {
-          this.logger.log(
-            `📋 Using knowledge base's user AI provider: ${kb.aiProviderId}`,
-          );
-          return {
-            providerId: kb.aiProviderId,
-            scope: 'user',
-            scopeId: userId,
-          };
-        }
-      }
-    }
-
-    // 3. User's fallback providers (only if bot exists)
-    if (bot) {
-      const fallbackCreatorId = bot.createdBy || 'system';
-      const userProviders =
-        await this.aiProvidersService.getUserConfigs(fallbackCreatorId);
-      const activeProviders = userProviders.filter((p) => p.isActive);
-
-      if (activeProviders.length > 0) {
-        const provider = activeProviders[0];
-        this.logger.log(
-          `🔄 Using user's fallback AI provider: ${provider.displayName} (${provider.providerId})`,
-        );
+    try {
+      if (
+        await this.aiProvidersService.configExists(
+          fallbackProviderId,
+          'user',
+          fallbackUserId,
+        )
+      ) {
+        this.logger.log(`Using default fallback provider: ${fallbackProviderId}`);
         return {
-          providerId: provider.providerId,
+          providerId: fallbackProviderId,
           scope: 'user',
-          scopeId: fallbackCreatorId,
+          scopeId: fallbackUserId,
         };
       }
+    } catch (e) {
+      // Ignore
     }
 
-    // No provider found
-    this.logger.warn(
-      `❌ No AI provider found for bot ${bot?.name || 'unknown'}`,
-    );
     return null;
   }
 }

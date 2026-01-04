@@ -521,7 +521,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                             {/* Widget: Trigger Button */}
                             <button
                                 onClick={() => setIsPreviewOpen(!isPreviewOpen)}
-                                className="absolute shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 flex items-center justify-center group/btn hover:rotate-6 shadow-primary/20"
+                                className="absolute shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 flex items-center justify-center group/btn shadow-primary/20"
                                 style={{
                                     bottom: settings.widgetPosition?.includes('top') ? 'auto' : '20px',
                                     top: settings.widgetPosition?.includes('top') ? '20px' : 'auto',

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, ChevronRight } from 'lucide-react'
+import { Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
     Breadcrumb,
@@ -37,7 +37,7 @@ export function KBBreadcrumbs({
 
     return (
         <Breadcrumb className="mb-6">
-            <BreadcrumbList className="sm:gap-2">
+            <BreadcrumbList>
                 <BreadcrumbItem>
                     <BreadcrumbLink
                         onClick={(e) => {
@@ -50,28 +50,24 @@ export function KBBreadcrumbs({
                             onDrop?.(null)
                         }}
                         className={cn(
-                            "flex items-center gap-1.5 cursor-pointer transition-all px-2 py-1 rounded-md",
-                            "hover:bg-muted hover:text-foreground",
-                            dragOverId === null && "bg-primary/20 ring-1 ring-primary text-primary font-bold shadow-sm"
+                            "flex items-center gap-1",
+                            dragOverId === null && "text-primary font-bold"
                         )}
                         href="#"
                     >
                         <Home className="w-4 h-4" />
-                        <span className="font-semibold">{rootName}</span>
+                        <span>{rootName}</span>
                     </BreadcrumbLink>
                 </BreadcrumbItem>
 
                 {breadcrumbs.map((crumb, index) => (
                     <React.Fragment key={crumb.id || index}>
-                        <BreadcrumbSeparator>
-                            <ChevronRight className="w-4 h-4 opacity-50" />
-                        </BreadcrumbSeparator>
+                        <BreadcrumbSeparator />
                         <BreadcrumbItem>
                             {index === breadcrumbs.length - 1 ? (
                                 <BreadcrumbPage
                                     className={cn(
-                                        "font-bold text-foreground px-2 py-1 rounded-md transition-all",
-                                        dragOverId === crumb.id && "bg-primary/20 ring-1 ring-primary text-primary shadow-sm"
+                                        dragOverId === crumb.id && "text-primary font-bold"
                                     )}
                                     onDragOver={handleDragOver}
                                     onDrop={(e: React.DragEvent) => {
@@ -93,9 +89,7 @@ export function KBBreadcrumbs({
                                         onDrop?.(crumb.id)
                                     }}
                                     className={cn(
-                                        "cursor-pointer transition-all px-2 py-1 rounded-md",
-                                        "hover:bg-muted hover:text-foreground",
-                                        dragOverId === crumb.id && "bg-primary/20 ring-1 ring-primary text-primary font-bold shadow-sm"
+                                        dragOverId === crumb.id && "text-primary font-bold"
                                     )}
                                     href="#"
                                 >

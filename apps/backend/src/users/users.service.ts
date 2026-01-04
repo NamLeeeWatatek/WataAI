@@ -33,21 +33,7 @@ export class UsersService {
       clonedPayload.password = await bcrypt.hash(clonedPayload.password, salt);
     }
 
-    if (clonedPayload.email) {
-      const userObject = await this.usersRepository.findByEmail(
-        clonedPayload.email,
-      );
-      if (userObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
-        });
-      }
-    }
-
-    // Role assignment refactor
+    // Role assignment refactor - Strict Enum Usage
     if (clonedPayload.role) {
       clonedPayload.role = this.transformRole(clonedPayload.role);
     } else {
@@ -62,8 +48,6 @@ export class UsersService {
       provider: clonedPayload.provider || 'email',
       isActive: clonedPayload.isActive ?? true,
       role: clonedPayload.role as Role,
-      firstName: createUserDto.firstName,
-      lastName: createUserDto.lastName,
       socialId: createUserDto.socialId,
     });
 
@@ -145,6 +129,7 @@ export class UsersService {
     }
 
     let name = updateUserDto.name;
+    // Legacy support for firstName/lastName if name is not provided
     if (
       name === undefined &&
       (updateUserDto.firstName !== undefined ||
@@ -172,8 +157,7 @@ export class UsersService {
       role,
       roleId: updateUserDto.roleId,
       emailVerifiedAt: updateUserDto.emailVerifiedAt,
-      firstName: updateUserDto.firstName,
-      lastName: updateUserDto.lastName,
+      // Removed writes to deprecated firstName/lastName
       socialId: updateUserDto.socialId,
     });
 
@@ -219,6 +203,7 @@ export class UsersService {
   private transformRole(roleInput: string | Role | null): Role | null {
     if (roleInput === null) return null;
     if (typeof roleInput === 'string') {
+      // If input is string key ("user"), map to Enum Value (2)
       const roleId = RoleEnum[roleInput as keyof typeof RoleEnum];
       if (roleId) {
         return {
@@ -226,7 +211,7 @@ export class UsersService {
           name: roleInput,
         } as Role;
       }
-      // Fallback or should throw? For backward compat keeping loose for now but properly typed return
+      // Fallback for safety, but this implies bad input
       return { id: RoleEnum.user, name: 'user' } as Role;
     }
     return roleInput as Role;

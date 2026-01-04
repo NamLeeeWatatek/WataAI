@@ -2,12 +2,13 @@
 
 import React from 'react';
 import { DataTable } from '@/components/ui/DataTable';
-import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Folder, FileText, Edit2, Trash2, Eye, Download, MoreVertical, FileCode, FileImage, FileAudio, FileVideo } from 'lucide-react';
+import { Edit2, Trash2, Eye, Download, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
+import { KbFileIcon } from './KbFileIcon';
 import type { SortDirection } from '@/components/ui/DataTable';
 import type { PaginationInfo } from '@/components/ui/Pagination';
 
@@ -42,7 +43,6 @@ interface KbTableViewProps {
   onDragOver?: (folderId: string) => void;
   onDrop?: (targetFolderId: string) => void;
   onToggleSelectAll?: (checked: boolean) => void;
-  onRowExpand?: (item: KbItem) => Promise<void> | void;
 }
 
 export function KbTableView({
@@ -64,8 +64,7 @@ export function KbTableView({
   onDragStart,
   onDragOver,
   onDrop,
-  onToggleSelectAll,
-  onRowExpand
+  onToggleSelectAll
 }: KbTableViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -95,15 +94,7 @@ export function KbTableView({
     )
   };
 
-  const getFileIcon = (name: string, type: 'folder' | 'document') => {
-    if (type === 'folder') return <Folder className="w-5 h-5" />;
-    const ext = name.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext || '')) return <FileImage className="w-5 h-5" />;
-    if (['mp4', 'webm', 'mov', 'avi'].includes(ext || '')) return <FileVideo className="w-5 h-5" />;
-    if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext || '')) return <FileAudio className="w-5 h-5" />;
-    if (['json', 'js', 'ts', 'html', 'css', 'py', 'go'].includes(ext || '')) return <FileCode className="w-5 h-5" />;
-    return <FileText className="w-5 h-5" />;
-  }
+
 
   const columns = [
     {
@@ -141,7 +132,8 @@ export function KbTableView({
               ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
               : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
           )}>
-            {getFileIcon(row.name, row.type)}
+            {/* <KbFileIcon name={row.name} type={row.type} className="w-5 h-5" /> */}
+            <KbFileIcon name={row.name} type={row.type} className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{value}</div>
@@ -253,10 +245,6 @@ export function KbTableView({
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         emptyMessage="This collection is currently empty"
-        isTree={true}
-        treeColumnKey="name"
-        getRowCanExpand={(row) => row.type === 'folder'}
-        onRowExpand={onRowExpand}
         onRowClick={onItemClick}
         className="w-full"
         tableClassName="bg-transparent border-0"

@@ -49,9 +49,9 @@ export class CreateUserDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ enum: ['admin', 'user'], default: 'user' })
+  @ApiPropertyOptional({ type: () => Role })
   @IsOptional()
-  role?: 'admin' | 'user' | Role | null;
+  role?: Role | string | null;
 
   @ApiPropertyOptional({ type: Number })
   @IsOptional()

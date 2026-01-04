@@ -62,6 +62,7 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, onSave }: 
     const [aiProviders, setAiProviders] = useState<AIProvider[]>([])
     const [loadingProviders, setLoadingProviders] = useState(false)
     const [useCustomRagModel, setUseCustomRagModel] = useState(false)
+    const [useCustomEmbeddingModel, setUseCustomEmbeddingModel] = useState(false)
 
     const form = useForm<z.infer<typeof settingsFormSchema>>({
         resolver: zodResolver(settingsFormSchema),
@@ -187,12 +188,15 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, onSave }: 
                                 <FormItem>
                                     <FormLabel>AI Provider for RAG</FormLabel>
                                     <FormControl>
-                                        <Select value={field.value} onValueChange={field.onChange}>
+                                        <Select
+                                            value={field.value || "system_default"}
+                                            onValueChange={(val) => field.onChange(val === "system_default" ? "" : val)}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder={loadingProviders ? "Loading providers..." : "Select AI provider (optional)"} />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="">None (Use default)</SelectItem>
+                                                <SelectItem value="system_default">None (Use default)</SelectItem>
                                                 {aiProviders.map((provider) => (
                                                     <SelectItem key={provider.id} value={provider.id}>
                                                         <div className="flex items-center gap-2">
@@ -251,7 +255,7 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, onSave }: 
                                                                         </SelectItem>
                                                                     ))
                                                                 ) : (
-                                                                    <SelectItem value="" disabled>
+                                                                    <SelectItem value="no_models" disabled>
                                                                         No models configured for this provider
                                                                     </SelectItem>
                                                                 );
@@ -310,20 +314,54 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, onSave }: 
                             name="embeddingModel"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Embedding Model</FormLabel>
+                                    <div className="flex items-center justify-between">
+                                        <FormLabel>Embedding Model</FormLabel>
+                                        <Button
+                                            type="button"
+                                            variant="link"
+                                            onClick={() => setUseCustomEmbeddingModel(!useCustomEmbeddingModel)}
+                                            className="p-0 h-auto text-xs text-primary underline"
+                                        >
+                                            {useCustomEmbeddingModel ? 'Use recommended models' : 'Enter custom model'}
+                                        </Button>
+                                    </div>
                                     <FormControl>
-                                        <Input placeholder="text-embedding-ada-002, text-embedding-004" {...field} />
+                                        {useCustomEmbeddingModel ? (
+                                            <Input placeholder="text-embedding-ada-002, text-embedding-004" {...field} />
+                                        ) : (
+                                            <Select
+                                                value={field.value || "system_default"}
+                                                onValueChange={(val) => field.onChange(val === "system_default" ? "" : val)}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select an embedding model" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {(() => {
+                                                        const selectedProvider = aiProviders.find(p => p.id === form.watch("aiProviderId"));
+                                                        const models = selectedProvider?.modelList || [];
+                                                        return models.length > 0 ? (
+                                                            models.map((model: string) => (
+                                                                <SelectItem key={model} value={model}>
+                                                                    {model}
+                                                                </SelectItem>
+                                                            ))
+                                                        ) : (
+                                                            <SelectItem value="no_models" disabled>
+                                                                No models configured for this provider
+                                                            </SelectItem>
+                                                        );
+                                                    })()}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
                                     </FormControl>
                                     <FormDescription className="space-y-1">
-                                        <div className="font-medium">⚠️ Important: Embedding model is INDEPENDENT of RAG provider above.</div>
                                         <div className="text-xs">
-                                            <strong>Examples:</strong> text-embedding-ada-002, text-embedding-3-small, text-embedding-004, all-MiniLM-L6-v2
+                                            <strong>Examples:</strong> text-embedding-ada-002, text-embedding-3-small, mxbai-embed-large
                                         </div>
                                         <div className="text-xs text-amber-600 dark:text-amber-400">
-                                            You can use ANY embedding model from ANY provider. This doesn't have to match the RAG provider selected above.
-                                        </div>
-                                        <div className="text-xs italic">
-                                            System will try to resolve this model from your configured providers or use system defaults.
+                                            If using Ollama, ensure you have pulled the embedding model (e.g. <code>ollama pull mxbai-embed-large</code>).
                                         </div>
                                     </FormDescription>
                                     <FormMessage />

@@ -12,6 +12,7 @@
   UseInterceptors,
   UploadedFile,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -292,7 +293,7 @@ export class KnowledgeBaseDocumentsController {
 
     if (!file) {
       console.error('❌ No file uploaded in request');
-      return { success: false, error: 'No file uploaded' };
+      throw new BadRequestException('No file uploaded');
     }
 
     // Log raw filename to understand encoding at source level

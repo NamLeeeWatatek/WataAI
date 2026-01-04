@@ -11,14 +11,20 @@ export class EncryptionService {
   private readonly encryptionKey: Buffer;
 
   constructor(private configService: ConfigService) {
-    const secret = this.configService.getOrThrow<string>('ENCRYPTION_SECRET');
+    const secret = this.configService.get<string>('ENCRYPTION_SECRET');
+    const legacyKey = this.configService.get<string>('ENCRYPTION_KEY');
 
-    if (!secret || secret.length < 32) {
-      throw new Error('ENCRYPTION_SECRET must be at least 32 characters');
+    if (secret && secret.length >= 32) {
+      // Preferred: Derive a 256-bit key from the secret
+      this.encryptionKey = crypto.scryptSync(secret, 'salt', 32);
+    } else if (legacyKey && legacyKey.length === 64) {
+      // Legacy fallback: Use hex key directly (compatibility mode)
+      this.encryptionKey = Buffer.from(legacyKey, 'hex');
+    } else {
+      throw new Error(
+        'Missing valid encryption config: Set ENCRYPTION_SECRET (preferred) or ENCRYPTION_KEY (legacy)',
+      );
     }
-
-    // Derive a 256-bit key from the secret
-    this.encryptionKey = crypto.scryptSync(secret, 'salt', 32);
   }
 
   /**

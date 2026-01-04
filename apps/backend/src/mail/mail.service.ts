@@ -14,7 +14,7 @@ export class MailService {
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
     const context = I18nContext.current();
@@ -22,12 +22,12 @@ export class MailService {
       context?.lang ||
       this.configService.get('app.fallbackLanguage', { infer: true });
 
-    const [emailConfirmTitle, text1, text2, text3] = (await Promise.all([
+    const [emailConfirmTitle, text1, text2, text3] = await Promise.all([
       this.i18n.t('common.confirmEmail', { lang }),
       this.i18n.t('confirm-email.text1', { lang }),
       this.i18n.t('confirm-email.text2', { lang }),
       this.i18n.t('confirm-email.text3', { lang }),
-    ])) as any[];
+    ]);
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -41,11 +41,7 @@ export class MailService {
       subject: emailConfirmTitle,
       text: `${url.toString()} ${emailConfirmTitle}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
-        'src',
-        'mail',
+        __dirname,
         'mail-templates',
         'activation.hbs',
       ),
@@ -69,15 +65,13 @@ export class MailService {
       context?.lang ||
       this.configService.get('app.fallbackLanguage', { infer: true });
 
-    const [resetPasswordTitle, text1, text2, text3, text4] = (await Promise.all(
-      [
-        this.i18n.t('common.resetPassword', { lang }),
-        this.i18n.t('reset-password.text1', { lang }),
-        this.i18n.t('reset-password.text2', { lang }),
-        this.i18n.t('reset-password.text3', { lang }),
-        this.i18n.t('reset-password.text4', { lang }),
-      ],
-    )) as any[];
+    const [resetPasswordTitle, text1, text2, text3, text4] = await Promise.all([
+      this.i18n.t('common.resetPassword', { lang }),
+      this.i18n.t('reset-password.text1', { lang }),
+      this.i18n.t('reset-password.text2', { lang }),
+      this.i18n.t('reset-password.text3', { lang }),
+      this.i18n.t('reset-password.text4', { lang }),
+    ]);
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -92,11 +86,7 @@ export class MailService {
       subject: resetPasswordTitle,
       text: `${url.toString()} ${resetPasswordTitle}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
-        'src',
-        'mail',
+        __dirname,
         'mail-templates',
         'reset-password.hbs',
       ),
@@ -121,12 +111,12 @@ export class MailService {
       context?.lang ||
       this.configService.get('app.fallbackLanguage', { infer: true });
 
-    const [emailConfirmTitle, text1, text2, text3] = (await Promise.all([
+    const [emailConfirmTitle, text1, text2, text3] = await Promise.all([
       this.i18n.t('common.confirmEmail', { lang }),
       this.i18n.t('confirm-new-email.text1', { lang }),
       this.i18n.t('confirm-new-email.text2', { lang }),
       this.i18n.t('confirm-new-email.text3', { lang }),
-    ])) as any[];
+    ]);
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -140,11 +130,7 @@ export class MailService {
       subject: emailConfirmTitle,
       text: `${url.toString()} ${emailConfirmTitle}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
-        'src',
-        'mail',
+        __dirname,
         'mail-templates',
         'confirm-new-email.hbs',
       ),
@@ -171,19 +157,17 @@ export class MailService {
     const appName = this.configService.get('app.name', { infer: true });
     const workspaceName = mailData.data.workspaceName;
 
-    const [subject, title, text1, text2, text3, actionBtn] = (await Promise.all(
-      [
-        this.i18n.t('invitation.subject', { lang, args: { workspaceName } }),
-        this.i18n.t('invitation.title', {
-          lang,
-          args: { workspaceName, appName },
-        }),
-        this.i18n.t('invitation.text1', { lang, args: { workspaceName } }),
-        this.i18n.t('invitation.text2', { lang }),
-        this.i18n.t('invitation.text3', { lang }),
-        this.i18n.t('invitation.actionBtn', { lang }),
-      ],
-    )) as string[];
+    const [subject, title, text1, text2, text3, actionBtn] = await Promise.all([
+      this.i18n.t('invitation.subject', { lang, args: { workspaceName } }),
+      this.i18n.t('invitation.title', {
+        lang,
+        args: { workspaceName, appName },
+      }),
+      this.i18n.t('invitation.text1', { lang, args: { workspaceName } }),
+      this.i18n.t('invitation.text2', { lang }),
+      this.i18n.t('invitation.text3', { lang }),
+      this.i18n.t('invitation.actionBtn', { lang }),
+    ]);
 
     const url = new URL(
       this.configService.getOrThrow('app.frontendDomain', {
@@ -196,11 +180,7 @@ export class MailService {
       subject: subject,
       text: `${url.toString()} ${subject}`,
       templatePath: path.join(
-        this.configService.getOrThrow('app.workingDirectory', {
-          infer: true,
-        }),
-        'src',
-        'mail',
+        __dirname,
         'mail-templates',
         'invitation.hbs',
       ),

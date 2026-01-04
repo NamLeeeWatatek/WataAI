@@ -44,6 +44,11 @@ export class AiProvider {
   updatedAt: Date;
 }
 
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
 /**
  * AiProviderConfig domain entity
  * Table: ai_provider_configs

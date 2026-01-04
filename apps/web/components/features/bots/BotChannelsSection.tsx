@@ -40,6 +40,7 @@ import { botsApi } from '@/lib/api/bots';
 import { Badge } from '@/components/ui/Badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 import { cn } from '@/lib/utils';
+import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 
 interface Props {
     botId: string;
@@ -71,6 +72,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
     const [channelName, setChannelName] = useState('');
     const [creating, setCreating] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const handleCreate = async () => {
         if (!channelName.trim()) {
@@ -103,15 +105,21 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
         }
     };
 
-    const handleDelete = async (channelId: string) => {
-        if (!confirm('Are you sure you want to delete this channel? Only the configuration will be removed.')) return;
+    const handleDelete = (channelId: string) => {
+        setDeleteId(channelId);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
 
         try {
-            await botsApi.deleteChannel(botId, channelId);
+            await botsApi.deleteChannel(botId, deleteId);
             toast.success('Channel deleted');
             onRefresh();
         } catch {
             toast.error('Failed to delete channel');
+        } finally {
+            setDeleteId(null);
         }
     };
 
@@ -133,13 +141,19 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                             </div>
                             <div>
                                 <CardTitle className="text-xl font-bold tracking-tight">Integration Channels</CardTitle>
-                                <CardDescription className="text-xs font-medium">Connect your bot to external platforms</CardDescription>
+                                <CardDescription className="text-xs font-medium">Connect your bot to external platforms via <a href="/channels" className="text-primary underline hover:text-primary/80">Project Integrations</a></CardDescription>
                             </div>
                         </div>
-                        <Button onClick={() => setShowModal(true)} className="shadow-lg shadow-primary/5 font-bold h-10 transition-all active:scale-95">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Channel
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" onClick={() => window.location.href = '/channels'} className="font-bold h-10 shadow-sm">
+                                <Settings className="w-4 h-4 mr-2" />
+                                Manage Integrations
+                            </Button>
+                            <Button onClick={() => setShowModal(true)} className="shadow-lg shadow-primary/5 font-bold h-10 transition-all active:scale-95">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Channel
+                            </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -152,14 +166,23 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                             <p className="max-w-xs text-sm font-medium text-muted-foreground mt-2 mb-8">
                                 Your bot is currently isolated. Connect it to external platforms to begin production interactions.
                             </p>
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowModal(true)}
-                                className="px-8 font-bold border-primary/20 transition-all active:scale-95"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                Initialize First Channel
-                            </Button>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => window.location.href = '/channels'}
+                                    className="px-6 font-bold shadow-sm bg-background"
+                                >
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    Manage Integrations
+                                </Button>
+                                <Button
+                                    onClick={() => setShowModal(true)}
+                                    className="px-8 font-bold border-primary/20 transition-all active:scale-95 shadow-lg shadow-primary/10"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    Initialize First Channel
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -334,6 +357,16 @@ export function BotChannelsSection({ botId, botChannels, onRefresh }: Props) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialogConfirm
+                open={!!deleteId}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                title="Delete Channel"
+                description="Are you sure you want to delete this channel? Only the configuration will be removed."
+                onConfirm={confirmDelete}
+                variant="destructive"
+                confirmText="Delete"
+            />
         </>
     );
 }

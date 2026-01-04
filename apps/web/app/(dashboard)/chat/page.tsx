@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/Button'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+import { Spinner } from '@/components/ui/Spinner'
 import { Card } from '@/components/ui/Card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { cn } from '@/lib/utils'
 import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import { useWorkspace } from '@/lib/hooks/useWorkspace'
@@ -37,8 +39,6 @@ import { Badge } from '@/components/ui/Badge'
 import { MessageRole } from '@/lib/types/conversations'
 import { motion } from 'framer-motion'
 import { PageHeader } from '@/components/ui/PageHeader'
-import { cn } from '@/lib/utils'
-import { ScrollArea } from '@/components/ui/ScrollArea'
 
 export default function ChatWithAIPage() {
     const { currentWorkspace } = useWorkspace()
@@ -48,10 +48,12 @@ export default function ChatWithAIPage() {
     const [loading, setLoading] = useState(false)
     const [loadingConversations, setLoadingConversations] = useState(true)
     const [bots, setBots] = useState<Bot[]>([])
-    const [selectedBot, setSelectedBot] = useState<string>('none')
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
-    const [selectedKnowledgeBases, setSelectedKnowledgeBases] = useState<string[]>([])
-    const [useKnowledgeBase, setUseKnowledgeBase] = useState(false)
+    const [config, setConfig] = useState({
+        botId: 'none',
+        useKnowledgeBase: false,
+        knowledgeBaseIds: [] as string[]
+    })
     const [showSettings, setShowSettings] = useState(false)
     const [editingConversationId, setEditingConversationId] = useState<string | null>(null)
     const [editingTitle, setEditingTitle] = useState('')
@@ -59,6 +61,41 @@ export default function ChatWithAIPage() {
     const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
     const [creatingConversation, setCreatingConversation] = useState(false)
     const [savingSettings, setSavingSettings] = useState(false)
+
+
+
+    // ✅ SENIOR: Derived state for "Dirty" check
+    const isConfigDirty = useMemo(() => {
+        if (!currentConversation) return false;
+
+        const currentBotId = currentConversation.botId || 'none';
+        const currentUseKB = !!currentConversation.useKnowledgeBase;
+        const currentKBIds = Array.isArray(currentConversation.metadata?.knowledgeBaseIds)
+            ? currentConversation.metadata.knowledgeBaseIds
+            : [];
+
+        const botChanged = config.botId !== currentBotId;
+        const useKBChanged = config.useKnowledgeBase !== currentUseKB;
+
+        // Array comparison for knowledge base selection
+        const kbIdsChanged = config.knowledgeBaseIds.length !== currentKBIds.length ||
+            !config.knowledgeBaseIds.every(id => currentKBIds.includes(id)) ||
+            !currentKBIds.every(id => config.knowledgeBaseIds.includes(id));
+
+        return botChanged || useKBChanged || kbIdsChanged;
+    }, [config, currentConversation]);
+
+    // ✅ SENIOR: Auto-save settings with debounce
+    useEffect(() => {
+        if (!currentConversation || !isConfigDirty) return;
+
+        const timer = setTimeout(() => {
+            updateConversationSettings();
+        }, 1000); // 1s auto-save delay
+
+        return () => clearTimeout(timer);
+    }, [config, isConfigDirty, currentConversation]);
+
 
     useEffect(() => {
         if (currentWorkspace?.id) {
@@ -90,14 +127,20 @@ export default function ChatWithAIPage() {
             if (!currentWorkspace) {
                 return
             }
-            const data = await getKnowledgeBases(currentWorkspace.id)
-            const kbList = Array.isArray(data) ? data : []
+            const data: any = await getKnowledgeBases({ workspaceId: currentWorkspace.id, limit: 100 })
+            const kbList = Array.isArray(data) ? data : (data?.data || [])
             setKnowledgeBases(kbList)
-            if (kbList.length === 0) {
-            }
         } catch {
             setKnowledgeBases([])
         }
+    }
+
+    const handleRefresh = async () => {
+        await Promise.all([
+            loadConversations(),
+            loadBots(),
+            loadKnowledgeBases()
+        ])
     }
 
     const loadConversations = async () => {
@@ -122,10 +165,10 @@ export default function ChatWithAIPage() {
             setCreatingConversation(true)
             const newConv = await createAIConversation({
                 title: 'New Chat',
-                botId: selectedBot !== 'none' ? selectedBot : undefined,
-                useKnowledgeBase: useKnowledgeBase,
+                botId: config.botId !== 'none' ? config.botId : undefined,
+                useKnowledgeBase: config.useKnowledgeBase,
                 metadata: {
-                    knowledgeBaseIds: selectedKnowledgeBases,
+                    knowledgeBaseIds: config.knowledgeBaseIds,
                 },
             })
 
@@ -158,21 +201,13 @@ export default function ChatWithAIPage() {
         setCurrentConversation(conv)
         setMessages(conv.messages || [])
 
-        if (conv.botId) {
-            setSelectedBot(conv.botId)
-        } else {
-            setSelectedBot('none')
-        }
-
-        if (conv.useKnowledgeBase !== undefined) {
-            setUseKnowledgeBase(conv.useKnowledgeBase)
-        }
-
-        if (conv.metadata?.knowledgeBaseIds && Array.isArray(conv.metadata.knowledgeBaseIds)) {
-            setSelectedKnowledgeBases(conv.metadata.knowledgeBaseIds)
-        } else {
-            setSelectedKnowledgeBases([])
-        }
+        setConfig({
+            botId: conv.botId || 'none',
+            useKnowledgeBase: !!conv.useKnowledgeBase,
+            knowledgeBaseIds: Array.isArray(conv.metadata?.knowledgeBaseIds)
+                ? conv.metadata.knowledgeBaseIds
+                : []
+        })
     }
 
     const updateConversationTitle = async (id: string, title: string) => {
@@ -246,10 +281,10 @@ export default function ChatWithAIPage() {
                 setCreatingConversation(true)
                 const newConv = await createAIConversation({
                     title: input.substring(0, 50) + (input.length > 50 ? '...' : ''),
-                    botId: selectedBot !== 'none' ? selectedBot : undefined,
-                    useKnowledgeBase: useKnowledgeBase,
+                    botId: config.botId !== 'none' ? config.botId : undefined,
+                    useKnowledgeBase: config.useKnowledgeBase,
                     metadata: {
-                        knowledgeBaseIds: selectedKnowledgeBases,
+                        knowledgeBaseIds: config.knowledgeBaseIds,
                     },
                 })
                 newConversation = newConv
@@ -279,25 +314,19 @@ export default function ChatWithAIPage() {
         try {
             let responseText = ''
             let sources: any[] = []
-            let modelName = selectedBot !== 'none'
-                ? bots.find(b => b.id === selectedBot)?.aiModelName || 'gemini-2.5-flash'
+            let modelName = config.botId !== 'none'
+                ? bots.find(b => b.id === config.botId)?.aiModelName || 'gemini-2.5-flash'
                 : 'gemini-2.5-flash'
 
-            console.log('[Sending Message]', {
-                selectedBot,
-                useKnowledgeBase,
-                knowledgeBaseIds: selectedKnowledgeBases,
-            });
-
-            if (selectedBot !== 'none') {
-                const bot = bots.find((b) => b.id === selectedBot)
+            if (config.botId !== 'none') {
+                const bot = bots.find((b) => b.id === config.botId)
                 modelName = bot?.aiModelName || modelName
 
                 const res = await botsApi.chat(
-                    selectedBot,
+                    config.botId,
                     input,
                     updatedMessages.map(m => ({ role: m.role, content: m.content })),
-                    useKnowledgeBase ? selectedKnowledgeBases : undefined
+                    config.useKnowledgeBase ? config.knowledgeBaseIds : undefined
                 )
                 responseText = res.response
                 sources = res.sources || []
@@ -306,6 +335,7 @@ export default function ChatWithAIPage() {
                     message: input,
                     model: modelName,
                     conversationHistory: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+                    knowledgeBaseIds: config.useKnowledgeBase ? config.knowledgeBaseIds : undefined
                 })
                 const data = res.data || res
                 responseText = data.answer || data.response || 'No response'
@@ -316,7 +346,7 @@ export default function ChatWithAIPage() {
                 content: responseText,
                 timestamp: new Date().toISOString(),
                 metadata: {
-                    bot: selectedBot !== 'none' ? bots.find(b => b.id === selectedBot)?.name : undefined,
+                    bot: config.botId !== 'none' ? bots.find(b => b.id === config.botId)?.name : undefined,
                     model: modelName,
                     sources: sources.length > 0 ? sources : undefined,
                 },
@@ -355,17 +385,13 @@ export default function ChatWithAIPage() {
 
         try {
             setSavingSettings(true)
-            console.log('[Updating Settings]', {
-                botId: selectedBot !== 'none' ? selectedBot : null,
-                useKnowledgeBase,
-                knowledgeBaseIds: selectedKnowledgeBases,
-            });
 
             await updateAIConversation(currentConversation.id, {
-                botId: selectedBot !== 'none' ? selectedBot : undefined,
-                useKnowledgeBase,
+                botId: config.botId !== 'none' ? config.botId : null,
+                useKnowledgeBase: config.useKnowledgeBase,
                 metadata: {
-                    knowledgeBaseIds: selectedKnowledgeBases,
+                    ...currentConversation.metadata,
+                    knowledgeBaseIds: config.knowledgeBaseIds,
                 },
             })
 
@@ -374,11 +400,11 @@ export default function ChatWithAIPage() {
                     c.id === currentConversation.id
                         ? {
                             ...c,
-                            botId: selectedBot !== 'none' ? selectedBot : null,
-                            useKnowledgeBase,
+                            botId: config.botId !== 'none' ? config.botId : null,
+                            useKnowledgeBase: config.useKnowledgeBase,
                             metadata: {
                                 ...c.metadata,
-                                knowledgeBaseIds: selectedKnowledgeBases,
+                                knowledgeBaseIds: config.knowledgeBaseIds,
                             },
                         }
                         : c
@@ -389,11 +415,11 @@ export default function ChatWithAIPage() {
                 prev
                     ? {
                         ...prev,
-                        botId: selectedBot !== 'none' ? selectedBot : null,
-                        useKnowledgeBase,
+                        botId: config.botId !== 'none' ? config.botId : null,
+                        useKnowledgeBase: config.useKnowledgeBase,
                         metadata: {
                             ...prev.metadata,
-                            knowledgeBaseIds: selectedKnowledgeBases,
+                            knowledgeBaseIds: config.knowledgeBaseIds,
                         },
                     }
                     : null
@@ -433,16 +459,15 @@ export default function ChatWithAIPage() {
         }
     }
 
-    const selectedBotData = bots.find((b) => b.id === selectedBot)
 
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-full flex bg-grid-pattern"
+            className="h-full w-full flex bg-background overflow-hidden relative"
         >
-            { }
-            <aside className="w-80 border-r border-border/40 flex flex-col bg-background">
+            {/* Left Sidebar: Conversation History */}
+            <aside className="w-80 border-r border-border/40 flex flex-col bg-muted/20 shrink-0 h-full overflow-hidden">
                 { }
                 <div className="p-4 border-b border-border/40">
                     <Button
@@ -460,7 +485,8 @@ export default function ChatWithAIPage() {
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {loadingConversations ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
-                            <LoadingLogo size="md" text="Loading conversations..." />
+                            <Spinner size="lg" className="text-primary" />
+                            <p className="text-sm text-muted-foreground">Loading conversations...</p>
                         </div>
                     ) : conversations.length === 0 ? (
                         <div className="text-center py-12 px-4">
@@ -562,261 +588,244 @@ export default function ChatWithAIPage() {
             </aside>
 
             { }
-            <div className="flex-1 flex flex-col">
-                { }
-                <PageHeader
-                    title={currentConversation?.title || 'Chat with AI'}
-                    description={currentConversation ? `${messages.length} messages` : 'Start a new conversation'}
-                    onRefresh={loadConversations}
-                    refreshing={loadingConversations}
-                    premium
-                    className="px-6 py-6 border-b border-border/40 bg-background mb-0"
-                >
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowSettings(!showSettings)}
-                            className="rounded-lg h-10 px-4"
-                        >
-                            <Settings className="w-4 h-4 mr-2" />
-                            Settings
-                        </Button>
-                        {currentConversation && (
-                            <Button variant="outline" size="sm" onClick={clearChat} className="rounded-lg h-10 px-4">
-                                <Plus className="w-4 h-4 mr-2" />
-                                New Chat
-                            </Button>
-                        )}
-                    </div>
-                </PageHeader>
-
-                { }
-                {showSettings && (
-                    <div className="border-t border-border/40 bg-gradient-to-b from-muted/30 to-muted/10">
-                        <div className="max-w-6xl mx-auto p-6 space-y-6">
-                            { }
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                                        <Settings className="w-5 h-5" />
-                                        Chat Configuration
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        Customize your AI chat experience
-                                    </p>
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-md">
+                <div className="flex-1 relative overflow-hidden flex flex-col items-center w-full">
+                    <div className="w-full h-full flex flex-col overflow-hidden px-4 md:px-0">
+                        {/* ✅ PROFESSIONAL: Unified Interface with integrated controls (Rộng thoải mái) */}
+                        <AiChatInterface
+                            messages={messages}
+                            onSendMessage={handleSend}
+                            loading={loading}
+                            botName={bots.find(b => b.id === config.botId)?.name || 'AI Assistant'}
+                            modelName={bots.find(b => b.id === config.botId)?.aiModelName || undefined}
+                            className="flex-1"
+                            headerActions={
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant={showSettings ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => setShowSettings(!showSettings)}
+                                        className="rounded-xl h-9 px-4 transition-all"
+                                    >
+                                        <Settings className={cn("w-3.5 h-3.5 mr-2", showSettings && "animate-spin-slow")} />
+                                        {showSettings ? 'Hide Settings' : 'Settings'}
+                                    </Button>
+                                    {currentConversation && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={clearChat}
+                                            className="rounded-xl h-9 px-4 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                            Clear
+                                        </Button>
+                                    )}
+                                    {!currentConversation && messages.length > 0 && (
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            onClick={createNewConversation}
+                                            loading={creatingConversation}
+                                            className="rounded-xl h-9 px-4 shadow-lg shadow-primary/20"
+                                        >
+                                            <Plus className="w-3.5 h-3.5 mr-2" />
+                                            Save Chat
+                                        </Button>
+                                    )}
                                 </div>
-                                <Button
-                                    onClick={updateConversationSettings}
-                                    loading={savingSettings}
-                                    disabled={!currentConversation}
-                                    size="sm"
-                                    className="rounded-lg"
-                                >
-                                    <Check className="w-4 h-4 mr-2" />
-                                    Save Settings
-                                </Button>
+                            }
+                            title={currentConversation?.title || 'New Chat'}
+                            subtitle={currentConversation ? `${messages.length} messages` : 'Ready for assistance'}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Sidebar: Configuration (Intelligent Control) */}
+            {showSettings && (
+                <motion.aside
+                    initial={{ x: 300, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: 300, opacity: 0 }}
+                    className="w-96 border-l border-border/40 flex flex-col bg-background shrink-0 shadow-2xl z-20 h-full overflow-hidden"
+                >
+                    <div className="p-6 border-b border-border/40 flex items-center justify-between bg-muted/10">
+                        <div className="flex items-center gap-2">
+                            <Settings className="w-5 h-5 text-primary" />
+                            <h3 className="font-bold text-lg">Control Panel</h3>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full"
+                            onClick={() => setShowSettings(false)}
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
+                        {/* Action Bar */}
+                        <div className="flex items-center justify-between gap-4">
+                            <p className="text-xs text-muted-foreground">
+                                {savingSettings ? 'Saving changes...' : 'Changes auto-save'}
+                            </p>
+                            <div className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                                savingSettings ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground opacity-50"
+                            )}>
+                                {savingSettings ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                {savingSettings ? 'Saving...' : 'Synced'}
+                            </div>
+                        </div>
+
+                        {/* Bot Selection Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground/80">
+                                <Zap className="w-4 h-4 text-primary" />
+                                Bot Selection
                             </div>
 
-                            { }
-                            <div className="space-y-3">
-                                <label className="text-sm font-semibold flex items-center gap-2">
-                                    <MessageCircle className="w-4 h-4 text-primary" />
-                                    Select Bot
-                                </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    { }
+                            <Tabs
+                                defaultValue={config.botId === 'none' ? 'system' : 'user'}
+                                onValueChange={(val) => {
+                                    if (val === 'system') setConfig(prev => ({ ...prev, botId: 'none' }));
+                                }}
+                                className="w-full"
+                            >
+                                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 p-1 rounded-xl">
+                                    <TabsTrigger value="system" className="rounded-lg text-xs">System AI</TabsTrigger>
+                                    <TabsTrigger value="user" className="rounded-lg text-xs">My My Bots</TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="system" className="animate-in fade-in slide-in-from-bottom-2">
                                     <Card
-                                        className={`p-4 cursor-pointer transition-all duration-200 rounded-xl ${selectedBot === 'none'
-                                            ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/20'
-                                            : 'hover:border-primary/40 hover:shadow-sm'
-                                            }`}
-                                        onClick={() => setSelectedBot('none')}
+                                        className={cn(
+                                            "p-4 cursor-pointer transition-all border-2 rounded-2xl",
+                                            config.botId === 'none' ? "border-primary bg-primary/5 shadow-md" : "border-transparent bg-muted/30 opacity-70 hover:opacity-100"
+                                        )}
+                                        onClick={() => setConfig(prev => ({ ...prev, botId: 'none' }))}
                                     >
-                                        <div className="flex items-start gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0 shadow-lg">
+                                        <div className="flex gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
                                                 <Zap className="w-5 h-5 text-white" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-semibold text-sm">Direct AI</h4>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    Chat directly with AI without bot configuration
-                                                </p>
+                                            <div className="min-w-0">
+                                                <p className="font-bold text-sm">Direct Agent</p>
+                                                <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">Standard high-performance model</p>
                                             </div>
                                         </div>
                                     </Card>
+                                </TabsContent>
 
-                                    { }
-                                    {bots.map((bot) => (
-                                        <Card
-                                            key={bot.id}
-                                            className={`p-4 cursor-pointer transition-all duration-200 rounded-xl ${selectedBot === bot.id
-                                                ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/20'
-                                                : 'hover:border-primary/40 hover:shadow-sm'
-                                                }`}
-                                            onClick={() => setSelectedBot(bot.id)}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center flex-shrink-0 shadow-lg">
-                                                    <MessageCircle className="w-5 h-5 text-white" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-semibold text-sm truncate">{bot.name}</h4>
-                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                                        {bot.description || 'No description'}
-                                                    </p>
-                                                    {bot.aiModelName && (
-                                                        <Badge variant="secondary" className="text-[10px] mt-2 font-bold px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
-                                                            <Zap className="w-3 h-3 mr-1" />
-                                                            {bot.aiModelName}
-                                                        </Badge>
+                                <TabsContent value="user" className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                                    {bots.length > 0 ? (
+                                        <div className="grid gap-2">
+                                            {bots.map((bot) => (
+                                                <Card
+                                                    key={bot.id}
+                                                    className={cn(
+                                                        "p-3 cursor-pointer transition-all border-2 rounded-xl flex items-center gap-3",
+                                                        config.botId === bot.id ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/40 hover:bg-muted/60"
                                                     )}
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
+                                                    onClick={() => setConfig(prev => ({ ...prev, botId: bot.id }))}
+                                                >
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
+                                                        <MessageCircle className="w-4 h-4 text-white" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-bold text-xs truncate">{bot.name}</p>
+                                                        <p className="text-[10px] text-muted-foreground truncate">{bot.aiModelName || 'Model V1'}</p>
+                                                    </div>
+                                                    {config.botId === bot.id && <Check className="w-4 h-4 text-primary" />}
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6 bg-muted/20 rounded-xl border border-dashed border-border">
+                                            <p className="text-xs text-muted-foreground">No bots found</p>
+                                        </div>
+                                    )}
+                                </TabsContent>
+                            </Tabs>
+                        </div>
+
+                        {/* Knowledge Source Section */}
+                        {config.botId === 'none' && (
+                            <div className="space-y-4 animate-in slide-in-from-right-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-foreground/80">
+                                        <Book className="w-4 h-4 text-primary" />
+                                        Knowledge Base
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="enable-kb-right"
+                                            checked={config.useKnowledgeBase}
+                                            onChange={(e) => setConfig(prev => ({
+                                                ...prev,
+                                                useKnowledgeBase: e.target.checked,
+                                                knowledgeBaseIds: e.target.checked ? prev.knowledgeBaseIds : []
+                                            }))}
+                                            className="w-4 h-4 accent-primary rounded cursor-pointer"
+                                        />
+                                    </div>
                                 </div>
+
+                                {config.useKnowledgeBase && (
+                                    <div className="grid gap-2">
+                                        {knowledgeBases.length > 0 ? (
+                                            knowledgeBases.map((kb) => {
+                                                const isSelected = config.knowledgeBaseIds.includes(kb.id);
+                                                return (
+                                                    <div
+                                                        key={kb.id}
+                                                        onClick={() => setConfig(prev => ({
+                                                            ...prev,
+                                                            knowledgeBaseIds: isSelected
+                                                                ? prev.knowledgeBaseIds.filter(id => id !== kb.id)
+                                                                : [...prev.knowledgeBaseIds, kb.id]
+                                                        }))}
+                                                        className={cn(
+                                                            "p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3",
+                                                            isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-transparent bg-muted/40 hover:bg-muted/60"
+                                                        )}
+                                                    >
+                                                        <div className={cn(
+                                                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
+                                                            isSelected ? "bg-emerald-600" : "bg-amber-600"
+                                                        )}>
+                                                            <Book className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-bold text-xs truncate">{kb.name}</p>
+                                                            <p className="text-[10px] text-muted-foreground">{kb.totalDocuments || 0} docs</p>
+                                                        </div>
+                                                        {isSelected && <Check className="w-4 h-4 text-primary" />}
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="text-center py-4 text-xs text-muted-foreground italic">No sources found</div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
+                        )}
 
-                            { }
-                            {selectedBot === 'none' && (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-sm font-semibold flex items-center gap-2">
-                                            <Book className="w-4 h-4 text-primary" />
-                                            Knowledge Sources
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="checkbox"
-                                                id="enable-kb"
-                                                checked={useKnowledgeBase}
-                                                onChange={(e) => {
-                                                    setUseKnowledgeBase(e.target.checked)
-                                                    if (!e.target.checked) {
-                                                        setSelectedKnowledgeBases([])
-                                                    }
-                                                }}
-                                                className="rounded"
-                                            />
-                                            <label
-                                                htmlFor="enable-kb"
-                                                className="text-sm cursor-pointer"
-                                            >
-                                                Enable Knowledge Base
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {useKnowledgeBase && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                                            {knowledgeBases.length === 0 ? (
-                                                <div className="col-span-full text-center py-8 px-4 border border-dashed border-border/40 rounded-xl">
-                                                    <Book className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                                                    <p className="text-sm text-muted-foreground">
-                                                        No knowledge bases available
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                knowledgeBases.map((kb) => {
-                                                    const isSelected = selectedKnowledgeBases.includes(kb.id)
-                                                    return (
-                                                        <Card
-                                                            key={kb.id}
-                                                            className={`p-4 cursor-pointer transition-all duration-200 rounded-xl ${isSelected
-                                                                ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/20'
-                                                                : 'hover:border-primary/40 hover:shadow-sm'
-                                                                }`}
-                                                            onClick={() => {
-                                                                setSelectedKnowledgeBases((prev) =>
-                                                                    isSelected
-                                                                        ? prev.filter((id) => id !== kb.id)
-                                                                        : [...prev, kb.id]
-                                                                )
-                                                            }}
-                                                        >
-                                                            <div className="flex items-start gap-3">
-                                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg ${isSelected
-                                                                    ? 'bg-gradient-to-br from-green-600 to-emerald-700'
-                                                                    : 'bg-gradient-to-br from-amber-600 to-orange-700'
-                                                                    }`}>
-                                                                    {isSelected ? (
-                                                                        <Check className="w-5 h-5 text-white" />
-                                                                    ) : (
-                                                                        <Book className="w-5 h-5 text-white" />
-                                                                    )}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <h4 className="font-semibold text-sm truncate">{kb.name}</h4>
-                                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                                                        {kb.description || 'No description'}
-                                                                    </p>
-                                                                    {kb.totalDocuments !== undefined && (
-                                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                                            {kb.totalDocuments} documents
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </Card>
-                                                    )
-                                                })
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {selectedKnowledgeBases.length > 0 && (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-primary/5 p-3 rounded-lg border border-primary/20">
-                                            <Check className="w-4 h-4 text-primary" />
-                                            <span>
-                                                {selectedKnowledgeBases.length} knowledge source{selectedKnowledgeBases.length > 1 ? 's' : ''} selected
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {selectedBot !== 'none' && selectedBotData && (
-                                <div className="bg-muted/50 rounded-xl p-4 border border-border/40">
-                                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                        <Zap className="w-4 h-4 text-primary" />
-                                        Current Configuration
-                                    </h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                                        <div>
-                                            <p className="text-muted-foreground text-xs">Bot</p>
-                                            <p className="font-medium">{selectedBotData.name}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground text-xs">AI Model</p>
-                                            <p className="font-medium">{selectedBotData.aiModelName || 'Default'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-muted-foreground text-xs">Knowledge Base</p>
-                                            <p className="font-medium">
-                                                Configured in bot settings
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-3 text-xs text-muted-foreground">
-                                        <p>Knowledge bases are configured in the bot's Knowledge Base tab and will be used automatically during conversations.</p>
-                                    </div>
-                                </div>
-                            )}
+                        {/* Summary Info */}
+                        <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-[10px] leading-relaxed text-muted-foreground">
+                            <p className="font-bold text-foreground/60 mb-1 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" /> NOTE
+                            </p>
+                            Configuration updates will take effect for the current conversation immediately after saving. System AI allows multiple knowledge sources, while custom bots use their internal settings.
                         </div>
                     </div>
-                )}
-
-
-                {/* ✅ PROFESSIONAL: Use dedicated AI Chat Interface */}
-                <AiChatInterface
-                    messages={messages}
-                    onSendMessage={handleSend}
-                    loading={loading}
-                    botName={selectedBotData?.name || 'AI Assistant'}
-                    modelName={selectedBotData?.aiModelName || undefined}
-                />
-            </div>
+                </motion.aside>
+            )}
 
             { }
             <AlertDialogConfirm

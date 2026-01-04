@@ -41,21 +41,43 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
   useEffect(() => {
     const loadProviders = async () => {
       try {
-        const data = workspaceId
-          ? await aiProvidersApi.getWorkspaceModels(workspaceId)
-          : await aiProvidersApi.getAvailableModels();
-        setProviders(data);
+        setLoading(true);
+        const userModelsPromise = aiProvidersApi.getAvailableModels();
+
+        const workspaceModelsPromise = workspaceId
+          ? aiProvidersApi.getWorkspaceModels(workspaceId)
+          : Promise.resolve([]);
+
+        const [userModels, workspaceModels] = await Promise.all([
+          userModelsPromise,
+          workspaceModelsPromise
+        ]);
+
+        const combined = [
+          ...(workspaceModels || []).map((p: any) => ({ ...p, source: 'workspace' })),
+          ...(userModels || []).map((p: any) => ({ ...p, source: 'user' }))
+        ];
+
+        // Deduplicate by providerId to avoid showing duplicates in dropdown
+        // (Since BotEntity links to AiProviderEntity, we select the Provider Type, not specific Config)
+        const uniqueProviders = combined.filter((provider, index, self) =>
+          index === self.findIndex((p) => p.providerId === provider.providerId)
+        );
+
+        setProviders(uniqueProviders);
       } catch (error) {
         console.error('Failed to load AI providers:', error);
+        // Fallback to empty
+        setProviders([]);
       } finally {
         setLoading(false);
       }
     };
     loadProviders();
-  }, []);
+  }, [workspaceId]);
 
-  // Find models for selected provider
-  const selectedProviderData = providers.find(p => p.providerKey === formData.aiProviderId || p.providerId === formData.aiProviderId);
+  // Find models for selected provider (using First Available Config for that provider)
+  const selectedProviderData = providers.find(p => p.providerId === formData.aiProviderId);
   const availableModels = selectedProviderData?.models || [];
   return (
     <div className="space-y-6">
@@ -166,13 +188,30 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                         <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl">
-                        {providers.map((p) => (
-                          <SelectItem key={p.providerId + (p.configId || '')} value={p.providerKey}>
-                            {p.providerName} {p.displayName ? `(${p.displayName})` : ''}
+                        {providers.length === 0 && (
+                          <SelectItem value="no-providers" disabled>
+                            No providers configured
                           </SelectItem>
-                        ))}
+                        )}
+                        {providers.map((p) => {
+                          const isDuplicateName = p.providerName.toLowerCase() === (p.displayName || '').toLowerCase();
+                          const label = isDuplicateName
+                            ? p.providerName
+                            : `${p.providerName} ${p.displayName ? `(${p.displayName})` : ''}`;
+
+                          return (
+                            <SelectItem key={p.configId} value={p.providerId}>
+                              {label} {p.source === 'workspace' ? '(Workspace)' : ''}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
+                    {providers.length === 0 && !loading && (
+                      <p className="text-[10px] text-destructive font-medium mt-1">
+                        No AI providers found. <a href="/settings/integrations" className="underline hover:text-destructive/80" target="_blank">Configure Integrations</a>
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model</Label>
@@ -188,6 +227,12 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                         ))}
                       </SelectContent>
                     </Select>
+                    {formData.aiProviderId && availableModels.length === 0 && !loading && (
+                      <div className="flex items-center gap-2 mt-2 text-[10px] text-amber-500 font-medium bg-amber-500/10 p-2 rounded-lg border border-amber-500/20">
+                        <Info className="w-3 h-3 shrink-0" />
+                        <p>No models found. Check API Key in Integrations.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

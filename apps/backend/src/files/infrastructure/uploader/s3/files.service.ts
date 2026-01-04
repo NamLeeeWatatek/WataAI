@@ -6,10 +6,15 @@
 import { FileRepository } from '../../persistence/file.repository';
 import { FileType } from '../../../domain/file';
 import { FileDriver } from '../../../domain/file-driver.interface';
+import { ConfigService } from '@nestjs/config';
+import { AllConfigType } from '../../../../config/config.type';
 
 @Injectable()
 export class FilesS3Service implements FileDriver {
-  constructor(private readonly fileRepository: FileRepository) { }
+  constructor(
+    private readonly fileRepository: FileRepository,
+    private readonly configService: ConfigService<AllConfigType>,
+  ) { }
 
   async create(file: Express.MulterS3.File): Promise<{ file: FileType }> {
     if (!file) {
@@ -24,7 +29,10 @@ export class FilesS3Service implements FileDriver {
     return {
       file: await this.fileRepository.create({
         path: file.key,
-        bucket: file.bucket || 'images',
+        bucket:
+          file.bucket ||
+          this.configService.get('file.bucketImages', { infer: true }) ||
+          'images',
       }),
     };
   }

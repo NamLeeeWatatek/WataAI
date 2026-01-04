@@ -106,13 +106,13 @@ export async function getKBFolderTree(kbId: string): Promise<GetFolderTreeRespon
 /**
  * Get unified content (folders and documents) in a specific level
  */
-export async function getKBContent(kbId: string, folderId?: string | null): Promise<{
+export async function getKBContent(kbId: string, folderId?: string | null, page: number = 1, limit: number = 10): Promise<{
   folders: KBFolder[]
   documents: { data: KBDocument[]; total: number }
   breadcrumbs: Array<{ id: string; name: string }>
 }> {
   return axiosClient.get(`/knowledge-bases/${kbId}/content`, {
-    params: { folderId: folderId || 'null' }
+    params: { folderId: folderId || 'null', page, limit }
   })
 }
 
@@ -308,4 +308,15 @@ export async function deleteKBBatch(data: BatchDeleteDto): Promise<BatchOperatio
  */
 export async function moveKBBatch(data: BatchMoveDto): Promise<BatchOperationResponse> {
   return axiosClient.post('/knowledge-bases/batch/move', data)
+}
+
+/**
+ * Clear ALL vector collections (Admin only)
+ */
+export async function clearAllVectors(): Promise<{
+  success: boolean
+  message: string
+  deleted: string[]
+}> {
+  return axiosClient.post('/knowledge-bases/vector/clear-all')
 }

@@ -2,6 +2,7 @@
 import { CreateWorkspaceDto } from './create-workspace.dto';
 import { IsOptional, IsString, IsEnum, Matches } from 'class-validator';
 import { WorkspaceRole } from '../enums/workspace-role.enum';
+import { WorkspacePlan } from '../enums/workspace-plan.enum';
 
 export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {
   @ApiPropertyOptional({ example: 'My Workspace' })
@@ -22,10 +23,10 @@ export class UpdateWorkspaceDto extends PartialType(CreateWorkspaceDto) {
   @IsString()
   avatarUrl?: string | null;
 
-  @ApiPropertyOptional({ enum: ['free', 'starter', 'pro', 'enterprise'] })
+  @ApiPropertyOptional({ enum: WorkspacePlan })
   @IsOptional()
-  @IsEnum(['free', 'starter', 'pro', 'enterprise'])
-  plan?: 'free' | 'starter' | 'pro' | 'enterprise';
+  @IsEnum(WorkspacePlan)
+  plan?: WorkspacePlan;
 }
 
 export class AddMemberDto {

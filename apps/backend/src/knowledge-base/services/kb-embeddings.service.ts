@@ -9,6 +9,7 @@ import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/en
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
+import { RecursiveCharacterTextSplitter } from '../utils/recursive-text-splitter';
 
 export interface TextChunk {
   content: string;
@@ -29,49 +30,43 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
-  chunkText(
+  async chunkText(
     text: string,
     chunkSize: number = 1000,
     chunkOverlap: number = 200,
-  ): TextChunk[] {
-    const chunks: TextChunk[] = [];
+  ): Promise<TextChunk[]> {
+    if (!text || text.length === 0) return [];
 
-    if (!text || text.length === 0) return chunks;
-    if (chunkSize <= 0) chunkSize = 1000;
-    if (chunkOverlap < 0) chunkOverlap = 0;
-    if (chunkOverlap >= chunkSize) chunkOverlap = Math.floor(chunkSize * 0.2);
+    // Use the smart RecursiveCharacterTextSplitter
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize,
+      chunkOverlap,
+      separators: ['\n\n', '\n', ' ', ''], // Preserves paragraphs/sentences
+      keepSeparator: false
+    });
 
-    let startChar = 0;
-    const maxChunks = 10000;
-    let chunkCount = 0;
+    const rawChunks = await splitter.splitText(text);
 
-    while (startChar < text.length && chunkCount < maxChunks) {
-      const endChar = Math.min(startChar + chunkSize, text.length);
-      const content = text.slice(startChar, endChar);
+    // Map back to TextChunk format (simplified start/end char tracking)
+    // Note: Recursive splitter loses exact char indices easily, 
+    // so we approximate or scan. For RAG, content is king.
 
-      chunks.push({
+    let currentPos = 0;
+    return rawChunks.map(content => {
+      // Find approximate real position (optional optimization)
+      const startChar = text.indexOf(content, currentPos);
+      const realStart = startChar !== -1 ? startChar : currentPos;
+      currentPos = realStart + content.length;
+
+      return {
         content,
-        startChar,
-        endChar,
-        tokenCount: this.estimateTokenCount(content),
-      });
-
-      chunkCount++;
-
-      const step = chunkSize - chunkOverlap;
-      if (step <= 0) break;
-
-      startChar += step;
-      if (startChar >= text.length) break;
-    }
-
-    if (chunkCount >= maxChunks) {
-      this.logger.warn(`Document too large, truncated to ${maxChunks} chunks`);
-    }
-
-    return chunks;
+        startChar: realStart,
+        endChar: currentPos,
+        tokenCount: this.estimateTokenCount(content)
+      };
+    });
   }
 
   private estimateTokenCount(text: string): number {
@@ -105,18 +100,12 @@ export class KBEmbeddingsService {
       userId || undefined,
       workspaceId || undefined,
       kbAiProviderId || undefined,
+      kbEmbeddingModel,
     );
     const provider = providerConfig.provider;
     const model = providerConfig.model;
     const requiresApiKey = providerConfig.requiresApiKey;
 
-    // Debug logging
-    this.logger.log(
-      `KB ${kbId} - User: ${userId}, Workspace: ${workspaceId}, KB Provider ID: ${kbAiProviderId}`,
-    );
-    this.logger.log(
-      `KB ${kbId} - Selected provider: ${provider}, model: ${model}, requiresApiKey: ${requiresApiKey}`,
-    );
 
     // Only fetch API key for providers that require it
     let apiKey: string | undefined;
@@ -150,9 +139,6 @@ export class KBEmbeddingsService {
       }
     }
 
-    this.logger.log(
-      `Using embedding provider ${provider} with model ${model} for KB ${kbId} ${requiresApiKey ? '(with API key)' : '(local)'}`,
-    );
 
     const batchSize = 10;
     let processedCount = 0;
@@ -209,11 +195,6 @@ export class KBEmbeddingsService {
                     `No API key configured for provider ${provider}`,
                   );
                 }
-              } else {
-                // For local providers (Ollama/Custom), use undefined apiKey
-                this.logger.log(
-                  `Using local provider ${provider}, no API key required`,
-                );
               }
 
               // Generate embedding with API key (or undefined for local providers)
@@ -222,6 +203,7 @@ export class KBEmbeddingsService {
                 provider,
                 model,
                 apiKey, // Pass the API key (or undefined for local providers)
+                { baseUrl: providerConfig.baseUrl }, // Pass baseUrl for Ollama
               );
             } catch (error) {
               // If selected provider fails, try fallback
@@ -257,7 +239,7 @@ export class KBEmbeddingsService {
                   embedding = await this.aiProvidersService.generateEmbedding(
                     chunk.content,
                     'google',
-                    embeddingModel,
+                    embeddingModel || 'text-embedding-004',
                   );
                 } catch (googleError) {
                   this.logger.error(
@@ -301,7 +283,7 @@ export class KBEmbeddingsService {
             chunk.embeddingError = error.message;
             await this.chunkRepository.save(chunk);
             this.logger.error(
-              `âŒ Failed to embed chunk ${chunk.id}: ${error.message}`,
+              `❌ Failed to embed chunk ${chunk.id}: ${error.message}`,
             );
 
             processedCount++;
@@ -320,11 +302,13 @@ export class KBEmbeddingsService {
 
   async generateQueryEmbedding(
     query: string,
-    embeddingModel: string = 'text-embedding-004',
+    embeddingModel?: string,
     kbId?: string,
   ): Promise<number[]> {
     let userId: string | undefined;
     let workspaceId: string | undefined;
+    let kbAiProviderId: string | undefined;
+    let effectiveEmbeddingModel = embeddingModel;
 
     if (kbId) {
       const kb = await this.kbRepository.findOne({
@@ -333,17 +317,26 @@ export class KBEmbeddingsService {
       });
       userId = kb?.createdBy ?? undefined;
       workspaceId = kb?.workspaceId || undefined;
+      kbAiProviderId = kb?.aiProviderId || undefined;
+      if (kb?.embeddingModel) {
+        effectiveEmbeddingModel = kb.embeddingModel;
+      }
     }
 
     // Get provider config using the same logic as chunk processing
     const providerConfig = await this.getProviderConfig(
       userId || undefined,
       workspaceId || undefined,
-      kbId,
+      kbAiProviderId,
+      effectiveEmbeddingModel,
     );
     const provider = providerConfig.provider;
     const model = providerConfig.model;
     const requiresApiKey = providerConfig.requiresApiKey;
+
+    this.logger.debug(
+      `Generating Query Embedding for KB: ${kbId || 'system'} | Provider: ${provider} | Model: ${model}`,
+    );
 
     // Get API key only if required
     let apiKey: string | undefined;
@@ -385,7 +378,7 @@ export class KBEmbeddingsService {
     const cached = await this.cacheManager.get<number[]>(cacheKey);
     if (cached) {
       this.logger.log(
-        `ðŸš€ Using cached embedding for: "${query.substring(0, 50)}..."`,
+        `🚀 Using cached embedding for: "${query.substring(0, 50)}..."`,
       );
       return cached;
     }
@@ -396,6 +389,7 @@ export class KBEmbeddingsService {
         provider,
         model,
         apiKey,
+        { baseUrl: providerConfig.baseUrl },
       );
 
       // Cache for 1 hour (3600 seconds)
@@ -432,7 +426,7 @@ export class KBEmbeddingsService {
           return this.aiProvidersService.generateEmbedding(
             query,
             attempt.provider,
-            attempt.model,
+            attempt.model || 'text-embedding-3-small',
             fallbackApiKey,
           );
         } catch (fallbackError) {
@@ -459,189 +453,116 @@ export class KBEmbeddingsService {
   private async getProviderConfig(
     userId?: string,
     workspaceId?: string,
-    kbAiProviderId?: string,
-  ): Promise<{ provider: string; model: string; requiresApiKey: boolean }> {
-    // Try to find a configured provider from KB settings
-    if (kbAiProviderId && (workspaceId || userId)) {
-      try {
-        // Check both scopes - workspace first, then user
-        const scopes = [
-          workspaceId ? 'workspace' : null,
-          userId ? 'user' : null,
-        ].filter(Boolean);
-
-        this.logger.log(
-          `Looking for provider config: kbAiProviderId=${kbAiProviderId}, scopes=${scopes.join(', ')}`,
-        );
-
-        for (const scope of scopes) {
-          if (!scope) continue;
-
-          const scopeId = scope === 'workspace' ? workspaceId : userId;
-          if (!scopeId) continue;
-
-          try {
-            const configs =
-              scope === 'workspace'
-                ? await this.aiProvidersService.getWorkspaceConfigs(scopeId)
-                : await this.aiProvidersService.getUserConfigs(scopeId);
-
-            this.logger.log(
-              `Checking ${scope} configs: found ${(configs as any[]).length} configs`,
-            );
-            (configs as any[]).forEach((cfg: any, i: number) => {
-              this.logger.log(
-                `  Config ${i}: providerId=${cfg.providerId}, provider.key=${cfg.provider?.key}`,
-              );
-            });
-
-            // Find config with matching providerId
-            const config = (configs as any[]).find(
-              (cfg: any) => cfg.providerId === kbAiProviderId,
-            );
-            if (config && config.provider && config.provider.key) {
-              this.logger.log(
-                `Found matching config: provider=${config.provider.key}, active=${config.isActive}`,
-              );
-
-              const providerKey = config.provider.key;
-              const requiresApiKey =
-                providerKey !== 'ollama' && providerKey !== 'custom';
-
-              // Get KB model for Ollama/Custom
-              let kbModel = config.modelList?.[0] || 'text-embedding-004';
-              if (providerKey === 'ollama' || providerKey === 'custom') {
-                const kbData = await this.kbRepository.findOne({
-                  where: { id: kbAiProviderId },
-                  select: ['embeddingModel'],
-                });
-                kbModel =
-                  kbData?.embeddingModel ||
-                  (providerKey === 'ollama'
-                    ? 'mxbai-embed-large:latest'
-                    : 'text-embedding-ada-002');
-                this.logger.log(`Using KB embedding model: ${kbModel}`);
-              }
-
-              let model = kbModel;
-              if (providerKey === 'openai') {
-                model = 'text-embedding-ada-002';
-              } else if (providerKey === 'google') {
-                model = kbModel || 'text-embedding-004';
-              }
-
-              this.logger.log(
-                `Returning provider config: ${providerKey}, model=${model}, requiresApiKey=${requiresApiKey}`,
-              );
-              return {
-                provider: providerKey,
-                model,
-                requiresApiKey,
-              };
-            } else {
-              this.logger.log(
-                `Config ID ${kbAiProviderId} not found in ${scope}`,
-              );
-            }
-          } catch (error) {
-            this.logger.warn(
-              `Error checking ${scope} provider config: ${error.message}`,
-            );
-          }
-        }
-      } catch (error) {
-        this.logger.warn(
-          `Failed to get provider config, using default: ${error.message}`,
-        );
-      }
-    } else {
-      this.logger.log(
-        `No KB AI Provider ID provided, checking for available providers`,
-      );
-    }
-
-    // Smart fallback: check available providers when KB config not found
-    try {
-      // Check for Ollama config first (preferred for local models)
+    providerId?: string,
+    preferredModel?: string,
+  ): Promise<{ provider: string; model: string; requiresApiKey: boolean; baseUrl?: string }> {
+    // 1. Try to find the specifically configured provider
+    if (providerId) {
       const scopes = [
-        workspaceId ? 'workspace' : null,
-        userId ? 'user' : null,
+        workspaceId ? { id: workspaceId, type: 'workspace' } : null,
+        userId ? { id: userId, type: 'user' } : null,
       ].filter(Boolean);
 
       for (const scope of scopes) {
         if (!scope) continue;
 
-        const scopeId = scope === 'workspace' ? workspaceId : userId;
-        if (!scopeId) continue;
-
         try {
           const configs =
-            scope === 'workspace'
-              ? await this.aiProvidersService.getWorkspaceConfigs(scopeId)
-              : await this.aiProvidersService.getUserConfigs(scopeId);
+            scope.type === 'workspace'
+              ? await this.aiProvidersService.getWorkspaceConfigs(scope.id)
+              : await this.aiProvidersService.getUserConfigs(scope.id);
 
-          // Try Ollama first
-          const ollamaConfig = (configs as any[]).find(
-            (cfg: any) => cfg.provider?.key === 'ollama',
+          const config = configs.find(
+            (c) => c.providerId === providerId,
           );
-          if (ollamaConfig) {
-            this.logger.log(
-              `Found available Ollama config in ${scope}, using it`,
-            );
-            // Get KB model if it's an Ollama model
-            const kbModel = kbAiProviderId
-              ? await this.kbRepository
-                  .findOne({
-                    where: { id: kbAiProviderId },
-                    select: ['embeddingModel'],
-                  })
-                  .then((kb) => kb?.embeddingModel)
-              : null;
+
+          if (config && config.provider && config.provider.key) {
+            const providerKey = config.provider.key;
+            // OpenAI and Google require API keys (unless using Vertex AI but simplicity first)
+            // Ollama and Custom typically don't (or use internal auth)
+            const requiresApiKey =
+              providerKey !== 'ollama' && providerKey !== 'custom';
+
+            const baseUrl = config.config?.baseUrl;
+
+            // Determines the embedding model to use
+            let model = 'text-embedding-ada-002'; // default
+
+            // For Ollama/Custom, we respect the KB's specific embedding model setting
+            // or fall back to sensible defaults
+            if (providerKey === 'ollama' || providerKey === 'custom') {
+              model = preferredModel ||
+                (providerKey === 'ollama' ? 'mxbai-embed-large:latest' : 'text-embedding-ada-002');
+            } else if (providerKey === 'google') {
+              model = 'text-embedding-004';
+            }
 
             return {
-              provider: 'ollama',
-              model: kbModel || 'mxbai-embed-large:latest',
-              requiresApiKey: false, // Ollama doesn't need API key
-            };
-          }
-
-          // Try Google next
-          const googleConfig = (configs as any[]).find(
-            (cfg: any) => cfg.provider?.key === 'google',
-          );
-          if (googleConfig && googleConfig.config?.apiKey) {
-            this.logger.log(`Found available Google config in ${scope}`);
-            return {
-              provider: 'google',
-              model: 'text-embedding-004',
-              requiresApiKey: true,
-            };
-          }
-
-          // Try OpenAI
-          const openaiConfig = (configs as any[]).find(
-            (cfg: any) => cfg.provider?.key === 'openai',
-          );
-          if (openaiConfig && openaiConfig.config?.apiKey) {
-            this.logger.log(`Found available OpenAI config in ${scope}`);
-            return {
-              provider: 'openai',
-              model: 'text-embedding-ada-002',
-              requiresApiKey: true,
+              provider: providerKey,
+              model,
+              requiresApiKey,
+              baseUrl,
             };
           }
         } catch (error) {
-          this.logger.warn(
-            `Error checking ${scope} fallback providers: ${error.message}`,
-          );
+          this.logger.warn(`Error checking ${scope.type} config: ${error.message}`);
         }
       }
-    } catch (error) {
-      this.logger.warn(`Failed to find fallback providers: ${error.message}`);
     }
 
-    this.logger.log(`No configured providers found, using default Google`);
-    // Absolute fallback
+    // 2. Fallback: No specific provider found (or not configured). 
+    // Search for ANY available provider, prioritizing local/Ollama.
+    const scopes = [
+      workspaceId ? { id: workspaceId, type: 'workspace' } : null,
+      userId ? { id: userId, type: 'user' } : null,
+    ].filter(Boolean);
+
+    for (const scope of scopes) {
+      if (!scope) continue;
+
+      try {
+        const configs =
+          scope.type === 'workspace'
+            ? await this.aiProvidersService.getWorkspaceConfigs(scope.id)
+            : await this.aiProvidersService.getUserConfigs(scope.id);
+
+        // Priority 1: Ollama
+        const ollamaConfig = configs.find((c) => c.provider?.key === 'ollama');
+        if (ollamaConfig) {
+          return {
+            provider: 'ollama',
+            model: preferredModel || 'mxbai-embed-large:latest',
+            requiresApiKey: false,
+            baseUrl: ollamaConfig.config?.baseUrl,
+          };
+        }
+
+        // Priority 2: Google
+        const googleConfig = configs.find((c) => c.provider?.key === 'google');
+        if (googleConfig && googleConfig.config?.apiKey) {
+          return {
+            provider: 'google',
+            model: 'text-embedding-004',
+            requiresApiKey: true,
+          };
+        }
+
+        // Priority 3: OpenAI
+        const openaiConfig = configs.find((c) => c.provider?.key === 'openai');
+        if (openaiConfig && openaiConfig.config?.apiKey) {
+          return {
+            provider: 'openai',
+            model: 'text-embedding-ada-002',
+            requiresApiKey: true,
+          };
+        }
+      } catch (error) {
+        this.logger.warn(`Error checking ${scope.type} fallback: ${error.message}`);
+      }
+    }
+
+    // 3. Absolute Fallback
+    this.logger.warn('No configured AI providers found for embeddings. Defaulting to Google placeholders.');
     return {
       provider: 'google',
       model: 'text-embedding-004',
@@ -649,137 +570,50 @@ export class KBEmbeddingsService {
     };
   }
 
+  // Cleaned up helper for legacy support or internal use
   private async getEmbeddingProvider(
     userId?: string,
     workspaceId?: string,
     kbId?: string,
   ): Promise<{ provider: string; model: string }> {
-    // Get KB embedding model if kbId provided
-    let kbEmbeddingModel = 'text-embedding-004';
-    if (kbId) {
-      const kb = await this.kbRepository.findOne({
-        where: { id: kbId },
-        select: ['embeddingModel'],
-      });
-      kbEmbeddingModel = kb?.embeddingModel || kbEmbeddingModel;
-    }
-
-    if (kbId) {
-      const kb = await this.kbRepository.findOne({
-        where: { id: kbId },
-        select: ['aiProviderId', 'embeddingModel'],
-      });
-      if (kb?.aiProviderId) {
-        // Check if KB has a configured provider - first try workspace scope
-        try {
-          if (workspaceId) {
-            const workspaceConfigs =
-              await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
-            const config = workspaceConfigs.find(
-              (cfg) => cfg.providerId === kb.aiProviderId,
-            );
-            if (config?.isActive && config.provider?.key) {
-              const providerKey = config.provider.key;
-              if (['google', 'openai', 'ollama'].includes(providerKey)) {
-                const embeddingModel =
-                  providerKey === 'openai'
-                    ? 'text-embedding-ada-002'
-                    : providerKey === 'google'
-                      ? kbEmbeddingModel
-                      : kbEmbeddingModel; // Use from KB for Ollama
-                return { provider: providerKey, model: embeddingModel };
-              }
-            }
-          }
-        } catch (error) {
-          this.logger.warn(
-            `Failed to check workspace provider for KB ${kbId}: ${error.message}`,
-          );
-        }
-
-        // Try user scope
-        try {
-          if (userId) {
-            const userConfigs =
-              await this.aiProvidersService.getUserConfigs(userId);
-            const config = userConfigs.find(
-              (cfg) => cfg.providerId === kb.aiProviderId,
-            );
-            if (config?.isActive && config.provider?.key) {
-              const providerKey = config.provider.key;
-              if (['google', 'openai', 'ollama'].includes(providerKey)) {
-                const embeddingModel =
-                  providerKey === 'openai'
-                    ? 'text-embedding-ada-002'
-                    : providerKey === 'google'
-                      ? kbEmbeddingModel
-                      : kbEmbeddingModel; // Use from KB for Ollama
-                return { provider: providerKey, model: embeddingModel };
-              }
-            }
-          }
-        } catch (error) {
-          this.logger.warn(
-            `Failed to check user provider for KB ${kbId}: ${error.message}`,
-          );
-        }
-      }
-    }
-
-    // Find the first configured embedding provider for user/workspace
-    if (workspaceId) {
-      try {
-        const workspaceProviders =
-          await this.aiProvidersService.getWorkspaceProviders(workspaceId);
-        for (const wp of workspaceProviders) {
-          if (
-            wp.key === 'google' ||
-            wp.key === 'openai' ||
-            wp.key === 'ollama'
-          ) {
-            const model =
-              wp.key === 'openai'
-                ? 'text-embedding-ada-002'
-                : wp.key === 'google'
-                  ? 'text-embedding-004'
-                  : kbEmbeddingModel; // Use KB model for Ollama
-            return { provider: wp.key, model };
-          }
-        }
-      } catch (error) {
-        this.logger.warn(`Failed to get workspace providers: ${error.message}`);
-      }
-    }
-
-    if (userId) {
-      try {
-        const userProviders =
-          await this.aiProvidersService.getUserProviders(userId);
-        for (const up of userProviders) {
-          if (
-            up.key === 'google' ||
-            up.key === 'openai' ||
-            up.key === 'ollama'
-          ) {
-            const model =
-              up.key === 'openai'
-                ? 'text-embedding-ada-002'
-                : up.key === 'google'
-                  ? 'text-embedding-004'
-                  : kbEmbeddingModel; // Use KB model for Ollama
-            return { provider: up.key, model };
-          }
-        }
-      } catch (error) {
-        this.logger.warn(`Failed to get user providers: ${error.message}`);
-      }
-    }
-
-    // Default fallback
-    return { provider: 'google', model: kbEmbeddingModel };
+    // Reuse getProviderConfig logic
+    const config = await this.getProviderConfig(userId, workspaceId, kbId, undefined);
+    return { provider: config.provider, model: config.model };
   }
 
-  async deleteVector(vectorId: string): Promise<void> {
-    return this.vectorService.deleteVector(vectorId);
+  async deleteVector(vectorId: string, dimension: number): Promise<void> {
+    return this.vectorService.deleteVector(vectorId, dimension);
+  }
+
+  /**
+   * Probes the dimension of an embedding model.
+   * Useful for automatic collection initialization.
+   */
+  async probeDimension(
+    provider: string,
+    model: string,
+    apiKey?: string,
+    options?: { baseUrl?: string },
+  ): Promise<number> {
+    const cacheKey = `dim_probe:${provider}:${model}`;
+    const cached = await this.cacheManager.get<number>(cacheKey);
+    if (cached) return cached;
+
+    try {
+      this.logger.debug(`🔍 Probing dimension for ${provider}/${model}...`);
+      const embedding = await this.aiProvidersService.generateEmbedding(
+        'probe',
+        provider,
+        model,
+        apiKey,
+        options,
+      );
+      const dimension = embedding.length;
+      await this.cacheManager.set(cacheKey, dimension, 86400); // 24h
+      return dimension;
+    } catch (error) {
+      this.logger.error(`Failed to probe dimension: ${error.message}`);
+      throw error;
+    }
   }
 }

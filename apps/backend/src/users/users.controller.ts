@@ -43,7 +43,7 @@ import { Roles } from '../roles/roles.decorator';
   version: '1',
 })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @ApiCreatedResponse({ type: User })
   @ApiOperation({ summary: 'Create new user (Admin only)' })
@@ -66,9 +66,6 @@ export class UsersController {
   ): Promise<InfinityPaginationResponseDto<User>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
-    if (limit > 50) {
-      limit = 50;
-    }
 
     const [data, total] = await this.usersService.findManyWithPagination({
       filterOptions: query?.filters,
