@@ -8,13 +8,14 @@ import { User } from '../../../../domain/user';
 import { UserRepository } from '../../user.repository';
 import { UserMapper } from '../mappers/user.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { RoleEnum } from '../../../../../roles/roles.enum';
 
 @Injectable()
 export class UsersRelationalRepository implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
-  ) {}
+  ) { }
 
   async create(data: User): Promise<User> {
     const persistenceModel = UserMapper.toPersistence(data);
@@ -37,13 +38,13 @@ export class UsersRelationalRepository implements UserRepository {
 
     if (filterOptions?.roles?.length) {
       const roleValues = filterOptions.roles.map((role) => {
-        if (typeof role === 'string') return role;
         if (typeof role === 'object' && role.id) {
-          return role.id === 1 ? 'admin' : 'user';
+          return role.id;
         }
-        return 'user';
+        return role;
       });
-      where.role = In(roleValues) as any;
+
+      where.role = In(roleValues.filter(Boolean)) as any;
     }
 
     if (filterOptions && 'isActive' in filterOptions) {
@@ -54,6 +55,7 @@ export class UsersRelationalRepository implements UserRepository {
       skip: (paginationOptions.page - 1) * paginationOptions.limit,
       take: paginationOptions.limit,
       where,
+      relations: ['role'], // Eager load role to avoid N+1
       order: sortOptions?.reduce(
         (accumulator, sort) => ({
           ...accumulator,

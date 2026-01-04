@@ -35,7 +35,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -110,7 +110,7 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-    } catch (error) {}
+    } catch (error) { }
 
     return savedBot;
   }
@@ -237,7 +237,7 @@ export class BotsService {
   }
 
   async linkKnowledgeBase(botId: string, dto: LinkKnowledgeBaseDto) {
-    await this.findOne(botId);
+    const bot = await this.findOne(botId);
 
     const existing = await this.botKbRepository.findOne({
       where: { botId, knowledgeBaseId: dto.knowledgeBaseId },
@@ -252,6 +252,7 @@ export class BotsService {
 
     const link = this.botKbRepository.create({
       botId,
+      workspaceId: bot.workspaceId,
       knowledgeBaseId: dto.knowledgeBaseId,
       priority: dto.priority ?? 1,
       ragSettings: dto.ragSettings,
@@ -377,12 +378,21 @@ export class BotsService {
     return this.botRepository.save(newBot);
   }
 
-  async getBotChannels(botId: string) {
+  async getBotChannels(botId: string, options?: { validated?: boolean }) {
     await this.findOne(botId);
-    return this.channelRepository.find({
-      where: { botId },
-      order: { createdAt: 'DESC' },
-    });
+
+    const query = this.channelRepository
+      .createQueryBuilder('channel')
+      .where('channel.botId = :botId', { botId })
+      .orderBy('channel.createdAt', 'DESC');
+
+    if (options?.validated) {
+      query.andWhere('channel.isActive = :isActive', { isActive: true });
+      // Ensure it has a connection linked (meaning it was verified)
+      // query.andWhere('channel.connectionId IS NOT NULL'); 
+    }
+
+    return query.getMany();
   }
 
   async createBotChannel(

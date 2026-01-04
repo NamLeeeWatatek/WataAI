@@ -37,6 +37,7 @@ import {
 } from './dto/kb-management.dto';
 import { KBFoldersService } from './services/kb-folders.service';
 import { KBDocumentsService } from './services/kb-documents.service';
+import { KBEmbeddingsService } from './services/kb-embeddings.service';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
@@ -54,6 +55,7 @@ export class KnowledgeBaseController {
     private readonly kbRagService: KBRagService,
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
+    private readonly embeddingsService: KBEmbeddingsService,
   ) { }
 
   @Permissions('kb:List')
@@ -118,33 +120,71 @@ export class KnowledgeBaseController {
   async getContent(
     @Param('id') kbId: string,
     @Query('folderId') folderId: string,
+    @Query('page') page: number = 1,
+    @Query('limit') rawLimit: number = 10,
     @Request() req,
   ) {
     const userId = req.user.id;
+    const limit = rawLimit > 100 ? 100 : rawLimit; // Enforce max limit
     const effectiveFolderId =
       folderId === 'null' || !folderId ? null : folderId;
 
-    const folders = await this.foldersService.findAllByParent(
+    // 1. Get ALL folders (assuming count is reasonable)
+    const allFolders = await this.foldersService.findAllByParent(
       kbId,
       effectiveFolderId,
       userId,
     );
 
-    const { data: documents, total } =
-      await this.documentsService.findManyWithPagination({
+    // 2. Calculate Folder Slice
+    const foldersStartIndex = (page - 1) * limit;
+    const foldersEndIndex = foldersStartIndex + limit;
+    const pagedFolders = allFolders.slice(foldersStartIndex, foldersEndIndex);
+
+    // 3. Calculate Document Params
+    // Number of slots used by folders on this page
+    const slotsUsedByFolders = pagedFolders.length;
+    // Remaining slots for documents
+    const docLimit = limit - slotsUsedByFolders;
+
+    // Document offset: How many documents should we skip?
+    // If we are deep in pages (past the folder count), we skip (GlobalStartIndex - TotalFolders)
+    // If we are still in folder pages (GlobalStartIndex < TotalFolders), we skip 0 (documents start after folders)
+    const totalFoldersCount = allFolders.length;
+    const docOffset = Math.max(0, foldersStartIndex - totalFoldersCount);
+
+    let documents: any[] = [];
+    let totalDocs = 0;
+
+    // Only fetch documents if we have space left or if we are past the folder region
+    if (docLimit > 0 || docOffset > 0) {
+      const { data, total } = await this.documentsService.findManyWithPagination({
         kbId,
         filterOptions: { folderId: effectiveFolderId },
-        paginationOptions: { page: 1, limit: 100 },
+        paginationOptions: { page: 1, limit: docLimit > 0 ? docLimit : 0, offset: docOffset }, // page:1 is dummy, relying on offset/limit
         userId,
       });
+      documents = data;
+      totalDocs = total;
+    } else {
+      // We are purely in folder territory and filled the page with folders
+      // But we still need total Docs count for pagination to work
+      const { total } = await this.documentsService.findManyWithPagination({
+        kbId,
+        filterOptions: { folderId: effectiveFolderId },
+        paginationOptions: { page: 1, limit: 1 }, // minimized fetch
+        userId,
+      });
+      totalDocs = total;
+    }
 
     const breadcrumbs = effectiveFolderId
       ? await this.foldersService.getBreadcrumbs(effectiveFolderId, userId)
       : [];
 
     return {
-      folders,
-      documents: { data: documents, total },
+      folders: pagedFolders,
+      documents: { data: documents, total: totalFoldersCount + totalDocs }, // Unified total for frontend
       breadcrumbs,
     };
   }
@@ -305,11 +345,16 @@ export class KnowledgeBaseController {
   @Get('vector/diagnostics')
   @ApiOperation({ summary: 'Get vector service diagnostics' })
   async getVectorDiagnostics() {
+    const probeText = 'diagnostics_probe';
+    const embedding = await this.embeddingsService.generateQueryEmbedding(probeText);
+    const dim = embedding.length;
+
     return {
       isAvailable: this.vectorService.isServiceAvailable(),
       url: process.env.QDRANT_URL,
       hasApiKey: !!process.env.QDRANT_API_KEY,
-      collectionName: 'knowledge-base',
+      detectedDimension: dim,
+      targetCollection: this.vectorService.getCollectionName(dim),
     };
   }
 
@@ -334,19 +379,49 @@ export class KnowledgeBaseController {
 
   @Post('vector/ensure-collection')
   @ApiOperation({ summary: 'Ensure vector collection exists' })
-  async ensureVectorCollection() {
+  async ensureVectorCollection(@Body('dimension') dimension: number = 768) {
     try {
-      const success = await this.vectorService.ensureCollection();
+      await this.vectorService.ensureCollection(dimension);
       return {
-        success,
-        message: success
-          ? 'Collection exists or was created successfully'
-          : 'Failed to create or verify collection',
+        success: true,
+        message: `Collection '${dimension}' verified or created`,
       };
     } catch (error) {
       return {
         success: false,
-        message: `Collection creation failed: ${error.message}`,
+        message: `Collection verification failed: ${error.message}`,
+      };
+    }
+  }
+
+  @Post('vector/recreate')
+  @ApiOperation({
+    summary: 'Recreate vector collection with auto-detected dimension',
+  })
+  async recreateVectorCollection() {
+    try {
+      // 1. Auto-detect dimension using a test probe
+      const probeText = 'dimension_probe_test';
+
+      // We use generateQueryEmbedding which now uses the system default model
+      const embedding = await this.embeddingsService.generateQueryEmbedding(probeText);
+      const dimension = embedding.length;
+
+      this.embeddingsService.probeDimension // Just verifying it exists
+
+      // 2. Recreate collection
+      await this.vectorService.recreateCollection(dimension);
+
+      return {
+        success: true,
+        message: `Collection recreated with auto-detected dimension: ${dimension}`,
+        dimension,
+      };
+    } catch (error) {
+      console.error('Failed to recreate collection:', error);
+      return {
+        success: false,
+        message: `Failed to recreate collection: ${error.message}`,
       };
     }
   }
@@ -386,6 +461,25 @@ export class KnowledgeBaseController {
     } catch (error) {
       console.error('Chat with knowledge base failed:', error);
       throw error;
+    }
+  }
+  @Post('vector/clear-all')
+  @ApiOperation({
+    summary: 'Clear ALL vector collections (USE WITH CAUTION)',
+  })
+  async clearAllVectors() {
+    try {
+      const deleted = await this.vectorService.clearAllCollections();
+      return {
+        success: true,
+        message: `Successfully deleted ${deleted.length} collections`,
+        deleted,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Failed to clear collections: ${error.message}`,
+      };
     }
   }
 }

@@ -13,6 +13,7 @@ import { TemplateDialog } from '@/components/features/creation-tools/TemplateDia
 import { Template } from '@/lib/types/template'
 import { templatesApi } from '@/lib/api/templates'
 import { Pagination } from '@/components/ui/Pagination'
+import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 
 // ...
 export default function TemplatesPage() {
@@ -20,20 +21,26 @@ export default function TemplatesPage() {
     const { templates, loading, refreshTemplates, deleteTemplate } = useTemplates()
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
     useEffect(() => {
         refreshTemplates()
     }, [refreshTemplates])
 
-    const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this template?')) {
-            try {
-                await templatesApi.delete(id);
-                toast.success('Template deleted');
-                await refreshTemplates();
-            } catch (err: any) {
-                toast.error(err.message || 'Failed to delete template');
-            }
+    const handleDelete = (id: string) => {
+        setDeleteId(id)
+    }
+
+    const confirmDelete = async () => {
+        if (!deleteId) return
+        try {
+            await templatesApi.delete(deleteId);
+            toast.success('Template deleted');
+            await refreshTemplates();
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to delete template');
+        } finally {
+            setDeleteId(null)
         }
     }
 
@@ -132,6 +139,16 @@ export default function TemplatesPage() {
                 template={editingTemplate}
                 creationToolId={editingTemplate?.creationToolId || ''}
                 onSave={handleSaveTemplate}
+            />
+
+            <AlertDialogConfirm
+                open={!!deleteId}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                title="Delete Template"
+                description="Are you sure you want to delete this template? This action cannot be undone."
+                onConfirm={confirmDelete}
+                variant="destructive"
+                confirmText="Delete"
             />
         </div>
     )

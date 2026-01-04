@@ -16,39 +16,71 @@ interface ExtendedAuthUser extends User {
     tokenExpires?: number
 }
 
+// Global lock to prevent parallel refresh attempts for the same token in a single process
+// This prevents the "race condition" where multiple parallel requests (e.g. middleware + client fetch)
+// try to refresh at the same time, invalidating each other's tokens on the backend.
+const refreshLocks = new Map<string, Promise<JWT>>();
+
 async function refreshAccessToken(token: JWT): Promise<JWT> {
+    const key = token.refreshToken as string;
+
+    // 1. If a refresh is already in progress for this token, reuse that promise
+    if (refreshLocks.has(key)) {
+        console.log("[Auth] Refresh already in progress for this token, joining...");
+        return refreshLocks.get(key)!;
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
+    const refreshPromise = (async () => {
+        try {
+            if (!token.refreshToken) {
+                throw new Error("No refresh token available");
+            }
+
+            const response = await fetch(`${apiUrl}/auth/refresh-token`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refreshToken: token.refreshToken }),
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("[Auth] Token refresh failed with status:", response.status, errorData);
+                throw new Error("RefreshAccessTokenError");
+            }
+
+            const data = await response.json()
+
+            return {
+                ...token,
+                accessToken: data.token,
+                refreshToken: data.refreshToken ?? token.refreshToken,
+                // Fallback to 1 hour if backend doesn't provide expiry
+                accessTokenExpires: data.tokenExpires || (Date.now() + 60 * 60 * 1000),
+                error: undefined
+            }
+        } catch (error) {
+            console.error("[Auth] Token refresh failure:", error instanceof Error ? error.message : "Unknown error")
+            return {
+                ...token,
+                error: "RefreshAccessTokenError",
+                // Set expiry to far future to stop refresh attempts until logout
+                accessTokenExpires: Date.now() + 1000 * 60 * 60 * 24 * 365
+            }
+        }
+    })();
+
+    // 2. Set the lock
+    refreshLocks.set(key, refreshPromise);
+
     try {
-        if (!token.refreshToken) {
-            throw new Error("No refresh token available");
-        }
-
-        const response = await fetch(`${apiUrl}/auth/refresh-token`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refreshToken: token.refreshToken }),
-        })
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("[Auth] Token refresh failed with status:", response.status, errorData);
-            throw new Error("RefreshAccessTokenError");
-        }
-
-        const data = await response.json()
-
-        return {
-            ...token,
-            accessToken: data.token,
-            refreshToken: data.refreshToken ?? token.refreshToken,
-            // Fallback to 1 hour if backend doesn't provide expiry
-            accessTokenExpires: data.tokenExpires || (Date.now() + 60 * 60 * 1000),
-            error: undefined
-        }
-    } catch (error) {
-        console.error("[Auth] Token refresh exception:", error)
-        return { ...token, error: "RefreshAccessTokenError" }
+        const result = await refreshPromise;
+        return result;
+    } finally {
+        // 3. Always clean up the lock
+        // We delay deletion slightly to handle very tightly packed requests
+        setTimeout(() => refreshLocks.delete(key), 5000);
     }
 }
 
@@ -127,12 +159,17 @@ export const authConfig = {
                 }
             }
 
-            // Refresh token 2 minutes before it expires
+            // 1. If there's already a refresh error, stop trying to refresh
+            if (token.error === "RefreshAccessTokenError") {
+                return token
+            }
+
+            // 2. Refresh token 2 minutes before it expires
             if (typeof token.accessTokenExpires === 'number' && Date.now() < token.accessTokenExpires - 2 * 60 * 1000) {
                 return token
             }
 
-            // Access token has expired or is about to expire, try to update it
+            // 3. Access token has expired or is about to expire, try to update it
             console.log("[Auth] Token expiring soon, triggering refresh...");
             return refreshAccessToken(token)
         },

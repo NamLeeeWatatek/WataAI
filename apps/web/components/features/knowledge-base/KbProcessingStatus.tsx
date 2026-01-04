@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Card } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Progress } from '@/components/ui/Progress'
 import { Badge } from '@/components/ui/Badge'
-import { Clock, Loader2 } from 'lucide-react'
+import { Clock, CheckCircle2, XCircle, Loader2, FileText } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import { cn } from '@/lib/utils'
 
@@ -21,12 +21,14 @@ interface ProcessingJob {
 
 interface KBProcessingStatusProps {
     knowledgeBaseId: string
+    onProcessingComplete?: () => void
 }
 
-export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps) {
+export function KBProcessingStatus({ knowledgeBaseId, onProcessingComplete }: KBProcessingStatusProps) {
     const [jobs, setJobs] = useState<ProcessingJob[]>([])
 
     useEffect(() => {
+        // Use environment variable or default to same host
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
         const wsUrl = apiUrl.replace('/api/v1', '')
 
@@ -35,47 +37,43 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionAttempts: 5,
+            path: '/socket.io/', // Ensure standard socket.io path
         })
 
         socket.on('connect', () => {
-
-        })
-
-        socket.on('disconnect', () => {
-
+            console.log('Connected to processing updates')
         })
 
         socket.on('processing:update', (data: ProcessingJob) => {
-
             if (data.knowledgeBaseId !== knowledgeBaseId) return
 
-            setJobs((prevJobs: ProcessingJob[]) => {
+            setJobs((prevJobs) => {
+                // If job is completed/failed, remove it after delay
                 if (data.status === 'completed' || data.status === 'failed') {
+                    // Notify parent to refresh data immediately
+                    if (data.status === 'completed' && onProcessingComplete) {
+                        onProcessingComplete()
+                    }
+
+                    // Specific timeout to remove THIS specific job
                     setTimeout(() => {
-                        setJobs((prev: ProcessingJob[]) => prev.filter((j: ProcessingJob) => j.documentId !== data.documentId))
-                    }, 2000)
+                        setJobs(current => current.filter(j => j.documentId !== data.documentId))
+                    }, 3000)
                 }
 
-                const existingIndex = prevJobs.findIndex((j: ProcessingJob) => j.documentId === data.documentId)
-
+                const existingIndex = prevJobs.findIndex(j => j.documentId === data.documentId)
                 if (existingIndex >= 0) {
                     const updated = [...prevJobs]
                     updated[existingIndex] = data
                     return updated
-                } else if (data.status === 'processing' || data.status === 'queued') {
-                    return [...prevJobs, data]
                 }
 
-                return prevJobs
+                // Add new job
+                return [...prevJobs, data]
             })
         })
 
-        socket.on('connect_error', (_error) => {
-
-        })
-
         return () => {
-
             socket.disconnect()
         }
     }, [knowledgeBaseId])
@@ -83,63 +81,83 @@ export function KBProcessingStatus({ knowledgeBaseId }: KBProcessingStatusProps)
     if (jobs.length === 0) return null
 
     return (
-        <Card className="p-5 mb-6 bg-card/40 backdrop-blur-md border border-border/50 shadow-premium overflow-hidden relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50 transition-opacity group-hover:opacity-100" />
-            <div className="relative space-y-4">
+        <Card className="mb-6 border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
+            <CardHeader className="py-3 px-4 border-b border-border/50">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
                         </div>
-                        <div>
-                            <h4 className="font-bold text-sm tracking-tight text-foreground">
-                                Active Processing Queue
-                            </h4>
-                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">
-                                {jobs.length} Object{jobs.length > 1 ? 's' : ''} in progress
-                            </p>
-                        </div>
+                        <CardTitle className="text-sm font-semibold">Processing Documents</CardTitle>
                     </div>
+                    <Badge variant="outline" className="text-xs font-normal bg-background/50">
+                        {jobs.length} active
+                    </Badge>
                 </div>
-
-                <div className="grid gap-4">
-                    {jobs.map((job: ProcessingJob) => (
-                        <div key={job.documentId} className="space-y-2.5 p-3 rounded-xl bg-muted/30 border border-border/40 hover:bg-muted/50 transition-colors">
-                            <div className="flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                    {job.status === 'queued' ? (
-                                        <Badge variant="secondary" className="gap-1.5 h-6 bg-amber-500/10 text-amber-500 border-amber-500/20 font-black text-[9px] uppercase tracking-widest">
-                                            <Clock className="w-3 h-3" />
-                                            Queued
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="default" className="gap-1.5 h-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 font-black text-[9px] uppercase tracking-widest">
-                                            <Loader2 className="w-3 h-3 animate-spin" />
-                                            {job.type === 'crawl' ? 'Crawling' : 'Embedding'}
-                                        </Badge>
-                                    )}
-                                    <span className="font-bold truncate text-foreground/80">
-                                        {job.documentName || 'Processing object...'}
-                                    </span>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="divide-y divide-border/50">
+                    {jobs.map((job) => (
+                        <div key={job.documentId} className="p-4 hover:bg-muted/30 transition-colors">
+                            <div className="flex items-start justify-between gap-4 mb-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className={cn(
+                                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                                        job.status === 'failed' ? "bg-destructive/10 text-destructive" :
+                                            job.status === 'completed' ? "bg-green-500/10 text-green-500" :
+                                                "bg-primary/10 text-primary"
+                                    )}>
+                                        {job.status === 'failed' ? <XCircle className="h-4 w-4" /> :
+                                            job.status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> :
+                                                <FileText className="h-4 w-4" />}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate">
+                                            {job.documentName || 'Processing document...'}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                            <span className="capitalize">{job.type || 'Embedding'}</span>
+                                            <span>•</span>
+                                            <span className={cn(
+                                                "font-medium",
+                                                job.status === 'processing' && "text-primary",
+                                                job.status === 'failed' && "text-destructive",
+                                                job.status === 'completed' && "text-green-500"
+                                            )}>
+                                                {job.status === 'queued' ? 'Queued' :
+                                                    job.status === 'processing' ? `${job.progress}%` :
+                                                        job.status}
+                                            </span>
+                                            {job.totalChunks > 0 && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span>{job.processedChunks}/{job.totalChunks} chunks</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    {job.totalChunks > 0 && (
-                                        <span className="text-[10px] font-mono font-bold text-muted-foreground bg-background/50 px-2 py-0.5 rounded-full">
-                                            {job.processedChunks}/{job.totalChunks}
-                                        </span>
-                                    )}
-                                    <span className="font-black text-primary font-mono">{job.progress}%</span>
-                                </div>
+                                {job.status === 'queued' && (
+                                    <Clock className="h-4 w-4 text-muted-foreground animate-pulse" />
+                                )}
                             </div>
-                            <Progress
-                                value={job.progress}
-                                className="h-2 bg-primary/5 rounded-full overflow-hidden"
-                                indicatorClassName="bg-gradient-to-r from-primary via-primary/80 to-primary/60 transition-all duration-500 shadow-[0_0_10px_rgba(var(--primary),0.3)]"
-                            />
+
+                            {(job.status === 'processing' || job.status === 'queued') && (
+                                <Progress
+                                    value={job.progress}
+                                    className="h-1.5"
+                                />
+                            )}
+
+                            {job.error && (
+                                <p className="text-xs text-destructive mt-2 bg-destructive/5 p-2 rounded-md">
+                                    {job.error}
+                                </p>
+                            )}
                         </div>
                     ))}
                 </div>
-            </div>
+            </CardContent>
         </Card>
     )
 }

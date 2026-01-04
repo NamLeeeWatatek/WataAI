@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import axiosClient from '@/lib/axios-client';
 import {
   Dialog,
@@ -53,8 +54,7 @@ export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
 
       onSave();
     } catch {
-
-      alert('Failed to save tag');
+      toast.error('Failed to save tag');
     } finally {
       setLoading(false);
     }

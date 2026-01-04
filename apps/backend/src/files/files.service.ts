@@ -53,7 +53,7 @@ export class FilesService {
   }
 
   async create(
-    file: Express.Multer.File | Express.MulterS3.File | any,
+    file: Express.Multer.File | Express.MulterS3.File | { fileName: string; fileSize: number; bucket?: string },
     workspaceId?: string, // Explicit argument instead of spread
   ): Promise<{
     file: FileType;

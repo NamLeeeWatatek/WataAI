@@ -15,6 +15,12 @@ import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import helmet from 'helmet';
 import * as bodyParser from 'body-parser';
 
+import { Request, Response, NextFunction } from 'express';
+
+interface RequestWithRawBody extends Request {
+  rawBody?: Buffer;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
@@ -29,8 +35,8 @@ async function bootstrap() {
   app.use(
     '/api/v1/webhooks',
     bodyParser.json({
-      verify: (req: any, res, buf) => {
-        req.rawBody = buf.toString('utf8');
+      verify: (req: RequestWithRawBody, res: Response, buf: Buffer) => {
+        req.rawBody = buf;
       },
     }),
   );
@@ -45,7 +51,7 @@ async function bootstrap() {
     }),
   );
 
-  app.use((_req: any, res: any, next: any) => {
+  app.use((_req: Request, res: Response, next: NextFunction) => {
     res.removeHeader('X-Frame-Options');
     next();
   });

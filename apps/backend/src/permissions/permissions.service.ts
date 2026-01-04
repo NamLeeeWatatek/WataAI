@@ -8,6 +8,7 @@ import { PermissionEntity } from './infrastructure/persistence/relational/entiti
 import { UserCapabilitiesDto } from './dto/user-capabilities.dto';
 import { PermissionCheckResponseDto } from './dto/permission-check.dto';
 import { WorkspaceMemberEntity } from '../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
+import { RoleEnum } from '../roles/roles.enum';
 
 @Injectable()
 export class PermissionsService {
@@ -20,7 +21,7 @@ export class PermissionsService {
     private readonly permissionRepository: Repository<PermissionEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private readonly workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) {}
+  ) { }
 
   async findAll(search?: string) {
     let where: any = {};
@@ -64,15 +65,17 @@ export class PermissionsService {
     }
 
     // Level 1: System Admin Check
-    // If the user has a System Global Role of 'Admin' (or equivalent permission '*'), they have full access everywhere.
+    // If the user has a System Global Role of 'Admin' (ID 1), they have full access everywhere.
     const systemRole = userWithPermissions.role;
     const systemPermissions =
       systemRole?.permissions?.map((p) => `${p.resource}:${p.action}`) || [];
+
+    // Strict ID check for System Admin using RoleEnum
     const isSystemAdmin =
-      systemRole?.name === 'Admin' || systemPermissions.includes('*');
+      systemRole?.id === RoleEnum.admin || systemPermissions.includes('*');
 
     let appliedRole = systemRole;
-    let appliedClassName = systemRole?.name || 'User';
+    let appliedRoleId = systemRole?.id;
 
     // Level 2: Workspace Role Check (Per-Tenant)
     // If not System Admin, and we have a workspace context, we fetch the per-tenant role.
@@ -84,12 +87,10 @@ export class PermissionsService {
 
       if (member && member.role) {
         appliedRole = member.role;
-        appliedClassName = member.role.name || 'Member';
+        appliedRoleId = member.role.id;
       } else {
         // If user is not a member of the workspace, or has no role??
         // Fallback to basic user, effectively no access.
-        // Actually, if they are not a member, they shouldn't access most things.
-        // We'll keep system permissions as base, but this usually implies restricted access.
       }
     }
 
@@ -105,11 +106,12 @@ export class PermissionsService {
     // We only want System Admin (Super Admin) to bypass everything.
     const isAdmin = isSystemAdmin;
 
-    // For UI widgets, we might want to know if they are AT LEAST a workspace admin (Owner/Admin)
+    // For UI widgets, we might want to know if they are AT LEAST a workspace admin
+    // Workspace Owner (4) or Workspace Admin/Manager (6) or System Admin (1)
     const isWorkspaceAdmin =
-      appliedClassName === 'Admin' ||
-      appliedClassName === 'Owner' ||
-      appliedClassName === 'Manager';
+      appliedRoleId === RoleEnum.admin ||
+      appliedRoleId === RoleEnum.owner ||
+      appliedRoleId === RoleEnum.manager;
 
     const check = (action: string) => {
       if (isAdmin) return true;
@@ -177,7 +179,7 @@ export class PermissionsService {
     };
 
     return {
-      role: appliedClassName?.toLowerCase() || 'user',
+      role: appliedRole?.name?.toLowerCase() || 'user', // Display name only
       permissions: allPermissions,
       can_create,
       can_read,

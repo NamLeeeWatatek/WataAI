@@ -7,9 +7,11 @@ import { FilesModule } from '../files/files.module';
 import { DatabaseConfig } from '../database/config/database-config.type';
 import databaseConfig from '../database/config/database.config';
 
+import { DocumentUserPersistenceModule } from './infrastructure/persistence/document/document-persistence.module';
+
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   .isDocumentDatabase
-  ? RelationalUserPersistenceModule
+  ? DocumentUserPersistenceModule
   : RelationalUserPersistenceModule;
 
 @Module({
@@ -18,4 +20,4 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   providers: [UsersService],
   exports: [UsersService, infrastructurePersistenceModule],
 })
-export class UsersModule {}
+export class UsersModule { }

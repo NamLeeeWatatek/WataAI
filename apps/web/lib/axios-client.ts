@@ -9,9 +9,6 @@ const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1
  */
 export const axiosClient = axios.create({
   baseURL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 let activeWorkspaceId: string | null = null;
@@ -34,6 +31,11 @@ export const setAxiosToken = (token: string | null) => {
 // Request Interceptor: Attach token and workspace ID
 axiosClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    // Set default content type if not provided and not sending FormData
+    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     // 1. Get token from cache or session
     // We also use this opportunity to hydrate workspaceId if missing
     if (!cachedToken || !activeWorkspaceId) {

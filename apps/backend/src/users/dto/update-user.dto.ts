@@ -53,7 +53,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiPropertyOptional({ enum: ['admin', 'user'] })
   @IsOptional()
-  role?: 'admin' | 'user' | Role | null;
+  role?: 'admin' | 'user' | string | Role | null;
 
   @ApiPropertyOptional({ type: Date })
   @IsOptional()

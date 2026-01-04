@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import axiosClient from '@/lib/axios-client';
 import {
   Dialog,
@@ -86,8 +87,7 @@ export function CategoryDialog({
 
       onSave();
     } catch {
-
-      alert('Failed to save category');
+      toast.error('Failed to save category');
     } finally {
       setLoading(false);
     }

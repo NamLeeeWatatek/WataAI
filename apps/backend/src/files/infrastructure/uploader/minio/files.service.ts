@@ -180,10 +180,22 @@ export class FilesMinioService implements FileDriver {
     // Auto-categorize bucket based on file type if not provided
     let bucket = file.bucket;
     if (!bucket) {
-      if (isImage) bucket = 'images';
-      else if (isVideo) bucket = 'videos';
-      else if (isAudio) bucket = 'audios';
-      else bucket = 'documents';
+      if (isImage)
+        bucket =
+          this.configService.get('file.bucketImages', { infer: true }) ||
+          'images';
+      else if (isVideo)
+        bucket =
+          this.configService.get('file.bucketVideos', { infer: true }) ||
+          'videos';
+      else if (isAudio)
+        bucket =
+          this.configService.get('file.bucketAudios', { infer: true }) ||
+          'audios';
+      else
+        bucket =
+          this.configService.get('file.bucketDocuments', { infer: true }) ||
+          'documents';
     }
 
     await this.ensureBucketExists(bucket);

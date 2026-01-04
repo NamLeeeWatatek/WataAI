@@ -21,7 +21,7 @@ export class UserSeedService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) {}
+  ) { }
 
   async run() {
     // Delete legacy/default admins if they exist

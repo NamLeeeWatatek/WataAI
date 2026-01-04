@@ -24,6 +24,7 @@ import { UsersService } from '../users/users.service';
 import { AllConfigType } from '../config/config.type';
 import { MailService } from '../mail/mail.service';
 import { RoleEnum } from '../roles/roles.enum';
+import { Role } from '../roles/domain/role';
 import { Session } from '../session/domain/session';
 import { SessionService } from '../session/session.service';
 import { User } from '../users/domain/user';
@@ -41,7 +42,7 @@ export class AuthService {
     private workspaceHelper: WorkspaceHelperService,
     private eventEmitter: EventEmitter2,
     private workspaceInvitationsService: WorkspaceInvitationsService,
-  ) {}
+  ) { }
 
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
@@ -127,8 +128,8 @@ export class AuthService {
       token,
       tokenExpires,
       user,
-      workspace: workspace as any,
-      workspaces: workspaces as any,
+      workspace: workspace,
+      workspaces: workspaces,
     };
   }
 
@@ -168,7 +169,10 @@ export class AuthService {
           null,
         socialId: socialData.id,
         provider: authProvider,
-        role: 'user',
+        role: {
+          id: RoleEnum.user,
+          name: 'user',
+        } as unknown as Role, // Force type as DTO might expect Role object now
         isActive: true,
       });
 
@@ -225,17 +229,25 @@ export class AuthService {
       token: jwtToken,
       tokenExpires,
       user,
-      workspace: workspace as any,
-      workspaces: workspaces as any,
+      workspace: workspace,
+      workspaces: workspaces,
     };
   }
 
   async register(dto: AuthRegisterLoginDto): Promise<void> {
+    // Use 'name' if provided, otherwise fallback to legacy firstName/lastName composition
+    const finalName =
+      dto.name ||
+      [dto.firstName, dto.lastName].filter(Boolean).join(' ').trim();
+
     const user = await this.usersService.create({
       email: dto.email,
-      name: `${dto.firstName} ${dto.lastName}`.trim(),
+      name: finalName,
       password: dto.password,
-      role: 'user',
+      role: {
+        id: RoleEnum.user,
+        name: 'user',
+      } as unknown as Role,
       isActive: false,
     });
 

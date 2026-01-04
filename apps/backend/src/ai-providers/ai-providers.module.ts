@@ -2,6 +2,9 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiProvidersController } from './ai-providers.controller';
 import { AiProvidersService } from './ai-providers.service';
+import { AiEncryptionService } from './services/ai-encryption.service';
+import { AiConfigService } from './services/ai-config.service';
+import { AiModelService } from './services/ai-model.service';
 import {
   AiProviderEntity,
   AiProviderConfigEntity,
@@ -13,7 +16,6 @@ import {
 import { AiProviderConfigRelationalRepository } from './infrastructure/persistence/relational/repositories/ai-provider-config.repository';
 import { AiProviderConfigRepository } from './infrastructure/persistence/ai-provider-config.repository';
 import { SystemAiSettingsRepository } from './infrastructure/system/system-ai-settings.repository';
-import { EncryptionUtil } from '../common/utils/encryption.util';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { forwardRef } from '@nestjs/common';
@@ -34,7 +36,9 @@ import { forwardRef } from '@nestjs/common';
   controllers: [AiProvidersController],
   providers: [
     AiProvidersService,
-    EncryptionUtil,
+    AiEncryptionService,
+    AiConfigService,
+    AiModelService,
     SystemAiSettingsRepository,
     {
       provide: AiProviderConfigRepository,
@@ -43,4 +47,4 @@ import { forwardRef } from '@nestjs/common';
   ],
   exports: [AiProvidersService],
 })
-export class AiProvidersModule {}
+export class AiProvidersModule { }

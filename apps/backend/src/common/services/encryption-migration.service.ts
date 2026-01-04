@@ -7,7 +7,7 @@ import {
   UserAiProviderConfigEntity,
   WorkspaceAiProviderConfigEntity,
 } from 'src/ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
-import { EncryptionUtil } from '../utils/encryption.util';
+import { EncryptionService } from '../../shared/services/encryption.service';
 
 /**
  * Migration service to upgrade encryption from AES-256-CBC to AES-256-GCM
@@ -28,7 +28,7 @@ export class EncryptionMigrationService {
     private userProviderRepo: Repository<UserAiProviderConfigEntity>,
     @InjectRepository(WorkspaceAiProviderConfigEntity)
     private workspaceProviderRepo: Repository<WorkspaceAiProviderConfigEntity>,
-    private readonly encryptionUtil: EncryptionUtil,
+    private readonly encryptionService: EncryptionService,
   ) {
     this.oldEncryptionKey =
       process.env.OLD_ENCRYPTION_KEY || process.env.ENCRYPTION_KEY || '';
@@ -91,7 +91,7 @@ export class EncryptionMigrationService {
       }
 
       // Re-encrypt with new GCM method
-      const newEncrypted = this.encryptionUtil.encrypt(decrypted);
+      const newEncrypted = this.encryptionService.encrypt(decrypted);
 
       // Update in database
       provider.config = { ...provider.config, apiKey: newEncrypted };

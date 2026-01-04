@@ -92,7 +92,7 @@ export interface CreateAiConversationDto {
 
 export interface UpdateAiConversationDto {
   title?: string;
-  botId?: string;
+  botId?: string | null;
   useKnowledgeBase?: boolean;
   metadata?: Record<string, any>;
   messages?: AiMessage[];

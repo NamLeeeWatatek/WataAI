@@ -13,4 +13,8 @@ export type FileConfig = {
   awsS3Region?: string;
   maxFileSize: number;
   minioEndpoint?: string;
+  bucketImages?: string;
+  bucketVideos?: string;
+  bucketAudios?: string;
+  bucketDocuments?: string;
 };

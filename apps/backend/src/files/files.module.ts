@@ -12,7 +12,10 @@ import { RelationalFilePersistenceModule } from './infrastructure/persistence/re
 import { DatabaseConfig } from '../database/config/database-config.type';
 import databaseConfig from '../database/config/database.config';
 import { ConfigService, ConfigModule } from '@nestjs/config'; // Added ConfigModule
-import { AllConfigType } from '../config/config.type';
+// import { AllConfigType } from '../config/config.type';
+import fileConfig from './config/file.config'; // Import file config
+import { FileConfig, FileDriver } from './config/file-config.type';
+import { AuditModule } from '../audit/audit.module';
 
 // Determine persistence module
 const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
@@ -20,14 +23,20 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   ? DocumentFilePersistenceModule
   : RelationalFilePersistenceModule;
 
-import { AuditModule } from '../audit/audit.module';
+// Determine driver module
+const driver = (fileConfig() as FileConfig).driver;
+
+const infrastructureUploaderModule =
+  driver === FileDriver.MINIO
+    ? FilesMinioModule
+    : driver === FileDriver.S3 || driver === FileDriver.S3_PRESIGNED
+      ? FilesS3Module
+      : FilesLocalModule;
 
 @Module({
   imports: [
     infrastructurePersistenceModule,
-    FilesMinioModule,
-    FilesLocalModule,
-    FilesS3Module,
+    infrastructureUploaderModule,
     AuditModule,
   ],
   providers: [
@@ -35,28 +44,12 @@ import { AuditModule } from '../audit/audit.module';
     FilesCronService,
     {
       provide: 'FILE_DRIVER',
-      useFactory: (
-        configService: ConfigService<AllConfigType>,
-        minioService: FilesMinioService,
-        s3Service: FilesS3Service,
-        localService: FilesLocalService,
-      ) => {
-        const driver = configService.getOrThrow('file.driver', { infer: true });
-
-        if (driver === 'minio') {
-          return minioService;
-        } else if (driver === 's3') {
-          return s3Service;
-        } else {
-          return localService;
-        }
-      },
-      inject: [
-        ConfigService,
-        FilesMinioService,
-        FilesS3Service,
-        FilesLocalService,
-      ],
+      useExisting:
+        driver === FileDriver.MINIO
+          ? FilesMinioService
+          : driver === FileDriver.S3 || driver === FileDriver.S3_PRESIGNED
+            ? FilesS3Service
+            : FilesLocalService,
     },
   ],
   exports: [FilesService, infrastructurePersistenceModule],

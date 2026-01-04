@@ -4,7 +4,7 @@ import { RoleEnum } from './roles.enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.getAllAndOverride<(number | string)[]>(
@@ -19,45 +19,24 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user) {
+    if (!user || !user.role) {
       return false;
     }
 
-    const userRole = user.role;
-
-    // 1. Nếu userRole là string (trường hợp simple)
-    if (typeof userRole === 'string') {
-      return roles.map(String).includes(userRole);
+    // Strict Role Checking Strategy
+    // 1. If User Role is an object with ID (Standard for Relational/TypeORM)
+    if (typeof user.role === 'object' && user.role.id) {
+      // Check if any allowed role matches the user's role ID
+      // We accept both string and number in @Roles, so we compare strictly as strings or numbers
+      return roles.some(role => String(role) === String(user.role.id));
     }
 
-    // 2. Nếu userRole là object có ID
-    if (userRole?.id !== undefined) {
-      // 2a. Nếu decorator truyền vào là ID (number/string ID) -> so sánh ID
-      const hasIdMatch = roles.map(String).includes(String(userRole.id));
-      if (hasIdMatch) return true;
-
-      // 2b. Nếu decorator truyền vào là Name ('admin') -> so sánh Name
-      if (userRole.name) {
-        const hasNameMatch = roles
-          .map((r) => String(r).toLowerCase())
-          .includes(userRole.name.toLowerCase());
-        if (hasNameMatch) return true;
-      }
-      // 2c. Fallback: Map từ Name trong decorator ('admin') sang ID trong RoleEnum (1) để so sánh vói userRole.id
-      const hasMappedIdMatch = roles.some((role) => {
-        if (typeof role === 'string') {
-          // Access enum by key string (e.g. RoleEnum['admin'])
-          const enumId = (RoleEnum as any)[role.toLowerCase()];
-          if (enumId) {
-            return String(enumId) === String(userRole.id);
-          }
-        }
-        return false;
-      });
-
-      if (hasMappedIdMatch) return true;
+    // 2. If User Role is a direct string (e.g. 'admin') - Legacy/Simple Auth
+    if (typeof user.role === 'string') {
+      return roles.some(role => String(role) === user.role);
     }
 
+    // Fallback: If we can't determine, deny access
     return false;
   }
 }

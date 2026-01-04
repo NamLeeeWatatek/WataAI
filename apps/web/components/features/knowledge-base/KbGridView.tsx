@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
-import { Folder, FileText, MoreVertical, Eye, Download, Edit2, Trash2, Video, Music, Image as ImageIcon, FileCode } from 'lucide-react';
+import { Pagination, PaginationInfo } from '@/components/ui/Pagination';
+import { Folder, MoreVertical, Eye, Download, Edit2, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
-import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
+import { KbFileIcon } from './KbFileIcon';
 
 interface KbItem {
   id: string;
@@ -38,6 +39,9 @@ interface KbGridViewProps {
   onPreviewDocument?: (documentId: string) => void;
   onDownloadDocument?: (documentId: string, filename: string) => void;
   onToggleSelectAll?: (checked: boolean) => void;
+  pagination?: PaginationInfo;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function KbGridView({
@@ -55,7 +59,10 @@ export function KbGridView({
   onDeleteItem,
   onPreviewDocument,
   onDownloadDocument,
-  onToggleSelectAll
+  onToggleSelectAll,
+  pagination,
+  onPageChange,
+  onPageSizeChange
 }: KbGridViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -84,15 +91,7 @@ export function KbGridView({
     )
   };
 
-  const getFileIcon = (name: string, type: 'folder' | 'document') => {
-    if (type === 'folder') return <Folder className="w-8 h-8" />;
-    if (isVideoUrl(name)) return <Video className="w-8 h-8" />;
-    if (isImageUrl(name)) return <ImageIcon className="w-8 h-8" />;
-    const ext = name.split('.').pop()?.toLowerCase();
-    if (['mp3', 'wav', 'ogg', 'm4a'].includes(ext || '')) return <Music className="w-8 h-8" />;
-    if (['json', 'js', 'ts', 'html', 'css', 'py', 'go'].includes(ext || '')) return <FileCode className="w-8 h-8" />;
-    return <FileText className="w-8 h-8" />;
-  }
+
 
   if (isLoading) {
     return (
@@ -170,7 +169,7 @@ export function KbGridView({
                 ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
                 : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
             )}>
-              {getFileIcon(item.name, item.type)}
+              <KbFileIcon name={item.name} type={item.type} className="w-8 h-8" />
             </div>
 
             <h3 className="font-bold text-sm truncate w-full px-2 group-hover:text-primary transition-colors leading-relaxed">
@@ -254,6 +253,13 @@ export function KbGridView({
           </Card>
         ))}
       </div>
+      {pagination && (
+        <Pagination
+          pagination={pagination}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+        />
+      )}
     </div>
   );
 }

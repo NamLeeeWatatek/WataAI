@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
 import { DataTable, Column } from '@/components/ui/DataTable';
 import { Input } from '@/components/ui/Input';
+import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 
 interface Props {
     botId: string;
@@ -44,8 +45,8 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     const [loading, setLoading] = useState(true);
     const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [unlinkTarget, setUnlinkTarget] = useState<BotKnowledgeBase | null>(null);
 
-    // Search states for the available KBs dialog
     const [availableSearch, setAvailableSearch] = useState('');
 
     useEffect(() => {
@@ -60,8 +61,8 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                 axiosClient.get(workspaceId ? `/knowledge-bases?workspaceId=${workspaceId}` : '/knowledge-bases')
             ]);
 
-            setLinkedKnowledgeBases(Array.isArray(linkedResponse) ? linkedResponse : []);
-            setAvailableKnowledgeBases(Array.isArray(availableResponse) ? availableResponse : []);
+            setLinkedKnowledgeBases(Array.isArray(linkedResponse) ? linkedResponse : (linkedResponse as any).data || []);
+            setAvailableKnowledgeBases(Array.isArray(availableResponse) ? availableResponse : (availableResponse as any).data || []);
         } catch (error) {
             console.error('Failed to load knowledge bases:', error);
             toast.error('Failed to load knowledge bases');
@@ -91,18 +92,24 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
         }
     };
 
-    const handleUnlink = async (row: BotKnowledgeBase) => {
-        if (!confirm(`Unlink "${row.knowledgeBase?.name}"?`)) return;
+    const handleUnlink = (row: BotKnowledgeBase) => {
+        setUnlinkTarget(row);
+    };
+
+    const confirmUnlink = async () => {
+        if (!unlinkTarget) return;
 
         try {
-            setLinkedKnowledgeBases(prev => prev.filter(item => item.id !== row.id));
-            await axiosClient.delete(`/bots/${botId}/knowledge-bases/${row.knowledgeBaseId}`);
+            setLinkedKnowledgeBases(prev => prev.filter(item => item.id !== unlinkTarget.id));
+            await axiosClient.delete(`/bots/${botId}/knowledge-bases/${unlinkTarget.knowledgeBaseId}`);
             toast.success('Knowledge base unlinked');
             setRefreshKey(k => k + 1);
             if (onRefresh) onRefresh();
         } catch (error) {
             toast.error('Failed to unlink');
             setRefreshKey(k => k + 1); // reload just in case
+        } finally {
+            setUnlinkTarget(null);
         }
     };
 
@@ -368,6 +375,16 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                     }
                 />
             </CardContent>
+
+            <AlertDialogConfirm
+                open={!!unlinkTarget}
+                onOpenChange={(open) => !open && setUnlinkTarget(null)}
+                title="Unlink Knowledge Base"
+                description={`Are you sure you want to unlink "${unlinkTarget?.knowledgeBase?.name}"? This will stop the bot from using this source for answers.`}
+                onConfirm={confirmUnlink}
+                variant="destructive"
+                confirmText="Unlink"
+            />
         </Card>
     );
 }

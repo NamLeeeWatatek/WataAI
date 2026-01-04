@@ -26,7 +26,6 @@ export class KBManagementService {
     private readonly agentKbRepository: Repository<BotKnowledgeBaseEntity>,
     @InjectRepository(KnowledgeBaseDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
-    @Inject(forwardRef(() => KBDocumentsService))
     private readonly kbDocumentsService: KBDocumentsService,
   ) { }
 

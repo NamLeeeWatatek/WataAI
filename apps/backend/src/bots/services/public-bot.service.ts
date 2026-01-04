@@ -51,7 +51,7 @@ export class PublicBotService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getBotConfig(
     botId: string,
@@ -219,158 +219,33 @@ export class PublicBotService {
       take: 10,
     });
 
-    let context = '';
-    let sources: any[] = [];
-
-    // Get active linked knowledge bases
-    const activeKnowledgeBases =
-      bot.knowledgeBases?.filter((kb) => kb.isActive) || [];
-
-    this.logger.log(`Bot ${bot.id} - Checking knowledge bases:`, {
-      totalLinked: bot.knowledgeBases?.length || 0,
-      activeLinked: activeKnowledgeBases.length,
-      message: dto.message.substring(0, 100) + '...',
-    });
-
-    if (activeKnowledgeBases.length > 0) {
-      try {
-        this.logger.log(
-          `Bot ${bot.id} has ${activeKnowledgeBases.length} linked active knowledge bases`,
-        );
-
-        // Query across all linked knowledge bases
-        const allResults: any[] = [];
-        for (const kbLink of activeKnowledgeBases) {
-          try {
-            this.logger.log(
-              `Querying knowledge base: ${kbLink.knowledgeBaseId}`,
-            );
-            const kbResults = await this.kbRagService.query(
-              dto.message,
-              bot.workspaceId,
-              kbLink.knowledgeBaseId,
-              2, // Limit per KB to avoid too much context
-              0.7,
-            );
-            this.logger.log(
-              `KB ${kbLink.knowledgeBaseId} returned ${kbResults.length} results`,
-            );
-            allResults.push(...kbResults);
-          } catch (kbError) {
-            this.logger.warn(
-              `Failed to query knowledge base ${kbLink.knowledgeBaseId}: ${kbError.message}`,
-            );
-          }
-        }
-
-        this.logger.log(`Total results from all KBs: ${allResults.length}`);
-
-        // Sort by score and take top 5 results
-        const topResults = allResults
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 5);
-
-        this.logger.log(
-          `Top ${topResults.length} results after sorting and limiting`,
-        );
-
-        if (topResults.length > 0) {
-          context = topResults.map((r) => r.content).join('\n\n');
-          sources = topResults.map((r) => ({
-            documentId: r.documentId,
-            title: r.metadata?.title || 'Document',
-            content: r.content.substring(0, 200),
-            score: r.score,
-          }));
-
-          this.logger.log(
-            `Using ${topResults.length} KB results for context (${context.length} chars)`,
-          );
-        } else {
-          this.logger.log('No relevant results found in knowledge bases');
-        }
-      } catch (error) {
-        this.logger.warn(`Failed to query knowledge bases: ${error.message}`);
-      }
-    } else {
-      this.logger.log(`Bot ${bot.id} has no linked active knowledge bases`);
-    }
-
-    const systemPrompt =
-      bot.systemPrompt ||
-      'You are a helpful AI assistant. Answer questions based on the provided context when available.';
-
-    const messages = [{ role: MessageRole.SYSTEM, content: systemPrompt }];
-
-    if (context) {
-      messages.push({
-        role: MessageRole.SYSTEM,
-        content: `Context from knowledge base:\n${context}\n\nPlease use this context to answer the user's question when relevant.`,
-      });
-    }
-
-    messages.push(
-      ...history.map((m) => ({
-        role: m.role as MessageRole,
-        content: m.content,
-      })),
-    );
-
     let aiContent = '';
+    let sources: any[] = [];
+    let context = '';
+
     try {
-      // Log bot configuration for debugging
-      this.logger.log(
-        `Bot ${bot.id} config - aiProviderId: ${bot.aiProviderId}, model: ${bot.aiModelName}, workspace: ${bot.workspaceId}, creator: ${bot.createdBy}`,
+      // Delegate to KBRagService for consistent RAG and AI Provider logic
+      // This ensures we use the correct AI Provider (KB vs Bot), correct Model, and correct BaseURL/Settings
+      const ragResult = await this.kbRagService.chatWithBotAndRAG(
+        dto.message,
+        bot.id,
+        undefined, // Let service resolve KBs from botId, or we could pass activeKnowledgeBases.map(k => k.knowledgeBaseId)
+        history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        bot.aiModelName || undefined
       );
 
-      // Use configured AI provider or find workspace/user provider configs
-      if (bot.aiProviderId) {
-        // Bot is configured with a specific provider config
-        const [scope, scopeId] = await this.resolveProviderScope(bot);
-        this.logger.log(
-          `Resolved scope for bot ${bot.id}: ${scope}, ${scopeId}`,
-        );
+      aiContent = ragResult.answer;
+      sources = ragResult.sources.map(s => ({
+        documentId: s.metadata?.documentId,
+        title: s.metadata?.title || 'Document',
+        content: s.content.substring(0, 200),
+        score: s.score,
+        metadata: s.metadata
+      }));
 
-        if (scope && scopeId) {
-          aiContent =
-            await this.aiProvidersService.chatWithHistoryUsingProvider(
-              messages as any,
-              bot.aiModelName || 'gemini-2.0-flash',
-              bot.aiProviderId,
-              scope as 'user' | 'workspace',
-              scopeId,
-            );
-        } else {
-          throw new Error(
-            `No valid provider configuration found for bot ${bot.id} with aiProviderId ${bot.aiProviderId}`,
-          );
-        }
-      } else {
-        // Fallback: try workspace providers, then user providers
-        const workspaceConfigs =
-          await this.aiProvidersService.getWorkspaceConfigs(bot.workspaceId);
-        const activeWorkspaceConfig = workspaceConfigs.find((c) => c.isActive);
-        this.logger.log(
-          `Workspace ${bot.workspaceId} has ${workspaceConfigs.length} configs, active: ${activeWorkspaceConfig?.id}`,
-        );
+      // Flatten context for logging or metadata if needed (optional, as logic is now inside service)
+      context = ragResult.sources.map(s => s.content).join('\n\n');
 
-        if (activeWorkspaceConfig) {
-          aiContent =
-            await this.aiProvidersService.chatWithHistoryUsingProvider(
-              messages as any,
-              bot.aiModelName || 'gemini-2.0-flash',
-              activeWorkspaceConfig.id,
-              'workspace',
-              bot.workspaceId,
-            );
-        } else {
-          // Final fallback: use hardcoded development providers for common models
-          aiContent = await this.fallbackToGenericProvider(
-            messages as any,
-            bot.aiModelName || 'gemini-2.0-flash',
-          );
-        }
-      }
     } catch (error) {
       this.logger.error(`AI generation failed: ${error.message}`);
       aiContent =
@@ -478,7 +353,7 @@ export class PublicBotService {
       await this.aiProvidersService.configExists(
         bot.aiProviderId,
         'user',
-        bot.createdBy,
+        bot.createdBy || '',
       )
     ) {
       return bot.createdBy ? ['user', bot.createdBy] : [null, null];

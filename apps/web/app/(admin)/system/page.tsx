@@ -8,6 +8,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { useSystemStats } from '@/lib/hooks/useSystemStats';
 import { AdminStatsCards } from '@/components/features/admin/AdminStatsCards';
 import { AdminCharts } from '@/components/features/admin/AdminCharts';
+import { QdrantMaintenanceCard } from '@/components/features/admin/QdrantMaintenanceCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { motion } from 'framer-motion';
 
@@ -114,6 +115,9 @@ export default function AdminDashboardPage() {
                         <AdminCharts stats={stats} />
                     )}
                 </section>
+
+                {/* 4. Danger Zone / Maintenance */}
+                <QdrantMaintenanceCard />
             </div>
         </PageShell>
     );

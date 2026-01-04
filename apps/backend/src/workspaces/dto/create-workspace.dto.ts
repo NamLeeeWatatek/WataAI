@@ -6,6 +6,8 @@ import {
   IsEnum,
   Matches,
 } from 'class-validator';
+import { Workspace } from '../domain/workspace';
+import { WorkspacePlan } from '../enums/workspace-plan.enum';
 
 export class CreateWorkspaceDto {
   @ApiProperty({ example: 'My Workspace' })
@@ -27,10 +29,10 @@ export class CreateWorkspaceDto {
   avatarUrl?: string | null;
 
   @ApiPropertyOptional({
-    enum: ['free', 'starter', 'pro', 'enterprise'],
-    default: 'free',
+    enum: WorkspacePlan,
+    default: WorkspacePlan.FREE,
   })
   @IsOptional()
-  @IsEnum(['free', 'starter', 'pro', 'enterprise'])
-  plan?: 'free' | 'starter' | 'pro' | 'enterprise';
+  @IsEnum(WorkspacePlan)
+  plan?: WorkspacePlan;
 }

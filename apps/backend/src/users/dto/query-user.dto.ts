@@ -11,16 +11,17 @@ import {
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { User } from '../domain/user';
 
+import { Role } from '../../roles/domain/role';
+
 export class FilterUserDto {
   @ApiPropertyOptional({
-    type: [String],
-    enum: ['admin', 'user'],
-    description: 'Filter by roles',
+    type: () => Role,
+    isArray: true,
+    description: 'Filter by roles (IDs)',
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(['admin', 'user'], { each: true })
-  roles?: ('admin' | 'user')[] | any[];
+  roles?: Role[] | number[];
 
   @ApiPropertyOptional({
     type: Boolean,

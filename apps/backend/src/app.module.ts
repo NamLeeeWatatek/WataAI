@@ -1,6 +1,7 @@
 ﻿import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import { BullModule } from '@nestjs/bullmq';
 import { UsersModule } from './users/users.module';
 import { FilesModule } from './files/files.module';
@@ -64,14 +65,14 @@ import { CreationToolsModule } from './creation-tools/creation-tools.module';
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
   .isDocumentDatabase
   ? MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
-    })
+    useClass: MongooseConfigService,
+  })
   : TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options: DataSourceOptions) => {
-        return new DataSource(options).initialize();
-      },
-    });
+    useClass: TypeOrmConfigService,
+    dataSourceFactory: async (options: DataSourceOptions) => {
+      return new DataSource(options).initialize();
+    },
+  });
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
@@ -96,9 +97,21 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
       envFilePath: ['.env'],
     }),
     EventEmitterModule.forRoot(),
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
-      ttl: 300,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        store: await redisStore({
+          socket: {
+            host: configService.get('queue.host'),
+            port: configService.get('queue.port'),
+          },
+          password: configService.get('queue.password'),
+          url: configService.get('queue.url'),
+          ttl: 300 * 1000, // cache-manager v5+ uses milliseconds
+        }),
+      }),
+      inject: [ConfigService],
     }),
     ScheduleModule.forRoot(), // Initialize ScheduleModule for Cron
     infrastructureDatabaseModule,
@@ -183,4 +196,4 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
     ExecutionModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -19,7 +19,7 @@ import {
 import { Search } from '@/components/ui/Search';
 import toast from '@/lib/toast';
 
-import { getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase } from '@/lib/api/knowledge-base';
+import { getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase, updateKnowledgeBase } from '@/lib/api/knowledge-base';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { Button } from '@/components/ui/Button';
@@ -50,6 +50,7 @@ export default function KnowledgeBasePage() {
     const [pageSize, setPageSize] = useState(12);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [deleteItem, setDeleteItem] = useState<KnowledgeBase | null>(null);
+    const [editingKb, setEditingKb] = useState<KnowledgeBase | null>(null);
 
     const searchTimerRef = useRef<NodeJS.Timeout>();
 
@@ -96,24 +97,32 @@ export default function KnowledgeBasePage() {
         return Math.round(size / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const handleCreateKnowledgeBase = async (data: { name: string; description?: string; aiProviderId?: string; ragModel?: string; embeddingModel?: string; color?: string }) => {
+    const handleSaveKnowledgeBase = async (data: { name: string; description?: string; aiProviderId?: string; ragModel?: string; embeddingModel?: string; color?: string; isPublic?: boolean }) => {
         if (!workspaceId) return;
         try {
-            await createKnowledgeBase({
-                name: data.name,
-                description: data.description,
-                aiProviderId: data.aiProviderId,
-                ragModel: data.ragModel,
-                embeddingModel: data.embeddingModel,
-                color: data.color || '#3B82F6',
-                isPublic: false,
-                workspaceId
-            });
-            toast.success('Knowledge Base created successfully');
+            if (editingKb) {
+                await updateKnowledgeBase(editingKb.id, {
+                    ...data,
+                });
+                toast.success('Knowledge Base updated successfully');
+            } else {
+                await createKnowledgeBase({
+                    name: data.name,
+                    description: data.description,
+                    aiProviderId: data.aiProviderId,
+                    ragModel: data.ragModel,
+                    embeddingModel: data.embeddingModel,
+                    color: data.color || '#3B82F6',
+                    isPublic: data.isPublic || false,
+                    workspaceId
+                });
+                toast.success('Knowledge Base created successfully');
+            }
             setDialogOpen(false);
+            setEditingKb(null);
             refetch();
         } catch (error) {
-            toast.error('Failed to create knowledge base');
+            toast.error(editingKb ? 'Failed to update knowledge base' : 'Failed to create knowledge base');
         }
     };
 
@@ -141,7 +150,10 @@ export default function KnowledgeBasePage() {
                 premium
             >
                 <div className="flex items-center gap-2">
-                    <Button onClick={() => setDialogOpen(true)} className="font-bold">
+                    <Button onClick={() => {
+                        setEditingKb(null);
+                        setDialogOpen(true);
+                    }} className="font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         New Knowledge Base
                     </Button>
@@ -185,7 +197,10 @@ export default function KnowledgeBasePage() {
                     <p className="text-muted-foreground mb-8 text-center max-w-sm font-medium leading-relaxed">
                         {searchQuery ? 'Adjust your search parameters to locate specific intelligence assets.' : 'Initialize your first knowledge base engine to power your AI agents.'}
                     </p>
-                    <Button onClick={() => setDialogOpen(true)} className="px-8 font-bold">
+                    <Button onClick={() => {
+                        setEditingKb(null);
+                        setDialogOpen(true);
+                    }} className="px-8 font-bold">
                         <Plus className="w-4 h-4 mr-2" />
                         Construct First Vault
                     </Button>
@@ -214,7 +229,8 @@ export default function KnowledgeBasePage() {
                                                 className="cursor-pointer"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    // TODO: Add edit functionality
+                                                    setEditingKb(kb);
+                                                    setDialogOpen(true);
                                                 }}
                                             >
                                                 <Edit2 className="w-4 h-4 mr-2" />
@@ -287,8 +303,12 @@ export default function KnowledgeBasePage() {
 
             <KBCollectionDialog
                 open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                onSubmit={handleCreateKnowledgeBase}
+                onOpenChange={(open) => {
+                    setDialogOpen(open);
+                    if (!open) setEditingKb(null);
+                }}
+                knowledgeBase={editingKb}
+                onSubmit={handleSaveKnowledgeBase}
             />
 
             <AlertDialogConfirm

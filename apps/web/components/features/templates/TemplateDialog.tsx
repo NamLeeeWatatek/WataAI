@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/Switch'
 import { Label } from '@/components/ui/Label'
 import type { Template } from '@/lib/types/template'
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools'
+import { toast } from 'sonner'
 
 interface TemplateDialogProps {
     open: boolean
@@ -92,7 +93,7 @@ export function TemplateDialog({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!formData.name.trim()) {
-            alert('Name is required')
+            toast.error('Name is required')
             return
         }
 
@@ -214,7 +215,7 @@ export function TemplateDialog({
                                     }}
                                     onUploadError={(error) => {
                                         console.error('Upload failed:', error)
-                                        alert(`Upload failed: ${error.message}`)
+                                        toast.error(`Upload failed: ${error.message}`)
                                     }}
                                     accept="image/*,video/*"
                                 />

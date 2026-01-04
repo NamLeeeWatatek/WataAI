@@ -14,23 +14,6 @@ export function HeroSection() {
 
             <div className="container relative z-10 px-4 mx-auto">
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-                    {/* Badge */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/50 border border-border/50 backdrop-blur-md mb-8 hover:bg-muted/80 transition-colors cursor-default"
-                    >
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                        <span className="text-sm font-medium text-muted-foreground">
-                            WataAI 2.0 is now live
-                        </span>
-                        <ArrowRight className="w-3 h-3 text-muted-foreground ml-1" />
-                    </motion.div>
-
                     {/* Headline */}
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}

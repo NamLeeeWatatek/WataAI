@@ -8,9 +8,9 @@ import { KBProcessingQueueService } from './kb-processing-queue.service';
 import { KBManagementService } from './kb-management.service';
 import { KBEmbeddingsService } from './kb-embeddings.service';
 import { sanitizeText, sanitizeMetadata } from '../utils/text-sanitizer';
-import * as cheerio from 'cheerio';
-import axios from 'axios';
 import { AuditService } from '../../audit/audit.service';
+import { MarkdownProcessorUtil } from '../utils/markdown-processor.util';
+import axios from 'axios';
 
 export interface CrawlOptions {
   maxPages?: number;
@@ -48,7 +48,7 @@ export class KBCrawlerService {
 
   async crawlUrl(url: string): Promise<CrawlResult> {
     try {
-      this.logger.log(`ðŸ•·ï¸ Crawling: ${url}`);
+      this.logger.log(`🕷️ Crawling: ${url}`);
 
       const response = await axios.get(url, {
         timeout: 30000,
@@ -58,42 +58,30 @@ export class KBCrawlerService {
       });
 
       const html = response.data;
-      const $ = cheerio.load(html);
-
-      $('script, style, nav, header, footer, iframe, noscript').remove();
-
-      const title =
-        $('title').text().trim() || $('h1').first().text().trim() || 'Untitled';
-
-      const mainContent = $('main, article, .content, #content, body')
-        .first()
-        .text()
-        .trim();
-
-      const content = mainContent
-        .replace(/\s+/g, ' ')
-        .replace(/\n+/g, '\n')
-        .trim();
-
-      const description = $('meta[name="description"]').attr('content') || '';
+      const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(html, url);
 
       const links: string[] = [];
-      $('a[href]').each((_, element) => {
-        const href = $(element).attr('href');
+      const dom = new (require('jsdom')).JSDOM(html);
+      const anchors = dom.window.document.querySelectorAll('a[href]');
+
+      anchors.forEach((element: any) => {
+        const href = element.getAttribute('href');
         if (href) {
           try {
             const absoluteUrl = new URL(href, url).href;
             links.push(absoluteUrl);
-          } catch (e) { }
+          } catch (e) {
+            // Ignore invalid URLs
+          }
         }
       });
 
       return {
         url,
-        title: sanitizeText(title),
-        content: sanitizeText(content),
+        title: title || 'Untitled',
+        content: content,
         metadata: sanitizeMetadata({
-          description,
+          description: excerpt,
           crawledAt: new Date().toISOString(),
           sourceUrl: url,
         }),
@@ -186,7 +174,7 @@ export class KBCrawlerService {
         });
 
         if (existingDoc) {
-          this.logger.log(`â­ï¸  Skipping ${url} - already exists`);
+          this.logger.log(`⭐️ Skipping ${url} - already exists`);
           continue;
         }
 
@@ -228,7 +216,7 @@ export class KBCrawlerService {
         processingStarted++;
 
         this.logger.log(
-          `âœ… Created document from ${url} (${documentsCreated}/${maxPages})`,
+          `✅ Created document from ${url} (${documentsCreated}/${maxPages})`,
         );
 
         if (followLinks && depth < maxDepth) {
@@ -274,5 +262,4 @@ export class KBCrawlerService {
 
     return { documentsCreated, errors, processingStarted };
   }
-
 }
