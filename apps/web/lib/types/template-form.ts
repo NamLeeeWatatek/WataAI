@@ -10,7 +10,7 @@ export const templateFormSchema = z.object({
     // file or blob for preview is handled by CoverUpload returning url, but we might keep file for some logic
     // but strictly speaking form values usually track what we send to backend.
     // The original had previewFile.
-    previewFile: z.instanceof(File).optional().nullable(),
+    previewFile: (typeof File !== 'undefined' ? z.instanceof(File) : z.any()).optional().nullable(),
 });
 
 export type TemplateFormValues = z.infer<typeof templateFormSchema>;
