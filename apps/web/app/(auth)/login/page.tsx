@@ -120,7 +120,7 @@ function LoginPageContent() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="grid grid-cols-1 gap-4 mb-8">
                         <Button
                             variant="secondary"
                             className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
@@ -130,7 +130,7 @@ function LoginPageContent() {
                             <FaGoogle className="mr-2 h-4 w-4" />
                             Google
                         </Button>
-                        <Button
+                        {/* <Button
                             variant="secondary"
                             className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('facebook')}
@@ -138,7 +138,7 @@ function LoginPageContent() {
                         >
                             <FaFacebook className="mr-2 h-4 w-4 text-[#1877F2]" />
                             Facebook
-                        </Button>
+                        </Button> */}
                     </div>
 
                     <div className="relative mb-8">
