@@ -202,6 +202,7 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                     </div>
                     {fields.length > 0 && (
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             className="h-6 text-[10px] gap-1.5 px-2 bg-background"
@@ -215,6 +216,7 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                 <div className="flex flex-wrap gap-1.5">
                     {fields.map(f => (
                         <button
+                            type="button"
                             key={f.name}
                             onClick={() => copyToClipboard(f.name)}
                             className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border hover:border-primary hover:text-primary transition-all group"
@@ -484,7 +486,7 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1.5">
                     <BookOpen className="w-3.5 h-3.5" />
                     Load from Library
                 </Button>

@@ -64,6 +64,7 @@ export function BulkActionsToolbar({
                             return (
                                 <Button
                                     key={index}
+                                    type="button"
                                     variant={action.variant || "ghost"}
                                     size="sm"
                                     onClick={action.onClick}
@@ -84,6 +85,7 @@ export function BulkActionsToolbar({
                         <Separator orientation="vertical" className="h-4 bg-background/20 mx-1" />
 
                         <Button
+                            type="button"
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-full hover:bg-background/20 hover:text-background"
