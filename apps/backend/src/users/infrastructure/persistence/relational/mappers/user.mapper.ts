@@ -1,6 +1,7 @@
 ﻿import { User } from '../../../../domain/user';
 import { UserEntity } from '../entities/user.entity';
 import { RoleMapper } from '../../../../../roles/infrastructure/persistence/relational/mappers/role.mapper';
+import { RoleEntity } from '../../../../../roles/infrastructure/persistence/relational/entities/role.entity';
 
 export class UserMapper {
   static toDomain(raw: UserEntity): User {
@@ -55,11 +56,13 @@ export class UserMapper {
     if (domainEntity.role) {
       persistenceEntity.role = RoleMapper.toPersistence(domainEntity.role);
     } else if (domainEntity.roleId) {
-      persistenceEntity.role = { id: domainEntity.roleId } as any;
+      persistenceEntity.role = Object.assign(new RoleEntity(), {
+        id: domainEntity.roleId,
+      });
     } else {
-      persistenceEntity.role = {
+      persistenceEntity.role = Object.assign(new RoleEntity(), {
         id: 2, // Default to user if no role provided
-      } as any;
+      });
     }
 
     persistenceEntity.firstName = domainEntity.firstName;

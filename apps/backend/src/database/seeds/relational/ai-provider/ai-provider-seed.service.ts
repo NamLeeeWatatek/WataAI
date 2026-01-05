@@ -1,14 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AiProviderEntity } from '../../../../ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
 
 @Injectable()
 export class AiProviderSeedService {
+  private readonly logger = new Logger(AiProviderSeedService.name);
+
   constructor(
     @InjectRepository(AiProviderEntity)
     private repository: Repository<AiProviderEntity>,
-  ) {}
+  ) { }
 
   async run() {
     const count = await this.repository.count();
@@ -81,9 +83,9 @@ export class AiProviderSeedService {
         await this.repository.save(this.repository.create(provider));
       }
 
-      console.log('✅ AI providers seeded successfully');
+      this.logger.log('✅ AI providers seeded successfully');
     } else {
-      console.log('ℹ️ AI providers already exist, skipping seed');
+      this.logger.log('ℹ️ AI providers already exist, skipping seed');
     }
   }
 }

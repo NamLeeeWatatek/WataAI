@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository, In } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
@@ -44,11 +44,13 @@ export class UsersRelationalRepository implements UserRepository {
         return role;
       });
 
-      where.role = In(roleValues.filter(Boolean)) as any;
+      where.role = {
+        id: In(roleValues.filter(Boolean)),
+      };
     }
 
-    if (filterOptions && 'isActive' in filterOptions) {
-      where.isActive = (filterOptions as any).isActive;
+    if (filterOptions?.isActive?.toString()) {
+      where.isActive = filterOptions.isActive;
     }
 
     const [entities, count] = await this.usersRepository.findAndCount({
@@ -124,7 +126,7 @@ export class UsersRelationalRepository implements UserRepository {
     });
 
     if (!entity) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const updatedEntity = await this.usersRepository.save(

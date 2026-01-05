@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BotEntity } from '../../../../bots/infrastructure/persistence/relational/entities/bot.entity';
@@ -7,6 +7,8 @@ import { WorkspaceEntity } from '../../../../workspaces/infrastructure/persisten
 
 @Injectable()
 export class BotSeedService {
+  private readonly logger = new Logger(BotSeedService.name);
+
   constructor(
     @InjectRepository(BotEntity)
     private repository: Repository<BotEntity>,
@@ -14,13 +16,13 @@ export class BotSeedService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) {}
+  ) { }
 
   async run() {
     const count = await this.repository.count();
 
     if (count > 0) {
-      console.log('ℹ️ Bots already exist, skipping seed');
+      this.logger.log('ℹ️ Bots already exist, skipping seed');
       return;
     }
 
@@ -220,7 +222,7 @@ export class BotSeedService {
     });
 
     if (users.length === 0) {
-      console.log('skipping bot seed (no users)');
+      this.logger.warn('skipping bot seed (no users)');
       return;
     }
 
@@ -230,7 +232,7 @@ export class BotSeedService {
       });
 
       if (!workspace) {
-        console.log(
+        this.logger.warn(
           `skipping bot seed for user ${user.email || user.id} (no workspace)`,
         );
         continue;
@@ -262,11 +264,11 @@ export class BotSeedService {
 
         await this.repository.save(bot);
       }
-      console.log(
+      this.logger.log(
         `✅ Seeded ${userBots.length} bots for ${user.email} in workspace ${workspace.name}`,
       );
     }
 
-    console.log('✅ Bots seeded successfully for all test users');
+    this.logger.log('✅ Bots seeded successfully for all test users');
   }
 }

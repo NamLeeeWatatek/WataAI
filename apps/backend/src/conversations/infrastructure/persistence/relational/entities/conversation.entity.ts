@@ -23,6 +23,8 @@ import {
   MessageFeedback,
 } from '../../../../conversations.enum';
 
+import { ChannelEntity } from '../../../../../channels/infrastructure/persistence/relational/entities/channel.entity';
+
 @Entity({ name: 'conversation' })
 export class ConversationEntity extends WorkspaceOwnedEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -38,6 +40,10 @@ export class ConversationEntity extends WorkspaceOwnedEntity {
   @Column({ name: 'channel_id', type: 'uuid', nullable: true })
   @Index()
   channelId?: string | null;
+
+  @ManyToOne(() => ChannelEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'channel_id' })
+  channel?: ChannelEntity;
 
   @Column({ name: 'contact_id', type: 'uuid', nullable: true })
   @Index()
@@ -92,6 +98,7 @@ export class ConversationEntity extends WorkspaceOwnedEntity {
 }
 
 @Entity({ name: 'message' })
+@Index(['conversationId', 'sentAt'])
 export class MessageEntity extends WorkspaceOwnedEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -1,6 +1,7 @@
 ﻿import {
   HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
@@ -33,6 +34,8 @@ import { WorkspaceInvitationsService } from '../workspaces/workspace-invitations
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private jwtService: JwtService,
     private usersService: UsersService,
@@ -171,8 +174,7 @@ export class AuthService {
         provider: authProvider,
         role: {
           id: RoleEnum.user,
-          name: 'user',
-        } as unknown as Role, // Force type as DTO might expect Role object now
+        } as Role, // Force type as DTO might expect Role object now
         isActive: true,
       });
 
@@ -246,8 +248,7 @@ export class AuthService {
       password: dto.password,
       role: {
         id: RoleEnum.user,
-        name: 'user',
-      } as unknown as Role,
+      } as Role,
       isActive: false,
     });
 
@@ -265,7 +266,7 @@ export class AuthService {
       },
     );
 
-    console.log(
+    this.logger.log(
       `[AuthService] User registered, emitting event for email verification: ${dto.email}`,
     );
     this.eventEmitter.emit('user.registered', {
@@ -384,7 +385,7 @@ export class AuthService {
       },
     );
 
-    console.log(
+    this.logger.log(
       `[AuthService] Password recovery requested, emitting event: ${email}`,
     );
     this.eventEmitter.emit('user.forgotPassword', {

@@ -27,11 +27,8 @@ import {
   MessageResponseDto,
   ConversationMessagesResponseDto,
 } from '../dto/public-bot.dto';
-import { KBRagService } from '../../knowledge-base/services/kb-rag.service';
-import {
-  AiProvidersService,
-  ChatMessage,
-} from '../../ai-providers/ai-providers.service';
+import { KBRagService, ChunkSource } from '../../knowledge-base/services/kb-rag.service';
+
 import { WidgetVersionService } from './widget-version.service';
 
 @Injectable()
@@ -48,7 +45,7 @@ export class PublicBotService {
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
     private readonly kbRagService: KBRagService,
-    private readonly aiProvidersService: AiProvidersService,
+
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
   ) { }
@@ -220,30 +217,23 @@ export class PublicBotService {
     });
 
     let aiContent = '';
-    let sources: any[] = [];
+    let sources: ChunkSource[] = [];
     let context = '';
 
     try {
       // Delegate to KBRagService for consistent RAG and AI Provider logic
-      // This ensures we use the correct AI Provider (KB vs Bot), correct Model, and correct BaseURL/Settings
       const ragResult = await this.kbRagService.chatWithBotAndRAG(
         dto.message,
         bot.id,
-        undefined, // Let service resolve KBs from botId, or we could pass activeKnowledgeBases.map(k => k.knowledgeBaseId)
+        undefined,
         history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         bot.aiModelName || undefined
       );
 
       aiContent = ragResult.answer;
-      sources = ragResult.sources.map(s => ({
-        documentId: s.metadata?.documentId,
-        title: s.metadata?.title || 'Document',
-        content: s.content.substring(0, 200),
-        score: s.score,
-        metadata: s.metadata
-      }));
+      sources = ragResult.sources;
 
-      // Flatten context for logging or metadata if needed (optional, as logic is now inside service)
+      // Flatten context for logging or metadata if needed
       context = ragResult.sources.map(s => s.content).join('\n\n');
 
     } catch (error) {
@@ -330,74 +320,7 @@ export class PublicBotService {
     };
   }
 
-  private async resolveProviderScope(
-    bot: BotEntity,
-  ): Promise<[string, string] | [null, null]> {
-    if (!bot.aiProviderId) {
-      return [null, null];
-    }
 
-    // First check if it's a workspace-level config (where aiProviderId is the config ID)
-    if (
-      await this.aiProvidersService.configExists(
-        bot.aiProviderId,
-        'workspace',
-        bot.workspaceId,
-      )
-    ) {
-      return ['workspace', bot.workspaceId];
-    }
-
-    // Then check if it's a user-level config (bot creator)
-    if (
-      await this.aiProvidersService.configExists(
-        bot.aiProviderId,
-        'user',
-        bot.createdBy || '',
-      )
-    ) {
-      return bot.createdBy ? ['user', bot.createdBy] : [null, null];
-    }
-
-    return [null, null];
-  }
-
-  private async fallbackToGenericProvider(
-    messages: ChatMessage[],
-    model: string,
-  ): Promise<string> {
-    // Final fallback for development: use hardcoded API keys for common models
-    this.logger.warn(`Using fallback provider for model ${model}`);
-
-    // Route to appropriate generic provider based on model name
-    if (
-      model.includes('ollama') ||
-      model.includes('deepseek') ||
-      model.includes('llama')
-    ) {
-      // For Ollama/DeepSeek models, assume local Ollama instance
-      return this.aiProvidersService.chatWithHistory(
-        messages as any,
-        model,
-        undefined, // no api key for ollama
-        'http://localhost:11434' as any, // baseUrl for ollama
-      );
-    } else if (model.includes('gemini') || model.includes('palm')) {
-      // For Google models - would need a default API key
-      throw new Error(
-        `Fallback not available for Google models. Please configure AI provider in workspace settings.`,
-      );
-    } else if (model.includes('gpt') || model.includes('openai')) {
-      // For OpenAI models - would need a default API key
-      throw new Error(
-        `Fallback not available for OpenAI models. Please configure AI provider in workspace settings.`,
-      );
-    } else {
-      throw new Error(
-        `No fallback provider available for model ${model}. Please configure AI provider in workspace settings.`,
-      );
-    }
-  }
 
   private isOriginAllowed(allowedOrigins: string[], origin: string): boolean {
     if (allowedOrigins.includes('*')) {

@@ -50,7 +50,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'ai-providers', version: '1' })
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) {}
+  constructor(private readonly aiProvidersService: AiProvidersService) { }
 
   // Get all available AI providers (global list)
   @Get()
@@ -417,7 +417,9 @@ export class AiProvidersController {
     @Body() dto: { providerId: string; config: Record<string, any> },
   ) {
     // Call service method with direct config instead of saved config lookup
-    const service = this.aiProvidersService as any;
-    return service.fetchModelsFromDirectConfig(dto.providerId, dto.config);
+    return this.aiProvidersService.fetchModelsFromDirectConfig(
+      dto.providerId,
+      dto.config,
+    );
   }
 }

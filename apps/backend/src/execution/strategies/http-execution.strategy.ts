@@ -53,10 +53,14 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
       }
     }
 
-    // 2. SSRF Check (Basic) - TODO: Enhance with strict IP check
-    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    // 2. SSRF Protection: Block private IP ranges and localhost
+    const isLocalOrPrivate = url.match(
+      /^(https?:\/\/)?(localhost|127\.|0\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|169\.254\.)/i,
+    );
+
+    if (isLocalOrPrivate) {
       throw new Error(
-        'Security Error: Target URL is not allowed (SSRF Protection).',
+        'Security Error: Target URL is not allowed (SSRF Protection). Private networks and localhost are blocked.',
       );
     }
 

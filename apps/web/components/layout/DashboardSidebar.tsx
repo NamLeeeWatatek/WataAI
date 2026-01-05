@@ -55,7 +55,6 @@ interface DashboardSidebarProps {
 const getTranslatedNavigation = (t: any): NavigationItem[] => [
     { name: t('dashboard.title'), href: '/dashboard', icon: Layout },
     { name: t('navigation.creationTools'), href: '/creation-tools', icon: Sparkles },
-    // Jobs page removed in favor of global widget
     { name: t('navigation.myProducts'), href: '/my-products', icon: Package },
     // Admin was moved to Header
     { name: t('dashboard.bots'), href: '/bots', icon: Bot },

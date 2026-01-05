@@ -10,7 +10,7 @@ import { StatusSchema } from '../../../../../statuses/infrastructure/persistence
 export class UserMapper {
   static toDomain(raw: UserSchemaClass): User {
     const domainEntity = new User();
-    domainEntity.id = raw._id.toString() as any;
+    domainEntity.id = raw._id.toString();
     domainEntity.email = raw.email;
     domainEntity.password = raw.password;
     domainEntity.provider = raw.provider;

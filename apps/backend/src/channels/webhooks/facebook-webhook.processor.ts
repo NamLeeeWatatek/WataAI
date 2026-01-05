@@ -13,7 +13,7 @@ import { ConversationsGateway } from '../../conversations/conversations.gateway'
 import { MessageRole } from '../../conversations/conversations.enum';
 import { MessageReceivedEvent } from '../../shared/events';
 
-interface FacebookWebhookPayload {
+export interface FacebookWebhookPayload {
   object: string;
   entry: Array<{
     id: string; // Page ID

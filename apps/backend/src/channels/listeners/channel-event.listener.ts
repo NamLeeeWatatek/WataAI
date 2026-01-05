@@ -14,7 +14,7 @@ export class ChannelEventListener {
     private readonly eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => ChannelsService))
     private readonly channelsService: ChannelsService,
-  ) {}
+  ) { }
 
   @OnEvent('channel.message.send')
   async handleSendChannelMessage(event: SendChannelMessageEvent) {
@@ -43,8 +43,8 @@ export class ChannelEventListener {
       }
 
       // Set credentials if provider supports it (Facebook, Instagram, etc.)
-      if ('setCredentials' in provider && channel.accessToken) {
-        (provider as any).setCredentials(
+      if (provider.setCredentials && channel.accessToken) {
+        provider.setCredentials(
           channel.accessToken,
           channel.credential?.clientSecret || '',
         );

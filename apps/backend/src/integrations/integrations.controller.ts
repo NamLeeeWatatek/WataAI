@@ -7,6 +7,7 @@
   Body,
   Param,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,7 +26,7 @@ export class IntegrationsController {
   @ApiOperation({ summary: 'Get all integration credentials' })
   async findAll(@CurrentWorkspace() workspaceId: string) {
     if (!workspaceId) {
-      throw new Error('Workspace ID is required to fetch integrations');
+      throw new BadRequestException('Workspace ID is required to fetch integrations');
     }
 
     const credentials = await this.integrationsService.findAll(workspaceId);
@@ -49,7 +50,7 @@ export class IntegrationsController {
     @CurrentWorkspace() workspaceId: string,
   ) {
     if (!workspaceId) {
-      throw new Error(
+      throw new BadRequestException(
         'Workspace ID is required to create integration credential',
       );
     }

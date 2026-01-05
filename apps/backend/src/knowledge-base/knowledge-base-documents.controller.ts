@@ -120,6 +120,8 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseDocumentsController {
+  private readonly logger = new Logger(KnowledgeBaseDocumentsController.name);
+
   constructor(
     private readonly documentsService: KBDocumentsService,
     private readonly crawlerService: KBCrawlerService,
@@ -280,7 +282,7 @@ export class KnowledgeBaseDocumentsController {
   ) {
     const userId = req.user.id;
 
-    console.log('🔍 UPLOAD REQUEST RECEIVED:', {
+    this.logger.debug('🔍 UPLOAD REQUEST RECEIVED', {
       userId,
       knowledgeBaseId,
       folderId,
@@ -292,12 +294,12 @@ export class KnowledgeBaseDocumentsController {
     });
 
     if (!file) {
-      console.error('❌ No file uploaded in request');
+      this.logger.error('❌ No file uploaded in request');
       throw new BadRequestException('No file uploaded');
     }
 
     // Log raw filename to understand encoding at source level
-    console.log('🎯 RAW UPLOAD RECEIVED:', {
+    this.logger.debug('🎯 RAW UPLOAD RECEIVED', {
       filename: file.originalname,
       isEmpty: !file.originalname,
       length: file.originalname?.length,
@@ -313,14 +315,14 @@ export class KnowledgeBaseDocumentsController {
 
     // Store fixed name if it was different
     if (fileNameFixed !== file.originalname) {
-      console.log('✨ Fixed Mojibake filename:', {
+      this.logger.log('✨ Fixed Mojibake filename', {
         original: file.originalname,
         fixed: fileNameFixed,
       });
     }
 
     const sanitizedFilename = sanitizeFilename(fileNameFixed);
-    console.log('🔄 Filename processing:', {
+    this.logger.debug('🔄 Filename processing', {
       original: file.originalname,
       fixed: fileNameFixed,
       sanitized: sanitizedFilename,

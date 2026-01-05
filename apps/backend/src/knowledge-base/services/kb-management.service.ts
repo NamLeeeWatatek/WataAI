@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
@@ -19,6 +19,8 @@ import { KnowledgeBaseDocumentEntity, KbDocumentEntity } from '../infrastructure
 
 @Injectable()
 export class KBManagementService {
+  private readonly logger = new Logger(KBManagementService.name);
+
   constructor(
     @InjectRepository(KnowledgeBaseEntity)
     private readonly kbRepository: Repository<KnowledgeBaseEntity>,
@@ -71,8 +73,8 @@ export class KBManagementService {
 
     if (sortOptions?.length) {
       sortOptions.forEach((sort) => {
-        if (sort.orderBy && (sort.orderBy as any) !== 'undefined') {
-          query.addOrderBy(`kb.${sort.orderBy}`, sort.order as any);
+        if (sort.orderBy) {
+          query.addOrderBy(`kb.${sort.orderBy}`, sort.order as 'ASC' | 'DESC');
         }
       });
     } else {
@@ -81,29 +83,17 @@ export class KBManagementService {
 
     query
       .skip((paginationOptions.page - 1) * paginationOptions.limit)
-      .take(paginationOptions.limit);
+      .take(paginationOptions.limit)
+      .loadRelationCountAndMap(
+        'kb.totalDocuments',
+        'kb.documents',
+        'documents',
+        (qb) => qb.where('documents.deletedAt IS NULL'),
+      );
 
     const [results, total] = await query.getManyAndCount();
 
-    // Calculate actual document counts for each KB (maintaining original logic)
-    const resultsWithCounts = await Promise.all(
-      results.map(async (kb) => {
-        const docCount = await this.kbRepository
-          .createQueryBuilder('kb')
-          .leftJoin('kb.documents', 'doc')
-          .where('kb.id = :kbId', { kbId: kb.id })
-          .andWhere('doc.deletedAt IS NULL')
-          .select('COUNT(doc.id)', 'count')
-          .getRawOne();
-
-        return {
-          ...kb,
-          totalDocuments: parseInt(docCount?.count || '0'),
-        };
-      }),
-    );
-
-    return { data: resultsWithCounts, total };
+    return { data: results, total };
   }
 
   async findAll(userId: string, workspaceId?: string) {
@@ -146,7 +136,10 @@ export class KBManagementService {
       try {
         await this.kbDocumentsService.remove(doc.id, userId);
       } catch (error) {
-        console.error(`Failed to delete document ${doc.id} during KB removal:`, error);
+        this.logger.error(
+          `Failed to delete document ${doc.id} during KB removal:`,
+          error,
+        );
       }
     }
 

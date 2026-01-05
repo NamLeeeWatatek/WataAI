@@ -90,7 +90,6 @@ export class FacebookOAuthService extends BaseOAuthService {
 
       this.logger.error('Token exchange failed:', errorData || error.message);
 
-      // âœ… FIX: Better error message for used authorization code
       if (errorCode === 100 && errorSubcode === 36009) {
         throw new HttpException(
           'This authorization code has already been used. Please try connecting again from the beginning.',
@@ -200,6 +199,18 @@ export class FacebookOAuthService extends BaseOAuthService {
     return this.getConnectedAccounts(workspaceId);
   }
 
+  async findActiveCredential(): Promise<ChannelCredentialEntity | null> {
+    return this.credentialRepository.findOne({
+      where: {
+        provider: 'facebook',
+        isActive: true,
+      },
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+  }
+
   async getCredential(
     workspaceId: string,
     fallbackId?: string,
@@ -209,7 +220,6 @@ export class FacebookOAuthService extends BaseOAuthService {
       searchWorkspaces.push(fallbackId);
     }
 
-    // Try finding by workspaceId first, then by fallbackId (e.g. userId for legacy support)
     for (const id of searchWorkspaces) {
       const cred = await this.credentialRepository.findOne({
         where: [
@@ -230,7 +240,7 @@ export class FacebookOAuthService extends BaseOAuthService {
     appSecret?: string,
     verifyToken?: string,
   ): Promise<ChannelCredentialEntity> {
-    let credential = await this.getCredential(workspaceId, workspaceId); // Fallback to same if not specified
+    let credential = await this.getCredential(workspaceId, workspaceId);
 
     if (!credential && appId && appSecret) {
       credential = await this.updateCredential(

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreationToolEntity } from '../../../../creation-tools/infrastructure/persistence/relational/entities/creation-tool.entity';
 import { TemplateEntity } from '../../../../templates/infrastructure/persistence/relational/entities/template.entity';
 import { CategoryEntity } from '../../../../categories/infrastructure/persistence/relational/entities/category.entity';
+import { DeepPartial } from 'typeorm';
 
 @Injectable()
 export class CreationToolsSeederService {
@@ -16,7 +17,7 @@ export class CreationToolsSeederService {
     private templateRepository: Repository<TemplateEntity>,
     @InjectRepository(CategoryEntity)
     private categoryRepository: Repository<CategoryEntity>,
-  ) {}
+  ) { }
 
   async run() {
     this.logger.log('Seeding Creation Tools...');
@@ -380,7 +381,7 @@ export class CreationToolsSeederService {
     const tool = this.creationToolRepository.create({
       ...data,
       category: category ?? undefined,
-    } as any) as any as CreationToolEntity;
+    } as DeepPartial<CreationToolEntity>);
     return this.creationToolRepository.save(tool);
   }
 
@@ -410,7 +411,7 @@ export class CreationToolsSeederService {
       ...data,
       creationToolId: toolId,
       category: category ?? undefined,
-    } as any) as any as TemplateEntity;
+    } as DeepPartial<TemplateEntity>);
     return this.templateRepository.save(template);
   }
 }

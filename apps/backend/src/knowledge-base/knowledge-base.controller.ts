@@ -9,6 +9,7 @@
   Query,
   UseGuards,
   Request,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,6 +50,8 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseController {
+  private readonly logger = new Logger(KnowledgeBaseController.name);
+
   constructor(
     private readonly kbService: KBManagementService,
     private readonly vectorService: KBVectorService,
@@ -418,7 +421,7 @@ export class KnowledgeBaseController {
         dimension,
       };
     } catch (error) {
-      console.error('Failed to recreate collection:', error);
+      this.logger.error('Failed to recreate collection:' + error.message);
       return {
         success: false,
         message: `Failed to recreate collection: ${error.message}`,
@@ -459,7 +462,7 @@ export class KnowledgeBaseController {
         sources: result.sources,
       };
     } catch (error) {
-      console.error('Chat with knowledge base failed:', error);
+      this.logger.error('Chat with knowledge base failed:' + error.message);
       throw error;
     }
   }

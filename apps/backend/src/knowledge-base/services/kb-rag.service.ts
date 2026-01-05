@@ -12,16 +12,25 @@ import {
 } from '../../bots/infrastructure/persistence/relational/entities/bot.entity';
 import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 import { KBChunkEntity } from '../infrastructure/persistence/relational/entities/kb-chunk.entity';
-import { ILike } from 'typeorm';
 import { KbAiConfig } from '../config/kb-ai.config';
+import { ILike } from 'typeorm';
+
+export interface ChunkSource {
+  content: string;
+  score: number;
+  documentId: string;
+  chunkIndex: number;
+  metadata?: Record<string, any>;
+}
 
 export interface RAGResult {
   answer: string;
-  sources: Array<{
-    content: string;
-    score: number;
-    metadata?: Record<string, any>;
-  }>;
+  sources: ChunkSource[];
+}
+
+interface RRFResult {
+  chunk: Omit<ChunkSource, 'score'>;
+  score: number;
 }
 
 @Injectable()
@@ -50,7 +59,7 @@ export class KBRagService {
     limit: number = 5,
     similarityThreshold: number = 0.7,
     useHybrid: boolean = true,
-  ) {
+  ): Promise<ChunkSource[]> {
     if (useHybrid) {
       return this.hybridQuery(
         query,
@@ -108,7 +117,7 @@ export class KBRagService {
     knowledgeBaseId?: string,
     limit: number = 5,
     similarityThreshold: number = 0.7,
-  ) {
+  ): Promise<ChunkSource[]> {
     try {
       this.logger.log(`🔄 Performing Hybrid Search for: "${query}"`);
 
@@ -165,7 +174,6 @@ export class KBRagService {
               metadata: result.payload.metadata,
               documentId: result.payload.documentId,
               chunkIndex: result.payload.chunkIndex,
-              score: score,
             },
             score: score,
           });
@@ -187,7 +195,6 @@ export class KBRagService {
     } catch (error) {
       this.logger.error(`Error in hybrid query: ${error.message}`);
       // Fallback to simple vector search if hybrid fails
-      // Cast to any to bypass the missing hybridQuery error if it still exists during application
       return this.query(
         query,
         workspaceId,
@@ -214,7 +221,7 @@ export class KBRagService {
 
       const relevantChunks = await this.query(
         question,
-        'system', // Default scope if knowledgeBaseId missing, but generateAnswerFromKb handles it
+        'system',
         knowledgeBaseId,
         limit,
         threshold,
@@ -242,17 +249,14 @@ export class KBRagService {
       const lang = I18nContext.current()?.lang;
       const prompt = `${this.i18n.t('ai.ragPromptPrefix', { lang })}\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
 
-      // ✅ Use configured AI provider for the knowledge base if available
       let answer: string;
       if (knowledgeBaseId) {
-        // Try to get knowledge base and use its configured AI provider
         answer = await this.generateAnswerFromKb(
           prompt,
           knowledgeBaseId,
           model,
         );
       } else {
-        // Fallback to default provider
         answer = await this.aiProvidersService.chat(
           prompt,
           model || KbAiConfig.defaults.model,
@@ -261,11 +265,7 @@ export class KBRagService {
 
       return {
         answer,
-        sources: relevantChunks.map((chunk) => ({
-          content: chunk.content,
-          score: chunk.score,
-          metadata: chunk.metadata,
-        })),
+        sources: relevantChunks,
       };
     } catch (error) {
       this.logger.error(`Error generating answer: ${error.message}`);
@@ -273,9 +273,6 @@ export class KBRagService {
     }
   }
 
-  /**
-   * Generate answer using knowledge base's configured AI provider
-   */
   private async generateAnswerFromKb(
     prompt: string,
     knowledgeBaseId: string,
@@ -286,21 +283,18 @@ export class KBRagService {
         where: { id: knowledgeBaseId },
       });
 
-      // Use KB's RAG model if configured, otherwise fall back to the model parameter or default
       const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
 
       if (kb && kb.aiProviderId) {
         const userId = kb.createdBy || 'system';
 
-        // Try workspace provider first, then user provider
         if (
           kb.workspaceId &&
           (await this.aiProvidersService.configExists(
             kb.aiProviderId,
             'workspace',
             kb.workspaceId,
-          )) &&
-          kb.workspaceId
+          ))
         ) {
           this.logger.log(
             `🔎 Using KB's workspace AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
@@ -329,18 +323,9 @@ export class KBRagService {
             'user',
             userId as string,
           );
-        } else {
-          this.logger.log(
-            `🔎 KB AI provider ${kb.aiProviderId} not found, using default with model: ${finalModel}`,
-          );
-          return await this.aiProvidersService.chat(prompt, finalModel);
         }
-      } else {
-        this.logger.log(
-          `🔎 KB provider config incomplete, using default with model: ${finalModel}`,
-        );
-        return await this.aiProvidersService.chat(prompt, finalModel);
       }
+      return await this.aiProvidersService.chat(prompt, finalModel);
     } catch (error) {
       this.logger.warn(
         `Failed to use KB AI provider, falling back to default: ${error.message}`,
@@ -383,13 +368,8 @@ export class KBRagService {
       const aiProviderId = bot.aiProviderId ?? undefined;
       const modelName = model || bot.aiModelName || KbAiConfig.defaults.model;
 
-      this.logger.log(
-        `🤖 Bot: ${bot.name}, Workspace: ${workspaceId}, AI Provider: ${aiProviderId || 'auto'}, Model: ${modelName}`,
-      );
+      let relevantChunks: ChunkSource[] = [];
 
-      let relevantChunks: any[] = [];
-
-      // Get linked knowledge bases for the bot
       const linkedKBs = await this.botKbRepository.find({
         where: {
           botId: agentId,
@@ -401,11 +381,9 @@ export class KBRagService {
 
       const knowledgeBaseIds = linkedKBs.map((lkb) => lkb.knowledgeBaseId);
 
-      // Try to query knowledge base, but don't fail if it errors
       if (knowledgeBaseIds.length > 0) {
         try {
-          // Query across all linked knowledge bases
-          const allChunks: any[] = [];
+          const allChunks: ChunkSource[] = [];
           for (const kbId of knowledgeBaseIds) {
             const chunks = await this.query(
               question,
@@ -416,22 +394,14 @@ export class KBRagService {
             );
             allChunks.push(...chunks);
           }
-          // Sort by score and take top 5
           relevantChunks = allChunks
             .sort((a, b) => b.score - a.score)
             .slice(0, 5);
-
-          this.logger.log(
-            `✅ Found ${relevantChunks.length} relevant chunks from ${knowledgeBaseIds.length} linked KBs`,
-          );
         } catch (kbError) {
           this.logger.warn(
             `⚠️ Knowledge base query failed: ${kbError.message}. Continuing without KB context.`,
           );
-          // Continue without KB context
         }
-      } else {
-        this.logger.log(`⚠️ No linked knowledge bases for bot ${bot.name}`);
       }
 
       let systemPrompt = botSystemPrompt || 'You are a helpful assistant.';
@@ -442,9 +412,6 @@ export class KBRagService {
           .join('\n\n');
 
         systemPrompt += `\n\nUse the following context from the knowledge base to answer questions:\n\n${context}`;
-        this.logger.log(`📚 Using KB context (${context.length} chars)`);
-      } else {
-        this.logger.log(`💬 No KB context available, using AI only`);
       }
 
       const messages = [
@@ -459,7 +426,6 @@ export class KBRagService {
         },
       ];
 
-      // Use chatWithHistoryUsingProvider to properly get API key from user settings
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
           messages,
@@ -472,11 +438,7 @@ export class KBRagService {
 
       return {
         answer,
-        sources: relevantChunks.map((chunk) => ({
-          content: chunk.content,
-          score: chunk.score,
-          metadata: chunk.metadata,
-        })),
+        sources: relevantChunks,
       };
     } catch (error) {
       this.logger.error(`Error generating answer for agent: ${error.message}`);
@@ -553,7 +515,6 @@ export class KBRagService {
 
       let effectiveKnowledgeBaseIds = knowledgeBaseIds;
 
-      // If no explicit knowledge bases provided but we have a bot, use the bot's linked knowledge bases
       if ((!knowledgeBaseIds || knowledgeBaseIds.length === 0) && botId) {
         const linkedKBs = await this.botKbRepository.find({
           where: {
@@ -567,22 +528,17 @@ export class KBRagService {
         effectiveKnowledgeBaseIds = linkedKBs.map((lkb) => lkb.knowledgeBaseId);
       }
 
-      // Handle RAG context gathering (if knowledge bases available)
       let ragContext = '';
-      let ragSources: Array<{
-        content: string;
-        score: number;
-        metadata?: Record<string, any>;
-      }> = [];
+      let ragSources: ChunkSource[] = [];
 
       if (effectiveKnowledgeBaseIds && effectiveKnowledgeBaseIds.length > 0) {
         const ragWorkspaceId = bot?.workspaceId || 'default';
         const allChunks = await this.gatherRAGContext(
           message,
           ragWorkspaceId,
-          effectiveKnowledgeBaseIds!,
+          effectiveKnowledgeBaseIds,
         );
-        ragSources = allChunks.slice(0, 5); // Top 5 results
+        ragSources = allChunks.slice(0, 5);
 
         if (ragSources.length > 0) {
           ragContext = ragSources
@@ -598,7 +554,6 @@ export class KBRagService {
         message,
       );
 
-      // Get AI provider using proper hierarchy: KB Workspace > KB User > Bot Provider > User Configs > Error
       const providerConfig = await this.resolveAIProvider(
         bot,
         effectiveKnowledgeBaseIds?.[0],
@@ -622,11 +577,7 @@ export class KBRagService {
 
       return {
         answer,
-        sources: ragSources.map((s) => ({
-          content: String(s.content || ''),
-          score: Number(s.score || 0),
-          metadata: (s.metadata as Record<string, any>) || {},
-        })),
+        sources: ragSources,
       };
     } catch (error) {
       this.logger.error(`Error in chatWithBotAndRAG: ${error.message}`);
@@ -634,25 +585,12 @@ export class KBRagService {
     }
   }
 
-  /**
-   * Gather RAG context from knowledge bases
-   */
   private async gatherRAGContext(
     message: string,
     workspaceId: string,
     knowledgeBaseIds: string[],
-  ): Promise<
-    Array<{
-      content: string;
-      score: number;
-      metadata?: Record<string, any>;
-    }>
-  > {
-    const allChunks: Array<{
-      content: string;
-      score: number;
-      metadata?: Record<string, any>;
-    }> = [];
+  ): Promise<ChunkSource[]> {
+    const allChunks: ChunkSource[] = [];
 
     for (const kbId of knowledgeBaseIds) {
       try {
@@ -663,19 +601,11 @@ export class KBRagService {
       }
     }
 
-    // Sort by score descending
     return allChunks
       .sort((a, b) => b.score - a.score)
-      .map((chunk) => ({
-        content: String(chunk.content || ''),
-        score: Number(chunk.score || 0),
-        metadata: (chunk.metadata as Record<string, any>) || {},
-      }));
+      .slice(0, 10);
   }
 
-  /**
-   * Build conversation messages with system prompt, RAG context, and history
-   */
   private buildMessages(
     systemPrompt: string,
     ragContext: string,
@@ -699,10 +629,6 @@ export class KBRagService {
     ];
   }
 
-  /**
-   * Resolve AI provider with proper hierarchy
-   * Priority: KB Workspace Provider > KB User Provider > Bot Provider > User Configs > Fail
-   */
   private async resolveAIProvider(
     bot?: BotEntity | null,
     knowledgeBaseId?: string,
@@ -712,14 +638,12 @@ export class KBRagService {
     scopeId: string;
     modelName?: string;
   } | null> {
-    // 1. Knowledge Base AI provider (Highest priority)
     if (knowledgeBaseId) {
       const kb = await this.kbRepository.findOne({
         where: { id: knowledgeBaseId },
       });
 
       if (kb?.aiProviderId) {
-        // Try KB Workspace Provider
         if (
           kb.workspaceId &&
           (await this.aiProvidersService.configExists(
@@ -736,7 +660,6 @@ export class KBRagService {
           };
         }
 
-        // Try KB User Provider
         const userId = kb.createdBy || 'system';
         if (
           await this.aiProvidersService.configExists(
@@ -755,7 +678,6 @@ export class KBRagService {
       }
     }
 
-    // 2. Bot's AI provider (Secondary priority)
     if (bot?.aiProviderId) {
       if (
         bot.workspaceId &&
@@ -789,9 +711,8 @@ export class KBRagService {
       }
     }
 
-    // 3. Fallback to Bot's user or system default
     const fallbackUserId = bot?.createdBy || 'system';
-    const fallbackProviderId = 'gemini'; // Default fallback
+    const fallbackProviderId = 'gemini';
 
     try {
       if (
@@ -801,7 +722,6 @@ export class KBRagService {
           fallbackUserId,
         )
       ) {
-        this.logger.log(`Using default fallback provider: ${fallbackProviderId}`);
         return {
           providerId: fallbackProviderId,
           scope: 'user',

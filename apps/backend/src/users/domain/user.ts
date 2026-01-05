@@ -13,6 +13,7 @@ export class User {
   name: string | null;
 
   @ApiPropertyOptional({ type: String, description: 'Avatar URL' })
+  @Expose({ groups: ['me', 'admin'] })
   avatarUrl?: string | null;
 
   @Exclude({ toPlainOnly: true })

@@ -1,6 +1,7 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { CreateTemplateDto } from './dto/create-template.dto';
+import { DeepPartial } from '../utils/types/deep-partial.type';
 import { NullableType } from '../utils/types/nullable.type';
 import { FilterTemplateDto, SortTemplateDto } from './dto/query-template.dto';
 import { TemplateRepository } from './infrastructure/persistence/template.repository';
@@ -187,7 +188,7 @@ export class TemplatesService {
     return this.templatesRepository.bulkUpdate(ids, {
       ...rest,
       category: categoryId ? { id: categoryId } : undefined,
-    } as any);
+    } as DeepPartial<Template>);
   }
 
   async bulkRemove(ids: Template['id'][]): Promise<void> {

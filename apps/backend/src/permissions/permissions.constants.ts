@@ -1,0 +1,102 @@
+export enum PermissionAction {
+    CREATE = 'Create',
+    READ = 'Read',
+    UPDATE = 'Update',
+    DELETE = 'Delete',
+    LIST = 'List',
+    GET = 'Get',
+    EXECUTE = 'Execute',
+    UPLOAD = 'Upload',
+    READ_SETTINGS = 'ReadSettings',
+    READ_AUDIT_LOGS = 'ReadAuditLogs',
+    UPDATE_SETTINGS = 'UpdateSettings',
+}
+
+export enum PermissionResource {
+    IAM = 'iam',
+    FLOW = 'flow',
+    TEMPLATE = 'template',
+    BOT = 'bot',
+    CHANNEL = 'channel',
+    INTEGRATION = 'integration',
+    WORKSPACE = 'workspace',
+    FILE = 'file',
+    JOB = 'job',
+    SYSTEM = 'system',
+}
+
+export const PermissionConstants = {
+    IAM: {
+        CREATE: `${PermissionResource.IAM}:${PermissionAction.CREATE}`,
+        CREATE_ROLE: `${PermissionResource.IAM}:CreateRole`,
+        LIST_USERS: `${PermissionResource.IAM}:ListUsers`,
+        GET: `${PermissionResource.IAM}:${PermissionAction.GET}`,
+        LIST_ROLES: `${PermissionResource.IAM}:ListRoles`,
+        GET_ROLE: `${PermissionResource.IAM}:GetRole`,
+        UPDATE: `${PermissionResource.IAM}:${PermissionAction.UPDATE}`,
+        UPDATE_ROLE: `${PermissionResource.IAM}:UpdateRole`,
+        DELETE: `${PermissionResource.IAM}:${PermissionAction.DELETE}`,
+        DELETE_ROLE: `${PermissionResource.IAM}:DeleteRole`,
+    },
+    FLOW: {
+        CREATE: `${PermissionResource.FLOW}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.FLOW}:${PermissionAction.LIST}`,
+        GET: `${PermissionResource.FLOW}:${PermissionAction.GET}`,
+        UPDATE: `${PermissionResource.FLOW}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.FLOW}:${PermissionAction.DELETE}`,
+        EXECUTE: `${PermissionResource.FLOW}:${PermissionAction.EXECUTE}`,
+    },
+    TEMPLATE: {
+        CREATE: `${PermissionResource.TEMPLATE}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.TEMPLATE}:${PermissionAction.LIST}`,
+        GET: `${PermissionResource.TEMPLATE}:${PermissionAction.GET}`,
+        UPDATE: `${PermissionResource.TEMPLATE}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.TEMPLATE}:${PermissionAction.DELETE}`,
+    },
+    BOT: {
+        CREATE: `${PermissionResource.BOT}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.BOT}:${PermissionAction.LIST}`,
+        GET: `${PermissionResource.BOT}:${PermissionAction.GET}`,
+        UPDATE: `${PermissionResource.BOT}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.BOT}:${PermissionAction.DELETE}`,
+    },
+    CHANNEL: {
+        CREATE: `${PermissionResource.CHANNEL}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.CHANNEL}:${PermissionAction.LIST}`,
+        UPDATE: `${PermissionResource.CHANNEL}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.CHANNEL}:${PermissionAction.DELETE}`,
+    },
+    INTEGRATION: {
+        CREATE: `${PermissionResource.INTEGRATION}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.INTEGRATION}:${PermissionAction.LIST}`,
+        UPDATE: `${PermissionResource.INTEGRATION}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.INTEGRATION}:${PermissionAction.DELETE}`,
+    },
+    WORKSPACE: {
+        CREATE: `${PermissionResource.WORKSPACE}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.WORKSPACE}:${PermissionAction.LIST}`,
+        UPDATE: `${PermissionResource.WORKSPACE}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.WORKSPACE}:${PermissionAction.DELETE}`,
+    },
+    FILE: {
+        UPLOAD: `${PermissionResource.FILE}:${PermissionAction.UPLOAD}`,
+        LIST: `${PermissionResource.FILE}:${PermissionAction.LIST}`,
+        DELETE: `${PermissionResource.FILE}:${PermissionAction.DELETE}`,
+    },
+    JOB: {
+        CREATE: `${PermissionResource.JOB}:${PermissionAction.CREATE}`,
+        LIST: `${PermissionResource.JOB}:${PermissionAction.LIST}`,
+        GET: `${PermissionResource.JOB}:${PermissionAction.GET}`,
+        UPDATE: `${PermissionResource.JOB}:${PermissionAction.UPDATE}`,
+        DELETE: `${PermissionResource.JOB}:${PermissionAction.DELETE}`,
+    },
+    SYSTEM: {
+        READ_SETTINGS: `${PermissionResource.SYSTEM}:${PermissionAction.READ_SETTINGS}`,
+        READ_AUDIT_LOGS: `${PermissionResource.SYSTEM}:${PermissionAction.READ_AUDIT_LOGS}`,
+        UPDATE_SETTINGS: `${PermissionResource.SYSTEM}:${PermissionAction.UPDATE_SETTINGS}`,
+    },
+    ANALYTICS: {
+        READ: `analytics:${PermissionAction.READ}`,
+        EXPORT: `analytics:Export`,
+    },
+};

@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
@@ -21,7 +21,7 @@ export class EncryptionService {
       // Legacy fallback: Use hex key directly (compatibility mode)
       this.encryptionKey = Buffer.from(legacyKey, 'hex');
     } else {
-      throw new Error(
+      throw new InternalServerErrorException(
         'Missing valid encryption config: Set ENCRYPTION_SECRET (preferred) or ENCRYPTION_KEY (legacy)',
       );
     }
@@ -57,7 +57,7 @@ export class EncryptionService {
       // Combine: iv:encrypted:authTag (all base64)
       return `${iv.toString('base64')}:${encrypted}:${authTag.toString('base64')}`;
     } catch (error) {
-      throw new Error(`Encryption failed: ${error.message}`);
+      throw new InternalServerErrorException(`Encryption failed: ${error.message}`);
     }
   }
 
@@ -102,7 +102,7 @@ export class EncryptionService {
 
       return decrypted;
     } catch (error) {
-      throw new Error(`Decryption failed: ${error.message}`);
+      throw new InternalServerErrorException(`Decryption failed: ${error.message}`);
     }
   }
 

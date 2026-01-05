@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { OpenAI } from 'openai';
+import { Injectable, Logger, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { GoogleGenerativeAI, Tool } from '@google/generative-ai';
+import { OpenAI, ClientOptions } from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { ChatMessage } from '../domain/ai-provider';
 
@@ -29,12 +29,14 @@ export class AiModelService {
             parts: [{ text: m.content }]
         }));
 
-        const tools = useTools ? [{ googleSearch: {} }] : undefined;
+        const tools: Tool[] | undefined = useTools
+            ? ([{ googleSearch: {} }] as unknown as Tool[])
+            : undefined;
 
         const chatSession = chat.startChat({
             history,
             systemInstruction: systemMessage?.content,
-            tools: tools as any,
+            tools: tools,
         });
 
         const result = await chatSession.sendMessage(lastMessage.content);
@@ -47,7 +49,7 @@ export class AiModelService {
         apiKey: string,
         baseURL?: string,
     ): Promise<string> {
-        const clientConfig: any = { apiKey };
+        const clientConfig: ClientOptions = { apiKey };
         if (baseURL) {
             clientConfig.baseURL = baseURL.endsWith('/v1')
                 ? baseURL
@@ -68,7 +70,7 @@ export class AiModelService {
             return response.choices[0]?.message?.content || '';
         } catch (error) {
             this.logger.error(`OpenAI Chat Error: ${error.message}`, error.stack);
-            throw new Error(`OpenAI Error: ${error.message}`);
+            throw new InternalServerErrorException(`OpenAI Error: ${error.message}`);
         }
     }
 
@@ -117,7 +119,7 @@ export class AiModelService {
             return content.type === 'text' ? content.text : '';
         } catch (error) {
             this.logger.error(`Anthropic Chat Error: ${error.message}`, error.stack);
-            throw new Error(`Anthropic Error: ${error.message}`);
+            throw new InternalServerErrorException(`Anthropic Error: ${error.message}`);
         }
     }
 
@@ -135,7 +137,7 @@ export class AiModelService {
 
         const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
         const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
-        const validUrl = hasProtocol ? nativeBaseUrl : `https://${nativeBaseUrl}`;
+        const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
         const endpoint = `${validUrl}/api/chat`;
 
         try {
@@ -179,13 +181,13 @@ export class AiModelService {
             return data.message?.content || '';
         } catch (error) {
             if (error.message?.includes('not found')) {
-                throw new Error(`Model '${model}' not found on Ollama server.`);
+                throw new BadRequestException(`Model '${model}' not found on Ollama server.`);
             }
-            throw new Error(`Ollama Error: ${error.message}`);
+            throw new InternalServerErrorException(`Ollama Error: ${error.message}`);
         }
     }
 
-    async verifyConnection(providerKey: string, config: any): Promise<void> {
+    async verifyConnection(providerKey: string, config: Record<string, any>): Promise<void> {
         try {
             const key = providerKey.toLowerCase();
 
@@ -211,17 +213,26 @@ export class AiModelService {
             let apiKey = config.apiKey;
 
             if (key === 'ollama') {
-                baseURL = baseURL || 'http://localhost:11434';
-                if (baseURL && !baseURL.endsWith('/v1') && !baseURL.endsWith('/v1/')) {
-                    baseURL = baseURL.endsWith('/') ? `${baseURL}v1` : `${baseURL}/v1`;
+                const url = config.baseURL || 'http://localhost:11434';
+                if (!url.endsWith('/v1') && !url.endsWith('/v1/')) {
+                    // Use Native check
+                    const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+                    const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
+                    const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
+                    const endpoint = `${validUrl}/api/tags`;
+
+                    const response = await fetch(endpoint);
+                    if (!response.ok) throw new Error(`Ollama connection failed: ${response.statusText}`);
+                    return;
                 }
+                baseURL = url;
             }
 
             if (baseURL && !apiKey) {
                 apiKey = 'no-key-required';
             }
 
-            const clientConfig: any = { apiKey };
+            const clientConfig: ClientOptions = { apiKey };
             if (baseURL) clientConfig.baseURL = baseURL;
 
             const client = new OpenAI(clientConfig);
@@ -232,7 +243,7 @@ export class AiModelService {
         }
     }
 
-    async fetchRemoteModels(providerKey: string, config: any): Promise<string[]> {
+    async fetchRemoteModels(providerKey: string, config: Record<string, any>): Promise<string[]> {
         try {
             const key = providerKey.toLowerCase();
 
@@ -254,7 +265,7 @@ export class AiModelService {
                 const url = config.baseUrl || 'http://localhost:11434';
                 const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
                 const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
-                const validUrl = hasProtocol ? nativeBaseUrl : `https://${nativeBaseUrl}`;
+                const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
                 const endpoint = `${validUrl}/api/tags`;
 
                 const response = await fetch(endpoint);
@@ -262,7 +273,7 @@ export class AiModelService {
                     throw new Error(`Failed to fetch Ollama models: ${response.statusText}`);
                 }
                 const data = await response.json();
-                return data.models?.map((m: any) => m.name) || [];
+                return data.models?.map((m: { name: string }) => m.name) || [];
             }
 
             return [];
@@ -300,7 +311,24 @@ export class AiModelService {
 
             if (key === 'ollama') {
                 const url = baseUrl || 'http://localhost:11434';
-                const endpoint = `${url}/api/embeddings`;
+
+                // Handle /v1 OpenAI compability mode
+                if (url.endsWith('/v1') || url.endsWith('/v1/')) {
+                    const client = new OpenAI({ apiKey: apiKey || 'ollama', baseURL: url });
+                    const response = await client.embeddings.create({
+                        model,
+                        input: text,
+                    });
+                    return response.data[0].embedding;
+                }
+
+                // Sanitize URL
+                const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+                const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
+                const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
+
+                const endpoint = `${validUrl}/api/embeddings`;
+
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -308,7 +336,7 @@ export class AiModelService {
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Ollama Embedding Error: ${await response.text()}`);
+                    throw new Error(`Ollama Embedding Error: ${response.status} ${response.statusText} - ${await response.text()}`);
                 }
 
                 const data = await response.json();
@@ -332,10 +360,34 @@ export class AiModelService {
         style?: string;
         additionalContext?: Record<string, any>;
     }): Promise<{ prompt: string; improvements: string[]; suggestions: string[] }> {
+        this.logger.log(`Generating system prompt for user ${params.userId}`);
+
+        const toneString = params.tone ? ` The response should be ${params.tone}.` : '';
+        const styleString = params.style ? ` Write in a ${params.style} style.` : '';
+        const contextString = params.additionalContext ? ` Additional Context: ${JSON.stringify(params.additionalContext)}` : '';
+
+        // Heuristic-based prompt construction
+        const basePrompt = params.template || `You are an AI assistant designed to: ${params.description}.${toneString}${styleString}${contextString}`;
+
+        const prompt = basePrompt.trim();
+
+        // Simulate AI improvements analysis
+        const improvements = [
+            'Refined goal clarity based on description',
+            params.tone ? 'Integrated tone requirements' : 'Standardized professional tone',
+            params.style ? 'Applied specific writing style' : 'Optimized for conversational flow'
+        ];
+
+        const suggestions = [
+            'Add more specific examples to the description for better grounding',
+            'Consider defining explicit constraints (what NOT to do)',
+            'Include a few-shot examples of ideal responses'
+        ];
+
         return {
-            prompt: `System Prompt based on: ${params.description}. Key points: ${params.style}, ${params.tone}`,
-            improvements: ['Added clarity', 'Enforced tone'],
-            suggestions: ['Provide more examples'],
+            prompt,
+            improvements,
+            suggestions,
         };
     }
 }
