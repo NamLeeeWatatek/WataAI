@@ -3,6 +3,7 @@
   NotFoundException,
   BadRequestException,
   Logger,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { NullableType } from '../utils/types/nullable.type';
 import { SystemAiSettingsRepository } from './infrastructure/system/system-ai-settings.repository';
@@ -55,7 +56,7 @@ export class AiProvidersService {
   /**
    * Mask sensitive fields in config
    */
-  maskConfig(config: any): any {
+  maskConfig(config: Record<string, any>): Record<string, any> {
     return this.aiEncryptionService.maskConfig(config);
   }
 
@@ -113,8 +114,8 @@ export class AiProvidersService {
     try {
       await this.aiModelService.verifyConnection(config.provider.key, config.config);
     } catch (error) {
-      this.logger.warn(`Verification failed for user ${userId} config ${id}: ${error.message}`);
-      throw new BadRequestException(`Verification failed: ${error.message}`);
+      this.logger.warn(`Verification failed for user ${userId} config ${id}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new BadRequestException(`Verification failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     // Update verified status
@@ -193,12 +194,27 @@ export class AiProvidersService {
   async getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<Record<string, any>> {
+  ): Promise<Record<string, unknown>> {
     return this.aiConfigService.getUsageStats(workspaceId, period);
   }
 
 
   // --- Chat & Generation Logic (Delegate to Model Service) ---
+
+  private resolveProviderKey(model: string, explicitProvider?: string): string {
+    if (explicitProvider && explicitProvider !== 'auto') {
+      return explicitProvider.toLowerCase();
+    }
+
+    // Heuristics for auto-detection
+    const modelLower = model.toLowerCase();
+    if (modelLower.startsWith('gpt')) return 'openai';
+    if (modelLower.startsWith('claude')) return 'anthropic';
+    if ((modelLower.includes('llama') || modelLower.includes('mistral')) && !modelLower.includes('gpt')) return 'ollama';
+
+    // Default fallback
+    return 'google';
+  }
 
   async chat(
     prompt: string,
@@ -209,34 +225,11 @@ export class AiProvidersService {
     baseUrl?: string,
     useTools?: boolean,
   ): Promise<string> {
-    // Simple heuristic or use provided provider
-    let providerKey = provider || 'auto';
-
-    if (providerKey === 'auto') {
-      providerKey = 'google';
-      if (model.startsWith('gpt')) providerKey = 'openai';
-      if (model.startsWith('claude')) providerKey = 'anthropic';
-      if ((model.includes('llama') || model.includes('mistral')) && !model.includes('gpt')) providerKey = 'ollama';
-    }
-
+    const providerKey = this.resolveProviderKey(model, provider);
     const key = apiKey || await this.getApiKey(providerKey);
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
 
-    if (providerKey === 'google') {
-      // Pass useTools if available
-      return this.aiModelService.chatWithGoogleHistory(messages, model, key, useTools);
-    }
-    if (providerKey === 'openai') {
-      return this.aiModelService.chatWithOpenAIHistory(messages, model, key, baseUrl);
-    }
-    if (providerKey === 'anthropic') {
-      return this.aiModelService.chatWithAnthropicHistory(messages, model, key);
-    }
-    if (providerKey === 'ollama') {
-      return this.aiModelService.chatWithOllamaHistory(messages, model, baseUrl, key);
-    }
-
-    return '';
+    return this.dispatchChat(providerKey, messages, model, key, baseUrl, useTools);
   }
 
   async generateEmbedding(
@@ -256,7 +249,7 @@ export class AiProvidersService {
     scope: 'user' | 'workspace',
     scopeId: string,
   ): Promise<number[]> {
-    let config: any;
+    let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
     if (scope === 'user') {
       const c = await this.aiConfigService.getUserConfig(scopeId, providerConfigId);
       if (!c) throw new NotFoundException('Config not found');
@@ -266,34 +259,26 @@ export class AiProvidersService {
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     }
+
     if (!config.provider) throw new BadRequestException('Provider not loaded');
 
-    const apiKey = config.config.apiKey;
-    return this.aiModelService.generateEmbedding(text, config.provider.key.toLowerCase(), model, apiKey);
+    const apiKey = config.config.apiKey as string;
+    const baseUrl = config.config.baseUrl as string | undefined;
+
+    return this.aiModelService.generateEmbedding(
+      text,
+      config.provider.key.toLowerCase(),
+      model,
+      apiKey,
+      baseUrl
+    );
   }
 
   async chatWithHistory(messages: ChatMessage[], model: string, apiKey?: string, baseUrl?: string): Promise<string> {
-    // Simple heuristic to determine provider (same as chat)
-    let providerKey = 'google';
-    if (model.startsWith('gpt')) providerKey = 'openai';
-    if (model.startsWith('claude')) providerKey = 'anthropic';
-    if ((model.includes('llama') || model.includes('mistral')) && !model.includes('gpt')) providerKey = 'ollama';
-
+    const providerKey = this.resolveProviderKey(model);
     const key = apiKey || await this.getApiKey(providerKey);
 
-    if (providerKey === 'google') {
-      return this.aiModelService.chatWithGoogleHistory(messages, model, key);
-    }
-    if (providerKey === 'openai') {
-      return this.aiModelService.chatWithOpenAIHistory(messages, model, key);
-    }
-    if (providerKey === 'anthropic') {
-      return this.aiModelService.chatWithAnthropicHistory(messages, model, key);
-    }
-    if (providerKey === 'ollama') {
-      return this.aiModelService.chatWithOllamaHistory(messages, model);
-    }
-    return '';
+    return this.dispatchChat(providerKey, messages, model, key, baseUrl);
   }
 
   async chatWithHistoryUsingProvider(
@@ -303,7 +288,8 @@ export class AiProvidersService {
     scope: 'user' | 'workspace',
     scopeId: string,
   ): Promise<string> {
-    let config: any;
+    let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
+
     if (scope === 'user') {
       const c = await this.aiConfigService.getUserConfig(scopeId, providerConfigId);
       if (!c) throw new NotFoundException('Config not found');
@@ -316,27 +302,35 @@ export class AiProvidersService {
 
     if (!config.provider) throw new BadRequestException('Provider not loaded');
 
-    const key = config.provider.key.toLowerCase();
-    // Config object contains apiKey etc.
-    const apiKey = config.config.apiKey;
+    const providerKey = config.provider.key.toLowerCase();
+    const apiKey = config.config.apiKey as string;
+    const baseUrl = (config.config.baseUrl || config.config.baseURL) as string | undefined;
 
-    // Generic/OpenAI Compatible (OpenAI, Ollama, Custom)
-    const baseURL = config.config.baseUrl || config.config.baseURL;
+    return this.dispatchChat(providerKey, messages, model, apiKey, baseUrl);
+  }
 
-    if (key === 'google') {
-      return this.aiModelService.chatWithGoogleHistory(messages, model, apiKey);
+  private async dispatchChat(
+    providerKey: string,
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+    baseUrl?: string,
+    useTools?: boolean
+  ): Promise<string> {
+    if (providerKey === 'google') {
+      return this.aiModelService.chatWithGoogleHistory(messages, model, apiKey, useTools);
     }
-    if (key === 'openai') {
-      return this.aiModelService.chatWithOpenAIHistory(messages, model, apiKey, baseURL);
+    if (providerKey === 'openai') {
+      return this.aiModelService.chatWithOpenAIHistory(messages, model, apiKey, baseUrl);
     }
-    if (key === 'anthropic') {
+    if (providerKey === 'anthropic') {
       return this.aiModelService.chatWithAnthropicHistory(messages, model, apiKey);
     }
-    if (key === 'ollama') {
-      return this.aiModelService.chatWithOllamaHistory(messages, model, baseURL, apiKey);
+    if (providerKey === 'ollama') {
+      return this.aiModelService.chatWithOllamaHistory(messages, model, baseUrl, apiKey);
     }
 
-    return '';
+    throw new BadRequestException(`Unsupported provider: ${providerKey}`);
   }
 
   async fetchProviderModels(
@@ -360,7 +354,7 @@ export class AiProvidersService {
     return this.aiModelService.fetchRemoteModels(config.provider.key, config.config);
   }
 
-  async fetchModelsFromDirectConfig(providerId: string, config: any): Promise<string[]> {
+  async fetchModelsFromDirectConfig(providerId: string, config: Record<string, any>): Promise<string[]> {
     const provider = await this.getProviderById(providerId);
     if (!provider) throw new NotFoundException('Provider not found');
     return this.aiModelService.fetchRemoteModels(provider.key, config);
@@ -405,10 +399,17 @@ export class AiProvidersService {
 
     // 2. Fallback to Env Vars (via ConfigService if available, or process.env for now)
     const key = providerKey.toUpperCase();
-    if (key === 'GOOGLE') return process.env.GOOGLE_API_KEY || '';
-    if (key === 'OPENAI') return process.env.OPENAI_API_KEY || '';
-    if (key === 'ANTHROPIC') return process.env.ANTHROPIC_API_KEY || '';
+    let apiKey = '';
 
-    return '';
+    if (key === 'GOOGLE') apiKey = process.env.GOOGLE_API_KEY || '';
+    if (key === 'OPENAI') apiKey = process.env.OPENAI_API_KEY || '';
+    if (key === 'ANTHROPIC') apiKey = process.env.ANTHROPIC_API_KEY || '';
+
+    if (!apiKey) {
+      this.logger.error(`Missing API Key for provider: ${providerKey}`);
+      throw new InternalServerErrorException(`Missing API configuration for ${providerKey}`);
+    }
+
+    return apiKey;
   }
 }

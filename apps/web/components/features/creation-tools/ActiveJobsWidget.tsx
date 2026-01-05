@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/ScrollArea';
 import { ProductDetailsDialog } from '../products/ProductDetailsDialog';
 
 export function ActiveJobsWidget() {
-    const { activeJobs, removeJob } = useCreationJobs();
+    const { activeJobs, removeJob, cancelJob } = useCreationJobs();
     const [isMinimized, setIsMinimized] = useState(false);
     const [isOpen, setIsOpen] = useState(true);
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
@@ -129,8 +129,8 @@ export function ActiveJobsWidget() {
                                                                 {job.status.toLowerCase()}
                                                             </Badge>
 
-                                                            {/* Allow removing completed/failed jobs */}
-                                                            {(job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED) && (
+                                                            {/* Allow removing completed/failed/canceled jobs */}
+                                                            {(job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) && (
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
@@ -141,6 +141,22 @@ export function ActiveJobsWidget() {
                                                                     }}
                                                                 >
                                                                     <X className="w-3 h-3 text-muted-foreground" />
+                                                                </Button>
+                                                            )}
+
+                                                            {/* Allow cancelling active jobs */}
+                                                            {(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors -mr-1"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        cancelJob(job.id);
+                                                                    }}
+                                                                    title="Stop generation"
+                                                                >
+                                                                    <XCircle className="w-3.5 h-3.5" />
                                                                 </Button>
                                                             )}
                                                         </div>

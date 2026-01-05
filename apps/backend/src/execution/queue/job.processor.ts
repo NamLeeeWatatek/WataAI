@@ -15,7 +15,9 @@ import { CreationJobsService } from '../../creation-jobs/creation-jobs.service';
 
 import { OnModuleInit } from '@nestjs/common';
 
-@Processor(JOB_QUEUE)
+@Processor(JOB_QUEUE, {
+  concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '50', 10),
+})
 export class JobProcessor extends WorkerHost implements OnModuleInit {
   private readonly logger = new Logger(JobProcessor.name);
 

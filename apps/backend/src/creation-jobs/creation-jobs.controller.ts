@@ -41,7 +41,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post()
   @Permissions('job:Create')
@@ -135,5 +135,18 @@ export class CreationJobsController {
     @CurrentWorkspace() workspaceId: string,
   ) {
     return this.service.removeMany(ids, workspaceId);
+  }
+  @Post(':id/cancel')
+  @Permissions('job:Update')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    description: 'Cancel creation job',
+  })
+  cancel(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
+    return this.service.cancel(id, workspaceId);
   }
 }

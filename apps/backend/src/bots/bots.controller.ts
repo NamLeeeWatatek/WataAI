@@ -49,7 +49,7 @@ export class BotsController {
   constructor(
     private readonly botsService: BotsService,
     private readonly botInteractionService: BotInteractionService,
-  ) {}
+  ) { }
 
   @Post()
   @Permissions('bot:Create')
@@ -73,7 +73,7 @@ export class BotsController {
     @Query() query: QueryBotDto,
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
-  ): Promise<InfinityPaginationResponseDto<any>> {
+  ): Promise<InfinityPaginationResponseDto<Bot>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {

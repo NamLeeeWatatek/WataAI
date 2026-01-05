@@ -66,18 +66,21 @@ axiosClient.interceptors.request.use(
 
     return config;
   },
-  (error: Error) => Promise.reject(error)
+  (error: unknown) => Promise.reject(error)
 );
 
 // Queue to hold requests while refreshing token
 let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: unknown) => void;
-  reject: (reason?: any) => void;
-}> = [];
+
+interface FailedRequest {
+  resolve: (value: string | null) => void;
+  reject: (reason?: unknown) => void;
+}
+
+let failedQueue: FailedRequest[] = [];
 
 // Helper to process queue
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -89,21 +92,31 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
 // Response Interceptor: Advanced Error Handling & Request Queueing
 axiosClient.interceptors.response.use(
   (response) => response.data,
   async (error: AxiosError) => {
-    const originalRequest = error.config as any;
+    const originalRequest = error.config as CustomAxiosRequestConfig;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     // Handle 401 Unauthorized (Token Expired)
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // If already refreshing, add this request to queue and wait
-        return new Promise(function (resolve, reject) {
+        return new Promise<string | null>(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            if (token) {
+              originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            }
             // Also re-attach workspace ID just in case
             if (activeWorkspaceId || lastValidWorkspaceId) {
               originalRequest.headers['x-workspace-id'] = activeWorkspaceId || lastValidWorkspaceId;
@@ -152,7 +165,10 @@ axiosClient.interceptors.response.use(
         } else {
           // Refresh failed - Reject all
           if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+            // Avoid infinite redirect loop if already on login
+            if (!window.location.pathname.startsWith('/login')) {
+              window.location.href = '/login';
+            }
           }
           throw new Error("Session refresh failed");
         }

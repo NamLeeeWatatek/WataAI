@@ -23,6 +23,7 @@ export class ExecutionQueueService {
                 'execute-creation-job',
                 { creationJob },
                 {
+                    jobId: creationJob.id,
                     removeOnComplete: true,
                     removeOnFail: 100,
                     attempts: 3,
@@ -39,6 +40,21 @@ export class ExecutionQueueService {
                 error.message,
             );
             throw error;
+        }
+    }
+
+    /**
+     * Remove a creation job from the execution queue
+     */
+    async removeCreationJob(jobId: string): Promise<void> {
+        try {
+            const job = await this.queue.getJob(jobId);
+            if (job) {
+                await job.remove();
+                this.logger.debug(`[Execution] Creation Job ${jobId} removed from queue`);
+            }
+        } catch (error) {
+            this.logger.warn(`Failed to remove creation job ${jobId} from queue: ${error.message}`);
         }
     }
 
