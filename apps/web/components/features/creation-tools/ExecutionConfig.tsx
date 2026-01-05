@@ -414,6 +414,28 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                     </div>
                 </div>
 
+                <div className="flex items-center space-x-3 p-4 rounded-xl border bg-yellow-500/5 border-yellow-500/10">
+                    <Checkbox
+                        id="async-pattern"
+                        checked={config.asyncPattern || false}
+                        onCheckedChange={(checked) => onChange({ ...config, asyncPattern: !!checked })}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                        <Label
+                            htmlFor="async-pattern"
+                            className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
+                        >
+                            Wait for Callback (Async Pattern)
+                            <Badge variant="outline" className="text-[10px] h-4 px-1 border-yellow-500/30 text-yellow-600 dark:text-yellow-400">Recommended for Video/Long Tasks</Badge>
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                            If enabled, the system will NOT wait for the HTTP response to complete the job.
+                            Instead, it will wait for an external Webhook call to <code>/api/v1/callbacks/jobs/:id/complete</code>.
+                            Use this for long-running tasks (&gt;5s) like video generation.
+                        </p>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
                     <div className="space-y-2">
                         <Label>Timeout (ms)</Label>

@@ -101,6 +101,13 @@ export interface HttpExecutionConfig {
 
   // Validation
   successCondition?: string;
+
+  /**
+   * If true, the system will NOT wait for the response to mark the job as completed.
+   * Instead, it will keep the job in PROCESSING state.
+   * The external tool is expected to call back the system to complete the job.
+   */
+  asyncPattern?: boolean;
 }
 
 export type ExecutionFlow = AiExecutionConfig | HttpExecutionConfig;

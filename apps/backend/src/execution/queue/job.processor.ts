@@ -103,12 +103,22 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         userId: 'createdBy' in jobEntity ? jobEntity.createdBy : undefined,
       });
 
+      // UX Improvement: Enforce minimum execution time of 2 seconds
+      // This ensures the "Processing" state is visible to the user and feels more realistic
+      // even for synchronous webhooks that return instantly.
       const executionTime = Date.now() - startTime;
       const minExecutionTime = 2000; // 2 seconds
       if (executionTime < minExecutionTime) {
         await new Promise((resolve) =>
           setTimeout(resolve, minExecutionTime - executionTime),
         );
+      }
+
+      // Check for Async Pattern
+      // If true, we do NOT complete the job here. We rely on external callback.
+      if ((config as any).asyncPattern) {
+        this.logger.log(`Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`);
+        return result; // Job in queue is "Done", but DB status remains PROCESSING
       }
 
       // Update Status to COMPLETED

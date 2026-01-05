@@ -92,6 +92,7 @@ export interface HttpExecutionConfig extends BaseExecutionConfig {
     timeoutMs?: number;
     retryCount?: number;
     successCondition?: string;
+    asyncPattern?: boolean;
 }
 
 export type ExecutionFlow = AiExecutionConfig | HttpExecutionConfig;
