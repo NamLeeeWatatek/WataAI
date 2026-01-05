@@ -1,4 +1,4 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+﻿import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
@@ -69,7 +69,7 @@ export class KBVectorService {
    * If it exists with a DIFFERENT dimension, it throws a specific error.
    */
   public async ensureCollection(dimension: number): Promise<string> {
-    if (!this.qdrantClient) throw new Error('Qdrant not available');
+    if (!this.qdrantClient) throw new InternalServerErrorException('Qdrant not available');
 
     const collectionName = this.getCollectionName(dimension);
 
@@ -99,14 +99,14 @@ export class KBVectorService {
 
         // Check existing dimension
         const info = await this.qdrantClient!.getCollection(collectionName);
-        const config = (info.config?.params as any) || {};
-        const vectors = config.vectors || {};
-        const currentSize = typeof vectors.size === 'number' ? vectors.size : vectors.default?.size;
+        const params = info.config?.params as unknown as { vectors?: { size?: number; default?: { size: number } } };
+        const vectors = params?.vectors;
+        const currentSize = typeof vectors?.size === 'number' ? vectors.size : vectors?.default?.size;
 
         if (currentSize && currentSize !== dimension) {
           const errorMsg = `Dimension mismatch in collection '${collectionName}'. Expected ${currentSize}, but received ${dimension}.`;
           this.logger.error(`❌ ${errorMsg}`);
-          throw new Error(errorMsg);
+          throw new InternalServerErrorException(errorMsg);
         }
 
         return collectionName;
@@ -122,7 +122,7 @@ export class KBVectorService {
 
   async upsertVector(point: VectorPoint, workspaceId: string): Promise<string> {
     if (!this.qdrantClient) {
-      throw new Error('Qdrant client not available');
+      throw new InternalServerErrorException('Qdrant client not available');
     }
 
     try {
@@ -315,7 +315,7 @@ export class KBVectorService {
 
   async recreateCollection(dimension: number): Promise<void> {
     if (!this.qdrantClient) {
-      throw new Error('Qdrant client not available');
+      throw new InternalServerErrorException('Qdrant client not available');
     }
 
     try {
@@ -357,7 +357,7 @@ export class KBVectorService {
    */
   async clearAllCollections(): Promise<string[]> {
     if (!this.qdrantClient) {
-      throw new Error('Qdrant client not available');
+      throw new InternalServerErrorException('Qdrant client not available');
     }
 
     try {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import {
@@ -14,6 +14,8 @@ import {
 
 @Injectable()
 export class ConversationSeedService {
+  private readonly logger = new Logger(ConversationSeedService.name);
+
   constructor(
     @InjectRepository(ConversationEntity)
     private conversationRepository: Repository<ConversationEntity>,
@@ -21,20 +23,20 @@ export class ConversationSeedService {
     private messageRepository: Repository<MessageEntity>,
     @InjectRepository(BotEntity)
     private botRepository: Repository<BotEntity>,
-  ) {}
+  ) { }
 
   async run() {
     const count = await this.conversationRepository.count();
 
     if (count > 0) {
-      console.log('ℹ️ Conversations already exist, skipping seed');
+      this.logger.log('ℹ️ Conversations already exist, skipping seed');
       return;
     }
 
     const bots = await this.botRepository.find({ take: 5 });
 
     if (bots.length === 0) {
-      console.log('ℹ️ No bots found, skipping conversation seeds');
+      this.logger.log('ℹ️ No bots found, skipping conversation seeds');
       return;
     }
 
@@ -143,8 +145,8 @@ export class ConversationSeedService {
         status === 'closed'
           ? new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000) // within 24 hours
           : new Date(
-              createdAt.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000,
-            ); // within 7 days
+            createdAt.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000,
+          ); // within 7 days
 
       const conversation = this.conversationRepository.create({
         botId: bot.id,
@@ -206,6 +208,6 @@ export class ConversationSeedService {
       await this.messageRepository.save(messages);
     }
 
-    console.log('✅ Conversations seeded successfully');
+    this.logger.log('✅ Conversations seeded successfully');
   }
 }

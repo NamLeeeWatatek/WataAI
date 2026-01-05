@@ -52,7 +52,7 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) {}
+  ) { }
 
   async create(
     createDto: CreateConversationDto & {
@@ -167,6 +167,7 @@ export class ConversationsService {
 
     // Join bot relation for metadata/UI
     query.leftJoinAndSelect('conversation.bot', 'bot');
+    query.leftJoinAndSelect('conversation.channel', 'channel');
 
     if (options.botId) {
       this.logger.log(`âœ… Filter: botId = ${options.botId}`);
@@ -230,18 +231,9 @@ export class ConversationsService {
         let channelName = item.channelType || 'Unknown';
         let channelMetadata = {};
 
-        if (item.channelId) {
-          try {
-            const channel = await this.channelsService.findOne(item.channelId);
-            if (channel) {
-              channelName = channel.name || channelName;
-              channelMetadata = channel.metadata || {};
-            }
-          } catch (error) {
-            this.logger.warn(
-              `Failed to fetch channel info for ${item.channelId}: ${error.message}`,
-            );
-          }
+        if (item.channel) {
+          channelName = item.channel.name || channelName;
+          channelMetadata = item.channel.config || {};
         }
 
         let lastMessage = 'No messages yet';
@@ -253,7 +245,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (error) {}
+        } catch (error) { }
 
         return {
           ...item,
@@ -384,7 +376,7 @@ export class ConversationsService {
       ...createDto,
       conversationId,
       workspaceId,
-      sender: (createDto.sender as any) ?? createDto.role,
+      sender: createDto.sender ?? createDto.role,
       metadata: createDto.metadata || {},
     });
 
@@ -486,8 +478,8 @@ export class ConversationsService {
       }
 
       // Set credentials if provider supports it
-      if ('setCredentials' in provider && channel.accessToken) {
-        (provider as any).setCredentials(
+      if (provider.setCredentials && channel.accessToken) {
+        provider.setCredentials(
           channel.accessToken,
           channel.credential?.clientSecret || '',
         );

@@ -8,6 +8,10 @@
   Param,
   UseGuards,
   Request,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
@@ -23,13 +27,15 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @ApiTags('Facebook OAuth')
 @Controller({ path: 'channels/facebook', version: '1' })
 export class FacebookOAuthController {
+  private readonly logger = new Logger(FacebookOAuthController.name);
+
   constructor(
     private readonly facebookOAuthService: FacebookOAuthService,
     private readonly channelsService: ChannelsService,
     private readonly channelStrategy: ChannelStrategy,
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
-  ) {}
+  ) { }
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -43,7 +49,7 @@ export class FacebookOAuthController {
     // If no workspace context, use personal context (user.id)
     const wsId = workspaceId || req.user.id;
 
-    console.log(
+    this.logger.log(
       `[FacebookOAuth] Getting OAuth URL for workspace: ${workspaceId} (user: ${req.user.id})`,
     );
 
@@ -53,12 +59,11 @@ export class FacebookOAuthController {
     );
 
     if (!credential) {
-      console.warn(
+      this.logger.warn(
         `[FacebookOAuth] No credential found for workspace: ${wsId}`,
       );
-      throw new HttpException(
+      throw new NotFoundException(
         `Facebook App not configured for workspace ${wsId}. Please setup your Facebook App in Channels -> Configurations first.`,
-        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -73,7 +78,7 @@ export class FacebookOAuthController {
       state,
     );
 
-    console.log(
+    this.logger.log(
       `[FacebookOAuth] Generated OAuth URL for client: ${credential.clientId}`,
     );
 
@@ -94,17 +99,11 @@ export class FacebookOAuthController {
   ) {
     // âœ… Handle Facebook OAuth errors
     if (error) {
-      throw new HttpException(
-        errorDescription || 'Facebook OAuth failed',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException(errorDescription || 'Facebook OAuth failed');
     }
 
     if (!code) {
-      throw new HttpException(
-        'Authorization code not provided',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException('Authorization code not provided');
     }
 
     try {
@@ -123,7 +122,7 @@ export class FacebookOAuthController {
         }
       }
 
-      console.log(
+      this.logger.log(
         `[FacebookOAuth] Handling callback for workspace: ${wsId}, user: ${userId}`,
       );
 
@@ -133,10 +132,7 @@ export class FacebookOAuthController {
       );
 
       if (!credential) {
-        throw new HttpException(
-          'Facebook App not configured',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException('Facebook App not configured');
       }
 
       const redirectUri = `${process.env.FRONTEND_DOMAIN}/channels/callback?provider=facebook`;
@@ -198,10 +194,7 @@ export class FacebookOAuthController {
       const page = pages.find((p) => p.id === body.pageId);
 
       if (!page) {
-        throw new HttpException(
-          'Page not found or no permission',
-          HttpStatus.NOT_FOUND,
-        );
+        throw new NotFoundException('Page not found or no permission');
       }
 
       const connection = await this.facebookOAuthService.connectPage(
@@ -235,9 +228,8 @@ export class FacebookOAuthController {
         webhookSubscribed: subscribed,
       };
     } catch (error) {
-      throw new HttpException(
+      throw new InternalServerErrorException(
         error.message || 'Failed to connect Facebook page',
-        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -305,8 +297,8 @@ export class FacebookOAuthController {
 
     const provider = this.channelStrategy.getProvider('facebook');
 
-    if ('setCredentials' in provider) {
-      (provider as any).setCredentials(
+    if (provider.setCredentials && connection.accessToken) {
+      provider.setCredentials(
         connection.accessToken,
         connection.credential?.clientSecret || '',
       );
@@ -318,10 +310,7 @@ export class FacebookOAuthController {
     });
 
     if (!result.success) {
-      throw new HttpException(
-        result.error || 'Failed to send test message',
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException(result.error || 'Failed to send test message');
     }
 
     return {

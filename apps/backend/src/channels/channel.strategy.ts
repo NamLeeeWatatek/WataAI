@@ -11,7 +11,7 @@ import { ChannelsService } from './channels.service';
 export class ChannelStrategy {
   private providers = new Map<string, ChannelProvider>();
 
-  constructor(private channelsService: ChannelsService) {}
+  constructor(private channelsService: ChannelsService) { }
 
   register(channelType: string, provider: ChannelProvider): void {
     this.providers.set(channelType, provider);
@@ -51,8 +51,8 @@ export class ChannelStrategy {
 
     const provider = this.getProvider(channelType);
 
-    if (channelType === 'facebook' && 'setCredentials' in provider) {
-      (provider as any).setCredentials(
+    if (channelType === 'facebook' && provider.setCredentials) {
+      provider.setCredentials(
         connection.accessToken || '',
         connection.credential.clientSecret || '',
       );

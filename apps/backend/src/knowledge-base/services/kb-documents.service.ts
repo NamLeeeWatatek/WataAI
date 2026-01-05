@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
@@ -62,7 +62,7 @@ export class KBDocumentsService {
           const kb = await this.kbRepository.findOne({
             where: { id: knowledgeBaseId }
           });
-          if (!kb) throw new Error('Knowledge Base not found');
+          if (!kb) throw new NotFoundException('Knowledge Base not found');
 
           workspaceId = kb.workspaceId || undefined;
         } catch (kbError) {
@@ -84,7 +84,7 @@ export class KBDocumentsService {
       const result = await this.filesService.create(uploadDto, workspaceId);
 
       if (!result || !result.uploadSignedUrl || !result.file) {
-        throw new Error('Failed to generate upload URL');
+        throw new BadRequestException('Failed to generate upload URL');
       }
 
       const fetch = (await import('node-fetch')).default;
@@ -98,7 +98,7 @@ export class KBDocumentsService {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error(`Upload failed with status ${uploadResponse.status}`);
+        throw new BadRequestException(`Upload failed with status ${uploadResponse.status}`);
       }
 
       const fileUrl = result.uploadSignedUrl.split('?')[0];
@@ -110,8 +110,11 @@ export class KBDocumentsService {
         fileId: result.file.id,
       };
     } catch (error) {
-      this.logger.error(`âŒ Failed to upload file: ${error.message}`);
-      throw new Error(`Failed to upload file to storage: ${error.message}`);
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(`â Œ Failed to upload file: ${error.message}`);
+      throw new InternalServerErrorException(`Failed to upload file to storage: ${error.message}`);
     }
   }
 
@@ -230,8 +233,11 @@ export class KBDocumentsService {
 
     if (sortOptions?.length) {
       sortOptions.forEach((sort) => {
-        if (sort.orderBy && (sort.orderBy as any) !== 'undefined') {
-          query.addOrderBy(`doc.${sort.orderBy}`, sort.order as any);
+        if (sort.orderBy) {
+          query.addOrderBy(
+            `doc.${sort.orderBy}`,
+            sort.order as 'ASC' | 'DESC',
+          );
         }
       });
     } else {

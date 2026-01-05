@@ -10,7 +10,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseProcessingController {
-  constructor(private readonly processingQueue: KBProcessingQueueService) {}
+  constructor(private readonly processingQueue: KBProcessingQueueService) { }
 
   @Get(':id/processing-status')
   @ApiOperation({ summary: 'Get processing status for knowledge base' })
@@ -20,7 +20,7 @@ export class KnowledgeBaseProcessingController {
       jobs: jobs.map((job) => ({
         jobId: job.id,
         documentId: job.documentId,
-        documentName: (job as any).documentName,
+        documentName: job.documentName,
         knowledgeBaseId: job.knowledgeBaseId,
         status: job.status,
         progress: job.progress,
@@ -39,7 +39,7 @@ export class KnowledgeBaseProcessingController {
       jobs: jobs.map((job) => ({
         jobId: job.id,
         documentId: job.documentId,
-        documentName: (job as any).documentName,
+        documentName: job.documentName,
         knowledgeBaseId: job.knowledgeBaseId,
         status: job.status,
         progress: job.progress,

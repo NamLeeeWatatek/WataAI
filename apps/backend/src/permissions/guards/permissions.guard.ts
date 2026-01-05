@@ -13,7 +13,7 @@ export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private permissionsService: PermissionsService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
@@ -33,12 +33,14 @@ export class PermissionsGuard implements CanActivate {
     }
 
     // Try to extract workspaceId from request context (set by WorkspaceAccessGuard or directly from headers/params)
+    // Try to extract workspaceId from request context (set by WorkspaceAccessGuard or directly from params/body/query)
+    // Security Fix: Prioritize params/body over headers to prevent IDOR attacks
     const workspaceId =
       request.workspaceId ||
-      request.headers?.['x-workspace-id'] ||
       request.params?.workspaceId ||
+      request.body?.workspaceId ||
       request.query?.workspaceId ||
-      request.body?.workspaceId;
+      request.headers?.['x-workspace-id'];
 
     const result = await this.permissionsService.checkPermissions(
       user,

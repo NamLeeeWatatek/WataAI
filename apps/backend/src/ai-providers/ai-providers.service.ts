@@ -173,7 +173,7 @@ export class AiProvidersService {
   async getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<any> {
+  ): Promise<Record<string, any>> {
     return this.aiConfigService.getUsageStats(workspaceId, period);
   }
 
@@ -324,7 +324,7 @@ export class AiProvidersService {
     context: 'user' | 'workspace',
     contextId: string,
   ): Promise<string[]> {
-    let config: any;
+    let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
     if (context === 'user') {
       const c = await this.aiConfigService.getUserConfig(contextId, configId);
       if (!c) throw new NotFoundException('Config not found');
@@ -346,7 +346,15 @@ export class AiProvidersService {
     return this.aiModelService.fetchRemoteModels(provider.key, config);
   }
 
-  async generateSystemPrompt(params: any) {
+  async generateSystemPrompt(params: {
+    userId: string;
+    description: string;
+    template?: string;
+    providerConfigId?: string;
+    tone?: string;
+    style?: string;
+    additionalContext?: Record<string, any>;
+  }) {
     return this.aiModelService.generateSystemPrompt(params);
   }
 
@@ -357,7 +365,7 @@ export class AiProvidersService {
     return this.systemAiSettingsRepository.findSystemSettings();
   }
 
-  async updateSystemAiSettings(dto: any) {
+  async updateSystemAiSettings(dto: Record<string, any>) {
     return this.systemAiSettingsRepository.updateSystemSettings(dto);
   }
 

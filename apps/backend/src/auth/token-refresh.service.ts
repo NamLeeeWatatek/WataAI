@@ -15,7 +15,7 @@ export class TokenRefreshService {
     private configService: ConfigService<AllConfigType>,
     private sessionService: SessionService,
     private usersService: UsersService,
-  ) {}
+  ) { }
 
   async refreshAccessToken(refreshToken: string): Promise<{
     token: string;
@@ -103,12 +103,17 @@ export class TokenRefreshService {
 
   isTokenExpiringSoon(token: string): boolean {
     try {
-      const payload = this.jwtService.decode(token) as any;
-      if (!payload || !payload.exp) {
+      const payload = this.jwtService.decode(token);
+      if (
+        !payload ||
+        typeof payload !== 'object' ||
+        !('exp' in payload) ||
+        !payload.exp
+      ) {
         return true;
       }
 
-      const expiresAt = payload.exp * 1000;
+      const expiresAt = (payload as { exp: number }).exp * 1000;
       const now = Date.now();
       const timeUntilExpiry = expiresAt - now;
 

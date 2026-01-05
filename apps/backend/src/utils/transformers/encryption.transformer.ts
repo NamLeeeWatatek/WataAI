@@ -1,4 +1,5 @@
 import { ValueTransformer } from 'typeorm';
+import { Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -7,11 +8,12 @@ const AUTH_TAG_LENGTH = 16;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 export class EncryptionTransformer implements ValueTransformer {
+  private readonly logger = new Logger(EncryptionTransformer.name);
   private encryptionKey: Buffer;
 
   constructor() {
     if (!ENCRYPTION_KEY) {
-      console.error(
+      this.logger.error(
         'CRITICAL: ENCRYPTION_KEY is not defined in environment variables.',
       );
     }
@@ -71,9 +73,8 @@ export class EncryptionTransformer implements ValueTransformer {
       decrypted += decipher.final('utf8');
       return decrypted;
     } catch (e) {
-      console.error(
-        'Decryption failed. Data might be tampered or key is incorrect:',
-        e.message,
+      this.logger.error(
+        `Decryption failed. Data might be tampered or key is incorrect: ${e.message}`,
       );
       return null;
     }

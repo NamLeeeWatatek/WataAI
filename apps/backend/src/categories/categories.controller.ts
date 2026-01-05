@@ -37,7 +37,7 @@ import { InfinityPaginationResponse } from '../utils/dto/infinity-pagination-res
   version: '1',
 })
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) { }
 
   @ApiCreatedResponse({
     type: Category,
@@ -105,10 +105,7 @@ export class CategoriesController {
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    if (updateCategoryDto.type) {
-      // This is for debugging to see if the pipe is stripping the field
-      console.log('[DRY-RUN] Received type:', updateCategoryDto.type);
-    }
+
     return this.categoriesService.update(id, updateCategoryDto);
   }
 

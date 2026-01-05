@@ -39,4 +39,6 @@ export interface ChannelProvider {
   verifyWebhook(payload: any, signature: string): boolean;
 
   parseIncomingMessage(payload: any): IncomingMessage;
+
+  setCredentials?(accessToken: string, clientSecret: string): void;
 }

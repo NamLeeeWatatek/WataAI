@@ -31,7 +31,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'notifications', version: '1' })
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly notificationsService: NotificationsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get user notifications' })
@@ -140,7 +140,7 @@ export class NotificationsController {
       workspaceId: req.user.workspaceId || 'default-workspace',
       title: body.title,
       message: body.message,
-      type: body.type as any,
+      type: (body.type as 'info' | 'success' | 'warning' | 'error') || 'info',
     });
   }
 }

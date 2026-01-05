@@ -3,6 +3,7 @@
   NotFoundException,
   forwardRef,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -11,12 +12,13 @@ import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
   constructor(
     @InjectRepository(NotificationEntity)
     private notificationRepo: Repository<NotificationEntity>,
     @Inject(forwardRef(() => NotificationsGateway))
     private notificationsGateway: NotificationsGateway,
-  ) {}
+  ) { }
 
   async create(data: {
     userId: string;
@@ -38,7 +40,7 @@ export class NotificationsService {
       this.notificationsGateway.broadcastUnreadCountUpdate(data.userId);
     } catch (error) {
       // Log error but don't fail the notification creation
-      console.error('Failed to emit real-time notification:', error.message);
+      this.logger.error(`Failed to emit real-time notification: ${error.message}`);
     }
 
     return savedNotification;

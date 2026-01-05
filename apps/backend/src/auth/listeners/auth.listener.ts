@@ -1,15 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { MailService } from '../../mail/mail.service';
 
 @Injectable()
 export class AuthEventListener {
-  constructor(private readonly mailService: MailService) {}
+  private readonly logger = new Logger(AuthEventListener.name);
+
+  constructor(private readonly mailService: MailService) { }
 
   @OnEvent('user.registered', { async: true })
   async handleUserRegisteredEvent(payload: { email: string; hash: string }) {
     try {
-      console.log(
+      this.logger.log(
         `[Background Worker] Sending verification email to ${payload.email}...`,
       );
       await this.mailService.userSignUp({
@@ -18,11 +20,11 @@ export class AuthEventListener {
           hash: payload.hash,
         },
       });
-      console.log(
+      this.logger.log(
         `[Background Worker] Verification email sent to ${payload.email}`,
       );
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[Background Worker] Failed to send email to ${payload.email}:`,
         error,
       );
@@ -37,7 +39,7 @@ export class AuthEventListener {
     tokenExpires: number;
   }) {
     try {
-      console.log(
+      this.logger.log(
         `[Background Worker] Sending reset password email to ${payload.email}...`,
       );
       await this.mailService.forgotPassword({
@@ -47,11 +49,11 @@ export class AuthEventListener {
           tokenExpires: payload.tokenExpires,
         },
       });
-      console.log(
+      this.logger.log(
         `[Background Worker] Reset password email sent to ${payload.email}`,
       );
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[Background Worker] Failed to send reset email to ${payload.email}:`,
         error,
       );

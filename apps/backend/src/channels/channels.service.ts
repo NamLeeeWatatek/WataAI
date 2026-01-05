@@ -1,6 +1,6 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { ChannelConnectionEntity } from '../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
 import { CreateConnectionDto } from '../integrations/dto/create-connection.dto';
 import {
@@ -10,13 +10,15 @@ import {
 
 @Injectable()
 export class ChannelsService {
+  private readonly logger = new Logger(ChannelsService.name);
+
   constructor(
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+  ) { }
 
   async findAll(workspaceId?: string): Promise<ChannelConnectionEntity[]> {
-    const where: any = {};
+    const where: FindOptionsWhere<ChannelConnectionEntity> = {};
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
@@ -31,7 +33,7 @@ export class ChannelsService {
     id: string,
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity | null> {
-    const where: any = { id };
+    const where: FindOptionsWhere<ChannelConnectionEntity> = { id };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
@@ -59,7 +61,7 @@ export class ChannelsService {
     type: string,
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity | null> {
-    const where: any = { type, status: ChannelConnectionStatus.ACTIVE };
+    const where: FindOptionsWhere<ChannelConnectionEntity> = { type: type as ChannelType, status: ChannelConnectionStatus.ACTIVE };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
@@ -74,12 +76,13 @@ export class ChannelsService {
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity> {
     const connection = this.connectionRepository.create({
-      ...(dto as any),
+      ...dto,
+      type: dto.type as ChannelType,
       workspaceId: workspaceId,
       status: ChannelConnectionStatus.ACTIVE,
       connectedAt: new Date(),
     });
-    return await this.connectionRepository.save(connection as any);
+    return await this.connectionRepository.save(connection);
   }
 
   async update(
@@ -87,7 +90,7 @@ export class ChannelsService {
     dto: { botId?: string | null; name?: string; metadata?: any },
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity> {
-    const where: any = { id };
+    const where: FindOptionsWhere<ChannelConnectionEntity> = { id };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
@@ -120,20 +123,20 @@ export class ChannelsService {
         [id],
       );
 
-      console.log(
+      this.logger.log(
         `âœ… Updated ${updateResult[1] || 0} conversations before deleting channel ${id}`,
       );
 
       // Then delete the channel
-      const where: any = { id };
+      const where: FindOptionsWhere<ChannelConnectionEntity> = { id };
       if (workspaceId) {
         where.workspaceId = workspaceId;
       }
       await this.connectionRepository.delete(where);
 
-      console.log(`âœ… Deleted channel ${id}`);
+      this.logger.log(`âœ… Deleted channel ${id}`);
     } catch (error) {
-      console.error(`âŒ Error deleting channel ${id}:`, error);
+      this.logger.error(`â Œ Error deleting channel ${id}:`, error);
       throw error;
     }
   }

@@ -14,17 +14,14 @@ import { GrSystem } from "react-icons/gr";
 
 import { usePathname } from 'next/navigation'
 import { paths } from '@/lib/routes'
-import { PERMISSIONS } from '@/lib/config/permissions'
 
 const AdminLink = () => {
-    const { hasPermission } = usePermissions()
+    const { isSuperAdmin } = usePermissions()
     const pathname = usePathname()
 
-    // Hide if already in system admin
     if (pathname?.startsWith(paths.system.root)) return null
 
-    // Strictly check for System Admin access using the same permission as the Layout Guard
-    const canAccessSystem = hasPermission(PERMISSIONS.SYSTEM.FULL_ACCESS)
+    const canAccessSystem = isSuperAdmin()
 
     if (!canAccessSystem) return null
 

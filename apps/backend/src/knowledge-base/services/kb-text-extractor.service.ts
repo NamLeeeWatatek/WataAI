@@ -5,6 +5,36 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 import PDFParser from 'pdf2json';
 
+interface PDFPageRun {
+  T: string;
+}
+
+interface PDFPageText {
+  R: PDFPageRun[];
+}
+
+interface PDFPage {
+  Texts: PDFPageText[];
+}
+
+interface PDFData {
+  Pages: PDFPage[];
+}
+
+interface PDFParserError {
+  parserError: string;
+}
+
+interface PDFTextItem {
+  str: string; // The text content
+  dir: string; // Text direction
+  transform: number[]; // Matrix for transformation [scaleX, skewY, skewX, scaleY, translateX, translateY]
+  width: number;
+  height: number;
+  fontName: string;
+  hasEOL: boolean;
+}
+
 @Injectable()
 export class KBTextExtractorService {
   private readonly logger = new Logger(KBTextExtractorService.name);
@@ -50,11 +80,12 @@ export class KBTextExtractorService {
       const pdfParser = new PDFParser();
 
       pdfParser.on('pdfParser_dataError', (errData: any) => {
-        this.logger.error(`PDF parsing error: ${errData.parserError}`);
-        reject(new Error(errData.parserError));
+        const parserError = errData?.parserError || errData?.message || String(errData);
+        this.logger.error(`PDF parsing error: ${parserError}`);
+        reject(new Error(parserError));
       });
 
-      pdfParser.on('pdfParser_dataReady', (pdfData: any) => {
+      pdfParser.on('pdfParser_dataReady', (pdfData: PDFData) => {
         try {
           let text = '';
 
@@ -121,12 +152,12 @@ export class KBTextExtractorService {
       for (let i = 1; i <= pdfDocument.numPages; i++) {
         const page = await pdfDocument.getPage(i);
         const textContent = await page.getTextContent();
-        const items = textContent.items as any[];
+        const items = textContent.items as PDFTextItem[];
 
         if (items.length === 0) continue;
 
         // Group items by their vertical position (Y coordinate)
-        const lines: Map<number, any[]> = new Map();
+        const lines: Map<number, PDFTextItem[]> = new Map();
         const yThreshold = 2;
 
         for (const item of items) {

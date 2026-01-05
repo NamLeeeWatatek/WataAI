@@ -96,7 +96,7 @@ export const authConfig = {
         maxAge: 30 * 24 * 60 * 60,
     },
     callbacks: {
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account, trigger, session }) {
             // Initial Sign In
             if (account) {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
@@ -156,6 +156,16 @@ export const authConfig = {
                         console.error("[Auth] Social login exchange failed", error)
                         return { ...token, error: "SocialLoginError" }
                     }
+                }
+            }
+
+            // Handle Session Update
+            if (trigger === "update" && session?.user) {
+                return {
+                    ...token,
+                    name: session.user.name,
+                    avatarUrl: session.user.avatarUrl,
+                    image: session.user.avatarUrl, // ensure image property is also updated
                 }
             }
 

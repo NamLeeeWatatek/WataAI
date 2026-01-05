@@ -13,6 +13,8 @@ export class FilesService {
     @Inject('FILE_DRIVER') private readonly fileDriver: FileDriver,
   ) { }
 
+  private readonly uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
   findById(id: FileType['id']): Promise<NullableType<FileType>> {
     return this.fileRepository.findById(id);
   }
@@ -31,7 +33,7 @@ export class FilesService {
 
   async confirmFromUrl(url: string | null | undefined): Promise<void> {
     if (!url) return;
-    const fileIdMatch = url.match(/[a-f0-9-]{36}/);
+    const fileIdMatch = url.match(this.uuidRegex);
     if (fileIdMatch) {
       await this.confirm(fileIdMatch[0]);
     }
@@ -46,7 +48,7 @@ export class FilesService {
 
   async deleteFromUrl(url: string | null | undefined): Promise<void> {
     if (!url) return;
-    const fileIdMatch = url.match(/[a-f0-9-]{36}/);
+    const fileIdMatch = url.match(this.uuidRegex);
     if (fileIdMatch) {
       await this.delete(fileIdMatch[0]);
     }
@@ -54,25 +56,29 @@ export class FilesService {
 
   async create(
     file: Express.Multer.File | Express.MulterS3.File | { fileName: string; fileSize: number; bucket?: string },
-    workspaceId?: string, // Explicit argument instead of spread
+    workspaceId?: string,
+    userId?: string,
   ): Promise<{
     file: FileType;
     uploadSignedUrl?: string;
     downloadSignedUrl?: string;
   }> {
-    // Note: The FileDriver interface takes generic args to support legacy spreading,
-    // but here we try to be more specific if possible.
     const result = await this.fileDriver.create(file, workspaceId);
 
-    // Audit logging logic...
-    // In strict mode, we might need to pass user info better than 'args spread'
-    // For now we keep the driver call simple.
-
-    // If 'workspaceId' was passed, we can log it.
-    // Ideally we should pass a context object.
-
-    // Legacy audit logic was relying on args heuristics. 
-    // We'll skip complex audit logic reconstruction for this specific roast fix unless critical.
+    if (userId && workspaceId) {
+      await this.auditService.log({
+        userId,
+        workspaceId,
+        action: 'FILE_UPLOADED',
+        resourceType: 'file',
+        resourceId: result.file.id,
+        details: {
+          fileName: result.file.path,
+          fileSize: result.file.size,
+          mimeType: result.file.mimeType,
+        },
+      });
+    }
 
     return result;
   }

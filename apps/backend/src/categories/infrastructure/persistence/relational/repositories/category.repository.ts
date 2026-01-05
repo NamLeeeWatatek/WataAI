@@ -12,7 +12,7 @@ export class CategoryRelationalRepository implements CategoryRepository {
   constructor(
     @InjectRepository(CategoryEntity)
     private readonly categoryRepository: Repository<CategoryEntity>,
-  ) {}
+  ) { }
 
   async create(data: Category): Promise<Category> {
     const persistenceModel = CategoryMapper.toPersistence(data);
@@ -72,7 +72,7 @@ export class CategoryRelationalRepository implements CategoryRepository {
       return null;
     }
 
-    console.log('[CategoryRepo] Updating ID:', id, 'with payload:', payload);
+
     Object.assign(entity, payload);
 
     await this.categoryRepository.save(entity);

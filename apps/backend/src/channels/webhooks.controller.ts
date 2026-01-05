@@ -10,6 +10,7 @@
   Inject,
   forwardRef,
   UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +21,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConversationsService } from '../conversations/conversations.service';
 import { ConversationsGateway } from '../conversations/conversations.gateway';
 import { WebhookVerifierFactory } from './webhooks/webhook-verifier.base';
-import { FacebookWebhookProcessor } from './webhooks/facebook-webhook.processor';
+import {
+  FacebookWebhookProcessor,
+  FacebookWebhookPayload,
+} from './webhooks/facebook-webhook.processor';
 import { InstagramWebhookProcessor } from './webhooks/instagram-webhook.processor';
 import { TelegramWebhookProcessor } from './webhooks/telegram-webhook.processor';
 import { Req } from '@nestjs/common';
@@ -97,29 +101,18 @@ export class WebhooksController {
 
   @Get('facebook')
   @ApiOperation({ summary: 'Verify Facebook webhook' })
-  async verifyFacebookWebhook(@Query() query: any, @Req() req: Request) {
+  async verifyFacebookWebhook(@Query() query: Record<string, any>) {
     const mode = query['hub.mode'];
     const token = query['hub.verify_token'];
     const challenge = query['hub.challenge'];
 
-    // Validate mode
     if (mode !== 'subscribe') {
-      this.logger.error('Mode không phải subscribe');
+      this.logger.error('Mode is not subscribe');
       return 'Forbidden';
     }
 
     try {
-      const credential = await this.facebookOAuthService[
-        'credentialRepository'
-      ].findOne({
-        where: {
-          provider: 'facebook',
-          isActive: true,
-        },
-        order: {
-          updatedAt: 'DESC',
-        },
-      });
+      const credential = await this.facebookOAuthService.findActiveCredential();
 
       const expectedToken = credential?.metadata?.verifyToken;
       if (token !== expectedToken) {
@@ -143,9 +136,9 @@ export class WebhooksController {
   @Post('facebook')
   @ApiOperation({ summary: 'Handle Facebook webhook events' })
   async handleFacebookWebhook(
-    @Body() payload: any,
+    @Body() payload: FacebookWebhookPayload,
     @Headers('x-hub-signature-256') signature?: string,
-    @Headers() headers?: any,
+    @Headers() headers?: Record<string, any>,
     @Req() req?: any,
   ) {
     this.logger.log('========== FACEBOOK WEBHOOK RECEIVED ==========');
@@ -173,7 +166,7 @@ export class WebhooksController {
             '⚠️ Continuing in development mode despite signature mismatch',
           );
         } else {
-          return { success: false, error: 'Invalid signature' };
+          throw new ForbiddenException('Invalid signature');
         }
       } else {
         this.logger.log('✅ Signature verified');
@@ -202,7 +195,7 @@ export class WebhooksController {
    * Verify Facebook webhook signature với proper App Secret
    */
   private async verifyFacebookSignature(
-    payload: any,
+    payload: FacebookWebhookPayload,
     signature?: string,
   ): Promise<boolean> {
     if (!signature) {

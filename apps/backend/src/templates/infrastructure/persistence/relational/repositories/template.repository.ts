@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository, In, Like } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { TemplateEntity } from '../entities/template.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import {
@@ -164,7 +165,7 @@ export class TemplatesRelationalRepository implements TemplateRepository {
 
     await this.templatesRepository.update(
       { id: In(ids) },
-      payload as any, // Casting to any because Partial<Template> might mismatch Entity specific fields slightly, but keys should match.
+      payload as QueryDeepPartialEntity<TemplateEntity>,
     );
   }
 
