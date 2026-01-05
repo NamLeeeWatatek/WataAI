@@ -41,6 +41,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
         [CreationJobStatus.PROCESSING]: { color: 'text-primary', variant: 'info' as const, icon: Clock, label: 'Processing' },
         [CreationJobStatus.PENDING]: { color: 'text-warning', variant: 'warning' as const, icon: Clock, label: 'Pending' },
         [CreationJobStatus.FAILED]: { color: 'text-destructive', variant: 'destructive' as const, icon: AlertCircle, label: 'Failed' },
+        [CreationJobStatus.CANCELED]: { color: 'text-muted-foreground', variant: 'secondary' as const, icon: AlertCircle, label: 'Canceled' },
     };
 
     const status = statusConfig[job.status] || statusConfig[CreationJobStatus.PENDING];
