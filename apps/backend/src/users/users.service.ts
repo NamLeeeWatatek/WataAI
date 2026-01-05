@@ -146,7 +146,7 @@ export class UsersService {
         ? this.transformRole(updateUserDto.role)
         : undefined;
 
-    const updatedUser = await this.usersRepository.update(id, {
+    const payload: Partial<User> = {
       email,
       name,
       avatarUrl: updateUserDto.avatarUrl,
@@ -157,9 +157,18 @@ export class UsersService {
       role,
       roleId: updateUserDto.roleId,
       emailVerifiedAt: updateUserDto.emailVerifiedAt,
-      // Removed writes to deprecated firstName/lastName
       socialId: updateUserDto.socialId,
+    };
+
+    // Remove undefined properties to avoid overwriting existing data with undefined
+    // and triggering default fallbacks (like role defaulting to User) in Mapper
+    Object.keys(payload).forEach((key) => {
+      if (payload[key as keyof User] === undefined) {
+        delete payload[key as keyof User];
+      }
     });
+
+    const updatedUser = await this.usersRepository.update(id, payload);
 
     if (updatedUser) {
       if (updatedUser.avatarUrl) {
