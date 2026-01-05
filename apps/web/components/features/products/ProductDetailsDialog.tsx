@@ -49,6 +49,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         [CreationJobStatus.PROCESSING]: { color: 'bg-blue-500/10 text-blue-500', icon: Clock, label: 'Processing' },
         [CreationJobStatus.PENDING]: { color: 'bg-yellow-500/10 text-yellow-500', icon: Clock, label: 'Pending' },
         [CreationJobStatus.FAILED]: { color: 'bg-red-500/10 text-red-500', icon: AlertCircle, label: 'Failed' },
+        [CreationJobStatus.CANCELED]: { color: 'bg-gray-500/10 text-gray-500', icon: AlertCircle, label: 'Canceled' },
     };
 
     const status = statusConfig[job.status] || statusConfig[CreationJobStatus.PENDING];
