@@ -198,19 +198,6 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
           </CardContent>
         </Card>
 
-        <Card >
-          <CardHeader className="pb-3 border-b border-border/10">
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Total Usage</CardDescription>
-            <CardTitle className="text-4xl font-black tracking-tighter mt-1">{totalUsage.toLocaleString()}</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-              <Activity className="size-3.5 text-info" />
-              <span>Requests Processed</span>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="bg-primary/5 border-dashed border-primary/20">
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardDescription className="text-primary font-black text-[10px] uppercase tracking-[0.2em]">Add Capability</CardDescription>
@@ -333,27 +320,13 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                         <CardContent className="p-6 pt-0 space-y-6 flex-1 flex flex-col">
                           {provider.modelList && provider.modelList.length > 0 ? (
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Stars className="size-3 text-primary/60" />
-                                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Current Models</p>
-                                </div>
-                                <button
-                                  onClick={() => handleSyncModels(provider.id)}
-                                  disabled={isSyncing === provider.id}
-                                  className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/70 transition-colors flex items-center gap-1 group/sync disabled:opacity-50"
-                                >
-                                  {isSyncing === provider.id ? (
-                                    <Loader2 className="size-2.5 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="size-2.5" />
-                                  )}
-                                  Sync
-                                </button>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Stars className="size-3 text-primary/60" />
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Available Models</p>
                               </div>
                               <div className="flex flex-wrap gap-2">
                                 {provider.modelList.slice(0, 5).map((model) => (
-                                  <Badge key={model} variant="secondary" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 hover:bg-primary/10 transition-colors">
+                                  <Badge key={model} variant="secondary" className="font-mono text-[9px] px-2 py-0.5 bg-primary/5 border-primary/10 text-primary/80 transition-colors cursor-default">
                                     {model}
                                   </Badge>
                                 ))}
@@ -365,69 +338,41 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                               </div>
                             </div>
                           ) : (
-                            <div className="py-8 flex flex-col items-center justify-center border border-dashed border-primary/20 rounded-2xl bg-primary/5 group-hover:bg-primary/10 transition-all relative overflow-hidden">
+                            <div className="py-8 flex flex-col items-center justify-center border border-dashed border-primary/20 rounded-2xl bg-primary/5 transition-all relative overflow-hidden">
                               <Cpu className="size-6 text-primary/40 mb-3" />
-                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/60 mb-4">No Models Detected</p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleSyncModels(provider.id)}
-                                disabled={isSyncing === provider.id}
-
-                                className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 active:scale-95 transition-all px-4"
-                              >
-                                {isSyncing === provider.id ? (
-                                  <Loader2 className="size-3 mr-2 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="size-3 mr-2" />
-                                )}
-                                Initial Discovery
-                              </Button>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">No Models Configured</p>
                             </div>
                           )}
 
-                          <div className="grid grid-cols-2 gap-6 p-4 rounded-xl border border-border/20 bg-muted/5 mt-auto">
-                            <div className="space-y-1">
-                              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Workload</p>
-                              <div className="flex items-center gap-1.5">
-                                <Zap className="size-3 text-primary/60" />
-                                <p className="text-sm font-black font-mono tracking-tight">{provider.quotaUsed.toLocaleString()}</p>
-                              </div>
-                            </div>
-                            <div className="space-y-1 text-right">
-                              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Last Active</p>
-                              <p className="text-xs font-bold">{provider.lastUsedAt ? new Date(provider.lastUsedAt).toLocaleDateString() : 'Never'}</p>
-                            </div>
-                          </div>
 
-                          <div className="flex flex-col gap-3 pt-2">
+                          <div className="flex flex-col gap-3 pt-2 mt-auto">
                             <div className="flex gap-3">
-                              {!provider.isVerified && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleVerify(provider.id)}
-                                  className="flex-1 h-11 font-bold text-xs"
-                                >
-                                  <RefreshCw className="mr-2 size-3.5" />
-                                  Validate
-                                </Button>
-                              )}
                               <Button
                                 size="sm"
                                 onClick={() => handleToggleActive(provider)}
-                                className="flex-1 h-11 font-bold text-xs"
+                                className={cn(
+                                  "flex-1 h-11 font-bold text-xs transition-all duration-300",
+                                  provider.isActive
+                                    ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                )}
                               >
-                                {provider.isActive ? 'Deactivate' : 'Activate'}
+                                {provider.isActive ? (
+                                  <>Deactivate Provider</>
+                                ) : (
+                                  <>Activate Provider</>
+                                )}
                               </Button>
                             </div>
                             <div className="flex gap-2">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleOpenDialog(provider)}
-                                className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest bg-muted/20 hover:bg-muted/40 rounded-xl"
+                                className="flex-1 h-10 text-[10px] font-black uppercase tracking-widest border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 rounded-xl transition-all"
                               >
-                                <Settings className="size-3.5 mr-2" /> Parameters
+                                <Settings className="size-3.5 mr-2" />
+                                Configure & Models
                               </Button>
                               <Button
                                 variant="ghost"
@@ -503,16 +448,6 @@ export function AIProvidersTab({ userConfigs, availableProviders, loading, onDat
                         {(row.modelList?.length || 0) > 3 && (
                           <span className="text-[9px] font-black text-muted-foreground/40 ml-1">+{row.modelList!.length - 3}</span>
                         )}
-                      </div>
-                    )
-                  },
-                  {
-                    key: 'usage',
-                    label: 'Usage',
-                    render: (_, row) => (
-                      <div className="flex items-center gap-2">
-                        <Zap className="size-3 text-primary/40" />
-                        <span className="font-mono text-xs font-black">{row.quotaUsed.toLocaleString()}</span>
                       </div>
                     )
                   },

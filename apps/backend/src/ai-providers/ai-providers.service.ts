@@ -52,6 +52,13 @@ export class AiProvidersService {
     return this.aiEncryptionService.decryptApiKey(encryptedApiKey);
   }
 
+  /**
+   * Mask sensitive fields in config
+   */
+  maskConfig(config: any): any {
+    return this.aiEncryptionService.maskConfig(config);
+  }
+
   // --- Provider Management (Delegate to Config) ---
   async getAvailableProviders(): Promise<AiProvider[]> {
     return this.aiConfigService.getAvailableProviders();
@@ -103,10 +110,23 @@ export class AiProvidersService {
     }
 
     // Delegate verification logic to Model Service
-    await this.aiModelService.verifyConnection(config.provider.key, config.config);
+    try {
+      await this.aiModelService.verifyConnection(config.provider.key, config.config);
+    } catch (error) {
+      this.logger.warn(`Verification failed for user ${userId} config ${id}: ${error.message}`);
+      throw new BadRequestException(`Verification failed: ${error.message}`);
+    }
 
-    // If successful, ideally mark as verified in DB via ConfigService
-    // For now returning true as per original contract
+    // Update verified status
+    // Note: We need to preserve existing config data while setting isVerified=true
+    const currentConfigData = config.config || {};
+    await this.updateUserConfig(userId, id, {
+      config: {
+        ...currentConfigData,
+        isVerified: true,
+      }
+    });
+
     return true;
   }
 

@@ -94,4 +94,28 @@ export class AiEncryptionService {
 
         return decrypted;
     }
+
+    /**
+     * Masks sensitive configuration fields for frontend display.
+     */
+    maskConfig(config: any): any {
+        if (!config) return config;
+        const masked = { ...config };
+
+        Object.keys(masked).forEach((key) => {
+            const lowerKey = key.toLowerCase();
+            if (
+                (lowerKey.includes('key') ||
+                    lowerKey.includes('secret') ||
+                    lowerKey.includes('token') ||
+                    lowerKey.includes('password')) &&
+                typeof masked[key] === 'string' &&
+                masked[key].length > 0
+            ) {
+                masked[key] = '••••••••••••';
+            }
+        });
+
+        return masked;
+    }
 }

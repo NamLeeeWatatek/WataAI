@@ -217,6 +217,7 @@ export class AiModelService {
 
                 // Helper to try fetching
                 const checkOllama = async (checkUrl: string) => {
+                    this.logger.debug(`Verifying Ollama connection at: ${checkUrl}`);
                     if (!checkUrl.endsWith('/v1') && !checkUrl.endsWith('/v1/')) {
                         const nativeBaseUrl = checkUrl.endsWith('/') ? checkUrl.slice(0, -1) : checkUrl;
                         const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
@@ -234,20 +235,28 @@ export class AiModelService {
                     const isNative = await checkOllama(url);
                     if (isNative) return;
                 } catch (error) {
+                    this.logger.warn(`Initial Ollama check failed for ${url}: ${error.message}`);
                     // Fallback: If localhost failed, try 127.0.0.1
                     if (url.includes('localhost')) {
                         const altUrl = url.replace('localhost', '127.0.0.1');
                         try {
                             const isNative = await checkOllama(altUrl);
-                            if (isNative) return;
-                            baseURL = altUrl; // Update for v1 check below
+                            if (isNative) {
+                                // Update baseURL for next steps if we found a working native endpoint
+                                // But if it was native, we returned above.
+                                // If we are here, it means checkOllama threw or returned false.
+                                // Actually 'checkOllama' returns true if native success.
+                                return;
+                            }
+                            // If it returned false (meaning it looks like v1 path), we update url
+                            url = altUrl;
                         } catch (retryError) {
                             // Try host.docker.internal as last resort for Docker environments
                             const dockerUrl = url.replace('localhost', 'host.docker.internal');
                             try {
                                 const isNative = await checkOllama(dockerUrl);
                                 if (isNative) return;
-                                baseURL = dockerUrl;
+                                url = dockerUrl;
                             } catch (finalError) {
                                 throw error;
                             }
@@ -261,6 +270,11 @@ export class AiModelService {
 
             if (baseURL && !apiKey) {
                 apiKey = 'no-key-required';
+            }
+
+            // Sanitization for OpenAI Client (which uses node-fetch)
+            if (baseURL && baseURL.includes('localhost')) {
+                baseURL = baseURL.replace('localhost', '127.0.0.1');
             }
 
             const clientConfig: ClientOptions = { apiKey };
