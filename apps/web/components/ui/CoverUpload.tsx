@@ -68,6 +68,7 @@ export function CoverUpload({
                         />
                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
                             <Button
+                                type="button"
                                 variant="secondary"
                                 size="sm"
                                 className="shadow-lg font-semibold"
@@ -77,6 +78,7 @@ export function CoverUpload({
                             </Button>
                             {onDelete && (
                                 <Button
+                                    type="button"
                                     variant="destructive"
                                     size="icon"
                                     className="shadow-lg h-9 w-9"

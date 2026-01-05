@@ -37,6 +37,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    type="button"
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
@@ -67,6 +68,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
 
                             return (
                                 <Button
+                                    type="button"
                                     key={iconName}
                                     variant="ghost"
                                     onClick={() => {
