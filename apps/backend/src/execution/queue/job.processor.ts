@@ -93,6 +93,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
       const config = tool.executionFlow as ExecutionFlow;
 
       // 2. Dispatch
+      const startTime = Date.now();
       this.logger.log(
         `Dispatching execution via Strategy Resolver for type: ${config.type}`,
       );
@@ -101,6 +102,14 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         workspaceId: jobEntity.workspaceId,
         userId: 'createdBy' in jobEntity ? jobEntity.createdBy : undefined,
       });
+
+      const executionTime = Date.now() - startTime;
+      const minExecutionTime = 2000; // 2 seconds
+      if (executionTime < minExecutionTime) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, minExecutionTime - executionTime),
+        );
+      }
 
       // Update Status to COMPLETED
       if (job.data.creationJob && jobEntity.workspaceId) {
