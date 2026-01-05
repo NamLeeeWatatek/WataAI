@@ -366,8 +366,12 @@ export class CreationToolsSeederService {
   ): Promise<CreationToolEntity> {
     const existingTool = await this.creationToolRepository.findOne({
       where: { slug: data.slug },
+      withDeleted: true,
     });
     if (existingTool) {
+      if (existingTool.deletedAt) {
+        await this.creationToolRepository.restore(existingTool.id);
+      }
       return existingTool;
     }
 
@@ -394,9 +398,13 @@ export class CreationToolsSeederService {
         creationToolId: toolId,
         name: data.name,
       },
+      withDeleted: true,
     });
 
     if (existingTemplate) {
+      if (existingTemplate.deletedAt) {
+        await this.templateRepository.restore(existingTemplate.id);
+      }
       return existingTemplate;
     }
 
