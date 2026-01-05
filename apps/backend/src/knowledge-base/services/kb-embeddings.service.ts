@@ -81,8 +81,8 @@ export class KBEmbeddingsService {
     chunks: KBChunkEntity[],
     embeddingModel?: string,
     onProgress?: (processed: number, total: number) => void,
-  ) {
-    if (chunks.length === 0) return;
+  ): Promise<{ successes: number; failures: number }> {
+    if (chunks.length === 0) return { successes: 0, failures: 0 };
 
     const kbId = chunks[0].knowledgeBaseId;
     const kb = await this.kbRepository.findOne({
@@ -142,11 +142,13 @@ export class KBEmbeddingsService {
 
     const batchSize = 10;
     let processedCount = 0;
+    let successes = 0;
+    let failures = 0;
 
     for (let i = 0; i < chunks.length; i += batchSize) {
       const batch = chunks.slice(i, i + batchSize);
 
-      await Promise.all(
+      const batchResults = await Promise.all(
         batch.map(async (chunk) => {
           try {
             chunk.embeddingStatus = KbProcessingStatus.PROCESSING;
@@ -278,6 +280,7 @@ export class KBEmbeddingsService {
             if (onProgress) {
               onProgress(processedCount, chunks.length);
             }
+            return true; // Success
           } catch (error) {
             chunk.embeddingStatus = KbProcessingStatus.FAILED;
             chunk.embeddingError = error.message;
@@ -290,14 +293,21 @@ export class KBEmbeddingsService {
             if (onProgress) {
               onProgress(processedCount, chunks.length);
             }
+            return false; // Failure
           }
         }),
       );
+
+      const batchSuccesses = batchResults.filter(r => r).length;
+      successes += batchSuccesses;
+      failures += (batchResults.length - batchSuccesses);
 
       if (i + batchSize < chunks.length) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
+
+    return { successes, failures };
   }
 
   async generateQueryEmbedding(

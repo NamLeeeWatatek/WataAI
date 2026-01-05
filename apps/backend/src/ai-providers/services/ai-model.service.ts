@@ -213,17 +213,48 @@ export class AiModelService {
             let apiKey = config.apiKey;
 
             if (key === 'ollama') {
-                const url = config.baseURL || 'http://localhost:11434';
-                if (!url.endsWith('/v1') && !url.endsWith('/v1/')) {
-                    // Use Native check
-                    const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-                    const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
-                    const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
-                    const endpoint = `${validUrl}/api/tags`;
+                let url = config.baseURL || 'http://127.0.0.1:11434';
 
-                    const response = await fetch(endpoint);
-                    if (!response.ok) throw new Error(`Ollama connection failed: ${response.statusText}`);
-                    return;
+                // Helper to try fetching
+                const checkOllama = async (checkUrl: string) => {
+                    if (!checkUrl.endsWith('/v1') && !checkUrl.endsWith('/v1/')) {
+                        const nativeBaseUrl = checkUrl.endsWith('/') ? checkUrl.slice(0, -1) : checkUrl;
+                        const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
+                        const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
+                        const endpoint = `${validUrl}/api/tags`; // /api/tags is a lightweight check
+
+                        const response = await fetch(endpoint);
+                        if (!response.ok) throw new Error(`Ollama connection failed: ${response.statusText}`);
+                        return true;
+                    }
+                    return false; // Let it fall through to /v1 check
+                };
+
+                try {
+                    const isNative = await checkOllama(url);
+                    if (isNative) return;
+                } catch (error) {
+                    // Fallback: If localhost failed, try 127.0.0.1
+                    if (url.includes('localhost')) {
+                        const altUrl = url.replace('localhost', '127.0.0.1');
+                        try {
+                            const isNative = await checkOllama(altUrl);
+                            if (isNative) return;
+                            baseURL = altUrl; // Update for v1 check below
+                        } catch (retryError) {
+                            // Try host.docker.internal as last resort for Docker environments
+                            const dockerUrl = url.replace('localhost', 'host.docker.internal');
+                            try {
+                                const isNative = await checkOllama(dockerUrl);
+                                if (isNative) return;
+                                baseURL = dockerUrl;
+                            } catch (finalError) {
+                                throw error;
+                            }
+                        }
+                    } else {
+                        throw error;
+                    }
                 }
                 baseURL = url;
             }
@@ -238,6 +269,7 @@ export class AiModelService {
             const client = new OpenAI(clientConfig);
             await client.models.list();
         } catch (error) {
+            this.logger.error(`Connection verification failed for ${providerKey}: ${error.message}`);
             // Re-throw with clean message
             throw new Error(`Verification failed: ${error.message}`);
         }
@@ -262,13 +294,25 @@ export class AiModelService {
             }
 
             if (key === 'ollama') {
-                const url = config.baseUrl || 'http://localhost:11434';
+                const url = config.baseUrl || 'http://127.0.0.1:11434';
                 const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
                 const hasProtocol = nativeBaseUrl.startsWith('http://') || nativeBaseUrl.startsWith('https://');
                 const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
                 const endpoint = `${validUrl}/api/tags`;
 
-                const response = await fetch(endpoint);
+                let response;
+                try {
+                    response = await fetch(endpoint);
+                } catch (error) {
+                    if (validUrl.includes('localhost')) {
+                        // Retry with 127.0.0.1
+                        const altEndpoint = endpoint.replace('localhost', '127.0.0.1');
+                        response = await fetch(altEndpoint);
+                    } else {
+                        throw error;
+                    }
+                }
+
                 if (!response.ok) {
                     throw new Error(`Failed to fetch Ollama models: ${response.statusText}`);
                 }
@@ -310,7 +354,7 @@ export class AiModelService {
             }
 
             if (key === 'ollama') {
-                const url = baseUrl || 'http://localhost:11434';
+                const url = baseUrl || 'http://127.0.0.1:11434';
 
                 // Handle /v1 OpenAI compability mode
                 if (url.endsWith('/v1') || url.endsWith('/v1/')) {
@@ -329,10 +373,20 @@ export class AiModelService {
 
                 const endpoint = `${validUrl}/api/embeddings`;
 
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ model, prompt: text }),
+                const makeRequest = async (ep: string) => {
+                    return fetch(ep, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model, prompt: text }),
+                    });
+                }
+
+                let response = await makeRequest(endpoint).catch(async (err) => {
+                    if (validUrl.includes('localhost')) {
+                        const altEndpoint = endpoint.replace('localhost', '127.0.0.1');
+                        return await makeRequest(altEndpoint);
+                    }
+                    throw err;
                 });
 
                 if (!response.ok) {

@@ -116,7 +116,7 @@ export class KBProcessor extends WorkerHost {
             }
 
             // Process Embeddings
-            await this.embeddingsService.processChunksWithProgress(
+            const processingResult = await this.embeddingsService.processChunksWithProgress(
                 chunkEntities,
                 kb.embeddingModel,
                 async (processed, total) => {
@@ -126,8 +126,16 @@ export class KBProcessor extends WorkerHost {
                 },
             );
 
+            if (processingResult.failures > 0) {
+                if (processingResult.successes === 0) {
+                    throw new Error(`Embedding generation failed for all ${processingResult.failures} chunks.`);
+                }
+                this.logger.warn(`Partial processed: ${processingResult.successes} succeeded, ${processingResult.failures} failed.`);
+            }
+
             document.processingStatus = KbProcessingStatus.COMPLETED;
             document.chunkCount = chunks.length;
+
             await this.documentRepository.save(document);
 
             this.processingQueue.completeJob(internalJobId);
