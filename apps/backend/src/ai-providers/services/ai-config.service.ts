@@ -102,10 +102,18 @@ export class AiConfigService {
         }
 
         // Merge configs, encrypt before save
-        const mergedConfig = {
-            ...this.aiEncryptionService.decryptConfig(existing).config,
-            ...dto.config,
-        };
+        // Smart merge: ignore masked values
+        const existingDecrypted = this.aiEncryptionService.decryptConfig(existing);
+        const mergedConfig = { ...existingDecrypted.config };
+
+        if (dto.config) {
+            Object.keys(dto.config).forEach((key) => {
+                const val = dto.config![key];
+                if (val !== '••••••••••••') {
+                    mergedConfig[key] = val;
+                }
+            });
+        }
         const encryptedConfig = this.aiEncryptionService.encryptConfig({
             ...dto,
             config: mergedConfig,
@@ -183,10 +191,18 @@ export class AiConfigService {
         }
 
         // Merge configs, encrypt before save
-        const mergedConfig = {
-            ...this.aiEncryptionService.decryptConfig(existing).config,
-            ...dto.config,
-        };
+        // Smart merge: ignore masked values
+        const existingDecrypted = this.aiEncryptionService.decryptConfig(existing);
+        const mergedConfig = { ...existingDecrypted.config };
+
+        if (dto.config) {
+            Object.keys(dto.config).forEach((key) => {
+                const val = dto.config![key];
+                if (val !== '••••••••••••') {
+                    mergedConfig[key] = val;
+                }
+            });
+        }
         const encryptedConfig = this.aiEncryptionService.encryptConfig({
             ...dto,
             config: mergedConfig,

@@ -132,15 +132,13 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
         if (!providerId) return;
 
-        // Validation for auto-fetch
-        const hasKey = !!configData?.apiKey;
-        const hasBaseUrl = !!configData?.baseUrl;
-        const isOllama = providerId === 'ollama';
-        const isCustom = providerId === 'custom';
+        // Validation for auto-fetch only
+        if (silent) {
+            const hasKey = !!configData?.apiKey;
+            const isOllama = providerId === 'ollama';
+            const isCustom = providerId === 'custom';
 
-        if (!hasKey && !isOllama && !isCustom) return;
-        if (isOllama && !hasBaseUrl && !configData?.baseUrl) {
-            // Ollama default is handled in service, but we check if user cleared it
+            if (!hasKey && !isOllama && !isCustom) return;
         }
 
         if (!silent) setIsFetchingModels(true);
@@ -164,9 +162,13 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
     // Auto-fetch effect
     useEffect(() => {
         if (open && autoRefreshEnabled) {
-            handleFetchModels(true);
+            const isUnchanged = isEdit && config?.config && JSON.stringify(debouncedConfig) === JSON.stringify(config.config);
+
+            if (!isUnchanged) {
+                handleFetchModels(true);
+            }
         }
-    }, [debouncedConfig, open, autoRefreshEnabled]);
+    }, [debouncedConfig, open, autoRefreshEnabled, isEdit, config]);
 
     const removeModel = (modelToRemove: string) => {
         const currentModels = form.getValues('modelList') || [];
@@ -308,7 +310,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                         <Input
                                                             {...field}
                                                             value={(field.value as string) || ''}
-
                                                             className="text-sm"
                                                         />
                                                     </FormControl>
@@ -318,27 +319,40 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                         />
                                     ))}
 
-                                    <div className="pt-4 space-y-4 border-t border-border/40">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-primary">
-                                                <Stars className="w-4 h-4" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">Available Models</span>
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleFetchModels()}
-                                                disabled={isFetchingModels}
-                                                className="h-8 text-[9px] font-black uppercase tracking-widest border-primary/20 transition-all font-bold"
-                                            >
-                                                {isFetchingModels ? (
-                                                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-                                                ) : (
-                                                    <RefreshCw className="w-3 h-3 mr-1.5" />
-                                                )}
-                                                Fetch Models
-                                            </Button>
+                                    <div className="pt-2 pb-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => handleFetchModels()}
+                                            disabled={isFetchingModels}
+                                            className={cn(
+                                                "w-full h-12 font-black uppercase tracking-widest text-xs border-2 transition-all active:scale-[0.98]",
+                                                isFetchingModels
+                                                    ? "border-primary/20 text-primary/50 cursor-wait"
+                                                    : "border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40"
+                                            )}
+                                        >
+                                            {isFetchingModels ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    Verifying Connection...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                                    Test Connection & Load Models
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <Stars className="w-4 h-4" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Detected Capabilities</span>
+                                            <span className="ml-auto text-[9px] font-bold text-muted-foreground/50 bg-muted/10 px-2 py-0.5 rounded-full">
+                                                {(form.getValues('modelList') || []).length} Models
+                                            </span>
                                         </div>
 
                                         <FormField
@@ -346,27 +360,27 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             name="modelList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-xl bg-muted/10 border border-border/10">
+                                                    <div className="flex flex-wrap gap-2 min-h-[80px] p-4 rounded-xl bg-muted/10 border border-border/10 transition-all focus-within:ring-2 focus-within:ring-primary/20">
                                                         {field.value && field.value.length > 0 ? (
                                                             field.value.map((model: string) => (
                                                                 <Badge
                                                                     key={model}
                                                                     variant="secondary"
-                                                                    className="group font-mono text-[10px] px-2 py-1 bg-primary/5 border-primary/10 text-primary hover:bg-destructive/10 hover:text-destructive hover:border-destructive/20 transition-all rounded-lg cursor-default"
+                                                                    className="group font-mono text-[10px] px-2 py-1 bg-background border border-border/40 text-foreground hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive transition-all rounded-lg cursor-pointer select-none"
+                                                                    onClick={() => removeModel(model)}
+                                                                    title="Click to remove"
                                                                 >
                                                                     {model}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeModel(model)}
-                                                                        className="ml-1.5 opacity-40 group-hover:opacity-100 transition-opacity"
-                                                                    >
-                                                                        <X className="w-2.5 h-2.5" />
-                                                                    </button>
+                                                                    <X className="w-2.5 h-2.5 ml-1.5 opacity-30 group-hover:opacity-100" />
                                                                 </Badge>
                                                             ))
                                                         ) : (
-                                                            <div className="w-full flex flex-col items-center justify-center py-2 text-muted-foreground/40">
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">No models fetched yet</span>
+                                                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 gap-2">
+                                                                <RefreshCw className="w-5 h-5 opacity-20" />
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-center">
+                                                                    No models loaded<br />
+                                                                    Test connection to fetch
+                                                                </span>
                                                             </div>
                                                         )}
                                                     </div>

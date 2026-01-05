@@ -493,7 +493,7 @@ export class KBEmbeddingsService {
             const requiresApiKey =
               providerKey !== 'ollama' && providerKey !== 'custom';
 
-            const baseUrl = config.config?.baseUrl;
+            const baseUrl = config.config?.baseUrl || config.config?.baseURL;
 
             // Determines the embedding model to use
             let model = 'text-embedding-ada-002'; // default

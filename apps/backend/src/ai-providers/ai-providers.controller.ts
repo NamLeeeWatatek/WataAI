@@ -75,16 +75,24 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Create user AI provider config' })
   @ApiCreatedResponse({ type: UserAiProviderConfig })
   @HttpCode(HttpStatus.CREATED)
-  createUserConfig(@Body() dto: CreateUserAiProviderConfigDto, @Request() req) {
-    return this.aiProvidersService.createUserConfig(req.user.id, dto);
+  async createUserConfig(@Body() dto: CreateUserAiProviderConfigDto, @Request() req) {
+    const config = await this.aiProvidersService.createUserConfig(req.user.id, dto);
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Get('user/configs')
   @Permissions('ai:List')
   @ApiOperation({ summary: 'Get user AI provider configs' })
   @ApiOkResponse({ type: [UserAiProviderConfig] })
-  getUserConfigs(@Request() req) {
-    return this.aiProvidersService.getUserConfigs(req.user.id);
+  async getUserConfigs(@Request() req) {
+    const configs = await this.aiProvidersService.getUserConfigs(req.user.id);
+    return configs.map((c) => ({
+      ...c,
+      config: this.aiProvidersService.maskConfig(c.config),
+    }));
   }
 
   @Get('user/configs/:id')
@@ -92,8 +100,13 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Get user AI provider config by ID' })
   @ApiOkResponse({ type: UserAiProviderConfig })
   @ApiParam({ name: 'id', type: String })
-  getUserConfig(@Param('id') id: string, @Request() req) {
-    return this.aiProvidersService.getUserConfig(req.user.id, id);
+  async getUserConfig(@Param('id') id: string, @Request() req) {
+    const config = await this.aiProvidersService.getUserConfig(req.user.id, id);
+    if (!config) return null;
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Patch('user/configs/:id')
@@ -101,12 +114,16 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Update user AI provider config' })
   @ApiOkResponse({ type: UserAiProviderConfig })
   @ApiParam({ name: 'id', type: String })
-  updateUserConfig(
+  async updateUserConfig(
     @Param('id') id: string,
     @Body() dto: UpdateUserAiProviderConfigDto,
     @Request() req,
   ) {
-    return this.aiProvidersService.updateUserConfig(req.user.id, id, dto);
+    const config = await this.aiProvidersService.updateUserConfig(req.user.id, id, dto);
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Delete('user/configs/:id')
@@ -132,11 +149,15 @@ export class AiProvidersController {
   @ApiCreatedResponse({ type: WorkspaceAiProviderConfig })
   @ApiParam({ name: 'workspaceId', type: String })
   @HttpCode(HttpStatus.CREATED)
-  createWorkspaceConfig(
+  async createWorkspaceConfig(
     @Param('workspaceId') workspaceId: string,
     @Body() dto: CreateWorkspaceAiProviderConfigDto,
   ) {
-    return this.aiProvidersService.createWorkspaceConfig(workspaceId, dto);
+    const config = await this.aiProvidersService.createWorkspaceConfig(workspaceId, dto);
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Permissions('ai:List')
@@ -144,8 +165,12 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Get workspace AI provider configs' })
   @ApiOkResponse({ type: [WorkspaceAiProviderConfig] })
   @ApiParam({ name: 'workspaceId', type: String })
-  getWorkspaceConfigs(@Param('workspaceId') workspaceId: string) {
-    return this.aiProvidersService.getWorkspaceConfigs(workspaceId);
+  async getWorkspaceConfigs(@Param('workspaceId') workspaceId: string) {
+    const configs = await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
+    return configs.map((c) => ({
+      ...c,
+      config: this.aiProvidersService.maskConfig(c.config),
+    }));
   }
 
   @Permissions('ai:Get')
@@ -154,11 +179,16 @@ export class AiProvidersController {
   @ApiOkResponse({ type: WorkspaceAiProviderConfig })
   @ApiParam({ name: 'workspaceId', type: String })
   @ApiParam({ name: 'id', type: String })
-  getWorkspaceConfig(
+  async getWorkspaceConfig(
     @Param('workspaceId') workspaceId: string,
     @Param('id') id: string,
   ) {
-    return this.aiProvidersService.getWorkspaceConfig(workspaceId, id);
+    const config = await this.aiProvidersService.getWorkspaceConfig(workspaceId, id);
+    if (!config) return null;
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Permissions('ai:Update')
@@ -167,12 +197,16 @@ export class AiProvidersController {
   @ApiOkResponse({ type: WorkspaceAiProviderConfig })
   @ApiParam({ name: 'workspaceId', type: String })
   @ApiParam({ name: 'id', type: String })
-  updateWorkspaceConfig(
+  async updateWorkspaceConfig(
     @Param('workspaceId') workspaceId: string,
     @Param('id') id: string,
     @Body() dto: UpdateWorkspaceAiProviderConfigDto,
   ) {
-    return this.aiProvidersService.updateWorkspaceConfig(workspaceId, id, dto);
+    const config = await this.aiProvidersService.updateWorkspaceConfig(workspaceId, id, dto);
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
   }
 
   @Permissions('ai:Delete')
