@@ -24,6 +24,8 @@ import { CreatePermissionDto } from './dto/create-permission.dto';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 
+import { RoleEnum } from '../roles/roles.enum';
+
 @ApiTags('Permissions')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -32,7 +34,7 @@ import { RolesGuard } from '../roles/roles.guard';
   version: '1',
 })
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) {}
+  constructor(private readonly permissionsService: PermissionsService) { }
 
   @Get('me/capabilities')
   @ApiOperation({ summary: 'Get current user capabilities and permissions' })
@@ -56,7 +58,7 @@ export class PermissionsController {
   }
 
   @Post()
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create new permission' })
   async create(@Body() dto: CreatePermissionDto) {
@@ -70,7 +72,7 @@ export class PermissionsController {
   }
 
   @Delete(':id')
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete permission' })
   async remove(@Param('id') id: string) {

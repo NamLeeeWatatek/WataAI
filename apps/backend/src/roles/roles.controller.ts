@@ -23,6 +23,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
+import { RoleEnum } from './roles.enum';
 
 @ApiTags('Roles')
 @ApiBearerAuth()
@@ -32,10 +33,10 @@ import { Roles } from './roles.decorator';
   version: '1',
 })
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+  constructor(private readonly rolesService: RolesService) { }
 
   @ApiOperation({ summary: 'Create new role' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createRoleDto: CreateRoleDto) {
@@ -43,7 +44,7 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Get all roles' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Get()
   @HttpCode(HttpStatus.OK)
   findAll(@Query('search') search?: string) {
@@ -51,7 +52,7 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Get role by ID' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: Number, required: true })
@@ -60,7 +61,7 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Update role permissions' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: Number, required: true })
@@ -69,7 +70,7 @@ export class RolesController {
   }
 
   @ApiOperation({ summary: 'Delete role' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiParam({ name: 'id', type: Number, required: true })
