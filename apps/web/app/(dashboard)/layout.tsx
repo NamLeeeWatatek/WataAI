@@ -16,6 +16,7 @@ import { CreationJobsProvider } from '@/components/providers/CreationJobsProvide
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget'
 import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitializer'
+import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
 
 export default function DashboardLayout({
     children,
@@ -85,60 +86,62 @@ export default function DashboardLayout({
     const isSpecialPage = isEditMode
 
     return (
-        <div className="h-screen flex bg-background overflow-hidden">
-            <WorkspaceInitializer />
-            {/* Mobile Sheet Navigation */}
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
+        <ThemeProviderWrapper>
+            <div className="h-screen flex bg-background overflow-hidden">
+                <WorkspaceInitializer />
+                {/* Mobile Sheet Navigation */}
+                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                    <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
+                        <DashboardSidebar
+                            expandedSections={expandedSections}
+                            onToggleSection={toggleSection}
+                            onSignOutConfirm={() => {
+                                setSidebarOpen(false);
+                                handleSignOut();
+                            }}
+                            sidebarOpen={true}
+                            onCloseSidebar={() => setSidebarOpen(false)}
+                            user={user} // Pass user data
+                        />
+                    </SheetContent>
+                </Sheet>
+
+                {/* Desktop Sidebar (hidden on mobile) */}
+                <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
                     <DashboardSidebar
                         expandedSections={expandedSections}
                         onToggleSection={toggleSection}
-                        onSignOutConfirm={() => {
-                            setSidebarOpen(false);
-                            handleSignOut();
-                        }}
+                        onSignOutConfirm={handleSignOut}
                         sidebarOpen={true}
-                        onCloseSidebar={() => setSidebarOpen(false)}
                         user={user} // Pass user data
                     />
-                </SheetContent>
-            </Sheet>
+                </div>
 
-            {/* Desktop Sidebar (hidden on mobile) */}
-            <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
-                <DashboardSidebar
-                    expandedSections={expandedSections}
-                    onToggleSection={toggleSection}
-                    onSignOutConfirm={handleSignOut}
-                    sidebarOpen={true}
-                    user={user} // Pass user data
-                />
-            </div>
+                {/* Main content area */}
+                <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
+                    <CreationJobsProvider>
+                        {/* Header with Redux-managed features */}
+                        <DashboardHeader
+                            showNotifications={showNotifications}
+                            onToggleNotifications={handleToggleNotifications}
+                            onToggleSidebar={handleToggleSidebar}
+                        />
 
-            {/* Main content area */}
-            <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
-                <CreationJobsProvider>
-                    {/* Header with Redux-managed features */}
-                    <DashboardHeader
-                        showNotifications={showNotifications}
-                        onToggleNotifications={handleToggleNotifications}
-                        onToggleSidebar={handleToggleSidebar}
-                    />
-
-                    {/* Content area with conditional container classes */}
-                    <div className="flex-1 overflow-hidden relative min-h-0">
-                        <div className={`h-full ${isSpecialPage ? 'overflow-auto' : 'page-container overflow-auto'}`}>
-                            <ErrorBoundary>
-                                {children}
-                            </ErrorBoundary>
+                        {/* Content area with conditional container classes */}
+                        <div className="flex-1 overflow-hidden relative min-h-0">
+                            <div className={`h-full ${isSpecialPage ? 'overflow-auto' : 'page-container overflow-auto'}`}>
+                                <ErrorBoundary>
+                                    {children}
+                                </ErrorBoundary>
+                            </div>
                         </div>
-                    </div>
-                    {/* <ActiveJobsWidget /> */}
-                </CreationJobsProvider>
-            </main >
+                        {/* <ActiveJobsWidget /> */}
+                    </CreationJobsProvider>
+                </main >
 
-            {/* Progress Overlay for async operations */}
-            < ProgressOverlay />
-        </div >
+                {/* Progress Overlay for async operations */}
+                < ProgressOverlay />
+            </div >
+        </ThemeProviderWrapper>
     )
 }

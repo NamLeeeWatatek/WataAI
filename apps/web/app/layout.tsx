@@ -42,15 +42,13 @@ export default function RootLayout({
                 <QueryProvider>
                     <I18nProvider>
                         <SessionProvider>
-                            <ThemeProviderWrapper>
-                                <ReduxProvider>
-                                    <ErrorBoundary>
-                                        <SessionWatcher />
-                                        {children}
-                                    </ErrorBoundary>
-                                    <Toaster />
-                                </ReduxProvider>
-                            </ThemeProviderWrapper>
+                            <ReduxProvider>
+                                <ErrorBoundary>
+                                    <SessionWatcher />
+                                    {children}
+                                </ErrorBoundary>
+                                <Toaster />
+                            </ReduxProvider>
                         </SessionProvider>
                     </I18nProvider>
                 </QueryProvider>

@@ -27,8 +27,15 @@ export class RolesGuard implements CanActivate {
     // 1. If User Role is an object with ID (Standard for Relational/TypeORM)
     if (typeof user.role === 'object' && user.role.id) {
       // Check if any allowed role matches the user's role ID
-      // We accept both string and number in @Roles, so we compare strictly as strings or numbers
-      return roles.some(role => String(role) === String(user.role.id));
+      const matchesId = roles.some(role => String(role) === String(user.role.id));
+      if (matchesId) return true;
+
+      // ALSO CHECK NAME (if name exists on role object)
+      // This allows @Roles('admin') to work even if we only have ID match logic previously
+      if ('name' in user.role) {
+        const matchesName = roles.some(role => String(role) === String((user.role as { name: string }).name));
+        if (matchesName) return true;
+      }
     }
 
     // 2. If User Role is a direct string (e.g. 'admin') - Legacy/Simple Auth

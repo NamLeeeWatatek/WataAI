@@ -35,6 +35,8 @@ import { infinityPagination } from '../utils/infinity-pagination';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 
+import { RoleEnum } from '../roles/roles.enum';
+
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Users')
@@ -48,7 +50,7 @@ export class UsersController {
   @ApiCreatedResponse({ type: User })
   @ApiOperation({ summary: 'Create new user (Admin only)' })
   @SerializeOptions({ groups: ['admin'] })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createUserDto: CreateUserDto): Promise<User> {
@@ -58,7 +60,7 @@ export class UsersController {
   @ApiOkResponse({ type: InfinityPaginationResponse(User) })
   @ApiOperation({ summary: 'Get all users with pagination (Admin only)' })
   @SerializeOptions({ groups: ['admin'] })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -79,7 +81,7 @@ export class UsersController {
   @ApiOkResponse({ type: User })
   @ApiOperation({ summary: 'Get user by ID (Admin only)' })
   @SerializeOptions({ groups: ['admin'] })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: String, required: true })
@@ -90,7 +92,7 @@ export class UsersController {
   @ApiOkResponse({ type: User })
   @ApiOperation({ summary: 'Update user (Admin only)' })
   @SerializeOptions({ groups: ['admin'] })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: String, required: true })
@@ -102,7 +104,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Delete user (Admin only)' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Delete(':id')
   @ApiParam({ name: 'id', type: String, required: true })
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -112,7 +114,7 @@ export class UsersController {
 
   @ApiOkResponse({ type: User })
   @ApiOperation({ summary: 'Verify user email (Admin only)' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Post(':id/verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: String, required: true })
@@ -122,7 +124,7 @@ export class UsersController {
 
   @ApiOkResponse({ type: User })
   @ApiOperation({ summary: 'Deactivate user (Admin only)' })
-  @Roles('admin')
+  @Roles(RoleEnum.admin)
   @Post(':id/deactivate')
   @HttpCode(HttpStatus.OK)
   @ApiParam({ name: 'id', type: String, required: true })
