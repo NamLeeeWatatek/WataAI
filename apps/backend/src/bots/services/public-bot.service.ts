@@ -153,6 +153,7 @@ export class PublicBotService {
       botId,
       channelType: 'web',
       channelId: null,
+      workspaceId: bot.workspaceId,
       metadata: {
         ...dto.metadata,
         contactName: dto.metadata?.name || null,
@@ -200,6 +201,7 @@ export class PublicBotService {
 
     const userMessage = this.messageRepository.create({
       conversationId,
+      workspaceId: conversation.workspaceId,
       role: MessageRole.USER,
       content: dto.message,
       metadata: dto.metadata || {},
@@ -244,6 +246,7 @@ export class PublicBotService {
 
     const botMessage = this.messageRepository.create({
       conversationId,
+      workspaceId: conversation.workspaceId,
       role: MessageRole.ASSISTANT,
       content: aiContent,
       sources: sources.length > 0 ? sources : null,

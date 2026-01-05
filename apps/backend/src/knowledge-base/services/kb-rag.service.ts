@@ -711,19 +711,35 @@ export class KBRagService {
       }
     }
 
-    const fallbackUserId = bot?.createdBy || 'system';
-    const fallbackProviderId = 'gemini';
-
-    try {
-      if (
-        await this.aiProvidersService.configExists(
-          fallbackProviderId,
-          'user',
-          fallbackUserId,
-        )
-      ) {
+    // Fallback: Try to find ANY configured provider for the workspace
+    if (bot?.workspaceId) {
+      const workspaceConfigs = await this.aiProvidersService.getWorkspaceConfigs(
+        bot.workspaceId,
+      );
+      if (workspaceConfigs.length > 0) {
+        // Prefer verified configs if available
+        const verifiedConfig =
+          workspaceConfigs.find((c) => c.config?.isVerified) ||
+          workspaceConfigs[0];
         return {
-          providerId: fallbackProviderId,
+          providerId: verifiedConfig.id,
+          scope: 'workspace',
+          scopeId: bot.workspaceId,
+        };
+      }
+    }
+
+    // Fallback: Try to find ANY configured provider for the user
+    const fallbackUserId = bot?.createdBy || 'system';
+    try {
+      const userConfigs = await this.aiProvidersService.getUserConfigs(
+        fallbackUserId,
+      );
+      if (userConfigs.length > 0) {
+        const verifiedConfig =
+          userConfigs.find((c) => c.config?.isVerified) || userConfigs[0];
+        return {
+          providerId: verifiedConfig.id,
           scope: 'user',
           scopeId: fallbackUserId,
         };
