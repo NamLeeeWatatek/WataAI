@@ -137,4 +137,25 @@ export class CreationJobsService {
   removeMany(ids: CreationJob['id'][], workspaceId: string): Promise<void> {
     return this.creationJobsRepository.removeMany(ids, workspaceId);
   }
+
+  async completeJob(
+    id: string,
+    resultData: any,
+    status: CreationJobStatus = CreationJobStatus.COMPLETED,
+    error?: string,
+  ): Promise<void> {
+    const jobs = await this.findByIds([id]);
+    const job = jobs[0];
+
+    if (!job || !job.workspaceId) {
+      throw new Error(`Job with ID ${id} not found or invalid`);
+    }
+
+    await this.update(job.id, job.workspaceId, {
+      status,
+      outputData: resultData,
+      error,
+      progress: status === CreationJobStatus.COMPLETED ? 100 : job.progress,
+    });
+  }
 }

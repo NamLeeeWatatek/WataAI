@@ -123,7 +123,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Form Fields</h3>
-                <Button onClick={handleAddField} size="sm" variant="outline" className="gap-2">
+                <Button type="button" onClick={handleAddField} size="sm" variant="outline" className="gap-2">
                     <Plus className="w-4 h-4" /> Add Field
                 </Button>
             </div>
@@ -132,18 +132,18 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                 {config.fields.length === 0 ? (
                     <div className="text-center py-8 border-2 border-dashed rounded-lg bg-muted/20">
                         <p className="text-sm text-muted-foreground">No fields configured yet.</p>
-                        <Button variant="link" onClick={handleAddField}>Add your first field</Button>
+                        <Button type="button" variant="link" onClick={handleAddField}>Add your first field</Button>
                     </div>
                 ) : (
                     config.fields.map((field, index) => (
                         <Card key={index} className="relative group hover:border-primary/50 transition-colors">
                             <CardContent className="p-3 flex items-center gap-3">
                                 <div className="flex flex-col gap-1 text-muted-foreground/50">
-                                    <Button variant="ghost" size="icon" className="h-4 w-4" disabled={index === 0} onClick={() => moveField(index, 'up')}>
+                                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4" disabled={index === 0} onClick={() => moveField(index, 'up')}>
                                         <ChevronUp className="w-3 h-3" />
                                     </Button>
                                     <GripVertical className="w-4 h-4 mx-auto" />
-                                    <Button variant="ghost" size="icon" className="h-4 w-4" disabled={index === config.fields.length - 1} onClick={() => moveField(index, 'down')}>
+                                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4" disabled={index === config.fields.length - 1} onClick={() => moveField(index, 'down')}>
                                         <ChevronDown className="w-3 h-3" />
                                     </Button>
                                 </div>
@@ -161,6 +161,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                             {`{{${field.name}}}`}
                                         </code>
                                         <button
+                                            type="button"
                                             onClick={() => copyToClipboard(`{{${field.name}}}`)}
                                             className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
                                         >
@@ -170,10 +171,10 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                 </div>
 
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEditField(index)}>
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleEditField(index)}>
                                         <Settings className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteField(index)}>
+                                    <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteField(index)}>
                                         <Trash2 className="w-4 h-4" />
                                     </Button>
                                 </div>
@@ -288,6 +289,7 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                                                     placeholder={`Option ${index + 1}`}
                                                 />
                                                 <Button
+                                                    type="button"
                                                     variant="ghost"
                                                     size="icon"
                                                     className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -322,8 +324,8 @@ export function FormBuilder({ config, onChange }: FormBuilderProps) {
                         </div>
                     )}
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSaveField}>Save Field</Button>
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button type="button" onClick={handleSaveField}>Save Field</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
