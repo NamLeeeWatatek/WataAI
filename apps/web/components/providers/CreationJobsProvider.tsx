@@ -11,6 +11,7 @@ interface CreationJobsContextType {
     activeJobs: CreationJob[];
     addJob: (job: CreationJob) => void;
     removeJob: (jobId: string) => void;
+    cancelJob: (jobId: string) => void;
     refreshJobs: () => Promise<void>;
     isLoading: boolean;
 }
@@ -36,7 +37,7 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
         try {
             // Fetch pending and processing jobs to resume tracking
             const response = await creationJobsApi.findAll({
-                status: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'], // Fetch recently changed if needed, or just standard
+                status: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'], // Fetch recently changed if needed, or just standard
                 limit: 10,
                 sort: 'updatedAt:desc'
             });
@@ -78,6 +79,31 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
             });
         }
     }, [toast]);
+
+    const cancelJob = useCallback(async (jobId: string) => {
+        try {
+            // Optimistic update
+            setActiveJobs(prev => prev.map(job =>
+                job.id === jobId ? { ...job, status: CreationJobStatus.CANCELED } : job
+            ));
+
+            await creationJobsApi.cancel(jobId);
+
+            toast({
+                title: "Job Canceled",
+                description: "The generation process has been stopped.",
+            });
+        } catch (error) {
+            console.error("Failed to cancel job", error);
+            toast({
+                title: "Error",
+                description: "Failed to cancel job",
+                variant: "destructive"
+            });
+            // Revert on failure (reload jobs)
+            fetchActiveJobs();
+        }
+    }, [fetchActiveJobs, toast]);
 
     // Unified socket connection using the hook
     const { on, isConnected } = useSocketConnection({
@@ -154,7 +180,7 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
     }, [isConnected, on, toast]);
 
     return (
-        <CreationJobsContext.Provider value={{ activeJobs, addJob, removeJob, refreshJobs: fetchActiveJobs, isLoading }}>
+        <CreationJobsContext.Provider value={{ activeJobs, addJob, removeJob, cancelJob, refreshJobs: fetchActiveJobs, isLoading }}>
             {children}
         </CreationJobsContext.Provider>
     );

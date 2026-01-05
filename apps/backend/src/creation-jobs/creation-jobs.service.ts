@@ -130,6 +130,39 @@ export class CreationJobsService {
     return updatedJob;
   }
 
+  async cancel(id: CreationJob['id'], workspaceId: string): Promise<void> {
+    const job = await this.creationJobsRepository.findById(id, workspaceId);
+
+    if (!job) {
+      throw new Error(`Job with ID ${id} not found or invalid`);
+    }
+
+    if (job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) {
+      // Already finished, do nothing
+      return;
+    }
+
+    // Attempt to remove from queue
+    if (job.status === CreationJobStatus.PENDING) {
+      await this.executionQueueService.removeCreationJob(id);
+    }
+
+    // Update status to CANCELED
+    await this.update(id, workspaceId, {
+      status: CreationJobStatus.CANCELED,
+      error: 'Job canceled by user',
+    });
+
+    await this.auditService.log({
+      userId: job.createdBy || 'unknown',
+      workspaceId,
+      action: 'JOB_CANCELED',
+      resourceType: 'creation-job',
+      resourceId: id,
+      details: { toolId: job.creationToolId },
+    });
+  }
+
   remove(id: CreationJob['id'], workspaceId: string): Promise<void> {
     return this.creationJobsRepository.remove(id, workspaceId);
   }

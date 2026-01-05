@@ -3,6 +3,7 @@ export enum CreationJobStatus {
     PROCESSING = 'PROCESSING',
     COMPLETED = 'COMPLETED',
     FAILED = 'FAILED',
+    CANCELED = 'CANCELED',
 }
 
 export interface CreationJob {
