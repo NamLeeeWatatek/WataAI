@@ -27,7 +27,7 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
     // 1. Template Rendering
     const url = await this.engine.parseAndRender(config.urlTemplate, inputs);
 
-    let body = undefined;
+    let body: any = undefined;
     if (config.bodyTemplate) {
       if (typeof config.bodyTemplate === 'string') {
         const renderedBody = await this.engine.parseAndRender(
@@ -37,13 +37,9 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         try {
           body = JSON.parse(renderedBody);
         } catch {
-          body = renderedBody; // Send as raw string if not JSON
+          body = renderedBody;
         }
       } else {
-        // If bodyTemplate is an object, we need to stringify it first to act as a template,
-        // or recursively render it. For simplicity/performance, let's assuming strict JSON/String templates.
-        // A better approach for object templates is recursive rendering,
-        // but let's encourage string-based JSON templates for full flexibility.
         const templateString = JSON.stringify(config.bodyTemplate);
         const renderedString = await this.engine.parseAndRender(
           templateString,
@@ -51,6 +47,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         body = JSON.parse(renderedString);
       }
+    } else if (['POST', 'PUT', 'PATCH'].includes(config.method)) {
+      body = inputs;
     }
 
     // 2. SSRF Protection: Block private IP ranges and localhost
@@ -103,8 +101,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         if (error.response.status === 504) {
           this.logger.warn(
             'Gateway Timeout (504) detected. The external tool took too long to respond to the initial webhook. ' +
-              'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
-              'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
+            'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
+            'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
           );
         }
       } else if (error.code === 'ECONNABORTED') {
@@ -113,8 +111,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         this.logger.warn(
           'Request Timeout detected. The external tool took too long to respond. ' +
-            '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
-            '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
+          '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
+          '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
         );
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);
