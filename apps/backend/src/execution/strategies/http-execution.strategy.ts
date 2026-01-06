@@ -51,6 +51,14 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
       body = inputs;
     }
 
+    // Auto-inject system metadata (Business Rule: Always provide context)
+    // This ensures that even if the bodyTemplate didn't include _callbackUrl, we force it in.
+    if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
+      if (!body._callbackUrl && inputs._callbackUrl) body._callbackUrl = inputs._callbackUrl;
+      if (!body._jobId && inputs._jobId) body._jobId = inputs._jobId;
+      if (!body._workspaceId && inputs._workspaceId) body._workspaceId = inputs._workspaceId;
+    }
+
     // 2. SSRF Protection: Block private IP ranges and localhost
     const isLocalOrPrivate = url.match(
       /^(https?:\/\/)?(localhost|127\.|0\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|169\.254\.)/i,

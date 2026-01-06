@@ -101,8 +101,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
       // These variables are available in the Liquid template (e.g. {{_callbackUrl}})
       const apiUrl =
         process.env.BACKEND_DOMAIN ||
-        process.env.API_URL ||
-        'http://localhost:3000/api/v1';
+        process.env.API_URL;
       const systemInputs = {
         ...executionInputs,
         _jobId: jobEntity.id,
@@ -139,8 +138,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
 
         const apiUrl =
           process.env.BACKEND_DOMAIN ||
-          process.env.API_URL ||
-          'http://localhost:3000';
+          process.env.API_URL
         this.logger.warn(
           `Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/v1/callbacks/jobs/${jobEntity.id}/complete`,
         );
