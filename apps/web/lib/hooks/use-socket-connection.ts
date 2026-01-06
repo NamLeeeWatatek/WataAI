@@ -90,13 +90,10 @@ export function useSocketConnection({
         setIsConnected(false);
         setIsConnecting(false);
 
-        if (enabled && reason === 'io server disconnect') {
-          // Server disconnected us, try reconnect
-          reconnectTimeoutRef.current = setTimeout(() => {
-            console.log(`[Socket:${namespace}] Attempting reconnection...`);
-            socket.connect();
-          }, 3000);
-        }
+        // NOTE: We do NOT manually reconnect on 'io server disconnect' here.
+        // If the server disconnected us (e.g. invalid auth), we should wait for
+        // the auth/user dependencies to change in the parent component,
+        // which will trigger the useEffect to call connect() again with new credentials.
       });
 
       socket.on('connect_error', (err) => {

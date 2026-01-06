@@ -2,6 +2,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CreationJob, CreationJobStatus } from "@/lib/types/creation-job";
 import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { MoreHorizontal, Trash2, ExternalLink, Copy } from "lucide-react";
@@ -24,6 +25,9 @@ import { PaginationInfo } from "@/components/ui/Pagination";
 
 import { creationJobsApi } from "@/lib/api/creation-jobs";
 import { BulkActionsToolbar } from "@/components/ui/BulkActionsToolbar";
+import { DataTableFacetedFilter } from "@/components/ui/data-table/DataTableFacetedFilter";
+import { Search } from "@/components/ui/Search";
+import { X } from "lucide-react";
 
 interface ProductsTableProps {
     jobs: CreationJob[];
@@ -36,6 +40,10 @@ interface ProductsTableProps {
     onPageChange?: (page: number) => void;
     pageSizeOptions?: number[];
     onPageSizeChange?: (pageSize: number) => void;
+    statusFilter?: string[];
+    onStatusFilterChange?: (status: string[]) => void;
+    searchFilter?: string;
+    onSearchChange?: (search: string) => void;
 }
 
 export function ProductsTable({
@@ -48,7 +56,11 @@ export function ProductsTable({
     pagination,
     onPageChange,
     pageSizeOptions,
-    onPageSizeChange
+    onPageSizeChange,
+    statusFilter = [],
+    onStatusFilterChange,
+    searchFilter = "",
+    onSearchChange
 }: ProductsTableProps) {
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
     const [isDeletingBulk, setIsDeletingBulk] = useState(false);
@@ -124,18 +136,7 @@ export function ProductsTable({
             key: 'status',
             label: 'Status',
             render: (value, row) => (
-                <Badge
-                    variant={
-                        row.status === CreationJobStatus.COMPLETED
-                            ? "default"
-                            : row.status === CreationJobStatus.FAILED
-                                ? "destructive"
-                                : "outline"
-                    }
-                    className="capitalize"
-                >
-                    {row.status.toLowerCase()}
-                </Badge>
+                <StatusBadge status={row.status} />
             )
         },
         {
@@ -230,6 +231,44 @@ export function ProductsTable({
 
     return (
         <>
+            <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex flex-1 items-center space-x-2">
+                    <Search
+                        placeholder="Filter products..."
+                        value={searchFilter}
+                        onChange={(e) => onSearchChange?.(e.target.value)}
+                        onClear={() => onSearchChange?.("")}
+                        className="h-8 w-[150px] lg:w-[250px]"
+                    />
+                    {onStatusFilterChange && (
+                        <DataTableFacetedFilter
+                            title="Status"
+                            options={[
+                                { label: "Completed", value: CreationJobStatus.COMPLETED },
+                                { label: "Pending", value: CreationJobStatus.PENDING },
+                                { label: "Processing", value: CreationJobStatus.PROCESSING },
+                                { label: "Failed", value: CreationJobStatus.FAILED },
+                            ]}
+                            selectedValues={new Set(statusFilter)}
+                            onSelect={(values) => onStatusFilterChange(Array.from(values))}
+                        />
+                    )}
+                    {(statusFilter.length > 0 || searchFilter) && (
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                onStatusFilterChange?.([]);
+                                onSearchChange?.("");
+                            }}
+                            className="h-8 px-2 lg:px-3"
+                        >
+                            Reset
+                            <X className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            </div>
+
             <DataTable
                 data={jobs}
                 columns={columns}

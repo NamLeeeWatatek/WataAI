@@ -65,6 +65,9 @@ const config: Config = {
 				serif: ['"Times New Roman"', 'Times', 'serif'],
 				mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
 			},
+			fontSize: {
+				xxs: '0.625rem', // 10px
+			},
 			fontWeight: {
 				light: '300',
 				book: '425',

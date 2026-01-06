@@ -60,28 +60,45 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Activity Trend Chart */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle>{t('dashboard.charts.activityTrend')}</CardTitle>
+          <CardTitle className="text-lg font-bold">{t('dashboard.charts.activityTrend')}</CardTitle>
           <CardDescription>{t('dashboard.charts.activityTrendDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={activityConfig} className="h-[300px] w-full">
             <AreaChart data={activityData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
+                axisLine={false}
+                tickMargin={10}
               />
-              <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <YAxis
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}`}
+              />
+              <ChartTooltip
+                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                content={<ChartTooltipContent className="bg-background/90 border-border/50 backdrop-blur-md shadow-xl" />}
+              />
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke="var(--color-value)"
-                fill="var(--color-value)"
-                fillOpacity={0.2}
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fill="url(#colorValue)"
+                animationDuration={1500}
               />
             </AreaChart>
           </ChartContainer>
@@ -89,26 +106,42 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Bots Status Chart */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle>{t('dashboard.charts.botsStatus')}</CardTitle>
+          <CardTitle className="text-lg font-bold">{t('dashboard.charts.botsStatus')}</CardTitle>
           <CardDescription>{t('dashboard.charts.botsStatusDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={botsConfig} className="h-[300px] w-full">
-            <BarChart data={botsData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <BarChart data={botsData} barSize={40}>
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
+                axisLine={false}
+                tickMargin={10}
               />
-              <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <YAxis
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <ChartTooltip
+                cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                content={<ChartTooltipContent className="bg-background/90 border-border/50 backdrop-blur-md shadow-xl" />}
+              />
               <Bar
                 dataKey="value"
-                radius={[8, 8, 0, 0]}
-                fill="hsl(var(--primary))"
+                radius={[6, 6, 0, 0]}
+                fill="url(#barGradient)"
+                animationDuration={1500}
               />
             </BarChart>
           </ChartContainer>
@@ -116,28 +149,44 @@ export function DashboardCharts({ stats, activityTrend }: DashboardChartsProps) 
       </Card>
 
       {/* Users Growth Chart */}
-      <Card className="md:col-span-2 overflow-hidden">
+      <Card className="md:col-span-2 overflow-hidden border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle>{t('dashboard.charts.userGrowth')}</CardTitle>
+          <CardTitle className="text-lg font-bold">{t('dashboard.charts.userGrowth')}</CardTitle>
           <CardDescription>{t('dashboard.charts.userGrowthDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={usersConfig} className="h-[300px] w-full">
             <LineChart data={usersTrendData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <defs>
+                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="hsl(var(--chart-1))" />
+                  <stop offset="100%" stopColor="hsl(var(--chart-2))" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
+                axisLine={false}
+                tickMargin={10}
               />
-              <YAxis tick={{ fontSize: 12 }} tickLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <YAxis
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <ChartTooltip
+                content={<ChartTooltipContent className="bg-background/90 border-border/50 backdrop-blur-md shadow-xl" />}
+              />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="var(--color-value)"
-                strokeWidth={2}
-                dot={{ r: 4 }}
+                stroke="url(#lineGradient)"
+                strokeWidth={3}
+                dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2, stroke: "hsl(var(--chart-1))" }}
+                activeDot={{ r: 6, fill: "hsl(var(--chart-1))", strokeWidth: 0, className: "animate-pulse" }}
+                animationDuration={2000}
               />
             </LineChart>
           </ChartContainer>

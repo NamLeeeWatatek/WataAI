@@ -13,11 +13,19 @@ export const dashboardKeys = {
  * Fetch dashboard statistics
  * Uses TanStack Query v5 for caching and state management
  */
-export function useDashboardStats(initialData?: DashboardStats) {
+// Update hook signature to accept dateRange
+export function useDashboardStats(
+    initialData?: DashboardStats,
+    dateRange?: { from?: Date; to?: Date }
+) {
     return useQuery({
-        queryKey: dashboardKeys.stats(),
+        queryKey: [...dashboardKeys.stats(), dateRange],
         queryFn: async () => {
-            const result = await axiosClient.get<DashboardStats>('/stats/dashboard')
+            const params: any = {};
+            if (dateRange?.from) params.startDate = dateRange.from.toISOString();
+            if (dateRange?.to) params.endDate = dateRange.to.toISOString();
+
+            const result = await axiosClient.get<DashboardStats>('/stats/dashboard', { params })
             if (!result) {
                 throw new Error('API returned no data')
             }

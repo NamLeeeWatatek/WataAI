@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import { Badge } from '@/components/ui/Badge';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button, buttonVariants } from '@/components/ui/Button';
 import { Loader2, CheckCircle2, XCircle, Minimize2, Maximize2, X, List, History, ExternalLink } from 'lucide-react';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
@@ -96,8 +97,12 @@ export function ActiveJobsWidget() {
                                                 <div
                                                     key={job.id}
                                                     className={cn(
-                                                        "p-4 transition-colors group relative cursor-pointer",
-                                                        job.status === CreationJobStatus.COMPLETED ? "hover:bg-green-500/5 cursor-pointer" : "hover:bg-muted/30"
+                                                        "p-4 transition-all duration-300 group relative cursor-pointer border-l-2 border-transparent",
+                                                        job.status === CreationJobStatus.COMPLETED
+                                                            ? "hover:bg-gradient-to-r hover:from-emerald-500/5 hover:to-transparent hover:border-emerald-500/50"
+                                                            : job.status === CreationJobStatus.FAILED
+                                                                ? "hover:bg-gradient-to-r hover:from-red-500/5 hover:to-transparent hover:border-red-500/50"
+                                                                : "hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent hover:border-primary/50"
                                                     )}
                                                     onClick={() => {
                                                         if (job.status === CreationJobStatus.COMPLETED) {
@@ -107,7 +112,7 @@ export function ActiveJobsWidget() {
                                                 >
                                                     <div className="flex justify-between items-start mb-2">
                                                         <div className="min-w-0 pr-2">
-                                                            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5 truncate">
+                                                            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5 truncate group-hover:text-primary transition-colors drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]">
                                                                 {displayName}
                                                             </p>
                                                             <p className="text-[10px] font-mono text-muted-foreground/60">
@@ -115,32 +120,24 @@ export function ActiveJobsWidget() {
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-2 shrink-0">
-                                                            <Badge
-                                                                variant={
-                                                                    job.status === CreationJobStatus.COMPLETED ? "default" :
-                                                                        job.status === CreationJobStatus.FAILED ? "destructive" :
-                                                                            "secondary"
-                                                                }
-                                                                className={cn(
-                                                                    "capitalize",
-                                                                    (job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && "animate-pulse"
-                                                                )}
-                                                            >
-                                                                {job.status.toLowerCase()}
-                                                            </Badge>
+                                                            <StatusBadge
+                                                                status={job.status}
+                                                                animatePending
+                                                                className={cn(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING ? "animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.2)]" : "")}
+                                                            />
 
                                                             {/* Allow removing completed/failed/canceled jobs */}
                                                             {(job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) && (
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="icon"
-                                                                    className="h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -mr-1"
+                                                                    className="h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -mr-1 hover:bg-destructive/10 hover:text-destructive"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         removeJob(job.id);
                                                                     }}
                                                                 >
-                                                                    <X className="w-3 h-3 text-muted-foreground" />
+                                                                    <X className="w-3 h-3" />
                                                                 </Button>
                                                             )}
 
@@ -165,7 +162,7 @@ export function ActiveJobsWidget() {
                                                     {job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING ? (
                                                         <div className="space-y-1.5 mt-2">
                                                             <div className="flex justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
-                                                                <span className="animate-pulse text-primary">Creating...</span>
+                                                                <span className="animate-pulse text-primary drop-shadow-[0_0_5px_rgba(var(--primary),0.5)]">Creating...</span>
                                                                 <span>{job.progress}%</span>
                                                             </div>
                                                             <Progress
@@ -176,16 +173,16 @@ export function ActiveJobsWidget() {
                                                         </div>
                                                     ) : job.status === CreationJobStatus.COMPLETED ? (
                                                         <div className="flex items-center justify-between mt-2">
-                                                            <div className="flex items-center gap-2 text-green-600 dark:text-green-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
-                                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                <span>Ready to view</span>
+                                                            <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
+                                                                <CheckCircle2 className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                                                                <span className="drop-shadow-[0_0_5px_rgba(16,185,129,0.2)]">Ready to view</span>
                                                             </div>
-                                                            <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            <ExternalLink className="w-3 h-3 text-emerald-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center gap-2 mt-2 text-red-600 dark:text-red-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
-                                                            <XCircle className="w-3.5 h-3.5" />
-                                                            <span>Failed</span>
+                                                        <div className="flex items-center gap-2 mt-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
+                                                            <XCircle className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
+                                                            <span className="drop-shadow-[0_0_5px_rgba(239,68,68,0.2)]">Failed</span>
                                                         </div>
                                                     )}
                                                 </div>

@@ -172,6 +172,8 @@
 
   /* Reset standard headings to inherit size or use standard values if needed, 
      but avoid aggressive global overrides that affect dashboard */
+  /* Reset standard headings to inherit size or use standard values if needed, 
+     but avoid aggressive global overrides that affect dashboard */
   h1,
   h2,
   h3,

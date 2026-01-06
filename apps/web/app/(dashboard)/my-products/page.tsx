@@ -15,20 +15,36 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 
 import { PageHeader } from '@/components/ui/PageHeader';
 
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { subDays } from 'date-fns';
+import { cn } from '@/lib/utils';
+
 export default function MyProductsPage() {
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: subDays(new Date(), 30),
+        to: new Date(),
+    });
+
+    const [statusFilter, setStatusFilter] = useState<string[]>([]);
+    const [searchFilter, setSearchFilter] = useState<string>("");
 
     const queryClient = useQueryClient();
 
     const { data: jobsData, isLoading, refetch, isRefetching } = useQuery({
-        queryKey: ['my-products', page, pageSize],
+        queryKey: ['my-products', page, pageSize, dateRange, statusFilter, searchFilter],
         queryFn: () => creationJobsApi.findAll({
             page,
             limit: pageSize,
-            sort: 'createdAt:desc'
+            sort: 'createdAt:desc',
+            startDate: dateRange?.from?.toISOString(),
+            endDate: dateRange?.to?.toISOString(),
+            status: statusFilter,
+            search: searchFilter,
         }),
         placeholderData: keepPreviousData,
     });
@@ -139,24 +155,31 @@ export default function MyProductsPage() {
                 refreshing={isLoading || isRefetching}
             >
                 <div className="flex items-center gap-2">
-                    <div className="border rounded-xl p-1 flex items-center gap-1 bg-muted/20">
+                    <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                    <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
                         <Button
-                            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            className="h-8 px-3 rounded-lg"
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "h-8 w-8 rounded-md transition-all",
+                                viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
                             onClick={() => setViewMode('grid')}
+                            title="Grid View"
                         >
-                            <LayoutGrid className="w-4 h-4 mr-1.5" />
-                            Grid
+                            <LayoutGrid className="w-4 h-4" />
                         </Button>
                         <Button
-                            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            className="h-8 px-3 rounded-lg"
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "h-8 w-8 rounded-md transition-all",
+                                viewMode === 'table' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                            )}
                             onClick={() => setViewMode('table')}
+                            title="Table View"
                         >
-                            <List className="w-4 h-4 mr-1.5" />
-                            Table
+                            <List className="w-4 h-4" />
                         </Button>
                     </div>
                 </div>
@@ -206,6 +229,10 @@ export default function MyProductsPage() {
                     onPageChange={setPage}
                     onPageSizeChange={setPageSize}
                     pageSizeOptions={[10, 20, 30, 50]}
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                    searchFilter={searchFilter}
+                    onSearchChange={setSearchFilter}
                 />
             )}
         </div>

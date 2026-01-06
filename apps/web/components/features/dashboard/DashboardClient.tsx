@@ -14,6 +14,11 @@ import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useAuth } from '@/lib/hooks/useAuth'
 
+import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRange } from "react-day-picker"
+import { useState } from 'react'
+import { subDays } from 'date-fns'
+
 const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -35,7 +40,12 @@ export function DashboardClient() {
     const { t } = useTranslation()
     const { user } = useAuth()
 
-    const { data: stats, isLoading, error } = useDashboardStats()
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: subDays(new Date(), 30),
+        to: new Date(),
+    })
+
+    const { data: stats, isLoading, error } = useDashboardStats(undefined, dateRange)
 
     if (isLoading) {
         return (
@@ -66,10 +76,13 @@ export function DashboardClient() {
                     description={t('dashboard.welcomeBack', { name: user?.name || t('welcome') })}
                     className="mb-10 px-2"
                 >
-                    <Button className="shadow-lg shadow-primary/10">
-                        <FiDownload className="mr-2 h-4 w-4" />
-                        {t('dashboard.downloadReport')}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                        <Button className="shadow-lg shadow-primary/10">
+                            <FiDownload className="mr-2 h-4 w-4" />
+                            {t('dashboard.downloadReport')}
+                        </Button>
+                    </div>
                 </PageHeader>
             </motion.div>
 

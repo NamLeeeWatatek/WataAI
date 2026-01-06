@@ -76,6 +76,12 @@ export class CreationJobsController {
         page,
         limit,
       },
+      filterOptions: {
+        startDate: query.startDate,
+        endDate: query.endDate,
+        search: query.search,
+        status: query.status,
+      },
       workspaceId,
     });
 
