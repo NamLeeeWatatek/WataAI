@@ -11,11 +11,12 @@ import { FilterBuilder } from 'src/utils/filter-builder';
 
 @Injectable()
 export class CreationJobsRelationalRepository
-  implements CreationJobsRepository {
+  implements CreationJobsRepository
+{
   constructor(
     @InjectRepository(CreationJobEntity)
     private readonly creationJobsRepository: Repository<CreationJobEntity>,
-  ) { }
+  ) {}
 
   async create(data: CreationJob): Promise<CreationJob> {
     const persistenceModel = CreationJobsMapper.toPersistence(data);
@@ -33,17 +34,30 @@ export class CreationJobsRelationalRepository
     filterOptions,
   }: {
     paginationOptions: IPaginationOptions;
-    filterOptions: { workspaceId: string; startDate?: string; endDate?: string; search?: string; status?: string[] };
+    filterOptions: {
+      workspaceId: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+      status?: string[];
+    };
   }): Promise<{ data: CreationJob[]; count: number }> {
-    const qb = this.creationJobsRepository.createQueryBuilder('job')
+    const qb = this.creationJobsRepository
+      .createQueryBuilder('job')
       .leftJoinAndSelect('job.creationTool', 'creationTool')
-      .where('job.workspaceId = :workspaceId', { workspaceId: filterOptions.workspaceId });
+      .where('job.workspaceId = :workspaceId', {
+        workspaceId: filterOptions.workspaceId,
+      });
 
     const filterBuilder = new FilterBuilder(qb);
 
     filterBuilder
       .search(filterOptions.search, ['job.id', 'creationTool.name'])
-      .filterByDateRange('job.createdAt', filterOptions.startDate, filterOptions.endDate)
+      .filterByDateRange(
+        'job.createdAt',
+        filterOptions.startDate,
+        filterOptions.endDate,
+      )
       .filterExact({ 'job.status': filterOptions.status });
 
     qb.orderBy('job.createdAt', 'DESC')

@@ -75,7 +75,7 @@ export function StatusBadge({
             )}
             {...props}
         >
-            {showIcon && isProcessing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+            {showIcon && isProcessing && <Loader2 className="mr-1 h-3 w-3" />}
             {children || label || normalizedStatus.replace(/_/g, " ")}
         </Badge>
     )

@@ -57,7 +57,9 @@ export class EncryptionService {
       // Combine: iv:encrypted:authTag (all base64)
       return `${iv.toString('base64')}:${encrypted}:${authTag.toString('base64')}`;
     } catch (error) {
-      throw new InternalServerErrorException(`Encryption failed: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Encryption failed: ${error.message}`,
+      );
     }
   }
 
@@ -102,7 +104,9 @@ export class EncryptionService {
 
       return decrypted;
     } catch (error) {
-      throw new InternalServerErrorException(`Decryption failed: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Decryption failed: ${error.message}`,
+      );
     }
   }
 

@@ -45,7 +45,7 @@ import { RoleEnum } from '../roles/roles.enum';
   version: '1',
 })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @ApiCreatedResponse({ type: User })
   @ApiOperation({ summary: 'Create new user (Admin only)' })
@@ -67,7 +67,7 @@ export class UsersController {
     @Query() query: QueryUserDto,
   ): Promise<InfinityPaginationResponseDto<User>> {
     const page = query?.page ?? 1;
-    let limit = query?.limit ?? 10;
+    const limit = query?.limit ?? 10;
 
     const [data, total] = await this.usersService.findManyWithPagination({
       filterOptions: query?.filters,

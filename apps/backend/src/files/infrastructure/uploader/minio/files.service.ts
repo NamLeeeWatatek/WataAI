@@ -141,12 +141,8 @@ export class FilesMinioService implements FileDriver {
     const isDocument = file.fileName.match(
       /\.(pdf|doc|docx|txt|csv|xls|xlsx|pptx)$/i,
     );
-    const isVideo = file.fileName.match(
-      /\.(mp4|mpeg|mov|avi|webm|mkv|wmv)$/i,
-    );
-    const isAudio = file.fileName.match(
-      /\.(mp3|wav|ogg|m4a|flac)$/i,
-    );
+    const isVideo = file.fileName.match(/\.(mp4|mpeg|mov|avi|webm|mkv|wmv)$/i);
+    const isAudio = file.fileName.match(/\.(mp3|wav|ogg|m4a|flac)$/i);
 
     if (!isImage && !isDocument && !isVideo && !isAudio) {
       throw new UnprocessableEntityException({

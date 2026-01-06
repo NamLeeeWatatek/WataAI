@@ -4,11 +4,11 @@
  */
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSocketConnection } from './use-socket-connection';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
-import { useNotificationPreferences } from '@/components/features/notifications/NotificationSettings';
+import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { axiosClient } from '../axios-client';
 
 interface Notification {
@@ -20,6 +20,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error' | 'job_progress' | 'job_created';
   isRead: boolean;
   createdAt: string;
+  metadata?: Record<string, any>;
   data?: any;
 }
 
@@ -54,13 +55,15 @@ export function useNotificationsRealtime({
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | undefined>(initialWorkspaceId);
 
+  const query = useMemo(() => ({ userId: user?.id }), [user?.id]);
+
   // Use the base socket connection hook
   const socketConnection = useSocketConnection({
     namespace: 'notifications',
     enabled: enabled && !!user?.id && !!accessToken,
     autoConnect,
     auth: { token: accessToken },
-    query: { userId: user?.id },
+    query,
   });
 
   // Fetch notifications from API

@@ -27,14 +27,17 @@ export class AiExecutionStrategy implements IExecutionStrategy {
     );
 
     let finalInputs = { ...inputs };
-    let finalPromptTemplate = config.promptTemplate;
+    const finalPromptTemplate = config.promptTemplate;
 
     // 0. Handle Template Inclusion if requested
-    const shouldIncludeTemplate = inputs.includeTemplate === true || config.includeTemplate === true;
+    const shouldIncludeTemplate =
+      inputs.includeTemplate === true || config.includeTemplate === true;
 
     if (shouldIncludeTemplate && inputs.templateId) {
       try {
-        const template = await this.templatesService.findById(inputs.templateId);
+        const template = await this.templatesService.findById(
+          inputs.templateId,
+        );
         if (template) {
           this.logger.debug(`Including Template Context: ${template.name}`);
 
@@ -46,7 +49,7 @@ export class AiExecutionStrategy implements IExecutionStrategy {
               description: template.description,
               prompt: template.prompt,
               content: template.promptTemplate, // Often promptTemplate contains the main content/instruction
-            }
+            },
           };
 
           // If the template has its own promptTemplate, we might want to use it
@@ -54,7 +57,9 @@ export class AiExecutionStrategy implements IExecutionStrategy {
           // For now, we'll just expose it as {{template.content}} in the main promptTemplate.
         }
       } catch (error) {
-        this.logger.warn(`Failed to fetch template ${inputs.templateId} for inclusion: ${error.message}`);
+        this.logger.warn(
+          `Failed to fetch template ${inputs.templateId} for inclusion: ${error.message}`,
+        );
       }
     }
 

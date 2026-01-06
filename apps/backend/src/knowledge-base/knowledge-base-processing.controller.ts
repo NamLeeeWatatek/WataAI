@@ -10,7 +10,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseProcessingController {
-  constructor(private readonly processingQueue: KBProcessingQueueService) { }
+  constructor(private readonly processingQueue: KBProcessingQueueService) {}
 
   @Get(':id/processing-status')
   @ApiOperation({ summary: 'Get processing status for knowledge base' })

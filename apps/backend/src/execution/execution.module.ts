@@ -30,4 +30,4 @@ import { ExecutionStrategyResolver } from './execution-strategy.resolver';
   ],
   exports: [ExecutionQueueModule, HttpExecutionStrategy],
 })
-export class ExecutionModule { }
+export class ExecutionModule {}

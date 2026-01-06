@@ -10,8 +10,8 @@ import {
 import { cn } from "@/lib/utils"
 import { Pagination, type PaginationInfo } from "./Pagination"
 import { Search as SearchInput } from "./Search"
-import { LoadingLogo } from "./LoadingLogo"
 import { Checkbox } from "./Checkbox"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 import {
   Table,
@@ -381,11 +381,15 @@ export function DataTable<T>({
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-48 text-center bg-transparent border-0">
-                  <LoadingLogo size="sm" text="Loading data" />
-                </TableCell>
-              </TableRow>
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="hover:bg-transparent">
+                  {columns.map((column) => (
+                    <TableCell key={column.key} className="p-4">
+                      <Skeleton className="h-6 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : error ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center text-destructive">

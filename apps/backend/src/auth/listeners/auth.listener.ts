@@ -6,7 +6,7 @@ import { MailService } from '../../mail/mail.service';
 export class AuthEventListener {
   private readonly logger = new Logger(AuthEventListener.name);
 
-  constructor(private readonly mailService: MailService) { }
+  constructor(private readonly mailService: MailService) {}
 
   @OnEvent('user.registered', { async: true })
   async handleUserRegisteredEvent(payload: { email: string; hash: string }) {

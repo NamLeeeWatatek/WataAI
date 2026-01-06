@@ -417,7 +417,7 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                         >
                             {generating ? (
                                 <div className="flex items-center gap-2">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <div className="rounded-full h-4 w-4 border-b-2 border-white"></div>
                                     <span>Generating...</span>
                                 </div>
                             ) : (

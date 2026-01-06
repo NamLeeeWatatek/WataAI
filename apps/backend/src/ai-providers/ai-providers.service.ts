@@ -35,7 +35,7 @@ export class AiProvidersService {
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
-  ) { }
+  ) {}
 
   /**
    * Encrypt an API key
@@ -112,10 +112,17 @@ export class AiProvidersService {
 
     // Delegate verification logic to Model Service
     try {
-      await this.aiModelService.verifyConnection(config.provider.key, config.config);
+      await this.aiModelService.verifyConnection(
+        config.provider.key,
+        config.config,
+      );
     } catch (error) {
-      this.logger.warn(`Verification failed for user ${userId} config ${id}: ${error instanceof Error ? error.message : String(error)}`);
-      throw new BadRequestException(`Verification failed: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Verification failed for user ${userId} config ${id}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw new BadRequestException(
+        `Verification failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     // Update verified status
@@ -125,7 +132,7 @@ export class AiProvidersService {
       config: {
         ...currentConfigData,
         isVerified: true,
-      }
+      },
     });
 
     return true;
@@ -171,10 +178,16 @@ export class AiProvidersService {
   ): Promise<boolean> {
     // Explicitly check if config exists in the given scope
     if (scope === 'user') {
-      const config = await this.aiConfigService.getUserConfig(scopeId, configId);
+      const config = await this.aiConfigService.getUserConfig(
+        scopeId,
+        configId,
+      );
       return !!config;
     } else {
-      const config = await this.aiConfigService.getWorkspaceConfig(scopeId, configId);
+      const config = await this.aiConfigService.getWorkspaceConfig(
+        scopeId,
+        configId,
+      );
       return !!config;
     }
   }
@@ -198,7 +211,6 @@ export class AiProvidersService {
     return this.aiConfigService.getUsageStats(workspaceId, period);
   }
 
-
   // --- Chat & Generation Logic (Delegate to Model Service) ---
 
   private resolveProviderKey(model: string, explicitProvider?: string): string {
@@ -210,7 +222,11 @@ export class AiProvidersService {
     const modelLower = model.toLowerCase();
     if (modelLower.startsWith('gpt')) return 'openai';
     if (modelLower.startsWith('claude')) return 'anthropic';
-    if ((modelLower.includes('llama') || modelLower.includes('mistral')) && !modelLower.includes('gpt')) return 'ollama';
+    if (
+      (modelLower.includes('llama') || modelLower.includes('mistral')) &&
+      !modelLower.includes('gpt')
+    )
+      return 'ollama';
 
     // Default fallback
     return 'google';
@@ -226,10 +242,17 @@ export class AiProvidersService {
     useTools?: boolean,
   ): Promise<string> {
     const providerKey = this.resolveProviderKey(model, provider);
-    const key = apiKey || await this.getApiKey(providerKey);
+    const key = apiKey || (await this.getApiKey(providerKey));
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
 
-    return this.dispatchChat(providerKey, messages, model, key, baseUrl, useTools);
+    return this.dispatchChat(
+      providerKey,
+      messages,
+      model,
+      key,
+      baseUrl,
+      useTools,
+    );
   }
 
   async generateEmbedding(
@@ -237,9 +260,15 @@ export class AiProvidersService {
     provider: string,
     model: string,
     apiKey?: string,
-    options?: { baseUrl?: string }
+    options?: { baseUrl?: string },
   ): Promise<number[]> {
-    return this.aiModelService.generateEmbedding(text, provider, model, apiKey, options?.baseUrl);
+    return this.aiModelService.generateEmbedding(
+      text,
+      provider,
+      model,
+      apiKey,
+      options?.baseUrl,
+    );
   }
 
   async generateEmbeddingUsingProvider(
@@ -251,11 +280,17 @@ export class AiProvidersService {
   ): Promise<number[]> {
     let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
     if (scope === 'user') {
-      const c = await this.aiConfigService.getUserConfig(scopeId, providerConfigId);
+      const c = await this.aiConfigService.getUserConfig(
+        scopeId,
+        providerConfigId,
+      );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     } else {
-      const c = await this.aiConfigService.getWorkspaceConfig(scopeId, providerConfigId);
+      const c = await this.aiConfigService.getWorkspaceConfig(
+        scopeId,
+        providerConfigId,
+      );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     }
@@ -270,13 +305,18 @@ export class AiProvidersService {
       config.provider.key.toLowerCase(),
       model,
       apiKey,
-      baseUrl
+      baseUrl,
     );
   }
 
-  async chatWithHistory(messages: ChatMessage[], model: string, apiKey?: string, baseUrl?: string): Promise<string> {
+  async chatWithHistory(
+    messages: ChatMessage[],
+    model: string,
+    apiKey?: string,
+    baseUrl?: string,
+  ): Promise<string> {
     const providerKey = this.resolveProviderKey(model);
-    const key = apiKey || await this.getApiKey(providerKey);
+    const key = apiKey || (await this.getApiKey(providerKey));
 
     return this.dispatchChat(providerKey, messages, model, key, baseUrl);
   }
@@ -291,11 +331,17 @@ export class AiProvidersService {
     let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
 
     if (scope === 'user') {
-      const c = await this.aiConfigService.getUserConfig(scopeId, providerConfigId);
+      const c = await this.aiConfigService.getUserConfig(
+        scopeId,
+        providerConfigId,
+      );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     } else {
-      const c = await this.aiConfigService.getWorkspaceConfig(scopeId, providerConfigId);
+      const c = await this.aiConfigService.getWorkspaceConfig(
+        scopeId,
+        providerConfigId,
+      );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     }
@@ -304,7 +350,9 @@ export class AiProvidersService {
 
     const providerKey = config.provider.key.toLowerCase();
     const apiKey = config.config.apiKey as string;
-    const baseUrl = (config.config.baseUrl || config.config.baseURL) as string | undefined;
+    const baseUrl = (config.config.baseUrl || config.config.baseURL) as
+      | string
+      | undefined;
 
     return this.dispatchChat(providerKey, messages, model, apiKey, baseUrl);
   }
@@ -315,19 +363,38 @@ export class AiProvidersService {
     model: string,
     apiKey: string,
     baseUrl?: string,
-    useTools?: boolean
+    useTools?: boolean,
   ): Promise<string> {
     if (providerKey === 'google') {
-      return this.aiModelService.chatWithGoogleHistory(messages, model, apiKey, useTools);
+      return this.aiModelService.chatWithGoogleHistory(
+        messages,
+        model,
+        apiKey,
+        useTools,
+      );
     }
     if (providerKey === 'openai') {
-      return this.aiModelService.chatWithOpenAIHistory(messages, model, apiKey, baseUrl);
+      return this.aiModelService.chatWithOpenAIHistory(
+        messages,
+        model,
+        apiKey,
+        baseUrl,
+      );
     }
     if (providerKey === 'anthropic') {
-      return this.aiModelService.chatWithAnthropicHistory(messages, model, apiKey);
+      return this.aiModelService.chatWithAnthropicHistory(
+        messages,
+        model,
+        apiKey,
+      );
     }
     if (providerKey === 'ollama') {
-      return this.aiModelService.chatWithOllamaHistory(messages, model, baseUrl, apiKey);
+      return this.aiModelService.chatWithOllamaHistory(
+        messages,
+        model,
+        baseUrl,
+        apiKey,
+      );
     }
 
     throw new BadRequestException(`Unsupported provider: ${providerKey}`);
@@ -344,17 +411,26 @@ export class AiProvidersService {
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     } else {
-      const c = await this.aiConfigService.getWorkspaceConfig(contextId, configId);
+      const c = await this.aiConfigService.getWorkspaceConfig(
+        contextId,
+        configId,
+      );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
     }
 
     if (!config.provider) throw new BadRequestException('Provider not loaded');
 
-    return this.aiModelService.fetchRemoteModels(config.provider.key, config.config);
+    return this.aiModelService.fetchRemoteModels(
+      config.provider.key,
+      config.config,
+    );
   }
 
-  async fetchModelsFromDirectConfig(providerId: string, config: Record<string, any>): Promise<string[]> {
+  async fetchModelsFromDirectConfig(
+    providerId: string,
+    config: Record<string, any>,
+  ): Promise<string[]> {
     const provider = await this.getProviderById(providerId);
     if (!provider) throw new NotFoundException('Provider not found');
     return this.aiModelService.fetchRemoteModels(provider.key, config);
@@ -407,7 +483,9 @@ export class AiProvidersService {
 
     if (!apiKey) {
       this.logger.error(`Missing API Key for provider: ${providerKey}`);
-      throw new InternalServerErrorException(`Missing API configuration for ${providerKey}`);
+      throw new InternalServerErrorException(
+        `Missing API configuration for ${providerKey}`,
+      );
     }
 
     return apiKey;

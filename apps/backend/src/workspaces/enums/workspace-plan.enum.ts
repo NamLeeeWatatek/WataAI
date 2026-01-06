@@ -1,6 +1,6 @@
 export enum WorkspacePlan {
-    FREE = 'free',
-    STARTER = 'starter',
-    PRO = 'pro',
-    ENTERPRISE = 'enterprise',
+  FREE = 'free',
+  STARTER = 'starter',
+  PRO = 'pro',
+  ENTERPRISE = 'enterprise',
 }

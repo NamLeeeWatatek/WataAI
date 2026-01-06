@@ -65,7 +65,7 @@ export function WidgetDeploymentHistory({ deployments, isLoading }: Props) {
             case 'deploying':
                 return (
                     <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase tracking-[0.2em] border-none">
-                        <Clock className="w-3 h-3 animate-spin mr-1.5" />
+                        <Clock className="w-3 h-3 mr-1.5" />
                         Syncing
                     </Badge>
                 );

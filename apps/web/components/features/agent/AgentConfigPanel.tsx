@@ -104,7 +104,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
         return (
             <div className="fixed inset-0 bg-background/60 backdrop-blur-md z-50 flex items-center justify-center">
                 <Card className="p-10 flex flex-col items-center gap-4 border-none">
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <Loader2 className="w-10 h-10 text-primary" />
                     <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Synchronizing Intelligence...</p>
                 </Card>
             </div>
@@ -283,7 +283,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                         className="px-8 font-black uppercase tracking-widest text-[11px]"
                     >
                         {saving ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 mr-2" />
                         ) : (
                             <Save className="w-4 h-4 mr-2" />
                         )}

@@ -59,6 +59,9 @@ export class UserEntity extends EntityRelationalHelper {
   @Index()
   socialId?: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  notificationPreferences?: Record<string, any> | null;
+
   @Column({ name: 'external_id', type: String, unique: true, nullable: true })
   externalId?: string | null;
 

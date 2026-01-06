@@ -33,7 +33,7 @@ import { RoleEnum } from './roles.enum';
   version: '1',
 })
 export class RolesController {
-  constructor(private readonly rolesService: RolesService) { }
+  constructor(private readonly rolesService: RolesService) {}
 
   @ApiOperation({ summary: 'Create new role' })
   @Roles(RoleEnum.admin)

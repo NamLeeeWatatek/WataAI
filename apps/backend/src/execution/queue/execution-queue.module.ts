@@ -12,4 +12,4 @@ import { JOB_QUEUE } from './execution-queue.constants';
   providers: [ExecutionQueueService],
   exports: [BullModule, ExecutionQueueService],
 })
-export class ExecutionQueueModule { }
+export class ExecutionQueueModule {}

@@ -14,7 +14,7 @@ export class ChannelEventListener {
     private readonly eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => ChannelsService))
     private readonly channelsService: ChannelsService,
-  ) { }
+  ) {}
 
   @OnEvent('channel.message.send')
   async handleSendChannelMessage(event: SendChannelMessageEvent) {

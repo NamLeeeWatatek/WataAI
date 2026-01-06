@@ -16,7 +16,7 @@ export class BotSeedService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) { }
+  ) {}
 
   async run() {
     const count = await this.repository.count();

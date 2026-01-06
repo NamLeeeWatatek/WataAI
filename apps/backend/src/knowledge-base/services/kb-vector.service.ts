@@ -1,4 +1,8 @@
-﻿import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
+﻿import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
@@ -37,7 +41,9 @@ export class KBVectorService {
           apiKey: qdrantApiKey,
         });
         this.isAvailable = true;
-        this.logger.log('🚀 Qdrant vector service initialized (ready for lazy init)');
+        this.logger.log(
+          '🚀 Qdrant vector service initialized (ready for lazy init)',
+        );
       } catch (error) {
         this.isAvailable = false;
         this.logger.error(
@@ -69,7 +75,8 @@ export class KBVectorService {
    * If it exists with a DIFFERENT dimension, it throws a specific error.
    */
   public async ensureCollection(dimension: number): Promise<string> {
-    if (!this.qdrantClient) throw new InternalServerErrorException('Qdrant not available');
+    if (!this.qdrantClient)
+      throw new InternalServerErrorException('Qdrant not available');
 
     const collectionName = this.getCollectionName(dimension);
 
@@ -87,7 +94,9 @@ export class KBVectorService {
         );
 
         if (!exists) {
-          this.logger.log(`🏗️ Creating collection '${collectionName}' with dimension ${dimension}...`);
+          this.logger.log(
+            `🏗️ Creating collection '${collectionName}' with dimension ${dimension}...`,
+          );
           await this.qdrantClient!.createCollection(collectionName, {
             vectors: {
               size: dimension,
@@ -99,9 +108,14 @@ export class KBVectorService {
 
         // Check existing dimension
         const info = await this.qdrantClient!.getCollection(collectionName);
-        const params = info.config?.params as unknown as { vectors?: { size?: number; default?: { size: number } } };
+        const params = info.config?.params as unknown as {
+          vectors?: { size?: number; default?: { size: number } };
+        };
         const vectors = params?.vectors;
-        const currentSize = typeof vectors?.size === 'number' ? vectors.size : vectors?.default?.size;
+        const currentSize =
+          typeof vectors?.size === 'number'
+            ? vectors.size
+            : vectors?.default?.size;
 
         if (currentSize && currentSize !== dimension) {
           const errorMsg = `Dimension mismatch in collection '${collectionName}'. Expected ${currentSize}, but received ${dimension}.`;
@@ -155,7 +169,9 @@ export class KBVectorService {
     } catch (error) {
       this.logger.error(`Error upserting vector: ${error.message}`);
       if (error.data) {
-        this.logger.error(`Qdrant error details: ${JSON.stringify(error.data)}`);
+        this.logger.error(
+          `Qdrant error details: ${JSON.stringify(error.data)}`,
+        );
       }
       throw error;
     }
@@ -216,7 +232,9 @@ export class KBVectorService {
         points: [id],
       });
     } catch (error) {
-      this.logger.error(`Error deleting vector from ${this.getCollectionName(dimension)}: ${error.message}`);
+      this.logger.error(
+        `Error deleting vector from ${this.getCollectionName(dimension)}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -242,7 +260,9 @@ export class KBVectorService {
         filter: this.buildFilter(deleteFilter),
       });
     } catch (error) {
-      this.logger.error(`Error deleting by filter in ${this.getCollectionName(dimension)}: ${error.message}`);
+      this.logger.error(
+        `Error deleting by filter in ${this.getCollectionName(dimension)}: ${error.message}`,
+      );
       throw error;
     }
   }
@@ -385,7 +405,9 @@ export class KBVectorService {
     if (!this.qdrantClient) return;
 
     const collectionName = this.getCollectionName(dimension);
-    this.logger.log(`Creating payload index for 'content' in ${collectionName}...`);
+    this.logger.log(
+      `Creating payload index for 'content' in ${collectionName}...`,
+    );
 
     try {
       await this.qdrantClient.createPayloadIndex(collectionName, {
@@ -406,7 +428,7 @@ export class KBVectorService {
     query: string,
     workspaceId: string,
     limit: number = 5,
-    dimension: number = 1536 // Default to common dim if unknown
+    dimension: number = 1536, // Default to common dim if unknown
   ): Promise<SearchResult[]> {
     if (!this.qdrantClient) return [];
 
@@ -422,25 +444,26 @@ export class KBVectorService {
           must: [
             {
               key: 'workspace_id',
-              match: { value: workspaceId }
+              match: { value: workspaceId },
             },
             {
               key: 'content',
-              match: { text: query } // Full-Text Match
-            }
-          ]
-        }
+              match: { text: query }, // Full-Text Match
+            },
+          ],
+        },
       });
 
-      return result.points.map(point => ({
+      return result.points.map((point) => ({
         id: point.id as string,
         score: 1.0, // Payload matching doesn't score by default unless we use 'recommend' or newer APIs. RRF handles ranking.
-        payload: point.payload as Record<string, any>
+        payload: point.payload as Record<string, any>,
       }));
-
     } catch (error) {
       // Fallback: If collection doesn't exist (e.g. wrong dimension), return empty
-      this.logger.debug(`Payload search failed (likely collection miss): ${error.message}`);
+      this.logger.debug(
+        `Payload search failed (likely collection miss): ${error.message}`,
+      );
       return [];
     }
   }

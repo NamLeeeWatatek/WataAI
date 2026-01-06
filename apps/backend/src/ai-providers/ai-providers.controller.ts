@@ -50,7 +50,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'ai-providers', version: '1' })
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   // Get all available AI providers (global list)
   @Get()
@@ -75,8 +75,14 @@ export class AiProvidersController {
   @ApiOperation({ summary: 'Create user AI provider config' })
   @ApiCreatedResponse({ type: UserAiProviderConfig })
   @HttpCode(HttpStatus.CREATED)
-  async createUserConfig(@Body() dto: CreateUserAiProviderConfigDto, @Request() req) {
-    const config = await this.aiProvidersService.createUserConfig(req.user.id, dto);
+  async createUserConfig(
+    @Body() dto: CreateUserAiProviderConfigDto,
+    @Request() req,
+  ) {
+    const config = await this.aiProvidersService.createUserConfig(
+      req.user.id,
+      dto,
+    );
     return {
       ...config,
       config: this.aiProvidersService.maskConfig(config.config),
@@ -119,7 +125,11 @@ export class AiProvidersController {
     @Body() dto: UpdateUserAiProviderConfigDto,
     @Request() req,
   ) {
-    const config = await this.aiProvidersService.updateUserConfig(req.user.id, id, dto);
+    const config = await this.aiProvidersService.updateUserConfig(
+      req.user.id,
+      id,
+      dto,
+    );
     return {
       ...config,
       config: this.aiProvidersService.maskConfig(config.config),
@@ -153,7 +163,10 @@ export class AiProvidersController {
     @Param('workspaceId') workspaceId: string,
     @Body() dto: CreateWorkspaceAiProviderConfigDto,
   ) {
-    const config = await this.aiProvidersService.createWorkspaceConfig(workspaceId, dto);
+    const config = await this.aiProvidersService.createWorkspaceConfig(
+      workspaceId,
+      dto,
+    );
     return {
       ...config,
       config: this.aiProvidersService.maskConfig(config.config),
@@ -166,7 +179,8 @@ export class AiProvidersController {
   @ApiOkResponse({ type: [WorkspaceAiProviderConfig] })
   @ApiParam({ name: 'workspaceId', type: String })
   async getWorkspaceConfigs(@Param('workspaceId') workspaceId: string) {
-    const configs = await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
+    const configs =
+      await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
     return configs.map((c) => ({
       ...c,
       config: this.aiProvidersService.maskConfig(c.config),
@@ -183,7 +197,10 @@ export class AiProvidersController {
     @Param('workspaceId') workspaceId: string,
     @Param('id') id: string,
   ) {
-    const config = await this.aiProvidersService.getWorkspaceConfig(workspaceId, id);
+    const config = await this.aiProvidersService.getWorkspaceConfig(
+      workspaceId,
+      id,
+    );
     if (!config) return null;
     return {
       ...config,
@@ -202,7 +219,11 @@ export class AiProvidersController {
     @Param('id') id: string,
     @Body() dto: UpdateWorkspaceAiProviderConfigDto,
   ) {
-    const config = await this.aiProvidersService.updateWorkspaceConfig(workspaceId, id, dto);
+    const config = await this.aiProvidersService.updateWorkspaceConfig(
+      workspaceId,
+      id,
+      dto,
+    );
     return {
       ...config,
       config: this.aiProvidersService.maskConfig(config.config),

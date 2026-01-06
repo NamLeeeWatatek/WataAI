@@ -11,9 +11,10 @@ export class FilesService {
     private readonly fileRepository: FileRepository,
     private readonly auditService: AuditService,
     @Inject('FILE_DRIVER') private readonly fileDriver: FileDriver,
-  ) { }
+  ) {}
 
-  private readonly uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  private readonly uuidRegex =
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
   findById(id: FileType['id']): Promise<NullableType<FileType>> {
     return this.fileRepository.findById(id);
@@ -55,7 +56,10 @@ export class FilesService {
   }
 
   async create(
-    file: Express.Multer.File | Express.MulterS3.File | { fileName: string; fileSize: number; bucket?: string },
+    file:
+      | Express.Multer.File
+      | Express.MulterS3.File
+      | { fileName: string; fileSize: number; bucket?: string },
     workspaceId?: string,
     userId?: string,
   ): Promise<{

@@ -124,7 +124,7 @@ export function FileDropzone({
                             </>
                         ) : (
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent" />
                             </div>
                         )}
                     </div>

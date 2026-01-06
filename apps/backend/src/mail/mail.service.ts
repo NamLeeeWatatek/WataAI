@@ -14,7 +14,7 @@ export class MailService {
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<AllConfigType>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async userSignUp(mailData: MailData<{ hash: string }>): Promise<void> {
     const context = I18nContext.current();
@@ -40,11 +40,7 @@ export class MailService {
       to: mailData.to,
       subject: emailConfirmTitle,
       text: `${url.toString()} ${emailConfirmTitle}`,
-      templatePath: path.join(
-        __dirname,
-        'mail-templates',
-        'activation.hbs',
-      ),
+      templatePath: path.join(__dirname, 'mail-templates', 'activation.hbs'),
       context: {
         title: emailConfirmTitle,
         url: url.toString(),
@@ -179,11 +175,7 @@ export class MailService {
       to: mailData.to,
       subject: subject,
       text: `${url.toString()} ${subject}`,
-      templatePath: path.join(
-        __dirname,
-        'mail-templates',
-        'invitation.hbs',
-      ),
+      templatePath: path.join(__dirname, 'mail-templates', 'invitation.hbs'),
       context: {
         title: title,
         url: url.toString(),

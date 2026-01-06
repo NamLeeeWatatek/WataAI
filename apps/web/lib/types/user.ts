@@ -27,6 +27,15 @@ export interface User {
     createdAt: string;
     updatedAt: string;
     permissions?: Record<string, any>;
+    notificationPreferences?: {
+        desktop?: boolean;
+        sound?: boolean;
+        messagePreview?: boolean;
+        onlyWhenInactive?: boolean;
+        doNotDisturb?: boolean;
+        mutedConversations?: string[];
+        [key: string]: any;
+    };
 }
 
 export interface CreateUserDto {
@@ -44,4 +53,5 @@ export interface CreateUserDto {
 
 export interface UpdateUserDto extends Partial<CreateUserDto> {
     id?: string;
+    notificationPreferences?: Record<string, any>;
 }

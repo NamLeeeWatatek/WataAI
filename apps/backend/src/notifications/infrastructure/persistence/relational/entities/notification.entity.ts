@@ -33,6 +33,9 @@ export class NotificationEntity extends EntityRelationalHelper {
   @Index()
   isRead: boolean;
 
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any>;
+
   @CreateDateColumn({ name: 'created_at' })
   @Index()
   createdAt: Date;

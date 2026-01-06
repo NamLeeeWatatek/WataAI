@@ -18,7 +18,7 @@ export class NotificationsService {
     private notificationRepo: Repository<NotificationEntity>,
     @Inject(forwardRef(() => NotificationsGateway))
     private notificationsGateway: NotificationsGateway,
-  ) { }
+  ) {}
 
   async create(data: {
     userId: string;
@@ -26,6 +26,7 @@ export class NotificationsService {
     title: string;
     message: string;
     type?: 'info' | 'success' | 'warning' | 'error';
+    metadata?: Record<string, any>;
   }) {
     const notification = this.notificationRepo.create({
       ...data,
@@ -40,7 +41,9 @@ export class NotificationsService {
       this.notificationsGateway.broadcastUnreadCountUpdate(data.userId);
     } catch (error) {
       // Log error but don't fail the notification creation
-      this.logger.error(`Failed to emit real-time notification: ${error.message}`);
+      this.logger.error(
+        `Failed to emit real-time notification: ${error.message}`,
+      );
     }
 
     return savedNotification;

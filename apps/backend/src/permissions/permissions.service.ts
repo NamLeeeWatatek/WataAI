@@ -23,10 +23,12 @@ export class PermissionsService {
     private readonly permissionRepository: Repository<PermissionEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private readonly workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async findAll(search?: string) {
-    let where: FindOptionsWhere<PermissionEntity> | FindOptionsWhere<PermissionEntity>[] = {};
+    let where:
+      | FindOptionsWhere<PermissionEntity>
+      | FindOptionsWhere<PermissionEntity>[] = {};
     if (search) {
       where = [
         { resource: Like(`%${search}%`) },
@@ -127,10 +129,13 @@ export class PermissionsService {
     };
 
     const mapPermissions = (resourceActions: Record<string, string>) => {
-      return Object.entries(resourceActions).reduce((acc, [key, action]) => {
-        acc[key] = check(action);
-        return acc;
-      }, {} as Record<string, boolean>);
+      return Object.entries(resourceActions).reduce(
+        (acc, [key, action]) => {
+          acc[key] = check(action);
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      );
     };
 
     const can_create = mapPermissions({
@@ -155,12 +160,24 @@ export class PermissionsService {
         settings: PermissionConstants.SYSTEM.READ_SETTINGS,
         audit: PermissionConstants.SYSTEM.READ_AUDIT_LOGS,
       }),
-      user: check(PermissionConstants.IAM.LIST_USERS) || check(PermissionConstants.IAM.GET),
-      role: check(PermissionConstants.IAM.LIST_ROLES) || check(PermissionConstants.IAM.GET_ROLE),
-      flow: check(PermissionConstants.FLOW.LIST) || check(PermissionConstants.FLOW.GET),
-      template: check(PermissionConstants.TEMPLATE.LIST) || check(PermissionConstants.TEMPLATE.GET),
-      bot: check(PermissionConstants.BOT.LIST) || check(PermissionConstants.BOT.GET),
-      job: check(PermissionConstants.JOB.LIST) || check(PermissionConstants.JOB.GET),
+      user:
+        check(PermissionConstants.IAM.LIST_USERS) ||
+        check(PermissionConstants.IAM.GET),
+      role:
+        check(PermissionConstants.IAM.LIST_ROLES) ||
+        check(PermissionConstants.IAM.GET_ROLE),
+      flow:
+        check(PermissionConstants.FLOW.LIST) ||
+        check(PermissionConstants.FLOW.GET),
+      template:
+        check(PermissionConstants.TEMPLATE.LIST) ||
+        check(PermissionConstants.TEMPLATE.GET),
+      bot:
+        check(PermissionConstants.BOT.LIST) ||
+        check(PermissionConstants.BOT.GET),
+      job:
+        check(PermissionConstants.JOB.LIST) ||
+        check(PermissionConstants.JOB.GET),
     };
 
     const can_update = mapPermissions({
@@ -201,8 +218,12 @@ export class PermissionsService {
       },
       widgets: {
         user_management: check(PermissionConstants.IAM.LIST_USERS),
-        flow_builder: check(PermissionConstants.FLOW.CREATE) || check(PermissionConstants.FLOW.UPDATE),
-        template_editor: check(PermissionConstants.TEMPLATE.CREATE) || check(PermissionConstants.TEMPLATE.UPDATE),
+        flow_builder:
+          check(PermissionConstants.FLOW.CREATE) ||
+          check(PermissionConstants.FLOW.UPDATE),
+        template_editor:
+          check(PermissionConstants.TEMPLATE.CREATE) ||
+          check(PermissionConstants.TEMPLATE.UPDATE),
         bot_manager: check(PermissionConstants.BOT.LIST),
         channel_manager: check(PermissionConstants.CHANNEL.LIST),
         integration_manager: check(PermissionConstants.INTEGRATION.LIST),

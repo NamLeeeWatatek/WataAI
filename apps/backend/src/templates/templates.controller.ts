@@ -36,7 +36,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
   version: '1',
 })
 export class TemplatesController {
-  constructor(private readonly templatesService: TemplatesService) { }
+  constructor(private readonly templatesService: TemplatesService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

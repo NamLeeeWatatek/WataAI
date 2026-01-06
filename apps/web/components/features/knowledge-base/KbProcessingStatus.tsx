@@ -87,7 +87,7 @@ export function KBProcessingStatus({ knowledgeBaseId, onProcessingComplete }: KB
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <CardTitle className="text-sm font-semibold">Processing Documents</CardTitle>
                     </div>

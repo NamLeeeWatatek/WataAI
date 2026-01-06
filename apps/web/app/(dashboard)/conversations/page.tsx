@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
-import { useNotificationPreferences } from '@/components/features/notifications/NotificationSettings';
+import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import {
   MessageSquare,
   Clock,
@@ -45,7 +45,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { ChatInterface } from '@/components/features/chat/ChatInterface';
-import { NotificationSettings } from '@/components/features/notifications/NotificationSettings';
 import axiosClient from '@/lib/axios-client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -105,7 +104,6 @@ function ConversationsPageContent() {
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
 
   // ✅ FIX: Use local state instead of URL params for selected conversation
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -587,7 +585,7 @@ function ConversationsPageContent() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowNotificationSettings(true)}
+                onClick={() => router.push('/settings?tab=notifications')}
                 className="h-9 w-9 rounded-xl hover:bg-muted/80 relative"
                 title="Notification settings"
               >
@@ -792,12 +790,6 @@ function ConversationsPageContent() {
           </div>
         )}
       </div>
-
-      {/* Notification Settings Modal */}
-      <NotificationSettings
-        isOpen={showNotificationSettings}
-        onClose={() => setShowNotificationSettings(false)}
-      />
     </div>
   );
 }

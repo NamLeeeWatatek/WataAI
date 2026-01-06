@@ -5,12 +5,12 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Badge } from '@/components/ui/Badge';
-import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import { Pagination, PaginationInfo } from '@/components/ui/Pagination';
 import { Folder, MoreVertical, Eye, Download, Edit2, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
 import { KbFileIcon } from './KbFileIcon';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface KbItem {
   id: string;
@@ -95,8 +95,22 @@ export function KbGridView({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <LoadingLogo size="md" text="Scanning objects..." />
+      <div className="flex-1 space-y-4">
+        <div className="flex justify-end px-1">
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Card key={i} className="p-5 flex flex-col items-center text-center bg-muted/5 border border-border/50">
+              <Skeleton className="w-20 h-20 rounded-2xl mb-5" />
+              <Skeleton className="h-4 w-3/4 mb-4" />
+              <div className="flex items-center justify-between w-full mt-4">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }

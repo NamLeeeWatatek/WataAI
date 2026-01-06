@@ -27,7 +27,10 @@ import {
   MessageResponseDto,
   ConversationMessagesResponseDto,
 } from '../dto/public-bot.dto';
-import { KBRagService, ChunkSource } from '../../knowledge-base/services/kb-rag.service';
+import {
+  KBRagService,
+  ChunkSource,
+} from '../../knowledge-base/services/kb-rag.service';
 
 import { WidgetVersionService } from './widget-version.service';
 
@@ -48,7 +51,7 @@ export class PublicBotService {
 
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getBotConfig(
     botId: string,
@@ -228,16 +231,18 @@ export class PublicBotService {
         dto.message,
         bot.id,
         undefined,
-        history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        bot.aiModelName || undefined
+        history.map((m) => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        })),
+        bot.aiModelName || undefined,
       );
 
       aiContent = ragResult.answer;
       sources = ragResult.sources;
 
       // Flatten context for logging or metadata if needed
-      context = ragResult.sources.map(s => s.content).join('\n\n');
-
+      context = ragResult.sources.map((s) => s.content).join('\n\n');
     } catch (error) {
       this.logger.error(`AI generation failed: ${error.message}`);
       aiContent =
@@ -322,8 +327,6 @@ export class PublicBotService {
       })),
     };
   }
-
-
 
   private isOriginAllowed(allowedOrigins: string[], origin: string): boolean {
     if (allowedOrigins.includes('*')) {

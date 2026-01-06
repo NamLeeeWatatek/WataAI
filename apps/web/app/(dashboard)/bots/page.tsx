@@ -344,7 +344,7 @@ export default function BotsPage() {
                                             className="w-full font-bold transition-all h-10 group/btn"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
-                                            <Settings className="w-4 h-4 mr-2 transition-transform duration-500 group-hover/btn:rotate-90" />
+                                            <Settings className="w-4 h-4 mr-2 transition-transform duration-500 " />
                                             Configure Agent
                                         </Button>
                                     </div>

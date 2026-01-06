@@ -519,7 +519,7 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
                     <div className="h-[300px] overflow-y-auto border rounded-md divide-y">
                         {loading ? (
                             <div className="flex h-full items-center justify-center">
-                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                                <Loader2 className="w-6 h-6 text-muted-foreground" />
                             </div>
                         ) : templates.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

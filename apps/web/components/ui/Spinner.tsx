@@ -1,11 +1,11 @@
 'use client'
 
-import { Loader2Icon } from 'lucide-react'
+import { Loader2Icon, type LucideProps } from 'lucide-react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const spinnerVariants = cva(
-  'animate-spin',
+  '',
   {
     variants: {
       size: {
@@ -31,7 +31,7 @@ const spinnerVariants = cva(
 )
 
 export interface SpinnerProps
-  extends React.ComponentProps<'svg'>,
+  extends Omit<LucideProps, 'ref' | 'size'>,
   VariantProps<typeof spinnerVariants> { }
 
 /**

@@ -26,7 +26,7 @@ export class KBProcessingQueueService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     @InjectQueue('kb-processing') private readonly kbQueue: Queue,
-  ) { }
+  ) {}
 
   async addJob(
     documentId: string,
@@ -48,7 +48,9 @@ export class KBProcessingQueueService {
     };
 
     this.jobs.set(internalJobId, jobStatus);
-    this.logger.log(`📥 Job ${internalJobId} added to memory status and BullMQ`);
+    this.logger.log(
+      `📥 Job ${internalJobId} added to memory status and BullMQ`,
+    );
 
     // Add to BullMQ
     await this.kbQueue.add(

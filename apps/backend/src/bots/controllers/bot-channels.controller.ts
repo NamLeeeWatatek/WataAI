@@ -31,7 +31,7 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/channels', version: '1' })
 export class BotChannelsController {
-  constructor(private readonly botsService: BotsService) { }
+  constructor(private readonly botsService: BotsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get bot channels' })

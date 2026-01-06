@@ -13,7 +13,7 @@ export class GenerationJobsService {
     private readonly generationJobRepository: GenerationJobRepository,
     private readonly executionQueueService: ExecutionQueueService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async create(
     data: Omit<GenerationJob, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>,

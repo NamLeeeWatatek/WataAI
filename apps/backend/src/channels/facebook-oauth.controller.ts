@@ -35,7 +35,7 @@ export class FacebookOAuthController {
     private readonly channelStrategy: ChannelStrategy,
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
-  ) { }
+  ) {}
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -99,7 +99,9 @@ export class FacebookOAuthController {
   ) {
     // âœ… Handle Facebook OAuth errors
     if (error) {
-      throw new BadRequestException(errorDescription || 'Facebook OAuth failed');
+      throw new BadRequestException(
+        errorDescription || 'Facebook OAuth failed',
+      );
     }
 
     if (!code) {
@@ -310,7 +312,9 @@ export class FacebookOAuthController {
     });
 
     if (!result.success) {
-      throw new BadRequestException(result.error || 'Failed to send test message');
+      throw new BadRequestException(
+        result.error || 'Failed to send test message',
+      );
     }
 
     return {
