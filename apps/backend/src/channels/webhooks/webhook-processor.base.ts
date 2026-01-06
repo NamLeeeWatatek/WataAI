@@ -31,7 +31,7 @@ export abstract class BaseWebhookProcessor<TPayload = any> {
   constructor(
     protected readonly eventEmitter: EventEmitter2,
     protected readonly queueService: WebhookQueueService,
-  ) { }
+  ) {}
 
   /**
    * Main entry point - validates and queues processing
@@ -58,7 +58,7 @@ export abstract class BaseWebhookProcessor<TPayload = any> {
   /**
    * Async processing implementation
    * Override this in channel-specific processors
-   * 
+   *
    * NOW PUBLIC to be called by Workers
    */
   public abstract processPayload(

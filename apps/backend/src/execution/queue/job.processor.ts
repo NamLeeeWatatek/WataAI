@@ -99,7 +99,10 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
 
       // Inject System Metadata for External Tools (n8n, Make, etc.)
       // These variables are available in the Liquid template (e.g. {{_callbackUrl}})
-      const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || 'http://localhost:3000/api/v1';
+      const apiUrl =
+        process.env.BACKEND_DOMAIN ||
+        process.env.API_URL ||
+        'http://localhost:3000/api/v1';
       const systemInputs = {
         ...executionInputs,
         _jobId: jobEntity.id,
@@ -130,11 +133,20 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
       // Check for Async Pattern
       // If true, we do NOT complete the job here. We rely on external callback.
       if ((config as any).asyncPattern) {
-        this.logger.log(`Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`);
+        this.logger.log(
+          `Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`,
+        );
 
-        const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || 'http://localhost:3000';
-        this.logger.warn(`Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/v1/callbacks/jobs/${jobEntity.id}/complete`);
-        this.logger.warn(`If running locally, ensure n8n can reach your localhost (e.g. via ngrok) or DISABLE asyncPattern in tool config.`);
+        const apiUrl =
+          process.env.BACKEND_DOMAIN ||
+          process.env.API_URL ||
+          'http://localhost:3000';
+        this.logger.warn(
+          `Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/v1/callbacks/jobs/${jobEntity.id}/complete`,
+        );
+        this.logger.warn(
+          `If running locally, ensure n8n can reach your localhost (e.g. via ngrok) or DISABLE asyncPattern in tool config.`,
+        );
 
         return result; // Job in queue is "Done", but DB status remains PROCESSING
       }

@@ -15,7 +15,10 @@ import { IPaginationOptions } from '../../utils/types/pagination-options';
 import { BotKnowledgeBaseEntity } from '../../bots/infrastructure/persistence/relational/entities/bot.entity';
 import { KBDocumentsService } from './kb-documents.service';
 import { Inject, forwardRef } from '@nestjs/common';
-import { KnowledgeBaseDocumentEntity, KbDocumentEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
+import {
+  KnowledgeBaseDocumentEntity,
+  KbDocumentEntity,
+} from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 
 @Injectable()
 export class KBManagementService {
@@ -29,7 +32,7 @@ export class KBManagementService {
     @InjectRepository(KnowledgeBaseDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
     private readonly kbDocumentsService: KBDocumentsService,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateKnowledgeBaseDto) {
     const kb = this.kbRepository.create({

@@ -34,7 +34,7 @@ import { RoleEnum } from '../roles/roles.enum';
   version: '1',
 })
 export class PermissionsController {
-  constructor(private readonly permissionsService: PermissionsService) { }
+  constructor(private readonly permissionsService: PermissionsService) {}
 
   @Get('me/capabilities')
   @ApiOperation({ summary: 'Get current user capabilities and permissions' })

@@ -31,7 +31,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'notifications', version: '1' })
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) { }
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get user notifications' })

@@ -1,4 +1,10 @@
-﻿import { Injectable, NotFoundException, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+﻿import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../config/config.type';
@@ -40,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) { }
+  ) {}
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);
@@ -60,7 +66,7 @@ export class KBDocumentsService {
       if (knowledgeBaseId && userId) {
         try {
           const kb = await this.kbRepository.findOne({
-            where: { id: knowledgeBaseId }
+            where: { id: knowledgeBaseId },
           });
           if (!kb) throw new NotFoundException('Knowledge Base not found');
 
@@ -71,7 +77,6 @@ export class KBDocumentsService {
           );
         }
       }
-
 
       const uploadDto = {
         fileName: filename,
@@ -98,7 +103,9 @@ export class KBDocumentsService {
       });
 
       if (!uploadResponse.ok) {
-        throw new BadRequestException(`Upload failed with status ${uploadResponse.status}`);
+        throw new BadRequestException(
+          `Upload failed with status ${uploadResponse.status}`,
+        );
       }
 
       const fileUrl = result.uploadSignedUrl.split('?')[0];
@@ -110,11 +117,16 @@ export class KBDocumentsService {
         fileId: result.file.id,
       };
     } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
       this.logger.error(`â Œ Failed to upload file: ${error.message}`);
-      throw new InternalServerErrorException(`Failed to upload file to storage: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Failed to upload file to storage: ${error.message}`,
+      );
     }
   }
 
@@ -234,10 +246,7 @@ export class KBDocumentsService {
     if (sortOptions?.length) {
       sortOptions.forEach((sort) => {
         if (sort.orderBy) {
-          query.addOrderBy(
-            `doc.${sort.orderBy}`,
-            sort.order as 'ASC' | 'DESC',
-          );
+          query.addOrderBy(`doc.${sort.orderBy}`, sort.order as 'ASC' | 'DESC');
         }
       });
     } else {
@@ -404,15 +413,19 @@ export class KBDocumentsService {
     // Find dimension for document's KB to target the right collection
     let dimension = 768; // fallback
     try {
-      const kb = await this.kbRepository.findOne({ where: { id: document.knowledgeBaseId } });
+      const kb = await this.kbRepository.findOne({
+        where: { id: document.knowledgeBaseId },
+      });
       if (kb) {
         dimension = await this.embeddingsService.probeDimension(
           kb.aiProviderId || 'ollama', // fallback provider
-          kb.ragModel || 'mxbai-embed-large' // fallback model
+          kb.ragModel || 'mxbai-embed-large', // fallback model
         );
       }
     } catch (dimError) {
-      this.logger.warn(`Could not determine dimension for KB ${document.knowledgeBaseId}: ${dimError.message}`);
+      this.logger.warn(
+        `Could not determine dimension for KB ${document.knowledgeBaseId}: ${dimError.message}`,
+      );
     }
 
     for (const chunk of chunks) {

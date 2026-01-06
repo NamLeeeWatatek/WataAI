@@ -10,7 +10,7 @@ export class AiProviderSeedService {
   constructor(
     @InjectRepository(AiProviderEntity)
     private repository: Repository<AiProviderEntity>,
-  ) { }
+  ) {}
 
   async run() {
     const count = await this.repository.count();

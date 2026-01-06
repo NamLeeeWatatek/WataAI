@@ -50,7 +50,7 @@ export class KBRagService {
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -140,7 +140,7 @@ export class KBRagService {
         query,
         workspaceId,
         limit * 2,
-        queryEmbedding.length // Dynamic dimension from the actual embedding model
+        queryEmbedding.length, // Dynamic dimension from the actual embedding model
       );
 
       // 3. Merging with Reciprocal Rank Fusion (RRF)
@@ -428,12 +428,12 @@ export class KBRagService {
 
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiProviderId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiProviderId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -493,17 +493,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiProviderId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiProviderId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {
@@ -511,7 +511,8 @@ export class KBRagService {
       }
 
       const systemPrompt = bot?.systemPrompt || 'You are a helpful assistant.';
-      const defaultModel = bot?.aiModelName || model || KbAiConfig.defaults.model;
+      const defaultModel =
+        bot?.aiModelName || model || KbAiConfig.defaults.model;
 
       let effectiveKnowledgeBaseIds = knowledgeBaseIds;
 
@@ -601,9 +602,7 @@ export class KBRagService {
       }
     }
 
-    return allChunks
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+    return allChunks.sort((a, b) => b.score - a.score).slice(0, 10);
   }
 
   private buildMessages(
@@ -713,9 +712,8 @@ export class KBRagService {
 
     // Fallback: Try to find ANY configured provider for the workspace
     if (bot?.workspaceId) {
-      const workspaceConfigs = await this.aiProvidersService.getWorkspaceConfigs(
-        bot.workspaceId,
-      );
+      const workspaceConfigs =
+        await this.aiProvidersService.getWorkspaceConfigs(bot.workspaceId);
       if (workspaceConfigs.length > 0) {
         // Prefer verified configs if available
         const verifiedConfig =
@@ -732,9 +730,8 @@ export class KBRagService {
     // Fallback: Try to find ANY configured provider for the user
     const fallbackUserId = bot?.createdBy || 'system';
     try {
-      const userConfigs = await this.aiProvidersService.getUserConfigs(
-        fallbackUserId,
-      );
+      const userConfigs =
+        await this.aiProvidersService.getUserConfigs(fallbackUserId);
       if (userConfigs.length > 0) {
         const verifiedConfig =
           userConfigs.find((c) => c.config?.isVerified) || userConfigs[0];

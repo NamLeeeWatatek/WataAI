@@ -52,7 +52,8 @@ export class KBTextExtractorService {
           return await this.extractFromDOCX(buffer);
 
         case 'text/html':
-          return MarkdownProcessorUtil.htmlToMarkdown(buffer.toString('utf-8')).content;
+          return MarkdownProcessorUtil.htmlToMarkdown(buffer.toString('utf-8'))
+            .content;
 
         case 'text/plain':
         case 'text/markdown':
@@ -62,9 +63,7 @@ export class KBTextExtractorService {
           return buffer.toString('utf-8');
 
         default:
-          this.logger.warn(
-            `⚠️ Unknown mime type ${mimeType}, trying as text`,
-          );
+          this.logger.warn(`⚠️ Unknown mime type ${mimeType}, trying as text`);
           return buffer.toString('utf-8');
       }
     } catch (error) {
@@ -80,7 +79,8 @@ export class KBTextExtractorService {
       const pdfParser = new PDFParser();
 
       pdfParser.on('pdfParser_dataError', (errData: any) => {
-        const parserError = errData?.parserError || errData?.message || String(errData);
+        const parserError =
+          errData?.parserError || errData?.message || String(errData);
         this.logger.error(`PDF parsing error: ${parserError}`);
         reject(new Error(parserError));
       });
@@ -201,11 +201,15 @@ export class KBTextExtractorService {
         .trim();
 
       if (fullText.length > 50) {
-        this.logger.log(`PDF extraction completed (pdfjs-dist): ${fullText.length} chars`);
+        this.logger.log(
+          `PDF extraction completed (pdfjs-dist): ${fullText.length} chars`,
+        );
         return MarkdownProcessorUtil.cleanMarkdown(fullText);
       }
     } catch (error) {
-      this.logger.warn(`pdfjs-dist failed, falling back to pdf2json: ${error.message}`);
+      this.logger.warn(
+        `pdfjs-dist failed, falling back to pdf2json: ${error.message}`,
+      );
     }
 
     // Fallback to pdf2json
@@ -229,7 +233,9 @@ export class KBTextExtractorService {
         this.logger.warn(`DOCX extraction warnings: ${result.messages.length}`);
       }
 
-      this.logger.log(`✅ Extracted structured Markdown (${content.length} chars) from DOCX`);
+      this.logger.log(
+        `✅ Extracted structured Markdown (${content.length} chars) from DOCX`,
+      );
       return content;
     } catch (error) {
       this.logger.error(`Failed to parse DOCX: ${error.message}`);

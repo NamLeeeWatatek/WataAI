@@ -100,7 +100,7 @@ export function CoverUpload({
                         {loading ? (
                             <div className="space-y-4 w-full max-w-xs">
                                 <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary">
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent" />
                                     Uploading... {progress}%
                                 </div>
                                 <Progress value={progress} className="h-2" />

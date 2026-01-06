@@ -334,7 +334,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                         >
                                             {isFetchingModels ? (
                                                 <>
-                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    <Loader2 className="w-4 h-4 mr-2" />
                                                     Verifying Connection...
                                                 </>
                                             ) : (
@@ -408,7 +408,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 className="h-14 px-8 font-black flex-1 sm:flex-none shadow-xl shadow-primary/20"
                             >
                                 {saveMutation.isPending ? (
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    <Loader2 className="w-5 h-5 mr-2" />
                                 ) : (
                                     <Save className="w-5 h-5 mr-2" />
                                 )}

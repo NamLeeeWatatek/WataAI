@@ -19,7 +19,7 @@ export class TemplatesService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async create(
     createTemplateDto: CreateTemplateDto,

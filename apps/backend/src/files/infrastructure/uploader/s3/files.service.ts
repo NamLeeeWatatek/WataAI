@@ -14,7 +14,7 @@ export class FilesS3Service implements FileDriver {
   constructor(
     private readonly fileRepository: FileRepository,
     private readonly configService: ConfigService<AllConfigType>,
-  ) { }
+  ) {}
 
   async create(file: Express.MulterS3.File): Promise<{ file: FileType }> {
     if (!file) {

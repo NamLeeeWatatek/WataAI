@@ -59,7 +59,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) { }
+  ) {}
 
   @Permissions('kb:List')
   @Get()
@@ -161,12 +161,17 @@ export class KnowledgeBaseController {
 
     // Only fetch documents if we have space left or if we are past the folder region
     if (docLimit > 0 || docOffset > 0) {
-      const { data, total } = await this.documentsService.findManyWithPagination({
-        kbId,
-        filterOptions: { folderId: effectiveFolderId },
-        paginationOptions: { page: 1, limit: docLimit > 0 ? docLimit : 0, offset: docOffset }, // page:1 is dummy, relying on offset/limit
-        userId,
-      });
+      const { data, total } =
+        await this.documentsService.findManyWithPagination({
+          kbId,
+          filterOptions: { folderId: effectiveFolderId },
+          paginationOptions: {
+            page: 1,
+            limit: docLimit > 0 ? docLimit : 0,
+            offset: docOffset,
+          }, // page:1 is dummy, relying on offset/limit
+          userId,
+        });
       documents = data;
       totalDocs = total;
     } else {
@@ -349,7 +354,8 @@ export class KnowledgeBaseController {
   @ApiOperation({ summary: 'Get vector service diagnostics' })
   async getVectorDiagnostics() {
     const probeText = 'diagnostics_probe';
-    const embedding = await this.embeddingsService.generateQueryEmbedding(probeText);
+    const embedding =
+      await this.embeddingsService.generateQueryEmbedding(probeText);
     const dim = embedding.length;
 
     return {
@@ -407,10 +413,11 @@ export class KnowledgeBaseController {
       const probeText = 'dimension_probe_test';
 
       // We use generateQueryEmbedding which now uses the system default model
-      const embedding = await this.embeddingsService.generateQueryEmbedding(probeText);
+      const embedding =
+        await this.embeddingsService.generateQueryEmbedding(probeText);
       const dimension = embedding.length;
 
-      this.embeddingsService.probeDimension // Just verifying it exists
+      this.embeddingsService.probeDimension; // Just verifying it exists
 
       // 2. Recreate collection
       await this.vectorService.recreateCollection(dimension);

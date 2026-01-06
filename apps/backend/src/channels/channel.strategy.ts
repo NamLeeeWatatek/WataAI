@@ -11,7 +11,7 @@ import { ChannelsService } from './channels.service';
 export class ChannelStrategy {
   private providers = new Map<string, ChannelProvider>();
 
-  constructor(private channelsService: ChannelsService) { }
+  constructor(private channelsService: ChannelsService) {}
 
   register(channelType: string, provider: ChannelProvider): void {
     this.providers.set(channelType, provider);

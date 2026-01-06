@@ -44,7 +44,7 @@ export class KBCrawlerService {
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   async crawlUrl(url: string): Promise<CrawlResult> {
     try {
@@ -58,7 +58,10 @@ export class KBCrawlerService {
       });
 
       const html = response.data;
-      const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(html, url);
+      const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(
+        html,
+        url,
+      );
 
       const links: string[] = [];
       const dom = new JSDOM(html);
@@ -114,7 +117,9 @@ export class KBCrawlerService {
     } = options;
 
     if (respectRobotsTxt) {
-      this.logger.warn('Robots.txt respect requested but not yet fully implemented. Proceeding with caution.');
+      this.logger.warn(
+        'Robots.txt respect requested but not yet fully implemented. Proceeding with caution.',
+      );
     }
 
     const visitedUrls = new Set<string>();
@@ -159,8 +164,12 @@ export class KBCrawlerService {
         if (next && !visitedUrls.has(next.url)) {
           // Double check filters before adding to batch to save processing
           if (next.depth <= maxDepth) {
-            const matchesInclude = includePatterns.length === 0 || includePatterns.some(p => next.url.includes(p));
-            const matchesExclude = excludePatterns.length > 0 && excludePatterns.some(p => next.url.includes(p));
+            const matchesInclude =
+              includePatterns.length === 0 ||
+              includePatterns.some((p) => next.url.includes(p));
+            const matchesExclude =
+              excludePatterns.length > 0 &&
+              excludePatterns.some((p) => next.url.includes(p));
 
             if (matchesInclude && !matchesExclude) {
               visitedUrls.add(next.url);
@@ -173,82 +182,84 @@ export class KBCrawlerService {
       if (batch.length === 0) continue;
 
       // Process batch in parallel
-      await Promise.all(batch.map(async ({ url, depth }) => {
-        if (documentsCreated >= maxPages) return;
+      await Promise.all(
+        batch.map(async ({ url, depth }) => {
+          if (documentsCreated >= maxPages) return;
 
-        try {
-          // Check existence again to be safe (though race cond is minor here)
-          const existingDoc = await this.documentRepository.findOne({
-            where: {
-              knowledgeBaseId,
-              sourceUrl: url,
-            },
-          });
-
-          if (existingDoc) {
-            this.logger.log(`⭐️ Skipping ${url} - already exists`);
-            return;
-          }
-
-          const result = await this.crawlUrl(url);
-
-          if (!result.content || result.content.length === 0) {
-            errors.push(`${url}: No content found`);
-            return;
-          }
-
-          const document = this.documentRepository.create({
-            knowledgeBaseId,
-            workspaceId: kb.workspaceId,
-            folderId,
-            name: result.title,
-            title: result.title,
-            content: result.content,
-            metadata: result.metadata,
-            fileType: 'webpage',
-            mimeType: 'text/html',
-            fileSize: String(result.content.length),
-            processingStatus: KbProcessingStatus.PENDING,
-            createdBy: userId,
-            type: 'url',
-            sourceUrl: url,
-          });
-
-          const savedDoc = await this.documentRepository.save(document);
-          documentsCreated++;
-
-          // Start processing asynchronously via BullMQ
-          const jobId = await this.processingQueue.addJob(
-            savedDoc.id,
-            knowledgeBaseId,
-            'embedding',
-            userId,
-          );
-          this.processingQueue.setJobDocumentName(jobId, result.title);
-          processingStarted++;
-
-          this.logger.log(
-            `✅ Created document from ${url} (${documentsCreated}/${maxPages})`,
-          );
-
-          if (followLinks && depth < maxDepth) {
-            const baseDomain = new URL(startUrl).hostname;
-            result.links.forEach((link) => {
-              try {
-                const linkDomain = new URL(link).hostname;
-                if (linkDomain === baseDomain && !visitedUrls.has(link)) {
-                  urlsToCrawl.push({ url: link, depth: depth + 1 });
-                }
-              } catch (e) {
-                // Invalid URL, skip
-              }
+          try {
+            // Check existence again to be safe (though race cond is minor here)
+            const existingDoc = await this.documentRepository.findOne({
+              where: {
+                knowledgeBaseId,
+                sourceUrl: url,
+              },
             });
+
+            if (existingDoc) {
+              this.logger.log(`⭐️ Skipping ${url} - already exists`);
+              return;
+            }
+
+            const result = await this.crawlUrl(url);
+
+            if (!result.content || result.content.length === 0) {
+              errors.push(`${url}: No content found`);
+              return;
+            }
+
+            const document = this.documentRepository.create({
+              knowledgeBaseId,
+              workspaceId: kb.workspaceId,
+              folderId,
+              name: result.title,
+              title: result.title,
+              content: result.content,
+              metadata: result.metadata,
+              fileType: 'webpage',
+              mimeType: 'text/html',
+              fileSize: String(result.content.length),
+              processingStatus: KbProcessingStatus.PENDING,
+              createdBy: userId,
+              type: 'url',
+              sourceUrl: url,
+            });
+
+            const savedDoc = await this.documentRepository.save(document);
+            documentsCreated++;
+
+            // Start processing asynchronously via BullMQ
+            const jobId = await this.processingQueue.addJob(
+              savedDoc.id,
+              knowledgeBaseId,
+              'embedding',
+              userId,
+            );
+            this.processingQueue.setJobDocumentName(jobId, result.title);
+            processingStarted++;
+
+            this.logger.log(
+              `✅ Created document from ${url} (${documentsCreated}/${maxPages})`,
+            );
+
+            if (followLinks && depth < maxDepth) {
+              const baseDomain = new URL(startUrl).hostname;
+              result.links.forEach((link) => {
+                try {
+                  const linkDomain = new URL(link).hostname;
+                  if (linkDomain === baseDomain && !visitedUrls.has(link)) {
+                    urlsToCrawl.push({ url: link, depth: depth + 1 });
+                  }
+                } catch (e) {
+                  // Invalid URL, skip
+                }
+              });
+            }
+          } catch (error) {
+            this.logger.error(`Error crawling ${url}: ${error.message}`);
+            errors.push(`${url}: ${error.message}`);
           }
-        } catch (error) {
-          this.logger.error(`Error crawling ${url}: ${error.message}`);
-          errors.push(`${url}: ${error.message}`);
-        }
-      }));
+        }),
+      );
 
       this.processingQueue.updateJobProgress(
         crawlJobId,

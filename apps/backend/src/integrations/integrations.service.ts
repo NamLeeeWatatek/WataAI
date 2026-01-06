@@ -1,4 +1,8 @@
-﻿import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+﻿import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelCredentialEntity } from './infrastructure/persistence/relational/entities/channel-credential.entity';
@@ -12,7 +16,7 @@ export class IntegrationsService {
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) { }
+  ) {}
 
   async findAll(workspaceId?: string): Promise<ChannelCredentialEntity[]> {
     const where: any = {};
@@ -48,7 +52,9 @@ export class IntegrationsService {
       });
 
       if (!workspaceExists) {
-        throw new NotFoundException(`Workspace with ID ${workspaceId} does not exist`);
+        throw new NotFoundException(
+          `Workspace with ID ${workspaceId} does not exist`,
+        );
       }
     }
 

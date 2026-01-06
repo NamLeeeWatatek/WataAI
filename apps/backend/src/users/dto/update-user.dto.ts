@@ -83,4 +83,8 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ type: Object })
   @IsOptional()
   permissions?: Record<string, any>;
+
+  @ApiPropertyOptional({ type: Object })
+  @IsOptional()
+  notificationPreferences?: Record<string, any> | null;
 }

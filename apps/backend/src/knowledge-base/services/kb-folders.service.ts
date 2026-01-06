@@ -1,9 +1,16 @@
-﻿import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+﻿import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { CreateFolderDto, UpdateFolderDto } from '../dto/kb-folder.dto';
 import { KBManagementService } from './kb-management.service';
-import { KbFolderEntity, KbDocumentEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
+import {
+  KbFolderEntity,
+  KbDocumentEntity,
+} from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 import { KBDocumentsService } from './kb-documents.service';
 import { Inject, forwardRef } from '@nestjs/common';
 
@@ -17,7 +24,7 @@ export class KBFoldersService {
     private readonly kbManagementService: KBManagementService,
     @Inject(forwardRef(() => KBDocumentsService))
     private readonly kbDocumentsService: KBDocumentsService,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateFolderDto) {
     const kb = await this.kbManagementService.findOne(
@@ -29,13 +36,18 @@ export class KBFoldersService {
     const existing = await this.folderRepository.findOne({
       where: {
         knowledgeBaseId: createDto.knowledgeBaseId,
-        parentId: createDto.parentFolderId === null ? IsNull() : createDto.parentFolderId,
+        parentId:
+          createDto.parentFolderId === null
+            ? IsNull()
+            : createDto.parentFolderId,
         name: createDto.name,
       },
     });
 
     if (existing) {
-      throw new ConflictException(`Folder with name "${createDto.name}" already exists at this level`);
+      throw new ConflictException(
+        `Folder with name "${createDto.name}" already exists at this level`,
+      );
     }
 
     const folderData = {
@@ -78,7 +90,10 @@ export class KBFoldersService {
     const folder = await this.findOne(folderId, userId);
 
     if (updateDto.name && updateDto.name !== folder.name) {
-      const parentId = updateDto.parentFolderId !== undefined ? updateDto.parentFolderId : folder.parentId;
+      const parentId =
+        updateDto.parentFolderId !== undefined
+          ? updateDto.parentFolderId
+          : folder.parentId;
       const existing = await this.folderRepository.findOne({
         where: {
           knowledgeBaseId: folder.knowledgeBaseId,
@@ -88,7 +103,9 @@ export class KBFoldersService {
       });
 
       if (existing && existing.id !== folderId) {
-        throw new ConflictException(`Folder with name "${updateDto.name}" already exists at this level`);
+        throw new ConflictException(
+          `Folder with name "${updateDto.name}" already exists at this level`,
+        );
       }
     }
 

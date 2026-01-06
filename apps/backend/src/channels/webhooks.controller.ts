@@ -48,7 +48,7 @@ export class WebhooksController {
     private readonly facebookProcessor: FacebookWebhookProcessor,
     private readonly instagramProcessor: InstagramWebhookProcessor,
     private readonly telegramProcessor: TelegramWebhookProcessor,
-  ) { }
+  ) {}
 
   // DEPRECATED: This generic endpoint only parses but doesn't save messages
   // Use specific endpoints like @Post('facebook') instead
@@ -268,9 +268,7 @@ export class WebhooksController {
           '   1. Reconnect Facebook channel to save credentials in database',
         );
         this.logger.error('   2. Set FACEBOOK_APP_SECRET in .env file');
-        this.logger.warn(
-          '⚠️ Signature verification skipped - SECURITY RISK!',
-        );
+        this.logger.warn('⚠️ Signature verification skipped - SECURITY RISK!');
         // In development, allow webhooks without verification
         // In production, this should return false
         const allowInDev = process.env.NODE_ENV !== 'production';

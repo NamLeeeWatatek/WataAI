@@ -23,4 +23,4 @@ import { forwardRef } from '@nestjs/common';
   providers: [CreationJobsService],
   exports: [CreationJobsService, RelationalCreationJobsPersistenceModule],
 })
-export class CreationJobsModule { }
+export class CreationJobsModule {}

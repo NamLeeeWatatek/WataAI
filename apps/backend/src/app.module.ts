@@ -65,14 +65,14 @@ import { CreationToolsModule } from './creation-tools/creation-tools.module';
 const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
   .isDocumentDatabase
   ? MongooseModule.forRootAsync({
-    useClass: MongooseConfigService,
-  })
+      useClass: MongooseConfigService,
+    })
   : TypeOrmModule.forRootAsync({
-    useClass: TypeOrmConfigService,
-    dataSourceFactory: async (options: DataSourceOptions) => {
-      return new DataSource(options).initialize();
-    },
-  });
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options: DataSourceOptions) => {
+        return new DataSource(options).initialize();
+      },
+    });
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
@@ -196,4 +196,4 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
     ExecutionModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -15,7 +15,7 @@ export class UsersRelationalRepository implements UserRepository {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
-  ) { }
+  ) {}
 
   async create(data: User): Promise<User> {
     const persistenceModel = UserMapper.toPersistence(data);

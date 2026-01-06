@@ -45,7 +45,7 @@ export function ActiveJobsWidget() {
                                 className="w-full h-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors relative"
                             >
                                 {pendingCount > 0 ? (
-                                    <Loader2 className="w-5 h-5 text-primary-foreground animate-spin" />
+                                    <Loader2 className="w-5 h-5 text-primary-foreground" />
                                 ) : (
                                     <List className="w-5 h-5 text-primary-foreground" />
                                 )}

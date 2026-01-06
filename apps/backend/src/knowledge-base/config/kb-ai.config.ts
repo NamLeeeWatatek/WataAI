@@ -8,7 +8,7 @@
 // 5. This fallback config
 
 export const KbAiConfig = {
-    defaults: {
-        model: 'gemini-2.0-flash', // Fallback model if everything else fails
-    },
+  defaults: {
+    model: 'gemini-2.0-flash', // Fallback model if everything else fails
+  },
 };

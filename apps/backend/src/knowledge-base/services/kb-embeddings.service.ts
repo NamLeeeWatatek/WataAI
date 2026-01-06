@@ -30,7 +30,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async chunkText(
     text: string,
@@ -44,17 +44,17 @@ export class KBEmbeddingsService {
       chunkSize,
       chunkOverlap,
       separators: ['\n\n', '\n', ' ', ''], // Preserves paragraphs/sentences
-      keepSeparator: false
+      keepSeparator: false,
     });
 
     const rawChunks = await splitter.splitText(text);
 
     // Map back to TextChunk format (simplified start/end char tracking)
-    // Note: Recursive splitter loses exact char indices easily, 
+    // Note: Recursive splitter loses exact char indices easily,
     // so we approximate or scan. For RAG, content is king.
 
     let currentPos = 0;
-    return rawChunks.map(content => {
+    return rawChunks.map((content) => {
       // Find approximate real position (optional optimization)
       const startChar = text.indexOf(content, currentPos);
       const realStart = startChar !== -1 ? startChar : currentPos;
@@ -64,7 +64,7 @@ export class KBEmbeddingsService {
         content,
         startChar: realStart,
         endChar: currentPos,
-        tokenCount: this.estimateTokenCount(content)
+        tokenCount: this.estimateTokenCount(content),
       };
     });
   }
@@ -106,7 +106,6 @@ export class KBEmbeddingsService {
     const model = providerConfig.model;
     const requiresApiKey = providerConfig.requiresApiKey;
 
-
     // Only fetch API key for providers that require it
     let apiKey: string | undefined;
 
@@ -138,7 +137,6 @@ export class KBEmbeddingsService {
         );
       }
     }
-
 
     const batchSize = 10;
     let processedCount = 0;
@@ -298,9 +296,9 @@ export class KBEmbeddingsService {
         }),
       );
 
-      const batchSuccesses = batchResults.filter(r => r).length;
+      const batchSuccesses = batchResults.filter((r) => r).length;
       successes += batchSuccesses;
-      failures += (batchResults.length - batchSuccesses);
+      failures += batchResults.length - batchSuccesses;
 
       if (i + batchSize < chunks.length) {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -465,7 +463,12 @@ export class KBEmbeddingsService {
     workspaceId?: string,
     providerId?: string,
     preferredModel?: string,
-  ): Promise<{ provider: string; model: string; requiresApiKey: boolean; baseUrl?: string }> {
+  ): Promise<{
+    provider: string;
+    model: string;
+    requiresApiKey: boolean;
+    baseUrl?: string;
+  }> {
     // 1. Try to find the specifically configured provider
     if (providerId) {
       const scopes = [
@@ -482,9 +485,7 @@ export class KBEmbeddingsService {
               ? await this.aiProvidersService.getWorkspaceConfigs(scope.id)
               : await this.aiProvidersService.getUserConfigs(scope.id);
 
-          const config = configs.find(
-            (c) => c.providerId === providerId,
-          );
+          const config = configs.find((c) => c.providerId === providerId);
 
           if (config && config.provider && config.provider.key) {
             const providerKey = config.provider.key;
@@ -501,8 +502,11 @@ export class KBEmbeddingsService {
             // For Ollama/Custom, we respect the KB's specific embedding model setting
             // or fall back to sensible defaults
             if (providerKey === 'ollama' || providerKey === 'custom') {
-              model = preferredModel ||
-                (providerKey === 'ollama' ? 'mxbai-embed-large:latest' : 'text-embedding-ada-002');
+              model =
+                preferredModel ||
+                (providerKey === 'ollama'
+                  ? 'mxbai-embed-large:latest'
+                  : 'text-embedding-ada-002');
             } else if (providerKey === 'google') {
               model = 'text-embedding-004';
             }
@@ -515,12 +519,14 @@ export class KBEmbeddingsService {
             };
           }
         } catch (error) {
-          this.logger.warn(`Error checking ${scope.type} config: ${error.message}`);
+          this.logger.warn(
+            `Error checking ${scope.type} config: ${error.message}`,
+          );
         }
       }
     }
 
-    // 2. Fallback: No specific provider found (or not configured). 
+    // 2. Fallback: No specific provider found (or not configured).
     // Search for ANY available provider, prioritizing local/Ollama.
     const scopes = [
       workspaceId ? { id: workspaceId, type: 'workspace' } : null,
@@ -567,12 +573,16 @@ export class KBEmbeddingsService {
           };
         }
       } catch (error) {
-        this.logger.warn(`Error checking ${scope.type} fallback: ${error.message}`);
+        this.logger.warn(
+          `Error checking ${scope.type} fallback: ${error.message}`,
+        );
       }
     }
 
     // 3. Absolute Fallback
-    this.logger.warn('No configured AI providers found for embeddings. Defaulting to Google placeholders.');
+    this.logger.warn(
+      'No configured AI providers found for embeddings. Defaulting to Google placeholders.',
+    );
     return {
       provider: 'google',
       model: 'text-embedding-004',
@@ -587,7 +597,12 @@ export class KBEmbeddingsService {
     kbId?: string,
   ): Promise<{ provider: string; model: string }> {
     // Reuse getProviderConfig logic
-    const config = await this.getProviderConfig(userId, workspaceId, kbId, undefined);
+    const config = await this.getProviderConfig(
+      userId,
+      workspaceId,
+      kbId,
+      undefined,
+    );
     return { provider: config.provider, model: config.model };
   }
 

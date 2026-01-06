@@ -9,9 +9,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, AlertCircle, Info, X, Settings, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Separator } from '@/components/ui/Separator';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { useNotificationsRealtime } from '@/lib/hooks/use-notifications-realtime';
-import { useNotificationPreferences } from './NotificationSettings';
+import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { cn } from '@/lib/utils';
 
 interface NotificationDropdownProps {
@@ -29,6 +30,7 @@ export function NotificationDropdown({
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
 
   const preferences = useNotificationPreferences();
   const {
@@ -268,6 +270,21 @@ export function NotificationDropdown({
                               </Badge>
                             </div>
                           )}
+                          {notification.metadata?.resourceType === 'creation_job' && (
+                            <div className="mt-2 flex items-center justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-[10px] px-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `/products?jobId=${notification.metadata?.resourceId}`;
+                                }}
+                              >
+                                View Results
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -301,9 +318,9 @@ export function NotificationDropdown({
                   size="icon"
                   className="rounded-full"
                   onClick={() => {
-                    // Open settings
-                    // You could integrate with your settings modal here
-                    // Open notification settings logic would go here
+                    // Navigate to settings
+                    router.push('/settings?tab=notifications');
+                    setIsOpen(false);
                   }}
                 >
                   <Settings className="w-4 h-4" />
@@ -338,9 +355,3 @@ function formatTimeAgo(dateString: string): string {
     return 'Just now';
   }
 }
-
-// Toast notification (you can import this from your toast library)
-const toast = {
-  success: (message: string) => { }, // Changed to no-op for production
-  error: (message: string) => { },   // Changed to no-op for production
-};

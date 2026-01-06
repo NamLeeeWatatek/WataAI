@@ -15,7 +15,7 @@ export class ChannelsService {
   constructor(
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) { }
+  ) {}
 
   async findAll(workspaceId?: string): Promise<ChannelConnectionEntity[]> {
     const where: FindOptionsWhere<ChannelConnectionEntity> = {};
@@ -61,7 +61,10 @@ export class ChannelsService {
     type: string,
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity | null> {
-    const where: FindOptionsWhere<ChannelConnectionEntity> = { type: type as ChannelType, status: ChannelConnectionStatus.ACTIVE };
+    const where: FindOptionsWhere<ChannelConnectionEntity> = {
+      type: type as ChannelType,
+      status: ChannelConnectionStatus.ACTIVE,
+    };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }

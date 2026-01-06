@@ -23,7 +23,7 @@ export class UserSeedService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async run() {
     // Delete legacy/default admins if they exist
@@ -51,138 +51,138 @@ export class UserSeedService {
       isActive: boolean;
       password?: string;
     }[] = [
-        // Admin users
-        {
-          name: 'Wata Admin',
-          email: 'wataai@gmail.com',
-          role: 'admin' as const,
-          isActive: true,
-          password: 'secret2026@wata',
-        },
-        // Regular users with different roles
-        {
-          name: 'John Smith',
-          email: 'john.smith@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Emily Johnson',
-          email: 'emily.johnson@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Michael Brown',
-          email: 'michael.brown@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Sarah Davis',
-          email: 'sarah.davis@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'David Wilson',
-          email: 'david.wilson@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Lisa Anderson',
-          email: 'lisa.anderson@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'James Taylor',
-          email: 'james.taylor@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Maria Garcia',
-          email: 'maria.garcia@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Robert Martinez',
-          email: 'robert.martinez@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Jennifer Lee',
-          email: 'jennifer.lee@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'William White',
-          email: 'william.white@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Linda Harris',
-          email: 'linda.harris@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Richard Clark',
-          email: 'richard.clark@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Patricia Lewis',
-          email: 'patricia.lewis@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Charles Walker',
-          email: 'charles.walker@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Barbara Hall',
-          email: 'barbara.hall@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Joseph Allen',
-          email: 'joseph.allen@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
-        {
-          name: 'Susan Young',
-          email: 'susan.young@example.com',
-          role: 'user' as const,
-          isActive: true,
-        },
+      // Admin users
+      {
+        name: 'Wata Admin',
+        email: 'wataai@gmail.com',
+        role: 'admin' as const,
+        isActive: true,
+        password: 'secret2026@wata',
+      },
+      // Regular users with different roles
+      {
+        name: 'John Smith',
+        email: 'john.smith@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Emily Johnson',
+        email: 'emily.johnson@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Michael Brown',
+        email: 'michael.brown@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Sarah Davis',
+        email: 'sarah.davis@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'David Wilson',
+        email: 'david.wilson@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Lisa Anderson',
+        email: 'lisa.anderson@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'James Taylor',
+        email: 'james.taylor@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Maria Garcia',
+        email: 'maria.garcia@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Robert Martinez',
+        email: 'robert.martinez@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Jennifer Lee',
+        email: 'jennifer.lee@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'William White',
+        email: 'william.white@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Linda Harris',
+        email: 'linda.harris@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Richard Clark',
+        email: 'richard.clark@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Patricia Lewis',
+        email: 'patricia.lewis@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Charles Walker',
+        email: 'charles.walker@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Barbara Hall',
+        email: 'barbara.hall@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Joseph Allen',
+        email: 'joseph.allen@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
+      {
+        name: 'Susan Young',
+        email: 'susan.young@example.com',
+        role: 'user' as const,
+        isActive: true,
+      },
 
-        // Some inactive users for testing
-        {
-          name: 'Thomas King',
-          email: 'thomas.king@example.com',
-          role: 'user' as const,
-          isActive: false,
-        },
-        {
-          name: 'Jessica Wright',
-          email: 'jessica.wright@example.com',
-          role: 'user' as const,
-          isActive: false,
-        },
-      ];
+      // Some inactive users for testing
+      {
+        name: 'Thomas King',
+        email: 'thomas.king@example.com',
+        role: 'user' as const,
+        isActive: false,
+      },
+      {
+        name: 'Jessica Wright',
+        email: 'jessica.wright@example.com',
+        role: 'user' as const,
+        isActive: false,
+      },
+    ];
 
     const salt = await bcrypt.genSalt();
     const defaultPassword = await bcrypt.hash('secret', salt);

@@ -20,13 +20,15 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'integrations', version: '1' })
 export class IntegrationsController {
-  constructor(private readonly integrationsService: IntegrationsService) { }
+  constructor(private readonly integrationsService: IntegrationsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all integration credentials' })
   async findAll(@CurrentWorkspace() workspaceId: string) {
     if (!workspaceId) {
-      throw new BadRequestException('Workspace ID is required to fetch integrations');
+      throw new BadRequestException(
+        'Workspace ID is required to fetch integrations',
+      );
     }
 
     const credentials = await this.integrationsService.findAll(workspaceId);

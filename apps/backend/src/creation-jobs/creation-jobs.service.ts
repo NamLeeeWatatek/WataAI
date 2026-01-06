@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateCreationJobDto } from './dto/create-creation-jobs.dto';
 import { UpdateCreationJobDto } from './dto/update-creation-jobs.dto';
 import { CreationJobsRepository } from './infrastructure/persistence/creation-jobs.repository';
@@ -19,7 +20,8 @@ export class CreationJobsService {
     private readonly notificationsGateway: NotificationsGateway,
     private readonly auditService: AuditService,
     private readonly i18n: I18nService,
-  ) { }
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(
     createDto: CreateCreationJobDto,
@@ -75,7 +77,12 @@ export class CreationJobsService {
     workspaceId,
   }: {
     paginationOptions: IPaginationOptions;
-    filterOptions?: { startDate?: string; endDate?: string; search?: string; status?: string[] };
+    filterOptions?: {
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+      status?: string[];
+    };
     workspaceId: string;
   }) {
     return this.creationJobsRepository.findAllWithPagination({
@@ -145,7 +152,11 @@ export class CreationJobsService {
       throw new Error(`Job with ID ${id} not found or invalid`);
     }
 
-    if (job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) {
+    if (
+      job.status === CreationJobStatus.COMPLETED ||
+      job.status === CreationJobStatus.FAILED ||
+      job.status === CreationJobStatus.CANCELED
+    ) {
       // Already finished, do nothing
       return;
     }
@@ -198,5 +209,21 @@ export class CreationJobsService {
       error,
       progress: status === CreationJobStatus.COMPLETED ? 100 : job.progress,
     });
+
+    if (status === CreationJobStatus.COMPLETED) {
+      this.eventEmitter.emit('creation-job.completed', {
+        id: job.id,
+        userId: job.createdBy,
+        workspaceId: job.workspaceId,
+        inputData: job.inputData,
+      });
+    } else if (status === CreationJobStatus.FAILED) {
+      this.eventEmitter.emit('creation-job.failed', {
+        id: job.id,
+        userId: job.createdBy,
+        workspaceId: job.workspaceId,
+        error: error,
+      });
+    }
   }
 }

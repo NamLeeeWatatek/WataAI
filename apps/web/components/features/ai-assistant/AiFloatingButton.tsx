@@ -147,7 +147,7 @@ export function AIFloatingButton() {
                                     {loading && (
                                         <div className="flex gap-2">
                                             <div className="glass border border-border/40 rounded-lg px-3 py-2">
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <Loader2 className="w-4 h-4" />
                                             </div>
                                         </div>
                                     )}
@@ -173,7 +173,7 @@ export function AIFloatingButton() {
                                     className="shadow-md"
                                     size="icon"
                                 >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                    {loading ? <Loader2 className="w-4 h-4" /> : <Send className="w-4 h-4" />}
                                 </Button>
                             </div>
                             <Button

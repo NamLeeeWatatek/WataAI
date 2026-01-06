@@ -54,4 +54,4 @@ const infrastructureUploaderModule =
   ],
   exports: [FilesService, infrastructurePersistenceModule],
 })
-export class FilesModule { }
+export class FilesModule {}

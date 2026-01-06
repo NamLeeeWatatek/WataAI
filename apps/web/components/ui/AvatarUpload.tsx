@@ -128,7 +128,7 @@ export function AvatarUpload({
             {/* Loading Overlay */}
             {isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/50 rounded-full z-20">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <Loader2 className="w-6 h-6 text-primary" />
                 </div>
             )}
 

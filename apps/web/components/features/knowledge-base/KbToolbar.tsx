@@ -62,7 +62,7 @@ export function KbToolbar({
           disabled={isLoading}
           className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
         >
-          <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+          <RefreshCw className={cn("w-4 h-4")} />
         </Button>
       </div>
 

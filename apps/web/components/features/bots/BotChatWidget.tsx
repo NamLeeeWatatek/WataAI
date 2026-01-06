@@ -156,7 +156,7 @@ export function BotChatWidget({
                 </AvatarFallback>
               </Avatar>
               <div className="bg-muted rounded-lg px-4 py-2">
-                <Loader2 className="size-4 animate-spin" />
+                <Loader2 className="size-4" />
               </div>
             </div>
           )}
@@ -176,7 +176,7 @@ export function BotChatWidget({
           />
           <Button onClick={sendMessage} disabled={loading || !input.trim()}>
             {loading ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Loader2 className="size-4" />
             ) : (
               <Send className="size-4" />
             )}

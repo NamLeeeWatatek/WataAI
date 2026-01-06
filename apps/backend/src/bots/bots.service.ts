@@ -35,7 +35,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -110,7 +110,7 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-    } catch (error) { }
+    } catch (error) {}
 
     return savedBot;
   }
@@ -389,7 +389,7 @@ export class BotsService {
     if (options?.validated) {
       query.andWhere('channel.isActive = :isActive', { isActive: true });
       // Ensure it has a connection linked (meaning it was verified)
-      // query.andWhere('channel.connectionId IS NOT NULL'); 
+      // query.andWhere('channel.connectionId IS NOT NULL');
     }
 
     return query.getMany();

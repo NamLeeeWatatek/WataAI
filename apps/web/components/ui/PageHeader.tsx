@@ -68,7 +68,7 @@ export function PageHeader({
                             onClick={onRefresh}
                             disabled={refreshing}
                         >
-                            <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshing && "animate-spin")} />
+                            <RefreshCw className={cn("w-4 h-4 text-muted-foreground")} />
                         </Button>
                     )}
                     {children}

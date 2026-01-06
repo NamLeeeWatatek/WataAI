@@ -23,7 +23,10 @@ import { ChannelEventListener } from './listeners/channel-event.listener';
 import { FacebookWebhookProcessor } from './webhooks/facebook-webhook.processor';
 import { InstagramWebhookProcessor } from './webhooks/instagram-webhook.processor';
 import { BullModule } from '@nestjs/bullmq';
-import { WEBHOOKS_QUEUE, WebhookQueueService } from './webhooks/webhook-queue.service';
+import {
+  WEBHOOKS_QUEUE,
+  WebhookQueueService,
+} from './webhooks/webhook-queue.service';
 import { TelegramWebhookProcessor } from './webhooks/telegram-webhook.processor';
 import { WebhookLoggerInterceptor } from './interceptors/webhook-logger.interceptor';
 import { FacebookSyncService } from './services/facebook-sync.service';
@@ -78,7 +81,7 @@ export class ChannelsModule implements OnModuleInit {
     private readonly facebookProvider: FacebookProvider,
     private readonly googleProvider: GoogleProvider,
     private readonly omiProvider: OmiProvider,
-  ) { }
+  ) {}
 
   onModuleInit() {
     this.strategy.register('facebook', this.facebookProvider);

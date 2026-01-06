@@ -15,7 +15,7 @@ export class TokenRefreshService {
     private configService: ConfigService<AllConfigType>,
     private sessionService: SessionService,
     private usersService: UsersService,
-  ) { }
+  ) {}
 
   async refreshAccessToken(refreshToken: string): Promise<{
     token: string;

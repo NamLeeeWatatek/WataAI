@@ -13,7 +13,13 @@ export abstract class CreationJobsRepository {
     filterOptions,
   }: {
     paginationOptions: IPaginationOptions;
-    filterOptions: { workspaceId: string; startDate?: string; endDate?: string; search?: string; status?: string[] };
+    filterOptions: {
+      workspaceId: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+      status?: string[];
+    };
   }): Promise<{ data: CreationJob[]; count: number }>;
 
   abstract findById(

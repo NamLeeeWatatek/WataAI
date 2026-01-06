@@ -88,7 +88,7 @@ export function MultiImageUpload({
                         )}
                     >
                         {isLoading ? (
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent" />
                         ) : (
                             <>
                                 <Upload className="h-6 w-6 text-muted-foreground" />

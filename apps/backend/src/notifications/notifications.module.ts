@@ -5,11 +5,17 @@ import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsHelper } from './notifications.helper';
+import { NotificationEventListener } from './listeners/notification.listener';
 
 @Module({
   imports: [TypeOrmModule.forFeature([NotificationEntity])],
   controllers: [NotificationsController],
-  providers: [NotificationsService, NotificationsGateway, NotificationsHelper],
+  providers: [
+    NotificationsService,
+    NotificationsGateway,
+    NotificationsHelper,
+    NotificationEventListener,
+  ],
   exports: [NotificationsService, NotificationsGateway, NotificationsHelper],
 })
 export class NotificationsModule {}
