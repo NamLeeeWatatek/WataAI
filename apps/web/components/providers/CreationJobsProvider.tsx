@@ -6,6 +6,7 @@ import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { useToast } from '@/lib/hooks/use-toast';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
+import { Notification, JobStatus } from '@/lib/types/notification';
 
 interface CreationJobsContextType {
     activeJobs: CreationJob[];
@@ -116,10 +117,27 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
     useEffect(() => {
         if (!isConnected) return;
 
-        const unsubscribe = on('new_notification', (notification: any) => {
+        const unsubscribe = on('new_notification', (notification: Notification) => {
+            let jobId: string | undefined;
+            let newStatus: string | undefined;
+            let newProgress: number | undefined;
+            let newData: any | undefined;
+
             if (notification.type === 'job_progress') {
+                jobId = notification.data?.jobId;
+                newStatus = notification.data?.status;
+                newProgress = notification.data?.progress;
+                newData = notification.data;
+            } else if ((notification.type === 'success' || notification.type === 'error') && notification.metadata?.resourceType === 'creation_job') {
+                jobId = notification.metadata.resourceId;
+                newStatus = notification.metadata.status; // COMPLETED or FAILED
+                // For completion, ensure 100% progress
+                if (newStatus === JobStatus.COMPLETED) newProgress = 100;
+            }
+
+            if (jobId) {
                 setActiveJobs(prev => {
-                    const existingJobIndex = prev.findIndex(j => j.id === notification.data.jobId);
+                    const existingJobIndex = prev.findIndex(j => j.id === jobId);
 
                     if (existingJobIndex === -1) {
                         return prev;
@@ -130,10 +148,10 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
 
                     const updatedJob = {
                         ...currentJob,
-                        progress: notification.data.progress ?? currentJob.progress,
-                        status: notification.data.status ?? currentJob.status,
-                        outputData: notification.data.outputData ?? currentJob.outputData,
-                        error: notification.data.error ?? currentJob.error,
+                        progress: newProgress ?? currentJob.progress,
+                        status: (newStatus as any) ?? currentJob.status,
+                        outputData: newData?.outputData ?? currentJob.outputData,
+                        error: newData?.error ?? currentJob.error,
                         updatedAt: new Date().toISOString()
                     };
 
@@ -151,7 +169,9 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
                         return toolName;
                     };
 
-                    if ((updatedJob.status === 'COMPLETED' || updatedJob.status === 'FAILED') &&
+                    const isJobProgressEvent = notification.type === 'job_progress';
+
+                    if (isJobProgressEvent && (updatedJob.status === 'COMPLETED' || updatedJob.status === 'FAILED') &&
                         currentJob.status !== updatedJob.status) {
 
                         if (!processedcompletions.current.has(updatedJob.id)) {

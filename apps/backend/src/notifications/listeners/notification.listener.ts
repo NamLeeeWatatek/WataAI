@@ -6,19 +6,22 @@ import { NotificationsService } from '../notifications.service';
 export class NotificationEventListener {
   private readonly logger = new Logger(NotificationEventListener.name);
 
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly notificationsService: NotificationsService) { }
 
   @OnEvent('creation-job.completed')
   async handleCreationJobCompleted(payload: any) {
     this.logger.log(
       `Handling creation-job.completed event for job ${payload.id}`,
     );
+    const prompt = payload.inputData?.prompt || 'Generation';
+    const displayPrompt = prompt.length > 50 ? prompt.substring(0, 47) + '...' : prompt;
+
     try {
       await this.notificationsService.create({
         userId: payload.userId,
         workspaceId: payload.workspaceId,
         title: 'Job Completed',
-        message: `Your job "${payload.inputData?.prompt || 'Generation'}" has been completed successfully.`,
+        message: `Your job "${displayPrompt}" has been completed successfully.`,
         type: 'success',
         metadata: {
           resourceType: 'creation_job',

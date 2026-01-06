@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useNotificationsRealtime } from '@/lib/hooks/use-notifications-realtime';
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { cn } from '@/lib/utils';
+import { Notification, JobStatus } from '@/lib/types/notification';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -221,8 +222,17 @@ export function NotificationDropdown({
                         if (!notification.isRead) {
                           await markAsRead(notification.id);
                         }
-                        // Here you could navigate to the related content
-                        // For example: router.push(`/notifications/${notification.id}`)
+
+                        // Navigate to results if applicable
+                        if (
+                          (notification.metadata?.resourceType === 'creation_job') ||
+                          (notification.type === 'job_progress' && [JobStatus.COMPLETED, JobStatus.FAILED].includes(notification.data?.status))
+                        ) {
+                          const jobId = notification.metadata?.resourceId || notification.data?.jobId;
+                          if (jobId) {
+                            router.push(`/my-products?jobId=${jobId}`);
+                          }
+                        }
                       }}
                     >
                       <div className="flex items-start gap-3">
@@ -278,7 +288,7 @@ export function NotificationDropdown({
                                 className="h-6 text-[10px] px-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  window.location.href = `/products?jobId=${notification.metadata?.resourceId}`;
+                                  router.push(`/my-products?jobId=${notification.metadata?.resourceId}`);
                                 }}
                               >
                                 View Results

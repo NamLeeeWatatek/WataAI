@@ -21,7 +21,7 @@ export class CreationJobsService {
     private readonly auditService: AuditService,
     private readonly i18n: I18nService,
     private readonly eventEmitter: EventEmitter2,
-  ) {}
+  ) { }
 
   async create(
     createDto: CreateCreationJobDto,
@@ -124,22 +124,28 @@ export class CreationJobsService {
 
     if (updatedJob && updatedJob.createdBy) {
       // Emit socket event for real-time progress
-      this.notificationsGateway.emitNewNotification({
-        userId: updatedJob.createdBy,
-        workspaceId: updatedJob.workspaceId,
-        type: 'job_progress',
-        title: this.i18n.t('job.updateTitle'),
-        message: this.i18n.t('job.progressUpdate', {
-          args: { progress: updatedJob.progress },
-        }),
-        data: {
-          jobId: updatedJob.id,
-          status: updatedJob.status,
-          progress: updatedJob.progress,
-          outputData: updatedJob.outputData,
-          error: updatedJob.error,
-        },
-      });
+      // Only emit if NOT completed/failed, because those are handled by the 'success/error' persistence listener
+      // This prevents "Double Notification" spam for completion.
+      const isFinalStatus = [CreationJobStatus.COMPLETED, CreationJobStatus.FAILED].includes(updatedJob.status);
+
+      if (!isFinalStatus) {
+        this.notificationsGateway.emitNewNotification({
+          userId: updatedJob.createdBy,
+          workspaceId: updatedJob.workspaceId,
+          type: 'job_progress',
+          title: this.i18n.t('job.updateTitle'),
+          message: this.i18n.t('job.progressUpdate', {
+            args: { progress: updatedJob.progress },
+          }),
+          data: {
+            jobId: updatedJob.id,
+            status: updatedJob.status,
+            progress: updatedJob.progress,
+            outputData: updatedJob.outputData,
+            error: updatedJob.error,
+          },
+        });
+      }
     }
 
     return updatedJob;
