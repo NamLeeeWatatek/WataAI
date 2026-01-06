@@ -420,7 +420,17 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                     <Checkbox
                         id="async-pattern"
                         checked={config.asyncPattern || false}
-                        onCheckedChange={(checked) => onChange({ ...config, asyncPattern: !!checked })}
+                        onCheckedChange={(checked) => {
+                            const isChecked = !!checked;
+                            const updates: Partial<HttpExecutionConfig> = { asyncPattern: isChecked };
+
+                            // Auto-configure bodyTemplate if enabling Async Pattern
+                            if (isChecked && !config.bodyTemplate) {
+                                updates.bodyTemplate = '{{ . | json }}';
+                            }
+
+                            onChange({ ...config, ...updates });
+                        }}
                     />
                     <div className="grid gap-1.5 leading-none flex-1">
                         <Label
@@ -436,6 +446,7 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                             If enabled, the system will NOT wait for the HTTP response to complete the job.
                             Instead, it will wait for an external Webhook call to <code>/api/v1/callbacks/jobs/:id/complete</code>.
                             Use this for long-running tasks (&gt;5s) like video generation.
+                            <strong>Note: Enabling this will default the Body Template to send all data (JSON).</strong>
                         </p>
                     </div>
                 </div>
