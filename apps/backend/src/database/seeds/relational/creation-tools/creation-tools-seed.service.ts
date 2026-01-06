@@ -17,7 +17,7 @@ export class CreationToolsSeederService {
     private templateRepository: Repository<TemplateEntity>,
     @InjectRepository(CategoryEntity)
     private categoryRepository: Repository<CategoryEntity>,
-  ) {}
+  ) { }
 
   async run() {
     this.logger.log('Seeding Creation Tools...');
@@ -248,9 +248,13 @@ export class CreationToolsSeederService {
         submitLabel: 'Generate Ad',
       },
       executionFlow: {
-        type: 'n8n-workflow',
-        webhookUrl:
+        type: 'http-webhook',
+        urlTemplate:
           'https://n8n.srv1078465.hstgr.cloud/webhook/wh-generate-video-ugc-ads-autopost-social',
+        method: 'POST',
+        // Send all inputs + system metadata as flat JSON body
+        bodyTemplate: '{{ . | json }}',
+        asyncPattern: true,
       },
       isActive: true,
     });
@@ -372,7 +376,14 @@ export class CreationToolsSeederService {
       if (existingTool.deletedAt) {
         await this.creationToolRepository.restore(existingTool.id);
       }
-      return existingTool;
+      // Update existing tool with new data (config updates)
+      const updatedTool = this.creationToolRepository.merge(existingTool, {
+        ...data,
+        category: undefined, // category is handled separately if needed, or we can look it up again
+      } as DeepPartial<CreationToolEntity>);
+
+      // We need to re-fetch category if we want to update it, but for now let's focus on config
+      return this.creationToolRepository.save(updatedTool);
     }
 
     let category: CategoryEntity | null = null;
