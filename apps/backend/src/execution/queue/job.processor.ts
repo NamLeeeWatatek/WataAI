@@ -86,26 +86,20 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         throw new Error(`Input Validation Failed: ${validationError.message}`);
       }
 
-      // 1.8 Prepare Inputs (Flatten complex objects for execution engine)
       const executionInputs = this.validationService.prepareInputs(
         tool.formConfig,
         validatedInputs,
       );
 
       const config = tool.executionFlow as ExecutionFlow;
-
-      // 2. Dispatch
       const startTime = Date.now();
-
-      // Inject System Metadata for External Tools (n8n, Make, etc.)
-      // These variables are available in the Liquid template (e.g. {{_callbackUrl}})
       const apiUrl =
         process.env.BACKEND_DOMAIN ||
         process.env.API_URL;
       const systemInputs = {
         ...executionInputs,
         _jobId: jobEntity.id,
-        _callbackUrl: `${apiUrl}/callbacks/jobs/${jobEntity.id}/complete`,
+        _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/${jobEntity.id}/complete`,
         _workspaceId: jobEntity.workspaceId,
       };
 
