@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository, In, Like } from 'typeorm';
+import { FindOptionsWhere, Repository, In, Like, ILike } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { TemplateEntity } from '../entities/template.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -19,7 +19,7 @@ export class TemplatesRelationalRepository implements TemplateRepository {
   constructor(
     @InjectRepository(TemplateEntity)
     private readonly templatesRepository: Repository<TemplateEntity>,
-  ) {}
+  ) { }
 
   async create(data: DeepPartial<Template>): Promise<Template> {
     const persistenceModel = TemplateMapper.toPersistence(data as Template);
@@ -61,7 +61,7 @@ export class TemplatesRelationalRepository implements TemplateRepository {
     }
 
     if (filterOptions?.name) {
-      where.name = Like(`%${filterOptions.name}%`);
+      where.name = ILike(`%${filterOptions.name}%`);
     }
 
     const [entities, count] = await this.templatesRepository.findAndCount({

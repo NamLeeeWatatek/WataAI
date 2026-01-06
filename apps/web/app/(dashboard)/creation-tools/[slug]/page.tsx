@@ -338,7 +338,7 @@ export default function CreationToolDetailPage() {
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                                    <div className="relative w-full sm:max-w-[240px]">
+                                    <div className="relative w-full sm:max-w-xs">
                                         <Search
                                             placeholder="Search templates..."
                                             value={searchQuery}

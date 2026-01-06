@@ -59,12 +59,21 @@
     --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
     --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
     --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.8);
+
+    /* Semantic Colors */
+    --success: 142 71% 45%;
+    --warning: 48 96% 53%;
+    --info: 217 91% 60%;
   }
 
   .light {
     /* Light Mode - Crisp, Clean, Technical */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
+
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 221 83% 53%;
 
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;

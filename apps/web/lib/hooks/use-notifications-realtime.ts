@@ -11,18 +11,7 @@ import { toast } from 'sonner';
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { axiosClient } from '../axios-client';
 
-interface Notification {
-  id: string;
-  userId: string;
-  workspaceId: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'job_progress' | 'job_created';
-  isRead: boolean;
-  createdAt: string;
-  metadata?: Record<string, any>;
-  data?: any;
-}
+import { Notification, JobStatus } from '@/lib/types/notification';
 
 interface UseNotificationsRealtimeConfig {
   enabled?: boolean;
@@ -104,7 +93,7 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      await axiosClient.patch(`/notifications/${notificationId}/read`) as unknown as any;
+      await axiosClient.post(`/notifications/${notificationId}/read`) as unknown as any;
 
       // Update local state
       setNotifications(prev =>
@@ -129,7 +118,7 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      await axiosClient.patch(`/notifications/read-all`, { workspaceId: currentWorkspaceId }) as unknown as any;
+      await axiosClient.post(`/notifications/read-all`, { workspaceId: currentWorkspaceId }) as unknown as any;
 
       // Update local state
       setNotifications(prev =>
@@ -175,20 +164,17 @@ export function useNotificationsRealtime({
     const handleNewNotification = (notification: Notification) => {
       console.log('New notification received:', notification);
 
-      // Add to notifications list
-      setNotifications(prev => [notification, ...prev]);
+      // UX: Only add to the list if it's NOT a transient progress update
+      // job_progress events are purely for the progress bar and should not be in history.
+      const isTransient = notification.type === 'job_progress';
 
-      // Suppress 'job_created' toasts as requested - they should just run in background
-      if (notification.type === 'job_created') {
-        return;
+      if (!isTransient) {
+        setNotifications(prev => [notification, ...prev]);
       }
 
-      // Skip toast for background job progress updates to avoid spam
+      // Skip toast for background job progress updates
       if (notification.type === 'job_progress') {
-
-        if (notification.data?.status === 'PROCESSING' || notification.data?.status === 'PENDING') {
-          return;
-        }
+        return;
       }
 
       // Show toast notification using standard Sonner methods for better UI
@@ -209,16 +195,6 @@ export function useNotificationsRealtime({
           break;
         case 'info':
           toast.info(notification.title, toastOptions);
-          break;
-        case 'job_progress':
-          // Handle job progress final states if they weren't filtered above
-          if (notification.data?.status === 'FAILED') {
-            toast.error(notification.title, toastOptions);
-          } else if (notification.data?.status === 'COMPLETED') {
-            toast.success(notification.title, toastOptions);
-          } else {
-            toast.info(notification.title, toastOptions);
-          }
           break;
         default:
           toast(notification.title, toastOptions);
