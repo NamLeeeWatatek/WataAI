@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Progress } from '@/components/ui/Progress'
 import { Badge } from '@/components/ui/Badge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Clock, CheckCircle2, XCircle, Loader2, FileText } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import { cn } from '@/lib/utils'
@@ -118,16 +119,11 @@ export function KBProcessingStatus({ knowledgeBaseId, onProcessingComplete }: KB
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                             <span className="capitalize">{job.type || 'Embedding'}</span>
                                             <span>•</span>
-                                            <span className={cn(
-                                                "font-medium",
-                                                job.status === 'processing' && "text-primary",
-                                                job.status === 'failed' && "text-destructive",
-                                                job.status === 'completed' && "text-green-500"
-                                            )}>
-                                                {job.status === 'queued' ? 'Queued' :
-                                                    job.status === 'processing' ? `${job.progress}%` :
-                                                        job.status}
-                                            </span>
+                                            <StatusBadge
+                                                status={job.status}
+                                                showIcon={job.status === 'processing'}
+                                                label={job.status === 'processing' ? `${job.progress}%` : undefined}
+                                            />
                                             {job.totalChunks > 0 && (
                                                 <>
                                                     <span>•</span>

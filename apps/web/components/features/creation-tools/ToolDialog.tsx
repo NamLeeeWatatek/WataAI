@@ -36,7 +36,6 @@ const toolFormSchema = z.object({
     slug: z.string().min(1, 'Slug is required'),
     description: z.string().optional(),
     icon: z.string().optional(),
-    coverImage: z.string().optional(),
     categoryIds: z.array(z.string()),
     isActive: z.boolean(),
     formConfig: z.custom<FormConfig>((data) => {
@@ -75,7 +74,6 @@ export function ToolDialog({
             slug: '',
             description: '',
             icon: '',
-            coverImage: '',
             categoryIds: [],
             isActive: true,
             formConfig: { fields: [], submitLabel: 'Generate' },
@@ -101,7 +99,6 @@ export function ToolDialog({
                     slug: tool.slug || '',
                     description: tool.description || '',
                     icon: tool.icon || '',
-                    coverImage: tool.coverImage || '',
                     categoryIds: cats,
                     isActive: tool.isActive ?? true,
                     formConfig: tool.formConfig || { fields: [], submitLabel: 'Generate' },
@@ -113,7 +110,6 @@ export function ToolDialog({
                     slug: '',
                     description: '',
                     icon: '',
-                    coverImage: '',
                     categoryIds: [],
                     isActive: true,
                     formConfig: { fields: [], submitLabel: 'Generate' },
@@ -157,19 +153,19 @@ export function ToolDialog({
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
-            <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden bg-background/95 border-border/50 shadow-2xl backdrop-blur-xl h-[85vh] flex flex-col">
-                <DialogHeader className="p-6 pb-2 border-b border-border/50 flex-none">
+            <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden bg-background/95 border-border/50 shadow-2xl backdrop-blur-xl max-h-[85vh] h-[85vh] flex flex-col">
+                <DialogHeader className="p-6 pb-2 border-b border-border/50 shrink-0">
                     <DialogTitle className="text-xl">{tool ? 'Edit Creation Tool' : 'Create Creation Tool'}</DialogTitle>
                     <DialogDescription>
                         {tool ? 'Update creation tool details and configuration' : 'Configure a new AI creation tool'}
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                     <Form {...form}>
-                        <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
-                            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-                                <div className="px-6 py-2 border-b bg-muted/20">
+                        <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col min-h-0">
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+                                <div className="px-6 py-2 border-b bg-muted/20 shrink-0">
                                     <TabsList className="grid w-full grid-cols-3">
                                         <TabsTrigger value="general">General Info</TabsTrigger>
                                         <TabsTrigger value="form">Form Builder</TabsTrigger>
@@ -178,8 +174,8 @@ export function ToolDialog({
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
-                                    <TabsContent value="general" className="mt-0 space-y-6 h-full">
-                                        <div className="space-y-4">
+                                    <TabsContent value="general" className="mt-0 space-y-6 h-full data-[state=inactive]:hidden">
+                                        <div className="space-y-4 pb-4">
                                             <FormField
                                                 control={control}
                                                 name="name"
@@ -275,25 +271,7 @@ export function ToolDialog({
                                                 )}
                                             />
 
-                                            <FormField
-                                                control={control}
-                                                name="coverImage"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Cover Image</FormLabel>
-                                                        <FormControl>
-                                                            <CoverUpload
-                                                                value={field.value || ''}
-                                                                onUpload={(url) => field.onChange(url)}
-                                                                onDelete={() => field.onChange('')}
-                                                                aspectRatio={16 / 9}
-                                                                description="16:9 Recommended"
-                                                            />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
+
 
                                             <FormField
                                                 control={control}
@@ -332,7 +310,7 @@ export function ToolDialog({
                                         </div>
                                     </TabsContent>
 
-                                    <TabsContent value="form" className="mt-0 h-full">
+                                    <TabsContent value="form" className="mt-0 min-h-full data-[state=inactive]:hidden">
                                         <FormField
                                             control={control}
                                             name="formConfig"
@@ -342,7 +320,7 @@ export function ToolDialog({
                                         />
                                     </TabsContent>
 
-                                    <TabsContent value="execution" className="mt-0 h-full">
+                                    <TabsContent value="execution" className="mt-0 min-h-full data-[state=inactive]:hidden">
                                         <FormField
                                             control={control}
                                             name="executionFlow"
@@ -358,7 +336,7 @@ export function ToolDialog({
                                 </div>
                             </Tabs>
 
-                            <DialogFooter className="p-4 border-t border-border/50 bg-muted/50 flex-none mt-auto">
+                            <DialogFooter className="p-4 border-t border-border/50 bg-muted/50 shrink-0 z-10 sticky bottom-0">
                                 <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>Cancel</Button>
                                 <Button type="submit" disabled={isSubmitting} className="min-w-[100px]">
                                     {isSubmitting ? (

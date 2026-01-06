@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { FiFileText, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiCircle } from 'react-icons/fi'
 import type { KBDocument } from '@/lib/types/knowledge-base'
 
@@ -19,16 +20,10 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
         return Math.round(size / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
     }
 
-    const getStatusBadge = (status: string) => {
+    const getDisplayName = (status: string) => {
         switch (status) {
-            case 'completed':
-                return <Badge variant="default" className="gap-1"><FiCheckCircle className="w-3 h-3" /> Ready</Badge>
-            case 'processing':
-                return <Badge variant="default" className="gap-1"><FiClock className="w-3 h-3" /> Processing</Badge>
-            case 'failed':
-                return <Badge variant="destructive" className="gap-1"><FiAlertCircle className="w-3 h-3" /> Failed</Badge>
-            default:
-                return <Badge variant="secondary">Pending</Badge>
+            case 'completed': return 'Ready';
+            default: return undefined;
         }
     }
 
@@ -42,7 +37,11 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
                     <div>
                         <div className="flex items-center gap-2">
                             <h4 className="font-medium">{document.metadata?.originalName || document.name || document.title}</h4>
-                            {getStatusBadge(document.processingStatus)}
+                            <StatusBadge
+                                status={document.processingStatus || 'pending'}
+                                label={getDisplayName(document.processingStatus)}
+                                showIcon={document.processingStatus === 'processing'}
+                            />
                         </div>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                             <span>{document.fileType || document.type || 'document'}</span>

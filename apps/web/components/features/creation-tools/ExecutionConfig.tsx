@@ -198,14 +198,14 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <Info className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Available Form Variables</span>
+                        <span className="text-xxs font-bold uppercase tracking-wider text-primary">Available Form Variables</span>
                     </div>
                     {fields.length > 0 && (
                         <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="h-6 text-[10px] gap-1.5 px-2 bg-background"
+                            className="h-6 text-xxs gap-1.5 px-2 bg-background"
                             onClick={copyAllAsJson}
                         >
                             {copied === 'JSON Structure' ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -231,7 +231,7 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                         </button>
                     ))}
                     {fields.length === 0 && (
-                        <p className="text-[10px] text-muted-foreground italic">No fields defined yet. Add fields in the Form Builder tab first.</p>
+                        <p className="text-xxs text-muted-foreground italic">No fields defined yet. Add fields in the Form Builder tab first.</p>
                     )}
                 </div>
             </CardContent>
@@ -305,7 +305,7 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
                     <div className="flex justify-between items-center">
                         <Label className="flex gap-2 items-center">
                             Prompt Template
-                            <Badge variant="outline" className="text-[10px] font-normal font-mono">LiquidJS Supported</Badge>
+                            <Badge variant="outline" className="text-xxs font-normal font-mono">LiquidJS Supported</Badge>
                         </Label>
                         <TemplateSelector onSelect={(template) => {
                             if (template) {
@@ -338,7 +338,7 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
                             className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
                         >
                             Include Template Content
-                            <Badge variant="secondary" className="text-[10px] h-4 px-1">Context</Badge>
+                            <Badge variant="secondary" className="text-xxs h-4 px-1">Context</Badge>
                         </Label>
                         <p className="text-xs text-muted-foreground">
                             Automatically include the selected template's prompt and configuration in the execution payload.
@@ -422,15 +422,17 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                         checked={config.asyncPattern || false}
                         onCheckedChange={(checked) => onChange({ ...config, asyncPattern: !!checked })}
                     />
-                    <div className="grid gap-1.5 leading-none">
+                    <div className="grid gap-1.5 leading-none flex-1">
                         <Label
                             htmlFor="async-pattern"
-                            className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
+                            className="text-sm font-bold leading-none cursor-pointer flex flex-wrap items-center gap-2"
                         >
-                            Wait for Callback (Async Pattern)
-                            <Badge variant="outline" className="text-[10px] h-4 px-1 border-yellow-500/30 text-yellow-600 dark:text-yellow-400">Recommended for Video/Long Tasks</Badge>
+                            <span>Wait for Callback (Async Pattern)</span>
+                            <Badge variant="outline" className="text-xxs h-4 px-1 border-yellow-500/30 text-yellow-600 dark:text-yellow-400 whitespace-nowrap">
+                                Recommended for Video/Long Tasks
+                            </Badge>
                         </Label>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground mt-1">
                             If enabled, the system will NOT wait for the HTTP response to complete the job.
                             Instead, it will wait for an external Webhook call to <code>/api/v1/callbacks/jobs/:id/complete</code>.
                             Use this for long-running tasks (&gt;5s) like video generation.
@@ -443,16 +445,28 @@ function HttpConfigEditor({ config, onChange }: { config: HttpExecutionConfig, o
                         <Label>Timeout (ms)</Label>
                         <Input
                             type="number"
-                            value={config.timeoutMs}
-                            onChange={(e) => onChange({ ...config, timeoutMs: parseInt(e.target.value) || 5000 })}
+                            value={config.timeoutMs ?? ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === '') {
+                                    onChange({ ...config, timeoutMs: undefined });
+                                } else {
+                                    onChange({ ...config, timeoutMs: parseInt(val) });
+                                }
+                            }}
+                            placeholder="5000"
                         />
                     </div>
                     <div className="space-y-2">
                         <Label>Retry Count</Label>
                         <Input
                             type="number"
-                            value={config.retryCount}
-                            onChange={(e) => onChange({ ...config, retryCount: parseInt(e.target.value) || 3 })}
+                            value={config.retryCount ?? ''}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                onChange({ ...config, retryCount: isNaN(val) ? undefined : val });
+                            }}
+                            placeholder="3"
                         />
                     </div>
                 </div>
@@ -530,7 +544,7 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
                                             {t.description || 'No description'}
                                         </div>
                                     </div>
-                                    <Badge variant="secondary" className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Badge variant="secondary" className="text-xxs opacity-0 group-hover:opacity-100 transition-opacity">
                                         Select
                                     </Badge>
                                 </button>

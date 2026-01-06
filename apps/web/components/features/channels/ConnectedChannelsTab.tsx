@@ -8,7 +8,7 @@ import { DataTable } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { Badge } from '@/components/ui/Badge';
 import {
-  Grid,
+  LayoutGrid,
   List,
   CheckCircle2,
   Settings,
@@ -180,25 +180,31 @@ export function ConnectedChannelsTab({
           />
         </div>
 
-        <div className="bg-muted p-1 rounded-xl flex border border-border/40">
-          <button
+        <div className="bg-muted/20 p-1 rounded-lg flex items-center gap-1 border border-border/40">
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onViewModeChange('grid')}
             className={cn(
-              "p-2 rounded-lg transition-all duration-300",
-              viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+              "h-8 w-8 rounded-md transition-all",
+              viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
+            title="Grid View"
           >
-            <Grid className="w-4 h-4" />
-          </button>
-          <button
+            <LayoutGrid className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => onViewModeChange('list')}
             className={cn(
-              "p-2 rounded-lg transition-all duration-300",
-              viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+              "h-8 w-8 rounded-md transition-all",
+              viewMode === 'list' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
+            title="List View"
           >
             <List className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 

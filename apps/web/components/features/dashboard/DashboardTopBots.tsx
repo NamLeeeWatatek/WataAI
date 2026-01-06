@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { motion } from 'framer-motion'
 import { FiActivity } from "react-icons/fi"
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import type { DashboardStats } from "@/lib/types"
 
 interface DashboardTopBotsProps {
@@ -32,26 +33,32 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
                         stats.topBots.slice(0, 3).map((bot, index) => (
                             <div key={bot.id} className="group cursor-pointer">
                                 <div className="flex items-center gap-5 mb-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center text-white font-black transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-xl flex items-center justify-center text-white font-black transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg",
+                                        index === 0 ? "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 shadow-orange-500/30" :
+                                            index === 1 ? "bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500 shadow-slate-500/30" :
+                                                index === 2 ? "bg-gradient-to-br from-amber-700 via-amber-600 to-amber-800 shadow-amber-700/30" :
+                                                    "bg-gradient-to-br from-primary via-primary/80 to-accent shadow-primary/30"
+                                    )}>
                                         {index + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-base font-bold truncate group-hover:text-primary transition-colors">{bot.name}</p>
-                                        <p className="text-xs font-medium text-muted-foreground">
+                                        <p className="text-xs font-bold text-muted-foreground/80">
                                             {bot.count} {t('dashboard.stats.conversationsLabel')}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-black text-success">{bot.metric?.toFixed(1)}%</p>
+                                        <p className="text-lg font-black text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]">{bot.metric?.toFixed(1)}%</p>
                                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter opacity-70">{t('dashboard.stats.success')}</p>
                                     </div>
                                 </div>
-                                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
+                                <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${bot.metric || 0}%` }}
                                         transition={{ duration: 1.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-r from-primary to-success"
+                                        className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
                                     />
                                 </div>
                             </div>

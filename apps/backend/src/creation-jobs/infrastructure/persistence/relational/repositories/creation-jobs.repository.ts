@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Between } from 'typeorm';
 import { CreationJobEntity } from '../entities/creation-jobs.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { CreationJob } from '../../../../domain/creation-jobs';
 import { CreationJobsRepository } from '../../creation-jobs.repository';
 import { CreationJobsMapper } from '../mappers/creation-jobs.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { FilterBuilder } from 'src/utils/filter-builder';
 
 @Injectable()
 export class CreationJobsRelationalRepository
-  implements CreationJobsRepository
-{
+  implements CreationJobsRepository {
   constructor(
     @InjectRepository(CreationJobEntity)
     private readonly creationJobsRepository: Repository<CreationJobEntity>,
-  ) {}
+  ) { }
 
   async create(data: CreationJob): Promise<CreationJob> {
     const persistenceModel = CreationJobsMapper.toPersistence(data);
@@ -33,21 +33,24 @@ export class CreationJobsRelationalRepository
     filterOptions,
   }: {
     paginationOptions: IPaginationOptions;
-    filterOptions: { workspaceId: string };
+    filterOptions: { workspaceId: string; startDate?: string; endDate?: string; search?: string; status?: string[] };
   }): Promise<{ data: CreationJob[]; count: number }> {
-    const where: any = {
-      workspaceId: filterOptions.workspaceId,
-    };
+    const qb = this.creationJobsRepository.createQueryBuilder('job')
+      .leftJoinAndSelect('job.creationTool', 'creationTool')
+      .where('job.workspaceId = :workspaceId', { workspaceId: filterOptions.workspaceId });
 
-    const [entities, count] = await this.creationJobsRepository.findAndCount({
-      skip: (paginationOptions.page - 1) * paginationOptions.limit,
-      take: paginationOptions.limit,
-      where,
-      relations: ['creationTool'],
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+    const filterBuilder = new FilterBuilder(qb);
+
+    filterBuilder
+      .search(filterOptions.search, ['job.id', 'creationTool.name'])
+      .filterByDateRange('job.createdAt', filterOptions.startDate, filterOptions.endDate)
+      .filterExact({ 'job.status': filterOptions.status });
+
+    qb.orderBy('job.createdAt', 'DESC')
+      .skip((paginationOptions.page - 1) * paginationOptions.limit)
+      .take(paginationOptions.limit);
+
+    const [entities, count] = await qb.getManyAndCount();
 
     return {
       data: entities.map((entity) => CreationJobsMapper.toDomain(entity)),

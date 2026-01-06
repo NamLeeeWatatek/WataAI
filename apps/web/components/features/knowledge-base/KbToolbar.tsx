@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { Grid, List, RefreshCw, Plus, FolderPlus, Upload, Globe, ChevronDown, FileText } from 'lucide-react';
+import { LayoutGrid, List, RefreshCw, Plus, FolderPlus, Upload, Globe, ChevronDown, FileText } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/Separator';
@@ -104,26 +104,28 @@ export function KbToolbar({
         <Separator orientation="vertical" className="h-6 hidden md:block" />
 
         {/* View Toggle */}
-        <div className="flex items-center bg-muted/40 p-1 rounded-lg border border-border/50">
+        <div className="flex items-center bg-muted/20 p-1 rounded-lg border border-border/40 gap-1">
           <Button
-            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => onViewModeChange('grid')}
             className={cn(
               "h-8 w-8 rounded-md transition-all",
-              viewMode === 'grid' ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+              viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
+            title="Grid View"
           >
-            <Grid className="w-4 h-4" />
+            <LayoutGrid className="w-4 h-4" />
           </Button>
           <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            variant="ghost"
             size="icon"
             onClick={() => onViewModeChange('table')}
             className={cn(
               "h-8 w-8 rounded-md transition-all",
-              viewMode === 'table' ? "bg-background shadow-xs text-primary" : "text-muted-foreground hover:text-foreground"
+              viewMode === 'table' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
+            title="Table View"
           >
             <List className="w-4 h-4" />
           </Button>

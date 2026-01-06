@@ -71,9 +71,11 @@ export class CreationJobsService {
 
   findAllWithPagination({
     paginationOptions,
+    filterOptions,
     workspaceId,
   }: {
     paginationOptions: IPaginationOptions;
+    filterOptions?: { startDate?: string; endDate?: string; search?: string; status?: string[] };
     workspaceId: string;
   }) {
     return this.creationJobsRepository.findAllWithPagination({
@@ -81,7 +83,13 @@ export class CreationJobsService {
         page: paginationOptions.page,
         limit: paginationOptions.limit,
       },
-      filterOptions: { workspaceId },
+      filterOptions: {
+        workspaceId,
+        startDate: filterOptions?.startDate,
+        endDate: filterOptions?.endDate,
+        search: filterOptions?.search,
+        status: filterOptions?.status,
+      },
     });
   }
 

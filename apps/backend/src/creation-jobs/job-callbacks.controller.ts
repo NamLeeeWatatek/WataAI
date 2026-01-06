@@ -2,8 +2,10 @@ import { Controller, Post, Body, Param, HttpStatus, HttpCode } from '@nestjs/com
 import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreationJobsService } from './creation-jobs.service';
 import { CreationJobStatus } from './domain/creation-jobs';
+import { Public } from '../utils/public.decorator';
 
 @ApiTags('Creation Job Callbacks')
+@Public()
 @Controller({
     path: 'callbacks/jobs',
     version: '1',

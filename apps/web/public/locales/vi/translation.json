@@ -46,6 +46,7 @@
     "signOut": "Đăng xuất",
     "confirm": {
       "signOut": "Bạn có chắc chắn muốn đăng xuất?",
+      "signingOut": "Đang đăng xuất...",
       "deleteBot": "Bạn có chắc chắn muốn xóa bot này? Hành động này không thể hoàn tác.",
       "deleteChannel": "Bạn có chắc chắn muốn xóa kênh này?",
       "disconnectChannel": "Bạn có chắc chắn muốn ngắt kết nối kênh này? Hành động này không thể hoàn tác.",
