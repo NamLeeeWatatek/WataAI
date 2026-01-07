@@ -30,6 +30,9 @@ export class Notification {
   @ApiProperty({ type: Boolean, default: false })
   isRead: boolean;
 
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
+  metadata?: Record<string, any>;
+
   @ApiProperty()
   createdAt: Date;
 }

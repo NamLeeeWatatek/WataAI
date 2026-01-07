@@ -82,13 +82,21 @@ export class FacebookOAuthService extends BaseOAuthService {
       );
 
       return response.data.access_token;
-    } catch (error: any) {
-      const errorData = error.response?.data;
-      const errorMessage = errorData?.error?.message || error.message;
-      const errorCode = errorData?.error?.code;
-      const errorSubcode = errorData?.error?.error_subcode;
+    } catch (error) {
+      let errorMessage = 'Failed to exchange code for token';
+      let errorCode: number | undefined;
+      let errorSubcode: number | undefined;
 
-      this.logger.error('Token exchange failed:', errorData || error.message);
+      if (axios.isAxiosError(error)) {
+        const errorData = error.response?.data;
+        errorMessage = errorData?.error?.message || error.message;
+        errorCode = errorData?.error?.code;
+        errorSubcode = errorData?.error?.error_subcode;
+        this.logger.error('Token exchange failed:', errorData || error.message);
+      } else {
+        errorMessage = String(error);
+        this.logger.error('Token exchange failed:', errorMessage);
+      }
 
       if (errorCode === 100 && errorSubcode === 36009) {
         throw new HttpException(
@@ -98,7 +106,7 @@ export class FacebookOAuthService extends BaseOAuthService {
       }
 
       throw new HttpException(
-        errorMessage || 'Failed to exchange code for token',
+        errorMessage,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -122,13 +130,20 @@ export class FacebookOAuthService extends BaseOAuthService {
 
       const data: FacebookUserPages = response.data;
       return data.data || [];
-    } catch (error: any) {
-      this.logger.error(
-        'Get pages failed:',
-        error.response?.data || error.message,
-      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.error(
+          'Get pages failed:',
+          error.response?.data || error.message,
+        );
+        throw new HttpException(
+          error.response?.data?.error?.message || 'Failed to get Facebook pages',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      this.logger.error('Get pages failed:', String(error));
       throw new HttpException(
-        error.response?.data?.error?.message || 'Failed to get Facebook pages',
+        'Failed to get Facebook pages',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -155,11 +170,16 @@ export class FacebookOAuthService extends BaseOAuthService {
       );
 
       return response.data;
-    } catch (error: any) {
-      this.logger.warn(
-        `Get user info failed for ${userId}:`,
-        error.response?.data || error.message,
-      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.warn(
+          `Get user info failed for ${userId}:`,
+          error.response?.data || error.message,
+        );
+      } else {
+        this.logger.warn(`Get user info failed for ${userId}:`, String(error));
+      }
       return {};
     }
   }
@@ -170,7 +190,7 @@ export class FacebookOAuthService extends BaseOAuthService {
     pageAccessToken: string,
     workspaceId: string,
     userId: string,
-    metadata?: any,
+    metadata?: Record<string, any>,
   ): Promise<ChannelConnectionEntity> {
     return this.connectAccount(
       pageId,
@@ -303,11 +323,15 @@ export class FacebookOAuthService extends BaseOAuthService {
       const data = response.data;
       this.logger.log(`Subscribed to webhooks for page ${pageId}:`, data);
       return data.success === true;
-    } catch (error: any) {
-      this.logger.error(
-        'Subscribe webhooks error:',
-        error.response?.data || error.message,
-      );
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.error(
+          'Subscribe webhooks error:',
+          error.response?.data || error.message,
+        );
+      } else {
+        this.logger.error('Subscribe webhooks error:', String(error));
+      }
       return false;
     }
   }

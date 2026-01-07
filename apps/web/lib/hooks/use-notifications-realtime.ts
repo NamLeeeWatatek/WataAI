@@ -9,7 +9,7 @@ import { useSocketConnection } from './use-socket-connection';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
-import { axiosClient } from '../axios-client';
+import { notificationsApi } from '../api/notifications';
 
 import { Notification, JobStatus } from '@/lib/types/notification';
 
@@ -60,12 +60,10 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      const data = await axiosClient.get<any>(`/notifications`, {
-        params: {
-          workspaceId: currentWorkspaceId,
-          isRead: false
-        }
-      }) as unknown as any;
+      const data = await notificationsApi.getAll({
+        workspaceId: currentWorkspaceId,
+        isRead: false
+      });
       setNotifications(data.items || []);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -77,11 +75,7 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      const data = await axiosClient.get<any>(`/notifications/unread-count`, {
-        params: {
-          workspaceId: currentWorkspaceId
-        }
-      }) as unknown as any;
+      const data = await notificationsApi.getUnreadCount(currentWorkspaceId);
       setUnreadCount(data.count || 0);
     } catch (error) {
       console.error('Failed to refresh unread count:', error);
@@ -93,7 +87,7 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      await axiosClient.post(`/notifications/${notificationId}/read`) as unknown as any;
+      await notificationsApi.markAsRead(notificationId);
 
       // Update local state
       setNotifications(prev =>
@@ -118,7 +112,7 @@ export function useNotificationsRealtime({
     if (!user?.id) return;
 
     try {
-      await axiosClient.post(`/notifications/read-all`, { workspaceId: currentWorkspaceId }) as unknown as any;
+      await notificationsApi.markAllAsRead(currentWorkspaceId);
 
       // Update local state
       setNotifications(prev =>

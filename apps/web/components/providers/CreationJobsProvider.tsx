@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { useSession } from 'next-auth/react';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -17,37 +16,27 @@ interface CreationJobsContextType {
     isLoading: boolean;
 }
 
+import { useAuth } from '@/lib/hooks/useAuth';
+
 const CreationJobsContext = createContext<CreationJobsContextType | undefined>(undefined);
 
 export function CreationJobsProvider({ children }: { children: React.ReactNode }) {
-    const { data: session } = useSession();
+    const { user, accessToken } = useAuth();
     const { toast } = useToast();
     const [activeJobs, setActiveJobs] = useState<CreationJob[]>([]);
-    const [isLoading, setIsLoading] = useState(false); // Can act as general loading state
-
-    // We use a ref to keep track of processed completed jobs to avoid duplicate toasts if re-renders happen
-    const processedcompletions = useRef<Set<string>>(new Set());
-
-    // Load initial active jobs? 
-    // Ideally, we might want to fetch "pending/processing" jobs from API on mount
-    // For now, we'll start empty or rely on WS to populate if the backend sends initial state (unlikely without request)
-    // But to be truly persistent across refreshes, we should fetch from API.
-    // Let's assume we can fetch active jobs.
+    const [isLoading, setIsLoading] = useState(false);
 
     const fetchActiveJobs = useCallback(async () => {
         try {
             // Fetch pending and processing jobs to resume tracking
             const response = await creationJobsApi.findAll({
-                status: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'], // Fetch recently changed if needed, or just standard
+                status: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
                 limit: 10,
                 sort: 'updatedAt:desc'
             });
 
             if (response.data) {
-                setActiveJobs(prev => {
-                    // Merge logic or replace? For simplicity, we replace but keep existing completions that might be newer
-                    return response.data;
-                });
+                setActiveJobs(prev => response.data);
             }
         } catch (error) {
             console.error("Failed to fetch active jobs", error);
@@ -55,10 +44,10 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
     }, []);
 
     useEffect(() => {
-        if (session?.user?.id) {
+        if (user?.id) {
             fetchActiveJobs();
         }
-    }, [session?.user?.id, fetchActiveJobs]);
+    }, [user?.id, fetchActiveJobs]);
 
     const addJob = useCallback((job: CreationJob) => {
         setActiveJobs(prev => {
@@ -101,7 +90,6 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
                 description: "Failed to cancel job",
                 variant: "destructive"
             });
-            // Revert on failure (reload jobs)
             fetchActiveJobs();
         }
     }, [fetchActiveJobs, toast]);
@@ -109,9 +97,9 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
     // Unified socket connection using the hook
     const { on, isConnected } = useSocketConnection({
         namespace: 'notifications',
-        enabled: !!session?.user?.id && !!(session as any)?.accessToken,
-        auth: { token: (session as any)?.accessToken },
-        query: { userId: session?.user?.id }
+        enabled: !!user?.id && !!accessToken,
+        auth: { token: accessToken },
+        query: { userId: user?.id }
     });
 
     useEffect(() => {
@@ -157,36 +145,12 @@ export function CreationJobsProvider({ children }: { children: React.ReactNode }
 
                     updatedJobs[existingJobIndex] = updatedJob;
 
-                    const getDisplayName = (job: CreationJob) => {
-                        const toolName = job.creationTool?.name || 'Product';
-                        const input = job.inputData as any;
-                        const subject = input?.prompt || input?.title || input?.name || input?.concept || input?.subject || input?.text;
-
-                        if (subject && typeof subject === 'string') {
-                            return subject.length > 50 ? subject.substring(0, 47) + '...' : subject;
-                        }
-
-                        return toolName;
-                    };
 
                     const isJobProgressEvent = notification.type === 'job_progress';
 
                     if (isJobProgressEvent && (updatedJob.status === 'COMPLETED' || updatedJob.status === 'FAILED') &&
                         currentJob.status !== updatedJob.status) {
-
-                        if (!processedcompletions.current.has(updatedJob.id)) {
-                            processedcompletions.current.add(updatedJob.id);
-
-                            const displayName = getDisplayName(updatedJob);
-
-                            toast({
-                                title: updatedJob.status === 'COMPLETED' ? 'Generation Successful' : 'Generation Failed',
-                                description: updatedJob.status === 'COMPLETED'
-                                    ? `"${displayName}" is ready for you.`
-                                    : `Failed to generate "${displayName}". Please try again.`,
-                                variant: updatedJob.status === 'COMPLETED' ? 'default' : 'destructive',
-                            });
-                        }
+                        // Logic removed to prevent double-toasting; handled by global notification system
                     }
 
                     return updatedJobs;

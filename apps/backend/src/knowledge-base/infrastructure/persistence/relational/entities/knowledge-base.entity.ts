@@ -265,7 +265,7 @@ export class RagFeedbackEntity extends WorkspaceOwnedEntity {
   answer: string;
 
   @Column({ type: 'jsonb' })
-  sources: any[];
+  sources: Record<string, any>[];
 
   @Column({ type: 'int', nullable: true })
   rating?: number | null;

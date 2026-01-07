@@ -4,7 +4,7 @@
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { ChannelCredentialEntity } from './infrastructure/persistence/relational/entities/channel-credential.entity';
 import { CreateCredentialDto } from './dto/create-credential.dto';
 import { WorkspaceEntity } from '../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
@@ -16,10 +16,10 @@ export class IntegrationsService {
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) {}
+  ) { }
 
   async findAll(workspaceId?: string): Promise<ChannelCredentialEntity[]> {
-    const where: any = {};
+    const where: FindOptionsWhere<ChannelCredentialEntity> = {};
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }
@@ -30,7 +30,7 @@ export class IntegrationsService {
     provider: string,
     workspaceId?: string,
   ): Promise<ChannelCredentialEntity | null> {
-    const where: any = { provider: provider.toLowerCase() };
+    const where: FindOptionsWhere<ChannelCredentialEntity> = { provider: provider.toLowerCase() };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }

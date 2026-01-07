@@ -10,7 +10,7 @@ export class FilesCronService {
   constructor(
     private readonly filesService: FilesService,
     private readonly fileRepository: FileRepository,
-  ) {}
+  ) { }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCron() {
@@ -24,9 +24,9 @@ export class FilesCronService {
         try {
           // Delete from storage and DB
           await this.filesService.delete(file.id);
-        } catch (err: any) {
+        } catch (err) {
           this.logger.error(
-            `Failed to delete file ${file.id}: ${err?.message}`,
+            `Failed to delete file ${file.id}: ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }

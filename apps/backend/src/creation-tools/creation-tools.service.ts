@@ -18,7 +18,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async create(createDto: CreateCreationToolDto): Promise<CreationTool> {
     const tool = await this.repository.create({
@@ -82,10 +82,11 @@ export class CreationToolsService {
     id: CreationTool['id'],
     updateDto: UpdateCreationToolDto,
   ): Promise<CreationTool> {
-    const updatePayload: any = { ...updateDto };
-    if (updateDto.categoryIds) {
-      updatePayload.categories = updateDto.categoryIds.map((id) => ({ id }));
-      delete updatePayload.categoryIds;
+    const { categoryIds, ...updatePayload } = updateDto;
+
+    const persistencePayload: any = { ...updatePayload };
+    if (categoryIds) {
+      persistencePayload.categories = categoryIds.map((id) => ({ id }));
     }
 
     const tool = await this.repository.update(id, updatePayload);

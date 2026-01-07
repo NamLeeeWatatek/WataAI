@@ -9,6 +9,7 @@
 } from 'typeorm';
 import { EntityRelationalHelper } from 'src/utils/relational-entity-helper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { MessageRole } from '../../../../conversations.enum';
 
 @Entity({ name: 'ai_conversation' })
 export class AiConversationEntity extends EntityRelationalHelper {
@@ -34,7 +35,7 @@ export class AiConversationEntity extends EntityRelationalHelper {
 
   @Column({ type: 'jsonb', default: [] })
   messages: Array<{
-    role: 'user' | 'assistant' | 'system';
+    role: MessageRole;
     content: string;
     timestamp: string;
     metadata?: any;

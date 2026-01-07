@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { io, Socket, ManagerOptions } from 'socket.io-client';
+import { io, Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 
 export interface UseSocketConnectionConfig {
@@ -20,9 +20,9 @@ export interface UseSocketConnectionReturn {
   connect: () => void;
   disconnect: () => void;
   reconnect: () => void;
-  emit: (event: string, data?: any) => void;
-  on: (event: string, handler: (...args: any[]) => void) => () => void;
-  off: (event: string, handler?: (...args: any[]) => void) => void;
+  emit: <T = unknown>(event: string, data?: T) => void;
+  on: <T = unknown>(event: string, handler: (data: T) => void) => () => void;
+  off: <T = unknown>(event: string, handler?: (data: T) => void) => void;
 }
 
 /**
@@ -55,7 +55,7 @@ export function useSocketConnection({
     return `${baseUrl}/${namespace}`;
   }, [customUrl, namespace]);
 
-  const getSocketOptions = useCallback((): any => ({
+  const getSocketOptions = useCallback((): Partial<ManagerOptions & SocketOptions> => ({
     transports: transport === 'polling' ? ['polling'] : ['websocket', 'polling'],
     reconnection: true,
     reconnectionDelay: 1000,
@@ -149,7 +149,7 @@ export function useSocketConnection({
     setTimeout(connect, 1000);
   }, [disconnect, connect]);
 
-  const emit = useCallback((event: string, data?: any) => {
+  const emit = useCallback(<T = unknown>(event: string, data?: T) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(event, data);
     } else {
@@ -157,7 +157,7 @@ export function useSocketConnection({
     }
   }, [namespace]);
 
-  const on = useCallback((event: string, handler: (...args: any[]) => void) => {
+  const on = useCallback(<T = unknown>(event: string, handler: (data: T) => void) => {
     if (socketRef.current) {
       socketRef.current.on(event, handler);
 
@@ -169,7 +169,7 @@ export function useSocketConnection({
     return () => { };
   }, []);
 
-  const off = useCallback((event: string, handler?: (...args: any[]) => void) => {
+  const off = useCallback(<T = unknown>(event: string, handler?: (data: T) => void) => {
     if (socketRef.current) {
       socketRef.current.off(event, handler);
     }

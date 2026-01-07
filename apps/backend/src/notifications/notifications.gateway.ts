@@ -12,6 +12,35 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
+import { Notification } from './domain/notification';
+
+export interface JobProgressPayload {
+  userId: string;
+  workspaceId?: string; // Optional for personal jobs
+  type: 'job_progress';
+  title: string;
+  message: string;
+  data: {
+    jobId: string;
+    status: string;
+    progress: number;
+    outputData?: any;
+    error?: string;
+  };
+}
+
+export interface JobCreatedPayload {
+  userId: string;
+  workspaceId?: string; // Optional
+  type: 'job_created';
+  title: string;
+  message: string;
+  data: {
+    jobId: string;
+  };
+}
+
+export type GatewayNotificationPayload = Notification | JobProgressPayload | JobCreatedPayload;
 
 @WebSocketGateway({
   cors: {
@@ -23,8 +52,7 @@ import { NotificationsService } from './notifications.service';
 })
 @UseGuards(AuthGuard('jwt'))
 export class NotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+  implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
@@ -34,7 +62,7 @@ export class NotificationsGateway
   constructor(
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
@@ -169,7 +197,7 @@ export class NotificationsGateway
   }
 
   // Public methods for emitting notifications from service
-  emitNewNotification(notification: any) {
+  emitNewNotification(notification: GatewayNotificationPayload) {
     const userSockets = this.connectedClients.get(notification.userId);
     if (userSockets && userSockets.size > 0) {
       this.server.to([...userSockets]).emit('new_notification', notification);

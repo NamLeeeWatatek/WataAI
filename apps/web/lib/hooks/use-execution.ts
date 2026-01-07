@@ -105,7 +105,7 @@ export function useExecution(
         const responsePromise = axiosClient.post(`/flows/${flowId}/execute`, inputData || {});
 
         // Set up WebSocket event handlers
-        const unsubscribeProgress = onWs('execution:progress', (data) => {
+        const unsubscribeProgress = onWs('execution:progress', (data: any) => {
           const update: ExecutionUpdate = {
             executionId: execId,
             flowId,
@@ -121,19 +121,19 @@ export function useExecution(
           }
         });
 
-        const unsubscribeNodeStart = onWs('execution:node:start', (data) => {
+        const unsubscribeNodeStart = onWs('execution:node:start', (data: any) => {
           updateNodeStatus(data.nodeId, 'running');
         });
 
-        const unsubscribeNodeComplete = onWs('execution:node:complete', (data) => {
+        const unsubscribeNodeComplete = onWs('execution:node:complete', (data: any) => {
           updateNodeStatus(data.nodeId, 'success', data);
         });
 
-        const unsubscribeNodeError = onWs('execution:node:error', (data) => {
+        const unsubscribeNodeError = onWs('execution:node:error', (data: any) => {
           updateNodeStatus(data.nodeId, 'error', data);
         });
 
-        const unsubscribeComplete = onWs('execution:complete', (data) => {
+        const unsubscribeComplete = onWs('execution:complete', (data: any) => {
           const update: ExecutionUpdate = {
             executionId: execId,
             flowId,
@@ -155,7 +155,7 @@ export function useExecution(
           resolve();
         });
 
-        const unsubscribeWebSocketError = onWs('execution:error', (data) => {
+        const unsubscribeWebSocketError = onWs('execution:error', (data: any) => {
           const update: ExecutionUpdate = {
             executionId: execId,
             flowId,

@@ -5,6 +5,7 @@ import { AiConversationEntity } from './infrastructure/persistence/relational/en
 import {
   CreateAiConversationDto,
   UpdateAiConversationDto,
+  AddAiMessageDto,
 } from './dto/ai-conversation.dto';
 
 @Injectable()
@@ -12,7 +13,7 @@ export class AiConversationsService {
   constructor(
     @InjectRepository(AiConversationEntity)
     private readonly conversationRepository: Repository<AiConversationEntity>,
-  ) {}
+  ) { }
 
   async create(userId: string, createDto: CreateAiConversationDto) {
     const conversation = this.conversationRepository.create({
@@ -80,12 +81,7 @@ export class AiConversationsService {
   async addMessage(
     id: string,
     userId: string,
-    message: {
-      role: 'user' | 'assistant' | 'system';
-      content: string;
-      timestamp: string;
-      metadata?: any;
-    },
+    message: AddAiMessageDto,
   ) {
     const conversation = await this.findOne(id, userId);
     conversation.messages.push(message);

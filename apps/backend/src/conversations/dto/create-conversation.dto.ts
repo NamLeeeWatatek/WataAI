@@ -17,6 +17,8 @@ import {
   ConversationStatus,
   MessageRole,
   MessageFeedback,
+  ConversationSource,
+  ConversationType,
 } from '../conversations.enum';
 
 export class CreateConversationDto {
@@ -56,10 +58,15 @@ export class CreateConversationDto {
   @IsUUID()
   workspaceId?: string;
 
-  @ApiPropertyOptional({ description: 'Source channel/platform' })
+  @ApiPropertyOptional({ enum: ConversationSource, description: 'Source channel/platform' })
   @IsOptional()
-  @IsString()
-  source?: string;
+  @IsEnum(ConversationSource)
+  source?: ConversationSource;
+
+  @ApiPropertyOptional({ enum: ConversationType, description: 'Conversation type' })
+  @IsOptional()
+  @IsEnum(ConversationType)
+  type?: ConversationType;
 
   @ApiPropertyOptional({ enum: ConversationStatus })
   @IsOptional()

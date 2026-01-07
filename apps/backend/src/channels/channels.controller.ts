@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ChannelsService } from './channels.service';
 import { CreateConnectionDto } from '../integrations/dto/create-connection.dto';
+import { UpdateConnectionDto } from './dto/update-connection.dto';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
@@ -22,7 +23,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'channels', version: '1' })
 export class ChannelsController {
-  constructor(private readonly channelsService: ChannelsService) {}
+  constructor(private readonly channelsService: ChannelsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })
@@ -61,7 +62,7 @@ export class ChannelsController {
   @ApiOperation({ summary: 'Update channel connection' })
   async update(
     @Param('id') id: string,
-    @Body() dto: { botId?: string | null; name?: string; metadata?: any },
+    @Body() dto: UpdateConnectionDto,
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
   ) {

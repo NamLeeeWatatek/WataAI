@@ -45,10 +45,10 @@ export class CreationJobEntity extends EntityRelationalHelper {
   creationToolId: string;
 
   @Column({ name: 'input_data', type: 'jsonb' })
-  inputData: any;
+  inputData: Record<string, any>;
 
   @Column({ name: 'output_data', type: 'jsonb', nullable: true })
-  outputData: any;
+  outputData: Record<string, any> | null;
 
   @Column({ type: 'float', default: 0 })
   progress: number;
