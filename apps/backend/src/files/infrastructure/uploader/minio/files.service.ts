@@ -13,6 +13,7 @@ import { FileType } from '../../../domain/file';
 import { ConfigService } from '@nestjs/config';
 import { AllConfigType } from '../../../../config/config.type';
 import { FileDriver } from '../../../domain/file-driver.interface';
+import crypto from 'crypto';
 
 @Injectable()
 export class FilesMinioService implements FileDriver {
@@ -166,12 +167,12 @@ export class FilesMinioService implements FileDriver {
       });
     }
 
-    const randomKey = Math.random().toString(36).substring(2);
+    const id = crypto.randomUUID();
     const extension = file.fileName.split('.').pop()?.toLowerCase();
 
-    // Multi-tenant path isolation: workspaces/{workspaceId}/{bucket}/{randomKey}.{ext}
+    // Multi-tenant path isolation: workspaces/{workspaceId}/{bucket}/{id}.{ext}
     const workspacePath = workspaceId ? `workspaces/${workspaceId}/` : '';
-    const key = `${workspacePath}${randomKey}.${extension}`;
+    const key = `${workspacePath}${id}.${extension}`;
 
     // Auto-categorize bucket based on file type if not provided
     let bucket = file.bucket;
@@ -216,7 +217,7 @@ export class FilesMinioService implements FileDriver {
     const baseUrl = this.minioEndpoint.endsWith('/')
       ? this.minioEndpoint.slice(0, -1)
       : this.minioEndpoint;
-    const uploadSignedUrl = `${baseUrl}/${bucket}/${key}`;
+    const uploadSignedUrl = await this.minioClient.presignedPutObject(bucket, key, 3600); // 1 hour expiry for upload
     const downloadSignedUrl = `${baseUrl}/${bucket}/${key}`;
 
     this.logger.log(`✅ Generated direct URLs:`);
@@ -225,9 +226,10 @@ export class FilesMinioService implements FileDriver {
     this.logger.log(`   Bucket '${bucket}' should now be publicly accessible`);
 
     const data = await this.fileRepository.create({
+      id: id,
       path: key,
       bucket: bucket,
-    });
+    } as FileType);
 
     return {
       file: data,

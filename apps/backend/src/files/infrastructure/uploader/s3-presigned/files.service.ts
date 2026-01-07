@@ -11,6 +11,7 @@ import { FileRepository } from '../../persistence/file.repository';
 import { FilesService } from '../../../files.service';
 
 import { FileUploadDto } from './dto/file.dto';
+import crypto from 'crypto';
 import {
   PutObjectCommand,
   GetObjectCommand,
@@ -21,7 +22,6 @@ import {
   PutBucketPolicyCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { randomStringGenerator } from '@nestjs/common/utils/random-string-generator.util';
 import { ConfigService } from '@nestjs/config';
 import { FileType } from '../../../domain/file';
 import { AllConfigType } from '../../../../config/config.type';
@@ -200,10 +200,8 @@ export class FilesS3PresignedService {
       });
     }
 
-    const key = `${randomStringGenerator()}.${file.fileName
-      .split('.')
-      .pop()
-      ?.toLowerCase()}`;
+    const id = crypto.randomUUID();
+    const key = `${id}.${file.fileName.split('.').pop()?.toLowerCase()}`;
 
     // Auto-categorize bucket based on file type if not provided
     let bucket = file.bucket;
@@ -222,18 +220,13 @@ export class FilesS3PresignedService {
       expiresIn: 3600,
     });
 
-    const downloadCommand = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    });
-    const downloadSignedUrl = await getSignedUrl(this.s3, downloadCommand, {
-      expiresIn: 3600,
-    });
+    const downloadSignedUrl = `https://${bucket}.s3.${this.configService.get('file.awsS3Region', { infer: true })}.amazonaws.com/${key}`;
 
     const data = await this.fileRepository.create({
+      id: id,
       path: key,
       bucket: bucket,
-    });
+    } as FileType);
 
     return {
       file: data,

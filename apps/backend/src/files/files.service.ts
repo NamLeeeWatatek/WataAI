@@ -11,7 +11,7 @@ export class FilesService {
     private readonly fileRepository: FileRepository,
     private readonly auditService: AuditService,
     @Inject('FILE_DRIVER') private readonly fileDriver: FileDriver,
-  ) {}
+  ) { }
 
   private readonly uuidRegex =
     /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -34,9 +34,26 @@ export class FilesService {
 
   async confirmFromUrl(url: string | null | undefined): Promise<void> {
     if (!url) return;
-    const fileIdMatch = url.match(this.uuidRegex);
-    if (fileIdMatch) {
-      await this.confirm(fileIdMatch[0]);
+
+    try {
+      // Robust extraction: Handle full URLs and relative paths
+      const urlString = url.startsWith('http') ? url : `http://dummy.com/${url}`;
+      const urlObj = new URL(urlString);
+      const pathname = urlObj.pathname;
+      const filename = pathname.split('/').pop();
+
+      if (!filename) return;
+
+      const fileIdMatch = filename.match(this.uuidRegex);
+      if (fileIdMatch) {
+        await this.confirm(fileIdMatch[0]);
+      }
+    } catch (error) {
+      // Fallback for malformed URLs
+      const fileIdMatch = url.match(this.uuidRegex);
+      if (fileIdMatch) {
+        await this.confirm(fileIdMatch[0]); // Best effort
+      }
     }
   }
 
