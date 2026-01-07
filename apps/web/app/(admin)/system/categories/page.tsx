@@ -11,7 +11,8 @@ import { PageShell } from "@/components/layout/PageShell"
 import { DataTable, Column } from "@/components/ui/DataTable"
 import { Button } from "@/components/ui/Button"
 import { CategoryDialog } from "@/components/features/categories/CategoryDialog"
-import { categoriesApi, Category } from "@/lib/api/categories"
+import { Category } from "@/lib/api/categories"
+import { useCategories } from "@/lib/hooks/features/useCategories"
 import { PaginationInfo } from "@/components/ui/Pagination"
 import {
     AlertDialog,
@@ -45,11 +46,12 @@ export default function CategoriesPage() {
     // Reset page 1 when search changes
 
 
-    const { data: response, isLoading, refetch } = useQuery({
-        queryKey: ['categories', page, limit, querySearch],
-        queryFn: () => categoriesApi.findAll({ page, limit, search: querySearch }),
-        placeholderData: keepPreviousData,
-    })
+    const {
+        data: response,
+        isLoading,
+        refetch,
+        deleteCategory
+    } = useCategories({ page, limit, search: querySearch })
 
     const data = response?.data || []
     const total = response?.total || 0
@@ -57,11 +59,11 @@ export default function CategoriesPage() {
     const handleDelete = async () => {
         if (!deleteId) return
         try {
-            await categoriesApi.delete(deleteId)
-            toast.success("Category deleted")
+            await deleteCategory(deleteId)
+            // Success handled in hook
             refetch()
         } catch (error) {
-            toast.error("Failed to delete category")
+            // Error handled in hook
         } finally {
             setDeleteId(null)
         }

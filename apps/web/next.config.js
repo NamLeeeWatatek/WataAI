@@ -5,6 +5,7 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
   },
+  reactCompiler: true,
   images: {
     // Add domains if you load external images
     remotePatterns: [

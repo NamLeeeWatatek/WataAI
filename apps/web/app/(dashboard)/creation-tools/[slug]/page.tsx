@@ -1,23 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { creationToolsApi, CreationTool, FormField } from '@/lib/api/creation-tools';
 import { templatesApi } from '@/lib/api/templates';
 import { getChannels } from '@/lib/api/channels';
 import { Template } from '@/lib/types/template';
 import { Channel } from '@/lib/types/channel';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/RadioGroup';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { Loader2, ArrowLeft, Sparkles, Check, Plus, Filter, LayoutGrid, Settings, Facebook, Instagram, Share2, Globe, FileText, X, Eye } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Loader2, ArrowLeft, Sparkles, Check, Settings, Search } from 'lucide-react';
+import { Search as SearchInput } from '@/components/ui/Search';
 import { useToast } from '@/lib/hooks/use-toast';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -38,25 +35,24 @@ import { DynamicFormField } from '@/components/ui/DynamicFormField';
 
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
 import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 export default function CreationToolDetailPage() {
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const { currentWorkspace } = useWorkspace();
     const { addJob } = useCreationJobs();
-    const [tool, setTool] = useState<CreationTool | null>(null);
-    const [templates, setTemplates] = useState<Template[]>([]);
-    const [channels, setChannels] = useState<Channel[]>([]);
+
+    // React Query State
     const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-    const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [includeTemplate, setIncludeTemplate] = useState(false);
-    const formConfig = tool?.formConfig || { fields: [] };
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [categories, setCategories] = useState<string[]>([]);
     const debouncedSearch = useDebounce(searchQuery, 500);
+
     const form = useForm<z.infer<any>>({
         defaultValues: {},
     });
@@ -64,158 +60,153 @@ export default function CreationToolDetailPage() {
     const setBreadcrumbName = useBreadcrumbStore(state => state.setBreadcrumbName)
     const removeBreadcrumbName = useBreadcrumbStore(state => state.removeBreadcrumbName)
 
+    // 1. Fetch Tool Data
+    const { data: tool, isLoading: toolLoading } = useQuery({
+        queryKey: ['creation-tool', params.slug],
+        queryFn: async () => {
+            if (!params.slug) return null;
+            return await creationToolsApi.getBySlug(params.slug as string);
+        },
+        enabled: !!params.slug,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // 2. Fetch Channels (only if needed)
+    // We check if any field allows channel selection or implies it
+    const requiresChannels = useMemo(() => {
+        if (!tool) return false;
+        return tool.formConfig.fields.some(f => f.type === 'channel-selector' || f.name === 'platforms');
+    }, [tool]);
+
+    const { data: channels = [] } = useQuery({
+        queryKey: ['channels', currentWorkspace?.id],
+        queryFn: () => getChannels(currentWorkspace?.id),
+        enabled: requiresChannels,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // 3. Form Initialization Side Effect
     useEffect(() => {
-        const fetchTool = async () => {
-            if (!params.slug) return;
+        if (!tool) return;
 
-            try {
-                const toolData = await creationToolsApi.getBySlug(params.slug as string);
-                setTool(toolData);
+        // Breadcrumb
+        if (params.slug) setBreadcrumbName(params.slug as string, tool.name);
 
-                const defaults: Record<string, any> = {};
-                let requiresChannels = false;
-                const zodShape: Record<string, any> = {};
+        // Form Defaults Setup
+        const defaults: Record<string, any> = {};
+        const zodShape: Record<string, any> = {};
 
-                toolData.formConfig.fields.forEach((field) => {
-                    if (field.defaultValue !== undefined) {
-                        defaults[field.name] = field.defaultValue;
-                    }
-
-                    let schema: any;
-
-                    if (field.type === 'number') {
-                        schema = z.number({ message: "Must be a number" });
-                        if (field.validation?.min !== undefined) schema = schema.min(field.validation.min);
-                        if (field.validation?.max !== undefined) schema = schema.max(field.validation.max);
-                    } else if (field.type === 'checkbox') {
-                        schema = z.boolean();
-                    } else if (field.type === 'channel-selector') {
-                        schema = z.array(z.string());
-                        if (field.validation?.required) {
-                            schema = (schema as z.ZodArray<any>).min(1, "Please select at least one channel");
-                        }
-                        requiresChannels = true;
-                    } else if (field.type === 'file') {
-                        schema = z.any().refine((val) => val && val.url, "File is required");
-                    } else {
-                        schema = z.string();
-                        if (field.validation?.minLength) schema = schema.min(field.validation.minLength, `Minimum ${field.validation.minLength} characters`);
-                        if (field.validation?.maxLength) schema = schema.max(field.validation.maxLength, `Maximum ${field.validation.maxLength} characters`);
-                        if (field.validation?.pattern) schema = schema.regex(new RegExp(field.validation.pattern), "Invalid format");
-                    }
-
-                    if (!field.validation?.required && field.type !== 'checkbox') {
-                        schema = schema.optional().or(z.literal(''));
-                    } else if (field.validation?.required) {
-                        if (field.type === 'text' || field.type === 'textarea') {
-                            schema = schema.min(1, "This field is required");
-                        }
-                    }
-
-                    zodShape[field.name] = schema;
-
-                    if (field.name === 'platforms') {
-                        requiresChannels = true;
-                    }
-                });
-
-                form.reset(defaults);
-
-                if (requiresChannels) {
-                    try {
-                        const channelsData = await getChannels();
-                        setChannels(channelsData);
-                    } catch (err) {
-                        console.error("Failed to load channels", err);
-                    }
-                }
-
-                if (params.slug) setBreadcrumbName(params.slug as string, toolData.name);
-            } catch (error) {
-                console.error('Failed to load tool:', error);
-                toast({
-                    title: 'Error',
-                    description: 'Failed to load creation tool',
-                    variant: 'destructive',
-                });
-            } finally {
-                setLoading(false);
+        tool.formConfig.fields.forEach((field) => {
+            if (field.defaultValue !== undefined) {
+                // If form already has value (e.g. from user input or prefill), don't overwrite blindly
+                // But this runs on tool load, which usually happens once.
+                // We'll set defaults.
+                defaults[field.name] = field.defaultValue;
             }
-        };
 
-        fetchTool();
+            // --- Zod Schema Generation (Keeping original logic) ---
+            let schema: any;
+            if (field.type === 'number') {
+                schema = z.number({ message: "Must be a number" });
+                if (field.validation?.min !== undefined) schema = schema.min(field.validation.min);
+                if (field.validation?.max !== undefined) schema = schema.max(field.validation.max);
+            } else if (field.type === 'checkbox') {
+                schema = z.boolean();
+            } else if (field.type === 'channel-selector') {
+                schema = z.array(z.string());
+                if (field.validation?.required) {
+                    schema = (schema as z.ZodArray<any>).min(1, "Please select at least one channel");
+                }
+            } else if (field.type === 'file') {
+                schema = z.any().refine((val) => val && val.url, "File is required");
+            } else {
+                schema = z.string();
+                if (field.validation?.minLength) schema = schema.min(field.validation.minLength, `Minimum ${field.validation.minLength} characters`);
+                if (field.validation?.maxLength) schema = schema.max(field.validation.maxLength, `Maximum ${field.validation.maxLength} characters`);
+                if (field.validation?.pattern) schema = schema.regex(new RegExp(field.validation.pattern), "Invalid format");
+            }
+
+            if (!field.validation?.required && field.type !== 'checkbox') {
+                schema = schema.optional().or(z.literal(''));
+            } else if (field.validation?.required) {
+                if (field.type === 'text' || field.type === 'textarea') {
+                    schema = schema.min(1, "This field is required");
+                }
+            }
+            zodShape[field.name] = schema;
+        });
+
+        // We only reset if the form is pristine or we just loaded the tool
+        // To be safe and simple: reset with defaults on mount/tool change
+        form.reset(defaults);
 
         return () => {
-            if (params.slug) removeBreadcrumbName(params.slug as string)
+            if (params.slug) removeBreadcrumbName(params.slug as string);
         }
-    }, [params.slug, form, setBreadcrumbName, removeBreadcrumbName]);
+    }, [tool, params.slug, setBreadcrumbName, removeBreadcrumbName, form]);
 
-    // This effect is now just for breadcrumbs and other side effects when tool state changes
-    useEffect(() => {
-        if (tool && params.slug) {
-            setBreadcrumbName(params.slug as string, tool.name)
-        }
-    }, [tool, params.slug, setBreadcrumbName])
 
-    useEffect(() => {
-        const fetchTemplates = async () => {
-            if (!tool?.id) return;
+    // 4. Fetch Templates
+    const { data: templates = [] } = useQuery({
+        queryKey: ['templates', tool?.id, debouncedSearch, selectedCategory],
+        queryFn: async () => {
+            if (!tool?.id) return [];
 
-            try {
-                // Construct filter object
-                const filters: any = {
-                    creationToolId: tool.id
-                };
+            const filters: any = {
+                creationToolId: tool.id
+            };
 
-                if (debouncedSearch && debouncedSearch.trim() !== '') {
-                    filters.name = debouncedSearch.trim();
-                }
-
-                if (selectedCategory && selectedCategory !== 'all') {
-                    filters.category = selectedCategory;
-                }
-
-                // Call API
-                const result = await templatesApi.findAll({
-                    filters: JSON.stringify(filters),
-                    limit: 100
-                });
-
-                const templatesData = Array.isArray(result) ? result : (result?.data || []);
-                setTemplates(templatesData);
-
-                // Auto-select template if ID is in URL
-                const queryTemplateId = searchParams.get('templateId');
-                if (queryTemplateId && !selectedTemplate) {
-                    const match = templatesData.find((t: any) => t.id === queryTemplateId);
-                    if (match) {
-                        handleTemplateSelect(match);
-                    }
-                }
-
-                // Extract categories from unfiltered list or first load
-                if ((!debouncedSearch && selectedCategory === 'all') || categories.length <= 1) {
-                    const distinctCategories = ['all', ...Array.from(new Set(templatesData.map((t: any) => {
-                        if (t.category && typeof t.category === 'object') {
-                            return t.category.slug || t.category.name || 'other';
-                        }
-                        return t.category || 'other';
-                    })))];
-                    setCategories(distinctCategories as string[]);
-                }
-            } catch (error) {
-                console.error("Failed to search templates", error);
+            if (debouncedSearch && debouncedSearch.trim() !== '') {
+                filters.name = debouncedSearch.trim();
             }
-        };
-        fetchTemplates();
-    }, [debouncedSearch, selectedCategory, tool?.id]);
+
+            if (selectedCategory && selectedCategory !== 'all') {
+                filters.category = selectedCategory;
+            }
+
+            const result = await templatesApi.findAll({
+                filters: JSON.stringify(filters),
+                limit: 100
+            });
+
+            return Array.isArray(result) ? result : (result?.data || []);
+        },
+        enabled: !!tool?.id,
+        placeholderData: keepPreviousData,
+    });
 
 
+    // Extract Categories from Templates (Client-side mainly, or based on initial load)
+    const categories = useMemo(() => {
+        // If searching, we might get partial categories, but better than nothing
+        // Or we could have a separate query for categories. 
+        // Existing logic derived it from templates.
+        if (templates.length === 0) return ['all'];
 
+        const distinctCategories = ['all', ...Array.from(new Set(templates.map((t: any) => {
+            if (t.category && typeof t.category === 'object') {
+                return t.category.slug || t.category.name || 'other';
+            }
+            return t.category || 'other';
+        })))];
+        return distinctCategories as string[];
+    }, [templates]);
+
+    // Handle URL Template Selection Auto-select
+    useEffect(() => {
+        const queryTemplateId = searchParams.get('templateId');
+        if (queryTemplateId && !selectedTemplate && templates.length > 0) {
+            const match = templates.find((t: any) => t.id === queryTemplateId);
+            if (match) {
+                handleTemplateSelect(match);
+            }
+        }
+    }, [searchParams, templates, selectedTemplate]);
+
+    // Handlers
     const handleTemplateSelect = (template: Template) => {
         setSelectedTemplate(template);
         if (template.prefilledData) {
-            // Merge per-field to trigger form updates
             Object.entries(template.prefilledData).forEach(([key, value]) => {
                 form.setValue(key, value);
             });
@@ -264,10 +255,6 @@ export default function CreationToolDetailPage() {
         }
     };
 
-    // We use the 'templates' state which is now filtered via API
-    const filteredTemplates = templates;
-
-
     const renderFormField = (field: FormField) => {
         return (
             <ShadcnFormField
@@ -286,7 +273,7 @@ export default function CreationToolDetailPage() {
         );
     };
 
-    if (loading) {
+    if (toolLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-background text-foreground">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -339,7 +326,7 @@ export default function CreationToolDetailPage() {
 
                                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                                     <div className="relative w-full sm:max-w-xs">
-                                        <Search
+                                        <SearchInput
                                             placeholder="Search templates..."
                                             value={searchQuery}
                                             onChange={(e: any) => setSearchQuery(e.target.value)}
@@ -404,7 +391,7 @@ export default function CreationToolDetailPage() {
                             </div>
 
                             <ScrollArea className="flex-1 p-6">
-                                {filteredTemplates.length === 0 ? (
+                                {templates.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center py-12 text-center opacity-60">
                                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                                             <Search className="w-8 h-8 text-muted-foreground" />
@@ -413,7 +400,7 @@ export default function CreationToolDetailPage() {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-                                        {filteredTemplates.map((template) => (
+                                        {templates.map((template) => (
                                             <div
                                                 key={template.id}
                                                 onClick={() => handleTemplateSelect(template)}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useState, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
@@ -17,23 +17,18 @@ import {
   Users,
   User,
   Hash,
-  ChevronRight,
   RefreshCw,
   Bell,
-  Settings,
   Bot,
   UserPlus,
   Mail,
   Instagram,
   Facebook,
   MessageCircle,
-  Send,
-  Phone
 } from 'lucide-react';
 import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
 import { Button } from '@/components/ui/Button';
 import { Search } from '@/components/ui/Search';
-import { Input } from '@/components/ui/Input';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import {
@@ -50,6 +45,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ChannelConversation } from '@/components/features/conversations/ChannelConversationList';
 import { Badge } from '@/components/ui/Badge';
+import { useQueryClient, useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useBotConversations, useBotConversation, botConversationKeys } from '@/lib/hooks/features/useBotConversations';
+import { useChannels } from '@/lib/hooks/features/useChannels';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { MessageRole } from '@/lib/types/conversations';
 
 
@@ -91,19 +90,116 @@ const formatRelativeTime = (dateString: string): string => {
   }
 };
 
+const mapConversation = (conv: any): Conversation => {
+  // ✅ Try multiple sources for last message
+  let lastMessage = 'No messages yet';
+
+  if (conv.lastMessage) {
+    lastMessage = conv.lastMessage;
+  } else if (conv.last_message) {
+    lastMessage = conv.last_message;
+  } else if (conv.metadata?.lastMessage) {
+    lastMessage = conv.metadata.lastMessage;
+  } else if (conv.messages && conv.messages.length > 0) {
+    const lastMsg = conv.messages[conv.messages.length - 1];
+    lastMessage = lastMsg.content || lastMsg.text || 'No messages yet';
+  }
+
+
+  // ✅ FIX: Ensure valid date
+  let lastMessageAt = new Date().toISOString();
+  const rawDate = conv.lastMessageAt || conv.last_message_at || conv.updatedAt || conv.updated_at || conv.createdAt || conv.created_at;
+  if (rawDate) {
+    try {
+      const parsedDate = new Date(rawDate);
+      if (!isNaN(parsedDate.getTime())) {
+        lastMessageAt = parsedDate.toISOString();
+      }
+    } catch {
+      // Keep default
+    }
+  }
+
+  return {
+    id: conv.id,
+    externalId: conv.externalId || conv.external_id || '',
+    channelId: conv.channelId || conv.channel_id || '',
+    channelType: conv.channelType || conv.channel_type || 'web',
+    channelName: conv.channelName || conv.channel_name || conv.channelType || 'Unknown',
+    customerName: conv.customerName || conv.contactName || conv.contact_name || 'Unknown',
+    customerAvatar: conv.customerAvatar || conv.contactAvatar || conv.contact_avatar,
+    lastMessage,
+    lastMessageAt,
+    unreadCount: conv.unreadCount || conv.unread_count || 0,
+    status: conv.status === 'active' ? 'open' : conv.status || 'open',
+    assignedTo: conv.assignedTo || conv.assigned_to,
+    metadata: conv.metadata || {},
+  };
+};
+
+const getChannelIcon = (type: string) => {
+  const icons: Record<string, JSX.Element> = {
+    facebook: <Facebook className="w-4 h-4" />,
+    messenger: <FaFacebookMessenger className="w-4 h-4" />,
+    instagram: <Instagram className="w-4 h-4" />,
+    whatsapp: <FaWhatsapp className="w-4 h-4" />,
+    telegram: <FaTelegram className="w-4 h-4" />,
+    email: <Mail className="w-4 h-4" />,
+    webchat: <MessageCircle className="w-4 h-4" />,
+  };
+  return icons[type] || <MessageSquare className="w-4 h-4" />;
+};
+
+const getChannelColor = (type: string) => {
+  const colors: Record<string, string> = {
+    facebook: 'text-blue-500',
+    messenger: 'text-blue-500',
+    instagram: 'text-pink-500',
+    whatsapp: 'text-green-500',
+    telegram: 'text-sky-500',
+    email: 'text-red-500',
+    webchat: 'text-cyan-500',
+  };
+  return colors[type] || 'text-gray-500';
+};
+
+// Extracted helpers for Channel Display
+const getChannelIconDisplay = (type: string) => {
+  const icons: Record<string, JSX.Element> = {
+    facebook: <Facebook className="w-5 h-5" />,
+    messenger: <FaFacebookMessenger className="w-5 h-5" />,
+    instagram: <Instagram className="w-5 h-5" />,
+    whatsapp: <FaWhatsapp className="w-5 h-5" />,
+    telegram: <FaTelegram className="w-5 h-5" />,
+    email: <Mail className="w-5 h-5" />,
+    webchat: <MessageCircle className="w-5 h-5" />,
+  };
+  return icons[type] || <MessageSquare className="w-5 h-5" />;
+};
+
+const getChannelColorDisplay = (type: string) => {
+  const colors: Record<string, string> = {
+    facebook: 'text-blue-500 bg-blue-500/10',
+    messenger: 'text-blue-500 bg-blue-500/10',
+    instagram: 'text-pink-500 bg-pink-500/10',
+    whatsapp: 'text-green-500 bg-green-500/10',
+    telegram: 'text-sky-500 bg-sky-500/10',
+    email: 'text-red-500 bg-red-500/10',
+    webchat: 'text-cyan-500 bg-cyan-500/10',
+  };
+  return colors[type] || 'text-gray-500 bg-gray-500/10';
+};
+
 function ConversationsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [channelsLoading, setChannelsLoading] = useState(true);
+  // State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [refreshing, setRefreshing] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  const { syncConversations, isSyncing: syncing } = useBotConversations();
 
   // ✅ FIX: Use local state instead of URL params for selected conversation
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -114,30 +210,72 @@ function ConversationsPageContent() {
 
   const selectedId = selectedConversationId;
 
+  const { currentWorkspace } = useWorkspace();
+
+  // React Query: Channels
+  const { channels: rawChannels, isLoading: channelsLoading } = useChannels(currentWorkspace?.id);
+
+  const channels = useMemo(() => {
+    return (rawChannels || []).map((channel: any) => ({
+      id: channel.id,
+      name: channel.name || channel.channelName || 'Unknown',
+      type: channel.type || channel.channelType || 'unknown',
+      icon: getChannelIcon(channel.type || channel.channelType || 'unknown'),
+      color: getChannelColor(channel.type || channel.channelType || 'unknown'),
+      unreadCount: 0,
+    }));
+  }, [rawChannels]);
+
+  // React Query: Conversations
+  const conversationsParams = useMemo(() => ({
+    source: 'channel' as const,
+    channelId: selectedChannel !== 'all' ? selectedChannel : undefined,
+    channelType: selectedChannel !== 'all' ? channels.find((c: any) => c.id === selectedChannel)?.type : undefined,
+  }), [selectedChannel, channels]);
+
+  const conversationsQueryKey = useMemo(() => botConversationKeys.list(conversationsParams), [conversationsParams]);
+
+  const {
+    data: conversationsResponse,
+    isLoading: conversationsLoading,
+    refetch: refetchConversations,
+    isRefetching: refreshing
+  } = useBotConversations(conversationsParams);
+
+  const conversations = useMemo(() => {
+    const raw = Array.isArray(conversationsResponse) ? conversationsResponse : (conversationsResponse?.items || []);
+    return raw.map(mapConversation);
+  }, [conversationsResponse]);
+
+  // Real-time updates handlers
   const handleConversationUpdate = useCallback((updatedConversation: any) => {
-    setConversations((prev) => {
-      const exists = prev.find((c) => c.id === updatedConversation.id);
-      const isNewConversation = !exists;
-      const hasNewMessage = exists && updatedConversation.lastMessageAt !== exists.lastMessageAt;
+    queryClient.setQueryData<{ items: Conversation[]; total: number }>(conversationsQueryKey, (oldData: any) => {
+      const prev = oldData?.items || [];
+      const exists = prev.find((c: Conversation) => c.id === updatedConversation.id);
+
+      // Update data
+      const mappedUpdated = mapConversation(updatedConversation);
+      let newData: Conversation[];
 
       if (exists) {
-        return prev.map((c) =>
+        newData = prev.map((c: Conversation) =>
           c.id === updatedConversation.id
-            ? {
-              ...c,
-              ...mapConversation(updatedConversation),
-              lastMessageAt: updatedConversation.lastMessageAt || c.lastMessageAt,
-            }
+            ? { ...c, ...mappedUpdated, lastMessageAt: updatedConversation.lastMessageAt || c.lastMessageAt }
             : c
-        ).sort((a, b) =>
-          new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
         );
       } else {
-        return [mapConversation(updatedConversation), ...prev];
+        newData = [mappedUpdated, ...prev];
       }
+
+      // Sort
+      const sortedData = newData.sort((a, b) =>
+        new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+      );
+
+      return { ...oldData, items: sortedData, total: oldData?.total || sortedData.length };
     });
 
-    // 🏢 ENTERPRISE NOTIFICATIONS - Slack/Teams/Intercom style
+    // 🏢 ENTERPRISE NOTIFICATIONS logic
     const isCurrentlyViewing = selectedId === updatedConversation.id;
     const isWindowFocused = typeof document !== 'undefined' && document.hasFocus();
 
@@ -147,7 +285,6 @@ function ConversationsPageContent() {
 
     if (!isCurrentlyViewing) {
       const newMessage = mapConversation(updatedConversation);
-
       // Only notify for new messages from customers
       if (newMessage.lastMessage && newMessage.lastMessage !== 'No messages yet') {
         const customerName = newMessage.customerName || 'Customer';
@@ -157,12 +294,8 @@ function ConversationsPageContent() {
             : newMessage.lastMessage)
           : 'New message received';
 
-        // Play sound notification (if enabled)
-        if (notificationPrefs.sound) {
-          playSound('message');
-        }
+        if (notificationPrefs.sound) playSound('message');
 
-        // Desktop notification (if enabled and granted)
         if (notificationPrefs.desktop && permission === 'granted') {
           showNotification({
             title: `💬 ${customerName}`,
@@ -172,7 +305,6 @@ function ConversationsPageContent() {
             data: { conversationId: newMessage.id },
           });
         } else {
-          // Fallback to toast notification
           toast(`💬 ${customerName}`, {
             description: messagePreview,
             duration: 4000,
@@ -180,130 +312,39 @@ function ConversationsPageContent() {
         }
       }
     }
-  }, [selectedId, notificationPrefs, permission, showNotification, playSound]);
+  }, [selectedId, notificationPrefs, permission, showNotification, playSound, queryClient, conversationsQueryKey]);
 
   const handleNewMessage = useCallback((message: any) => {
-
-    // Update conversation's last message and move to top
-    setConversations((prev) => {
+    queryClient.setQueryData<{ items: Conversation[]; total: number }>(conversationsQueryKey, (oldData: any) => {
+      const prev = oldData?.items || [];
       const conversationId = message.conversationId;
-      const conversation = prev.find(c => c.id === conversationId);
+      const conversation = prev.find((c: Conversation) => c.id === conversationId);
 
-      if (!conversation) {
-        return prev;
-      }
-
-      // Update conversation with new message
-      const updated = prev.map(c => {
-        if (c.id === conversationId) {
-          return {
-            ...c,
+      if (conversation) {
+        // Move to top and update last message
+        const updated = [
+          {
+            ...conversation,
             lastMessage: message.content,
             lastMessageAt: message.sentAt || message.createdAt || new Date().toISOString(),
-          };
-        }
-        return c;
-      });
-
-      // Sort by lastMessageAt (newest first)
-      return updated.sort((a, b) =>
-        new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
-      );
+            unreadCount: (conversation.unreadCount || 0) + 1,
+          },
+          ...prev.filter((c: Conversation) => c.id !== conversationId),
+        ];
+        const sorted = updated.sort((a, b) =>
+          new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        );
+        return { ...oldData, items: sorted };
+      }
+      return oldData; // Conversation not in list, maybe should refetch?
     });
-  }, []);
+  }, [queryClient, conversationsQueryKey]);
 
   const { isConnected } = useConversationsSocket({
     onConversationUpdate: handleConversationUpdate,
     onNewMessage: handleNewMessage,
     enabled: true,
   });
-
-  const loadConversations = useCallback(async (silent = false) => {
-    try {
-      if (!silent) {
-        setLoading(true);
-      } else {
-        setRefreshing(true);
-      }
-      const params = new URLSearchParams();
-
-      params.set('source', 'channel');
-
-      if (selectedChannel !== 'all') {
-        const channel = channels.find(c => c.id === selectedChannel);
-        if (channel) {
-          params.set('channelId', channel.id);
-          params.set('channelType', channel.type);
-        }
-      }
-
-      const data: any = await axiosClient.get(`/conversations?${params.toString()}`);
-
-
-
-      let rawConversations: any[] = [];
-      if (Array.isArray(data)) {
-        rawConversations = data;
-      } else if (data?.items && Array.isArray(data.items)) {
-        rawConversations = data.items;
-      } else if (data?.conversations && Array.isArray(data.conversations)) {
-        rawConversations = data.conversations;
-      } else if (data?.data && Array.isArray(data.data)) {
-        rawConversations = data.data;
-      }
-
-      const mappedConversations = rawConversations.map(mapConversation);
-
-
-      setConversations(mappedConversations);
-    } catch (error) {
-      if (!silent) {
-        toast.error('Failed to load conversations');
-      }
-      setConversations([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [selectedChannel, channels, statusFilter]);
-
-  const loadChannels = async () => {
-    try {
-      setChannelsLoading(true);
-      const data: any = await axiosClient.get('/channels');
-
-      const mappedChannels: Channel[] = (data?.items || data || []).map((channel: any) => ({
-        id: channel.id,
-        name: channel.name || channel.channelName || 'Unknown',
-        type: channel.type || channel.channelType || 'unknown',
-        icon: getChannelIcon(channel.type || channel.channelType || 'unknown'),
-        color: getChannelColor(channel.type || channel.channelType || 'unknown'),
-        unreadCount: 0,
-      }));
-
-      setChannels(mappedChannels);
-    } catch (error) {
-      toast.error('Failed to load channels');
-      setChannels([]);
-    } finally {
-      setChannelsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadChannels();
-  }, []);
-
-  useEffect(() => {
-    loadConversations(false);
-    const interval = setInterval(() => {
-      if (!isConnected) {
-        loadConversations(true);
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [statusFilter, selectedChannel, isConnected, loadConversations]);
 
   const handleSync = async () => {
     if (selectedChannel === 'all') {
@@ -318,111 +359,40 @@ function ConversationsPageContent() {
     }
 
     try {
-      setSyncing(true);
-      toast.info('Syncing conversations from Facebook...');
-
-      const data: any = await axiosClient.post(
-        `/channels/facebook/connections/${channel.id}/sync-to-db`,
-        {
+      await syncConversations({
+        channelId: channel.id,
+        syncParams: {
           conversationLimit: 25,
           messageLimit: 50,
         }
-      );
-
-      if (data.success) {
-        toast.success(`Synced ${data.synced} conversation(s) from Facebook`);
-        // Reload conversations to show synced data
-        await loadConversations(false);
-      } else {
-        toast.error('Failed to sync conversations');
-      }
+      });
+      await refetchConversations();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to sync conversations';
-      toast.error(errorMessage);
-    } finally {
-      setSyncing(false);
+      // Error handled in hook
     }
   };
 
-  const mapConversation = (conv: any): Conversation => {
-    // ✅ Try multiple sources for last message
-    let lastMessage = 'No messages yet';
+  const filteredConversations = useMemo(() => {
+    if (!conversations) return [];
 
-    if (conv.lastMessage) {
-      lastMessage = conv.lastMessage;
-    } else if (conv.last_message) {
-      lastMessage = conv.last_message;
-    } else if (conv.metadata?.lastMessage) {
-      lastMessage = conv.metadata.lastMessage;
-    } else if (conv.messages && conv.messages.length > 0) {
-      const lastMsg = conv.messages[conv.messages.length - 1];
-      lastMessage = lastMsg.content || lastMsg.text || 'No messages yet';
+    let result = conversations;
+
+    // Filter by search
+    if (searchQuery) {
+      result = result.filter((conv: Conversation) =>
+        conv.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        conv.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
-
-    // ✅ FIX: Ensure valid date
-    let lastMessageAt = new Date().toISOString();
-    const rawDate = conv.lastMessageAt || conv.last_message_at || conv.updatedAt || conv.updated_at || conv.createdAt || conv.created_at;
-    if (rawDate) {
-      try {
-        const parsedDate = new Date(rawDate);
-        if (!isNaN(parsedDate.getTime())) {
-          lastMessageAt = parsedDate.toISOString();
-        }
-      } catch {
-        // Keep default
-      }
+    // Filter by status (Frontend filter)
+    if (statusFilter !== 'all') {
+      const targetStatus = statusFilter === 'active' ? 'open' : statusFilter;
+      result = result.filter((c: Conversation) => c.status === targetStatus);
     }
 
-    return {
-      id: conv.id,
-      externalId: conv.externalId || conv.external_id || '',
-      channelId: conv.channelId || conv.channel_id || '',
-      channelType: conv.channelType || conv.channel_type || 'web',
-      channelName: conv.channelName || conv.channel_name || conv.channelType || 'Unknown',
-      customerName: conv.customerName || conv.contactName || conv.contact_name || 'Unknown',
-      customerAvatar: conv.customerAvatar || conv.contactAvatar || conv.contact_avatar,
-      lastMessage,
-      lastMessageAt,
-      unreadCount: conv.unreadCount || conv.unread_count || 0,
-      status: conv.status === 'active' ? 'open' : conv.status || 'open',
-      assignedTo: conv.assignedTo || conv.assigned_to,
-      metadata: conv.metadata || {},
-    };
-  };
-
-  const getChannelIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
-      facebook: <Facebook className="w-4 h-4" />,
-      messenger: <FaFacebookMessenger className="w-4 h-4" />,
-      instagram: <Instagram className="w-4 h-4" />,
-      whatsapp: <FaWhatsapp className="w-4 h-4" />,
-      telegram: <FaTelegram className="w-4 h-4" />,
-      email: <Mail className="w-4 h-4" />,
-      webchat: <MessageCircle className="w-4 h-4" />,
-    };
-    return icons[type] || <MessageSquare className="w-4 h-4" />;
-  };
-
-  const getChannelColor = (type: string) => {
-    const colors: Record<string, string> = {
-      facebook: 'text-blue-500',
-      messenger: 'text-blue-500',
-      instagram: 'text-pink-500',
-      whatsapp: 'text-green-500',
-      telegram: 'text-sky-500',
-      email: 'text-red-500',
-      webchat: 'text-cyan-500',
-    };
-    return colors[type] || 'text-gray-500';
-  };
-
-  const filteredConversations = Array.isArray(conversations)
-    ? conversations.filter(conv =>
-      conv.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : [];
+    return result;
+  }, [conversations, searchQuery, statusFilter]);
 
   // ✅ FIX: Select conversation without navigation
   const handleSelectConversation = (id: string) => {
@@ -430,17 +400,17 @@ function ConversationsPageContent() {
   };
 
   const channelsWithCounts = useMemo(() =>
-    channels.map(channel => ({
+    channels.map((channel: any) => ({
       ...channel,
       unreadCount: conversations.filter(
-        conv => conv.channelType === channel.type && conv.unreadCount > 0
+        (conv: Conversation) => conv.channelType === channel.type && conv.unreadCount > 0
       ).length,
     })),
     [channels, conversations]
   );
 
   const totalUnread = useMemo(() =>
-    conversations.filter(conv => conv.unreadCount > 0).length,
+    conversations.filter((conv: Conversation) => conv.unreadCount > 0).length,
     [conversations]
   );
 
@@ -610,7 +580,7 @@ function ConversationsPageContent() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => loadConversations(false)}
+                onClick={() => refetchConversations()}
                 className="h-9 w-9 rounded-xl hover:bg-muted/80"
                 loading={refreshing}
               >
@@ -630,7 +600,7 @@ function ConversationsPageContent() {
           </div>
 
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-            <TabsList className="w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 h-auto">
               <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="closed">Closed</TabsTrigger>
               <TabsTrigger value="all">All</TabsTrigger>
@@ -640,7 +610,7 @@ function ConversationsPageContent() {
 
 
         <ScrollArea className="flex-1">
-          {loading ? (
+          {conversationsLoading ? (
             <div
               className="flex items-center justify-center py-20"
             >
@@ -674,7 +644,7 @@ function ConversationsPageContent() {
             <div
               className="divide-y divide-border/50"
             >
-              {filteredConversations.map((conv, index) => (
+              {filteredConversations.map((conv: Conversation, index: number) => (
                 <button
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv.id)}
@@ -844,51 +814,43 @@ function ConversationChat({
 }: {
   conversationId: string;
 }) {
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    conversation: rawConversation,
+    isLoading: loading,
+    sendMessage,
+    takeoverConversation,
+    handbackConversation
+  } = useBotConversation(conversationId);
 
-  useEffect(() => {
-    loadConversation();
-  }, [conversationId]);
+  const conversation = useMemo(() => {
+    if (!rawConversation) return undefined;
+    const data: any = rawConversation;
 
-  const loadConversation = async () => {
-    try {
-      setLoading(true);
-      const data: any = await axiosClient.get(`/conversations/${conversationId}`);
-
-      const mappedConversation = {
-        id: data.id,
-        externalId: data.externalId || data.external_id || '',
-        channelId: data.channelId || data.channel_id || '',
-        channelType: data.channelType || data.channel_type || 'web',
-        channelName: data.channelName || data.channel_name || data.channelType || 'Unknown',
-        customerName: data.customerName || data.contactName || data.contact_name || 'Unknown',
-        customerAvatar: data.customerAvatar || data.contactAvatar || data.contact_avatar,
-        lastMessage: data.metadata?.lastMessage || 'No messages yet',
-        lastMessageAt: data.lastMessageAt || data.last_message_at || new Date().toISOString(),
-        unreadCount: data.unreadCount || data.unread_count || 0,
-        status: data.status === 'active' ? 'open' : data.status || 'open',
-        assignedTo: data.assignedTo || data.assigned_to,
-        metadata: data.metadata || {},
-      };
-
-      setConversation(mappedConversation);
-    } catch (error) {
-      toast.error('Failed to load conversation');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return {
+      id: data.id,
+      externalId: data.externalId || data.external_id || '',
+      channelId: data.channelId || data.channel_id || '',
+      channelType: data.channelType || data.channel_type || 'web',
+      channelName: data.channelName || data.channel_name || data.channelType || 'Unknown',
+      customerName: data.customerName || data.contactName || data.contact_name || 'Unknown',
+      customerAvatar: data.customerAvatar || data.contactAvatar || data.contact_avatar,
+      lastMessage: data.metadata?.lastMessage || 'No messages yet',
+      lastMessageAt: data.lastMessageAt || data.last_message_at || new Date().toISOString(),
+      unreadCount: data.unreadCount || data.unread_count || 0,
+      status: data.status === 'active' ? 'open' : data.status || 'open',
+      assignedTo: data.assignedTo || data.assigned_to,
+      metadata: data.metadata || {},
+    };
+  }, [rawConversation]);
 
   const handleSendMessage = async (content: string) => {
     try {
-      // ✅ FIX: Backend requires 'role' not 'sender'
-      await axiosClient.post(`/conversations/${conversationId}/messages`, {
+      await sendMessage({
         content,
-        role: MessageRole.ASSISTANT // Agent/Bot message
+        role: MessageRole.ASSISTANT
       });
     } catch (err) {
-      toast.error('Failed to send message');
+      // Toast handled by hook
       throw err;
     }
   };
@@ -896,49 +858,19 @@ function ConversationChat({
   // 🤖 → 👤 Human Handoff: Agent takes over
   const handleTakeover = async () => {
     try {
-      await axiosClient.post(`/conversations/${conversationId}/takeover`);
-      toast.success('You are now handling this conversation');
-      await loadConversation();
+      await takeoverConversation();
     } catch (error) {
-      toast.error('Failed to take over conversation');
+      // Toast handled by hook
     }
   };
 
   // 👤 → 🤖 Hand Back: Return to bot
   const handleHandBack = async () => {
     try {
-      await axiosClient.post(`/conversations/${conversationId}/handback`);
-      toast.success('Bot will resume auto-reply');
-      await loadConversation();
+      await handbackConversation();
     } catch (error) {
-      toast.error('Failed to hand back conversation');
+      // Toast handled by hook
     }
-  };
-
-  const getChannelIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
-      facebook: <Facebook className="w-5 h-5" />,
-      messenger: <FaFacebookMessenger className="w-5 h-5" />,
-      instagram: <Instagram className="w-5 h-5" />,
-      whatsapp: <FaWhatsapp className="w-5 h-5" />,
-      telegram: <FaTelegram className="w-5 h-5" />,
-      email: <Mail className="w-5 h-5" />,
-      webchat: <MessageCircle className="w-5 h-5" />,
-    };
-    return icons[type] || <MessageSquare className="w-5 h-5" />;
-  };
-
-  const getChannelColor = (type: string) => {
-    const colors: Record<string, string> = {
-      facebook: 'text-blue-500 bg-blue-500/10',
-      messenger: 'text-blue-500 bg-blue-500/10',
-      instagram: 'text-pink-500 bg-pink-500/10',
-      whatsapp: 'text-green-500 bg-green-500/10',
-      telegram: 'text-sky-500 bg-sky-500/10',
-      email: 'text-red-500 bg-red-500/10',
-      webchat: 'text-cyan-500 bg-cyan-500/10',
-    };
-    return colors[type] || 'text-gray-500 bg-gray-500/10';
   };
 
   if (loading) {
@@ -959,7 +891,6 @@ function ConversationChat({
 
   return (
     <>
-
       <div className="border-b border-border/50 px-6 py-4 bg-background/95 backdrop-blur-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -973,8 +904,8 @@ function ConversationChat({
             <div>
               <div className="flex items-center gap-2.5 mb-1">
                 <h2 className="font-semibold text-base text-foreground">{conversation.customerName}</h2>
-                <div className={cn('p-1.5 rounded-lg shadow-sm', getChannelColor(conversation.channelType))}>
-                  {getChannelIcon(conversation.channelType)}
+                <div className={cn('p-1.5 rounded-lg shadow-sm', getChannelColorDisplay(conversation.channelType))}>
+                  {getChannelIconDisplay(conversation.channelType)}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">

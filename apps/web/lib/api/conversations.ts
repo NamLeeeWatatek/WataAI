@@ -27,7 +27,8 @@ export interface GetConversationsParams {
   endDate?: string
   page?: number
   limit?: number
-  source?: 'all' | 'channel' | 'widget'
+  source?: 'all' | 'channel' | 'widget',
+  channelId?: string
 }
 
 /**
@@ -131,5 +132,40 @@ export async function deleteAIConversation(id: string): Promise<DeleteAiConversa
  */
 export async function addAIConversationMessage(id: string, data: AddAiMessageDto): Promise<AddAiMessageResponse> {
   return axiosClient.post(`/ai-conversations/${id}/messages`, data)
+}
+
+/**
+ * Archive conversation
+ */
+export async function archiveBotConversation(id: string): Promise<any> {
+  return axiosClient.post(`/conversations/${id}/archive`)
+}
+
+/**
+ * Delete bot conversation
+ */
+export async function deleteBotConversation(id: string): Promise<any> {
+  return axiosClient.delete(`/conversations/${id}`)
+}
+
+/**
+ * Sync Facebook conversations
+ */
+export async function syncFacebookConversations(channelId: string, params: { conversationLimit?: number; messageLimit?: number } = {}): Promise<any> {
+  return axiosClient.post(`/channels/facebook/connections/${channelId}/sync-to-db`, params)
+}
+
+/**
+ * Hand over conversation to human (Takeover)
+ */
+export async function takeoverConversation(id: string): Promise<any> {
+  return axiosClient.post(`/conversations/${id}/takeover`)
+}
+
+/**
+ * Hand conversation back to bot (Handback)
+ */
+export async function handbackConversation(id: string): Promise<any> {
+  return axiosClient.post(`/conversations/${id}/handback`)
 }
 

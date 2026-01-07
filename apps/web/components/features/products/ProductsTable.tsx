@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CreationJob, CreationJobStatus } from "@/lib/types/creation-job";
@@ -94,7 +95,7 @@ export function ProductsTable({
         return job.creationTool?.name || 'Untitled Product';
     };
 
-    const columns: Column<CreationJob>[] = [
+    const columns = React.useMemo<Column<CreationJob>[]>(() => [
         {
             key: 'selection',
             label: '',
@@ -212,7 +213,7 @@ export function ProductsTable({
                 </div>
             )
         }
-    ];
+    ], [onDelete]);
 
     if (jobs.length === 0 && !isLoading) {
         return (

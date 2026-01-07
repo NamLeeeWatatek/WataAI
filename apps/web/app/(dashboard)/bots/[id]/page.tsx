@@ -16,11 +16,10 @@ import {
     History,
     Clock,
     Eye,
-    EyeOff
+    EyeOff,
+    RefreshCw
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
-import { botsApi } from '@/lib/api/bots';
-import axiosClient from '@/lib/axios-client';
 
 import {
     BotConfigurationTab
@@ -35,29 +34,26 @@ import { WidgetVersionsList } from '@/components/features/widget/WidgetVersionsL
 import { useWidgetVersions, useWidgetDeployments } from '@/lib/hooks/use-widget-versions';
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useBot, useBots } from '@/lib/hooks/features/useBots';
+import { useQuery } from '@tanstack/react-query';
 
 export default function BotDetailPage() {
     const params = useParams();
     const router = useRouter();
     const botId = params.id as string;
 
-    if (!botId || botId === 'undefined' || botId === 'null') {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-                    <p className="text-muted-foreground">Invalid bot ID</p>
-                </div>
-            </div>
-        );
-    }
+    const {
+        bot,
+        channels: botChannels,
+        appearance: botSettings,
+        isLoading: botLoading,
+        refetch: refetchBot,
+        updateAppearance
+    } = useBot(botId);
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const { updateBot, isMutating: saving } = useBots();
+
     const [hasChanges, setHasChanges] = useState(false);
-    const [bot, setBot] = useState<any>(null);
-    const [botChannels, setBotChannels] = useState<any[]>([]);
-    const [botSettings, setBotSettings] = useState<any>(null);
     const [activeTab, setActiveTab] = useState('configuration');
 
     const { versions, isLoading: versionsLoading, mutate: mutateVersions } = useWidgetVersions(botId);
@@ -65,7 +61,21 @@ export default function BotDetailPage() {
 
     const activeVersion = versions?.find(v => v.isActive && v.status === 'published');
 
-    const [formData, setFormData] = useState({
+    interface BotFormData {
+        name: string;
+        description: string;
+        systemPrompt: string;
+        aiProviderId: string | undefined;
+        aiModelName: string;
+        aiParameters: {
+            temperature: number;
+            max_tokens: number;
+        };
+        enableAutoLearn: boolean;
+        isActive: boolean;
+    }
+
+    const [formData, setFormData] = useState<BotFormData>({
         name: '',
         description: '',
         systemPrompt: '',
@@ -79,47 +89,22 @@ export default function BotDetailPage() {
         isActive: false,
     });
 
+    // Sync form data when bot is loaded
     useEffect(() => {
-        loadBot();
-        loadAppearanceSettings();
-    }, [botId]);
-
-    const loadBot = async () => {
-        try {
-            setLoading(true);
-            const [data, channels] = await Promise.all([
-                botsApi.getOne(botId),
-                botsApi.getChannels(botId)
-            ]);
-
-            setBot(data);
-            setBotChannels(channels);
-
+        if (bot) {
             setFormData({
-                name: data.name,
-                description: data.description || '',
-                systemPrompt: data.systemPrompt || '',
-                aiProviderId: data.aiProviderId || undefined,
-                aiModelName: data.aiModelName || '',
-                aiParameters: (data.aiParameters as { temperature: number; max_tokens: number }) || { temperature: 0.7, max_tokens: 1000 },
-                enableAutoLearn: data.enableAutoLearn || false,
-                isActive: data.isActive || false,
-            });
-        } catch {
-            toast.error('Failed to load bot');
-        } finally {
-            setLoading(false);
+                name: bot.name,
+                description: bot.description || '',
+                systemPrompt: bot.systemPrompt || '',
+                aiProviderId: bot.aiProviderId || undefined,
+                aiModelName: bot.aiModelName || '',
+                aiParameters: (bot.aiParameters as any) || { temperature: 0.7, max_tokens: 1000 },
+                enableAutoLearn: bot.enableAutoLearn || false,
+                isActive: bot.isActive || false,
+            } as BotFormData);
+            setHasChanges(false);
         }
-    };
-
-    const loadAppearanceSettings = async () => {
-        try {
-            const response = await axiosClient.get(`/bots/${botId}/widget/appearance`);
-            setBotSettings(response);
-        } catch {
-            // Ignore if settings don't exist yet
-        }
-    };
+    }, [bot]);
 
     const handleChange = (updates: Partial<typeof formData>) => {
         setFormData((prev) => ({ ...prev, ...updates }));
@@ -128,108 +113,76 @@ export default function BotDetailPage() {
 
     const handleSave = async () => {
         if (!formData.name.trim()) {
-            toast.error('Bot name is required');
+            toast.error('Identifier is required');
             return;
         }
 
         try {
-            setSaving(true);
-            const cleanData: any = {};
-            Object.keys(formData).forEach(key => {
-                const value = (formData as any)[key];
-                if (value !== undefined && value !== null && value !== '') {
-                    cleanData[key] = value;
-                }
-            });
-
-            console.log('[Bot Save] Sending data:', cleanData);
-            await botsApi.update(botId, cleanData);
-            toast.success('Bot updated successfully');
+            await updateBot({ id: botId, data: formData });
             setHasChanges(false);
-            loadBot();
-        } catch {
-            toast.error('Failed to save bot');
-        } finally {
-            setSaving(false);
-        }
+            refetchBot();
+        } catch { }
     };
 
     const handleSaveAppearance = async (settings: any) => {
         try {
-            await axiosClient.put(`/bots/${botId}/widget/appearance`, {
-                primaryColor: settings.primaryColor,
-                backgroundColor: settings.backgroundColor,
-                botMessageColor: settings.botMessageColor,
-                botMessageTextColor: settings.botMessageTextColor,
-                userMessageTextColor: settings.userMessageTextColor,
-                inputBackgroundColor: settings.inputBackgroundColor,
-                inputTextColor: settings.inputTextColor,
-                fontFamily: settings.fontFamily,
+            await updateAppearance({
+                ...settings,
                 position: settings.widgetPosition,
                 buttonSize: settings.widgetButtonSize,
-                welcomeMessage: settings.welcomeMessage,
-                placeholderText: settings.placeholderText,
-                showAvatar: settings.showAvatar,
-                showTimestamp: settings.showTimestamp,
             });
-            await loadAppearanceSettings();
-            toast.success('Appearance updated');
         } catch {
-            toast.error('Failed to update appearance');
+            // Error handled in hook
         }
     };
 
-    if (loading) {
-        return <PageLoading message="Loading bot" />;
-    }
+    if (botLoading && !bot) return <PageLoading message="Connecting to neural interface..." />;
 
-    if (!bot) {
+    if (!bot && !botLoading) {
         return (
-            <div className="text-center py-12">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">Bot not found</p>
+            <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+                <AlertCircle className="w-16 h-16 text-destructive/20 mb-4" />
+                <h2 className="text-xl font-black mb-2">Interface Offline</h2>
+                <p className="text-muted-foreground text-sm font-medium">The requested agent signature could not be located in the current workspace.</p>
+                <Button variant="link" onClick={() => router.push('/bots')} className="mt-4">Return to Fleet</Button>
             </div>
         );
     }
+    if (!bot) return null;
 
     return (
-        <div className="h-full overflow-y-auto scrollbar-hide">
+        <div className="h-full overflow-y-auto scrollbar-hide bg-grid-pattern">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8">
                 <PageHeader
                     title={bot.name}
-                    description="Configure and manage your chatbot settings"
-                    onRefresh={loadBot}
-                    refreshing={loading}
+                    description="Neural architecture and interface protocol management"
+                    onRefresh={refetchBot}
+                    refreshing={botLoading}
                     premium
                 >
                     <div className="flex items-center gap-3">
-                        <Badge
-                            variant={bot.isActive ? "default" : "secondary"}
-                        >
-                            {bot.isActive ? <Eye className="w-3.5 h-3.5 mr-1.5" /> : <EyeOff className="w-3.5 h-3.5 mr-1.5" />}
-                            {bot.isActive ? 'Active' : 'Inactive'}
+                        <Badge variant={bot.isActive ? "default" : "secondary"} className="h-8 px-3 font-black tracking-widest text-[10px]">
+                            {bot.isActive ? <Eye className="w-3.5 h-3.5 mr-2" /> : <EyeOff className="w-3.5 h-3.5 mr-2" />}
+                            {bot.isActive ? 'ONLINE' : 'OFFLINE'}
                         </Badge>
                         <Button
                             onClick={handleSave}
                             disabled={!hasChanges}
                             loading={saving}
-                            className="font-bold h-10 px-6"
+                            className="font-bold h-10 px-8 shadow-lg shadow-primary/20"
                         >
                             <Save className="w-4 h-4 mr-2" />
-                            Save Changes
+                            Commit Protocol
                         </Button>
                     </div>
                 </PageHeader>
 
                 {hasChanges && (
-                    <Card className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-                        <div className="h-1 w-full bg-amber-500 animate-pulse" />
-                        <CardContent className="py-4">
+                    <Card className="mb-8 border-amber-500/20 bg-amber-500/5 animate-in fade-in slide-in-from-top-4">
+                        <CardContent className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
-                                <AlertCircle className="w-5 h-5 shrink-0" />
-                                <p className="text-sm font-bold tracking-tight">
-                                    You have unsaved changes. Don't forget to push your updates!
-                                </p>
+                                <RefreshCw className="w-5 h-5 animate-spin-slow" />
+                                <p className="text-sm font-black tracking-tight uppercase">Uncommitted changes detected in neural core</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -237,117 +190,72 @@ export default function BotDetailPage() {
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
                     <TabsHeader>
-                        <TabsList variant="pills" className="grid grid-cols-2 md:flex w-full md:w-auto">
+                        <TabsList variant="pills">
                             {[
-                                { value: 'configuration', label: 'Configuration', icon: BotIcon },
-                                { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
-                                { value: 'channels', label: 'Channels', icon: Palette },
-                                { value: 'widget', label: 'Widget', icon: History },
-                                { value: 'settings', label: 'Settings', icon: Clock }
+                                { value: 'configuration', label: 'Neural Core', icon: BotIcon },
+                                { value: 'knowledge-base', label: 'Knowledge RAG', icon: Code },
+                                { value: 'channels', label: 'Omnichannel', icon: Palette },
+                                { value: 'widget', label: 'Visual Interface', icon: History },
+                                { value: 'settings', label: 'Protocol Settings', icon: Clock }
                             ].map((tab) => (
-                                <TabsTrigger
-                                    key={tab.value}
-                                    value={tab.value}
-                                    variant="pills"
-                                >
-                                    <tab.icon className="w-4 h-4" />
-                                    {tab.label}
+                                <TabsTrigger key={tab.value} value={tab.value} variant="pills">
+                                    <tab.icon className="w-3.5 h-3.5 mr-2" />
+                                    <span className="font-bold text-xs">{tab.label}</span>
                                 </TabsTrigger>
                             ))}
                         </TabsList>
                     </TabsHeader>
 
-                    <div className="space-y-6">
-                        <TabsContent value="configuration" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <div className="mt-8">
+                        <TabsContent value="configuration" className="m-0 focus-visible:outline-none">
                             <BotConfigurationTab formData={formData} onChange={handleChange} workspaceId={bot?.workspaceId} />
                         </TabsContent>
 
-                        <TabsContent value="knowledge-base" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            <BotKnowledgeBaseSection
-                                botId={botId}
-                                workspaceId={bot?.workspaceId}
-                                onRefresh={loadBot}
-                            />
+                        <TabsContent value="knowledge-base" className="m-0 focus-visible:outline-none">
+                            <BotKnowledgeBaseSection botId={botId} workspaceId={bot?.workspaceId} onRefresh={refetchBot} />
                         </TabsContent>
 
-                        <TabsContent value="channels" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            <BotChannelsSection
-                                botId={botId}
-                                botChannels={botChannels}
-                                onRefresh={loadBot}
-                            />
+                        <TabsContent value="channels" className="m-0 focus-visible:outline-none">
+                            <BotChannelsSection botId={botId} botChannels={botChannels} onRefresh={refetchBot} />
                         </TabsContent>
 
-                        <TabsContent value="widget" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                            <div className="space-y-8">
+                        <TabsContent value="widget" className="m-0 focus-visible:outline-none">
+                            <div className="space-y-12">
                                 <div>
-                                    <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3">
-                                        <Palette className="w-6 h-6 text-primary" />
-                                        Widget Appearance
-                                    </h2>
-                                    <p className="text-sm font-medium text-muted-foreground/60 mb-8">Customize the visual identity and messaging protocol of your chat widget</p>
+                                    <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3 uppercase">Interface Identity</h2>
+                                    <p className="text-sm font-medium text-muted-foreground/60 mb-8">Synchronize the visual aesthetics and messaging protocols of the public widget.</p>
 
                                     {!botSettings ? (
-                                        <Card className="border-dashed">
-                                            <CardContent className="py-16">
-                                                <div className="text-center">
-                                                    <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto mb-4" />
-                                                    <p className="text-sm font-bold text-muted-foreground tracking-tight">Synchronizing appearance protocol...</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                        <div className="h-64 flex flex-col items-center justify-center bg-muted/10 rounded-3xl border border-dashed">
+                                            <RefreshCw className="w-10 h-10 text-primary/20 animate-spin mb-4" />
+                                            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">Querying identity matrix...</p>
+                                        </div>
                                     ) : (
                                         <WidgetAppearanceSettings
                                             botId={botId}
                                             currentSettings={{
-                                                primaryColor: botSettings.primaryColor,
-                                                backgroundColor: botSettings.backgroundColor,
-                                                botMessageColor: botSettings.botMessageColor,
-                                                botMessageTextColor: botSettings.botMessageTextColor,
-                                                userMessageTextColor: botSettings.userMessageTextColor,
-                                                inputBackgroundColor: botSettings.inputBackgroundColor,
-                                                inputTextColor: botSettings.inputTextColor,
-                                                fontFamily: botSettings.fontFamily,
-                                                widgetPosition: botSettings.widgetPosition,
-                                                widgetButtonSize: botSettings.widgetButtonSize,
-                                                welcomeMessage: botSettings.welcomeMessage,
-                                                placeholderText: botSettings.placeholderText,
-                                                showAvatar: botSettings.showAvatar,
-                                                showTimestamp: botSettings.showTimestamp,
+                                                ...(botSettings as any),
+                                                widgetPosition: (botSettings as any).position,
+                                                widgetButtonSize: (botSettings as any).buttonSize,
                                             }}
                                             onSave={handleSaveAppearance}
                                         />
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8 border-t border-border/40">
-                                    <div className="lg:col-span-2 space-y-6">
-                                        <div>
-                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                                <Code className="w-5 h-5 text-primary" />
-                                                Integration Protocol
-                                            </h3>
-                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Deploy this script to your host environment to enable the widget</p>
-                                            <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
-                                        </div>
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12 border-t border-border/10">
+                                    <div className="lg:col-span-2 space-y-8">
+                                        <h3 className="text-xl font-black flex items-center gap-2 uppercase">Deployment Script</h3>
+                                        <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
                                     </div>
 
-                                    <div className="lg:col-span-1 space-y-8">
+                                    <div className="lg:col-span-1 space-y-10">
                                         <div>
-                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                                <History className="w-5 h-5 text-primary" />
-                                                Version Control
-                                            </h3>
-                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Historical iterations and snapshots</p>
+                                            <h3 className="text-lg font-black mb-4 uppercase">Versioning</h3>
                                             <WidgetVersionsList botId={botId} versions={versions || []} isLoading={versionsLoading} onRefresh={mutateVersions} />
                                         </div>
-
                                         <div>
-                                            <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                                                <Clock className="w-5 h-5 text-primary" />
-                                                Deployment Ledger
-                                            </h3>
-                                            <p className="text-sm font-medium text-muted-foreground/60 mb-6">Recent distribution and traffic activity</p>
+                                            <h3 className="text-lg font-black mb-4 uppercase">Ledger</h3>
                                             <WidgetDeploymentHistory deployments={deployments || []} isLoading={deploymentsLoading} />
                                         </div>
                                     </div>
@@ -355,13 +263,11 @@ export default function BotDetailPage() {
                             </div>
                         </TabsContent>
 
-                        <TabsContent value="settings" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <TabsContent value="settings" className="m-0 focus-visible:outline-none">
                             <BotSettingsTab
                                 enableAutoLearn={formData.enableAutoLearn}
                                 onChange={(enableAutoLearn) => handleChange({ enableAutoLearn })}
-                                onDelete={() => {
-                                    router.push('/bots');
-                                }}
+                                onDelete={() => router.push('/bots')}
                             />
                         </TabsContent>
                     </div>

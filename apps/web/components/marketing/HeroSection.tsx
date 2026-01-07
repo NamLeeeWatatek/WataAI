@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight, Sparkles, Zap, PlayCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+
 
 export function HeroSection() {
     return (
@@ -15,10 +15,7 @@ export function HeroSection() {
             <div className="container relative z-10 px-4 mx-auto">
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
                     {/* Headline */}
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1 }}
+                    <h1
                         className="text-4xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight mb-8"
                     >
                         <span className="block text-transparent bg-clip-text bg-gradient-to-br from-foreground via-foreground/90 to-foreground/50 pb-2">
@@ -27,24 +24,18 @@ export function HeroSection() {
                         <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-pink-400 pb-4">
                             Every Channel.
                         </span>
-                    </motion.h1>
+                    </h1>
 
                     {/* Subheadline */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
+                    <p
                         className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed"
                     >
                         Build, deploy, and manage intelligent chatbots that live across Facebook, Zalo, and your Website.
                         <span className="text-foreground font-medium"> Zero code required.</span>
-                    </motion.p>
+                    </p>
 
                     {/* CTAs */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+                    <div
                         className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
                     >
                         <Button
@@ -65,13 +56,10 @@ export function HeroSection() {
                             <PlayCircle className="w-4 h-4 mr-2" />
                             View Demo
                         </Button>
-                    </motion.div>
+                    </div>
 
                     {/* Visual Mockup Placeholder */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.8, delay: 0.5 }}
+                    <div
                         className="mt-20 relative w-full aspect-[16/9] max-w-5xl rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden shadow-2xl"
                     >
                         <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
@@ -97,7 +85,7 @@ export function HeroSection() {
                         <div className="absolute top-20 left-72 right-4 bottom-4 rounded-lg bg-background/40 border border-border/50 flex items-center justify-center">
                             <p className="text-muted-foreground text-sm font-medium">Interactive Graph Visualization Node</p>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </section>

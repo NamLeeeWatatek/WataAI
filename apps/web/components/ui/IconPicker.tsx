@@ -8,10 +8,11 @@ import {
     PopoverTrigger,
 } from "@/components/ui/Popover"
 import { ScrollArea } from "@/components/ui/ScrollArea"
-import { icons, Folder, LucideIcon } from 'lucide-react'
+import { type LucideIcon, Folder } from 'lucide-react'
 import { Search } from "@/components/ui/Search"
 import { cn } from "@/lib/utils"
 import { commonIcons } from "@/lib/constants/icons"
+import { iconMap } from "@/lib/icon-map"
 
 interface IconPickerProps {
     value?: string
@@ -29,8 +30,8 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         )
     }, [search])
 
-    const SelectedIcon = (value && (icons as unknown as Record<string, LucideIcon>)[value])
-        ? (icons as unknown as Record<string, LucideIcon>)[value]
+    const SelectedIcon = (value && iconMap[value])
+        ? iconMap[value]
         : Folder
 
     return (
@@ -63,7 +64,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                 <ScrollArea className="h-72">
                     <div className="grid grid-cols-5 gap-2 p-4">
                         {filteredIcons.map((iconName) => {
-                            const IconComponent = (icons as unknown as Record<string, LucideIcon>)[iconName]
+                            const IconComponent = iconMap[iconName]
                             if (!IconComponent) return null;
 
                             return (

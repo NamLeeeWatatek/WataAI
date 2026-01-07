@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { PageShell } from '@/components/layout/PageShell'
 import { CardDescription } from '@/components/ui/Card'
@@ -11,9 +12,8 @@ import { DataTable } from '@/components/ui/DataTable'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { adminApi } from '@/lib/api/admin'
 import { User } from '@/lib/types/user'
-import { RoleEntity } from '@/lib/types/permissions'
 import toast from '@/lib/toast'
-import { MoreHorizontal, Shield, User as UserIcon, CheckCircle } from 'lucide-react'
+import { MoreHorizontal, Shield, User as UserIcon, CheckCircle, RefreshCw } from 'lucide-react'
 import { Search } from '@/components/ui/Search'
 import {
     DropdownMenu,
@@ -22,12 +22,13 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu"
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils/date'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
 
 export default function AdminUsersPage() {
+    const queryClient = useQueryClient();
     const [page, setPage] = useState(1)
     const [limit, setLimit] = useState(10)
     const [search, setSearch] = useState('')
@@ -68,7 +69,16 @@ export default function AdminUsersPage() {
     const totalUsers = usersResponse?.total || 0
     const totalPages = Math.ceil(totalUsers / limit)
 
-
+    // Mutations
+    const updateUserMutation = useMutation({
+        mutationFn: ({ id, data }: { id: string | number; data: any }) => adminApi.updateUser(String(id), data),
+        onSuccess: () => {
+            toast.success('User profile updated');
+            setIsEditRoleOpen(false);
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+        onError: () => toast.error('Failed to update user'),
+    });
 
     const handleEditRole = (user: User) => {
         setSelectedUser(user)
@@ -77,22 +87,15 @@ export default function AdminUsersPage() {
         setIsEditRoleOpen(true)
     }
 
-    const saveRoleUpdate = async () => {
+    const saveRoleUpdate = () => {
         if (!selectedUser) return
-
-        try {
-            await adminApi.updateUser(selectedUser.id, {
-                roleId: parseInt(newRoleId)
-            })
-            toast.success('User role updated')
-            setIsEditRoleOpen(false)
-            refetchUsers()
-        } catch (error) {
-            toast.error('Failed to update user role')
-        }
+        updateUserMutation.mutate({
+            id: selectedUser.id,
+            data: { roleId: parseInt(newRoleId) }
+        });
     }
 
-    const columns = [
+    const columns = React.useMemo(() => [
         {
             key: 'name',
             label: 'User Identity',
@@ -170,18 +173,18 @@ export default function AdminUsersPage() {
                             <MoreHorizontal className="w-4 h-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => handleEditRole(user)}>
                             Change Role
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive focus:bg-destructive/10">
                             Deactivate User
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             )
         }
-    ]
+    ], []);
 
     const paginationInfo = {
         page,
@@ -202,35 +205,35 @@ export default function AdminUsersPage() {
             title="User Directory"
             description="Manage your organization's users, roles, and access permissions."
             actions={
-                <Button className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-4">
+                <Button className="gap-2 shadow-sm h-9 px-6 font-bold rounded-xl">
                     <UserIcon className="w-4 h-4" />
-                    Invite User
+                    Invite Member
                 </Button>
             }
         >
-            <div className="space-y-6">
+            <div className="space-y-8">
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {stats.map((stat) => (
-                        <div key={stat.label} className="p-4 rounded-xl border bg-card shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-                            <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", stat.bg)}>
-                                <stat.icon className={cn("w-5 h-5", stat.color)} />
+                        <div key={stat.label} className="p-6 rounded-2xl border bg-card shadow-sm flex items-center gap-5 transition-all hover:shadow-xl hover:shadow-primary/5">
+                            <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shadow-inner", stat.bg)}>
+                                <stat.icon className={cn("w-6 h-6", stat.color)} />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
-                                <p className="text-xl font-bold">{stat.value}</p>
+                                <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em]">{stat.label}</p>
+                                <p className="text-2xl font-black">{stat.value}</p>
                             </div>
                         </div>
                     ))}
                 </div>
 
                 {/* Main Content Card */}
-                <div className="rounded-xl border bg-card shadow-sm overflow-hidden flex flex-col">
+                <div className="rounded-2xl border bg-card shadow-sm overflow-hidden flex flex-col transition-all">
                     <div className="p-4 border-b bg-muted/20 flex items-center justify-between gap-4">
                         <div className="max-w-sm flex-1">
                             <Search
-                                placeholder="Search users by name or email..."
-                                className="h-9"
+                                placeholder="Find by name or signal identifier..."
+                                className="h-10"
                                 value={search}
                                 onChange={(e: any) => {
                                     const value = e.target.value
@@ -249,8 +252,9 @@ export default function AdminUsersPage() {
                                 }}
                             />
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>Showing {users.length} of {totalUsers} users</span>
+                        <div className="flex items-center gap-4">
+                            {isLoading && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Showing {users.length} of {totalUsers} Entities</span>
                         </div>
                     </div>
 
@@ -272,27 +276,30 @@ export default function AdminUsersPage() {
 
                 {/* Edit Role Dialog */}
                 <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl">Change User Role</DialogTitle>
-                            <CardDescription className="text-xs">
-                                Update system access level for <strong>{selectedUser?.email}</strong>
+                    <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden">
+                        <DialogHeader className="p-6 pb-0">
+                            <DialogTitle className="text-xl font-black flex items-center gap-2 uppercase">
+                                <Shield className="w-5 h-5 text-primary" />
+                                Reassign Access
+                            </DialogTitle>
+                            <CardDescription className="text-xs font-medium">
+                                Updating authorization matrix for <strong className="text-foreground">{selectedUser?.email}</strong>
                             </CardDescription>
                         </DialogHeader>
-                        <div className="py-6 space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">System-wide Role</Label>
+                        <div className="p-6 space-y-6">
+                            <div className="space-y-3">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System-wide Authority</Label>
                                 <Select value={newRoleId} onValueChange={setNewRoleId}>
-                                    <SelectTrigger className="h-11">
+                                    <SelectTrigger className="h-12 font-bold bg-muted/50 border-border/40">
                                         <SelectValue placeholder="Select a role" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="rounded-xl">
                                         {(roles || []).map(role => (
-                                            <SelectItem key={role.id} value={String(role.id)}>
+                                            <SelectItem key={role.id} value={String(role.id)} className="rounded-lg">
                                                 <div className="flex flex-col items-start text-left py-0.5">
-                                                    <span className="font-semibold text-sm">{role.name}</span>
+                                                    <span className="font-bold text-sm">{role.name}</span>
                                                     {role.description && (
-                                                        <span className="text-[10px] text-muted-foreground line-clamp-1">{role.description}</span>
+                                                        <span className="text-[10px] text-muted-foreground line-clamp-1 max-w-[240px] leading-relaxed">{role.description}</span>
                                                     )}
                                                 </div>
                                             </SelectItem>
@@ -301,9 +308,9 @@ export default function AdminUsersPage() {
                                 </Select>
                             </div>
                         </div>
-                        <DialogFooter className="bg-muted/30 p-4 -mx-6 -mb-6 mt-2">
-                            <Button variant="ghost" onClick={() => setIsEditRoleOpen(false)} className="h-9">Cancel</Button>
-                            <Button onClick={saveRoleUpdate} className="h-9 px-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">Save Changes</Button>
+                        <DialogFooter className="bg-muted/30 p-4 flex items-center justify-end gap-3 mt-0">
+                            <Button variant="ghost" onClick={() => setIsEditRoleOpen(false)} className="h-10 font-bold">Abort</Button>
+                            <Button onClick={saveRoleUpdate} loading={updateUserMutation.isPending} className="h-10 px-8 font-black shadow-lg shadow-primary/20">Sync Authority</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

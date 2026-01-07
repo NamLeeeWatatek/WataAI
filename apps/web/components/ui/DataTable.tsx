@@ -97,7 +97,7 @@ export interface DataTableProps<T> {
   getRowCanExpand?: (row: T) => boolean
 }
 
-export function DataTable<T>({
+function DataTableInner<T>({
   data,
   loading = false,
   error = null,
@@ -422,5 +422,7 @@ export function DataTable<T>({
     </div>
   )
 }
+
+export const DataTable = React.memo(DataTableInner) as typeof DataTableInner;
 
 

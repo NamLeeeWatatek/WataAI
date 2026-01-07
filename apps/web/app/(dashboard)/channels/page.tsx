@@ -1,42 +1,27 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/Spinner';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
-import axiosClient from '@/lib/axios-client';
 import toast from '@/lib/toast';
-import { loadChannelsData, disconnectChannelAsync, deleteConfigAsync, createConfigAsync, updateConfigAsync, loadBotsForFacebook } from '@/lib/store/slices/channelsSlice';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
     setConnecting,
     setFacebookPages,
     setFacebookTempToken,
     setConnectingPage,
     setSelectedBotId,
-    setActiveTab,
-    setDisconnectId,
-    setDeleteConfigId,
-    setAssignBotDialogOpen,
-    setSelectedChannel,
-    clearFacebookState
+    clearFacebookState,
 } from '@/lib/store/slices/channelsSlice';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import {
-    RefreshCw,
     X,
     Facebook,
-    LayoutGrid,
-    List,
-    Search,
     Settings,
-    UserPlus,
-    Activity,
-    Globe
+    RefreshCw,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { AlertBanner } from '@/components/ui/AlertBanner';
+// import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { AssignBotDialog } from '@/components/features/channels/AssignBotDialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
@@ -44,49 +29,51 @@ import { ConnectedChannelsTab, ChannelConfigurationsTab } from '@/components/fea
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollArea } from '@/components/ui/ScrollArea';
-import { FiFacebook } from 'react-icons/fi';
-import { cn } from '@/lib/utils';
+import { useChannels } from '@/lib/hooks/features/useChannels';
+import { getOAuthUrl } from '@/lib/api/channels';
+import { useBots } from '@/lib/hooks/features/useBots';
+import { type Bot } from '@/lib/api/bots';
 
-export default function ChannelsPageRefactored() {
-    const { user, accessToken } = useAuth();
-    const session = { user: { id: user?.id, ...user }, accessToken };
+export default function ChannelsPage() {
     const { currentWorkspace } = useWorkspace();
+    const workspaceId = currentWorkspace?.id;
     const dispatch = useAppDispatch();
 
+    // Redux state for Facebook OAuth flow specifically
     const {
-        channels,
-        configs,
-        isLoading,
         facebookPages,
         facebookTempToken,
         connectingPage,
-        bots,
         selectedBotId,
-        loadingBots,
-        activeTab,
-        disconnectId,
-        deleteConfigId,
-        assignBotDialogOpen,
-        selectedChannel
+        isConnecting
     } = useAppSelector(state => state.channels);
 
+    // TanStack Query Hooks
+    const {
+        channels,
+        integrations: configs,
+        isLoading,
+        refetch,
+        disconnect,
+        deleteIntegration,
+        saveIntegration,
+        connectFacebook,
+        isMutating
+    } = useChannels(workspaceId);
+
+    const { data: botsResponse, isLoading: loadingBots } = useBots(workspaceId);
+    const bots = botsResponse?.data || [];
+
+    // Local UI State
+    const [activeTab, setActiveTab] = useState<'connected' | 'configurations'>('connected');
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(9);
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-    useEffect(() => {
-        dispatch(loadChannelsData());
-    }, [dispatch]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, activeTab]);
-
-    const loadData = () => {
-        dispatch(loadChannelsData());
-    };
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(12);
+    const [disconnectId, setDisconnectId] = useState<string | null>(null);
+    const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
+    const [assignBotDialogOpen, setAssignBotDialogOpen] = useState(false);
+    const [selectedChannel, setSelectedChannel] = useState<any>(null);
 
     const handleConnect = async (provider: string, configId?: string) => {
         dispatch(setConnecting(provider));
@@ -95,24 +82,16 @@ export default function ChannelsPageRefactored() {
             let oauthUrl: string;
 
             if (provider === 'facebook' || provider === 'messenger' || provider === 'instagram') {
-                const response = await axiosClient.get('/channels/facebook/oauth/url') as any;
-
-                if (!response.url) {
-                    toast.error('Please configure Facebook App settings first');
-                    dispatch(setConnecting(null));
-                    return;
-                }
-
+                const response = await getOAuthUrl('facebook', undefined, workspaceId);
                 oauthUrl = response.url;
             } else {
-                const config = configId ? configs.find(c => c.id === configId) : configs.find(c => c.provider === provider);
+                const config = configId ? configs.find(c => String(c.id) === String(configId)) : configs.find(c => c.provider === provider);
                 if (!config) {
                     toast.error(`Please configure ${provider} settings first`);
                     dispatch(setConnecting(null));
                     return;
                 }
-
-                const response = await axiosClient.get(`/channels/oauth/${provider}/url`, { params: { configId } }) as any;
+                const response = await getOAuthUrl(provider, configId, workspaceId);
                 oauthUrl = response.url;
             }
 
@@ -128,7 +107,7 @@ export default function ChannelsPageRefactored() {
             );
 
             if (!popup) {
-                toast.error('Popup blocked! Please allow popups for this site.');
+                toast.error('Popup blocked!');
                 dispatch(setConnecting(null));
                 return;
             }
@@ -138,33 +117,16 @@ export default function ChannelsPageRefactored() {
                     if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && event.data.pages) {
                         dispatch(setFacebookPages(event.data.pages));
                         dispatch(setFacebookTempToken(event.data.tempToken));
-                        toast.success(`Found ${event.data.pages.length} Facebook page(s)`);
-
-                        const wsId = currentWorkspace?.id || event.data.workspaceId || (session as any)?.user?.workspaceId;
-                        if (wsId) {
-                            dispatch(loadBotsForFacebook(wsId));
-                        }
-
-                        popup?.close();
-                        window.removeEventListener('message', messageHandler);
-                        dispatch(setConnecting(null));
+                        toast.success(`Discovered ${event.data.pages.length} terminals`);
                     } else {
                         toast.success(`Connected to ${event.data.channel || provider}`);
-                        popup?.close();
-                        window.removeEventListener('message', messageHandler);
-
-                        setTimeout(async () => {
-                            dispatch(loadChannelsData());
-                            dispatch(setConnecting(null));
-                        }, 1000);
+                        refetch();
                     }
+                    popup?.close();
+                    window.removeEventListener('message', messageHandler);
+                    dispatch(setConnecting(null));
                 } else if (event.data?.status === 'error') {
-                    toast.error(`Connection failed: ${event.data.message || event.data.channel || 'Unknown error'}`);
-
-                    if (provider === 'facebook' || provider === 'messenger' || provider === 'instagram') {
-                        dispatch(clearFacebookState());
-                    }
-
+                    toast.error(`Connection failed: ${event.data.message || 'Unknown protocol error'}`);
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
                     dispatch(setConnecting(null));
@@ -172,293 +134,223 @@ export default function ChannelsPageRefactored() {
             };
 
             window.addEventListener('message', messageHandler);
-
-            const checkClosed = setInterval(() => {
-                if (popup?.closed) {
-                    clearInterval(checkClosed);
-                    dispatch(setConnecting(null));
-                    window.removeEventListener('message', messageHandler);
-                }
-            }, 1000);
-
         } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
-            toast.error(`Failed to start connection: ${message}`);
+            toast.error('Failed to get connection URL');
             dispatch(setConnecting(null));
         }
     };
 
-    const handleDisconnect = (id: string) => {
-        dispatch(setDisconnectId(id));
-    };
-
-    const confirmDisconnect = () => {
-        if (disconnectId) {
-            dispatch(disconnectChannelAsync(disconnectId));
-        }
-    };
-
-    const handleConnectFacebookPage = async (page: any) => {
-        if (!facebookTempToken) {
-            toast.error('Session expired. Please reconnect Facebook again.');
-            dispatch(setFacebookPages([]));
-            return;
-        }
-
-        dispatch(setConnectingPage(true));
-
+    const handleDisconnect = async () => {
+        if (!disconnectId) return;
         try {
-            await axiosClient.post('/channels/facebook/connect', {
-                pageId: page.id,
-                pageName: page.name,
-                userAccessToken: facebookTempToken,
-                category: page.category,
-                // Pass undefined if selectedBotId is empty string
-                botId: selectedBotId || undefined
+            await disconnect(disconnectId);
+        } catch (error) {
+        } finally {
+            setDisconnectId(null);
+        }
+    };
+
+    const handleDeleteConfig = async () => {
+        if (!deleteConfigId) return;
+        try {
+            await deleteIntegration(deleteConfigId);
+        } catch (error) {
+        } finally {
+            setDeleteConfigId(null);
+        }
+    };
+
+    const handleSaveConfig = async (data: any) => {
+        try {
+            await saveIntegration({ id: deleteConfigId || undefined, data });
+        } catch (error) {
+        }
+    };
+
+    const handleConnectFacebookPage = async (facebookPageId: string) => {
+        try {
+            dispatch(setConnectingPage(facebookPageId));
+            await connectFacebook({
+                facebookPageId,
+                botId: selectedBotId,
+                accessToken: facebookTempToken
             });
 
-            const selectedBot = bots.find(b => b.id === selectedBotId);
-            if (selectedBot) {
-                toast.success(`Connected ${page.name} to bot "${selectedBot.name}"`);
-            } else {
-                toast.success(`Connected ${page.name} to workspace`);
-            }
-
-            dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
-            dispatch(loadChannelsData());
+            toast.success('Facebook page connected successfully');
+            dispatch(setFacebookPages(facebookPages.filter(p => p.id !== facebookPageId)));
+            refetch();
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to connect page';
-            toast.error(errorMessage);
-
-            if (errorMessage.includes('authorization') || errorMessage.includes('token')) {
-                dispatch(clearFacebookState());
-                toast.info('Please reconnect Facebook to continue');
-            }
         } finally {
-            dispatch(setConnectingPage(false));
+            dispatch(setConnectingPage(null));
         }
-    };
-
-    const handleDeleteConfig = () => {
-        if (deleteConfigId) {
-            dispatch(deleteConfigAsync(deleteConfigId));
-        }
-    };
-
-    const handleSaveConfig = async (config: any) => {
-        try {
-            if (config.id) {
-                await dispatch(updateConfigAsync({ id: config.id, data: config }));
-            } else {
-                await dispatch(createConfigAsync(config));
-            }
-            toast.success('Configuration saved successfully!');
-            dispatch(loadChannelsData());
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to save configuration';
-            toast.error(message);
-        }
-    };
-
-    const handleAssignBot = (channel: any) => {
-        dispatch(setSelectedChannel(channel));
-        dispatch(setAssignBotDialogOpen(true));
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-700">
-            <PageHeader
-                title="Channels & Integrations"
-                description="Connect and orchestrate your communication channels with centralized AI control."
-                onRefresh={loadData}
-                refreshing={isLoading}
-                className="px-1"
-            />
+        <div className="h-full flex flex-col space-y-8 p-8">
+            <div className="flex items-center justify-between space-y-2">
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight">Channels</h2>
+                    <p className="text-muted-foreground">Manage your communication channels and integrations</p>
+                </div>
+            </div>
 
-            <Tabs value={activeTab} onValueChange={(value) => dispatch(setActiveTab(value as 'connected' | 'configurations'))} className="w-full">
-                <TabsList className="mb-8">
+            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
+                <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
                     <TabsTrigger value="connected">
-                        Connections ({channels.length})
+                        <div className="flex items-center gap-2">
+                            <span>Connected Terminals</span>
+                            <Badge variant="secondary" className="ml-1 opacity-70">
+                                {channels.length}
+                            </Badge>
+                        </div>
                     </TabsTrigger>
                     <TabsTrigger value="configurations">
-                        Configurations ({configs.length})
+                        <div className="flex items-center gap-2">
+                            <span>Configurations</span>
+                            <Badge variant="secondary" className="ml-1 opacity-70">
+                                {configs.length}
+                            </Badge>
+                        </div>
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="connected" className="mt-6">
+                <TabsContent value="connected" className="m-0 focus-visible:outline-none">
                     <ConnectedChannelsTab
-                        channels={channels.map(c => ({ ...c, createdAt: c.connected_at }))}
+                        channels={channels.filter((c: any) =>
+                            c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            c.type?.toLowerCase().includes(searchQuery.toLowerCase())
+                        ) as any[]}
                         searchQuery={searchQuery}
                         viewMode={viewMode}
-                        currentPage={currentPage}
+                        currentPage={page}
                         pageSize={pageSize}
                         totalCount={channels.length}
-                        selectedIds={selectedIds}
+                        selectedIds={[]}
                         onSearchChange={setSearchQuery}
                         onViewModeChange={setViewMode}
-                        onPageChange={setCurrentPage}
+                        onPageChange={setPage}
                         onPageSizeChange={setPageSize}
-                        onToggleSelection={(id) => {
-                            setSelectedIds(prev =>
-                                prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-                            );
-                        }}
-                        onClearSelection={() => setSelectedIds([])}
-                        onAssignBot={handleAssignBot}
-                        onDisconnect={handleDisconnect}
-                        onLoadData={() => dispatch(setActiveTab('configurations'))}
+                        onToggleSelection={() => { }}
+                        onClearSelection={() => { }}
                         isLoading={isLoading}
+                        onDisconnect={(id: string) => setDisconnectId(id)}
+                        onAssignBot={(channel: any) => {
+                            setSelectedChannel(channel);
+                            dispatch(setSelectedBotId(channel.botId));
+                            setAssignBotDialogOpen(true);
+                        }}
+                        onLoadData={refetch}
                     />
                 </TabsContent>
 
-                <TabsContent value="configurations" className="mt-6">
+                <TabsContent value="configurations" className="m-0">
                     <ChannelConfigurationsTab
-                        configs={configs.map(c => ({ ...c, name: c.name || '' }))}
+                        configs={configs.filter((c: any) =>
+                            c.provider?.toLowerCase().includes(searchQuery.toLowerCase())
+                        ) as any[]}
                         isLoading={isLoading}
-                        onSaveConfig={handleSaveConfig}
-                        onDeleteConfig={(id) => dispatch(setDeleteConfigId(id))}
                         onConnect={handleConnect}
+                        onDeleteConfig={(id: string) => setDeleteConfigId(id)}
+                        onSaveConfig={(config: any) => handleSaveConfig(config)}
                     />
                 </TabsContent>
             </Tabs>
 
-            {facebookPages.length > 0 && (
-                <div className="fixed inset-0 bg-background/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in zoom-in duration-300">
-                    <Card className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
-                        <div className="p-6 border-b border-border/40 flex items-center justify-between bg-card/50">
-                            <div>
-                                <h3 className="text-2xl font-black tracking-tight">Connect Facebook Pages</h3>
-                                <p className="text-sm text-muted-foreground mt-1 font-medium">
-                                    Link your available pages to the workspace
-                                </p>
+            { }
+            {isConnecting && (
+                <Card className="fixed bottom-6 right-6 p-4 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-md z-50 w-80 animate-in slide-in-from-bottom-10">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                <RefreshCw className="w-5 h-5 animate-spin" />
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => dispatch(clearFacebookState())}
-                                className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </Button>
+                            <div>
+                                <h4 className="font-semibold">Connecting {isConnecting}</h4>
+                                <p className="text-xs text-muted-foreground">Waiting for authentication...</p>
+                            </div>
                         </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full"
+                            onClick={() => dispatch(clearFacebookState())}
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
 
-                        <ScrollArea className="flex-1 overflow-y-auto p-6">
-                            <div className="space-y-8">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-                                            <Settings className="w-3 h-3" />
-                                            Assign Bot Gateway (Optional)
-                                        </h4>
-                                    </div>
-
-                                    {loadingBots ? (
-                                        <div className="flex items-center gap-3 py-4 font-bold text-primary p-4 border border-border/40 rounded-xl bg-card">
-                                            <RefreshCw className="w-4 h-4 animate-spin" />
-                                            <span>Synchronizing bots...</span>
-                                        </div>
-                                    ) : (
-                                        <div className="p-1">
-                                            <select
-                                                value={selectedBotId || ''}
-                                                onChange={(e) => dispatch(setSelectedBotId(e.target.value))}
-                                                className="w-full bg-background/50 rounded-xl px-4 py-3 border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold transition-all text-sm"
-                                            >
-                                                <option value="" className="bg-card text-muted-foreground">
-                                                    Do not assign a bot (Connect only)
-                                                </option>
-                                                {bots.map((bot) => (
-                                                    <option key={bot.id} value={bot.id} className="bg-card">
-                                                        {bot.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <p className="text-[11px] font-medium text-muted-foreground/60 mt-2 px-1">
-                                                {selectedBotId
-                                                    ? "Incoming messages will be processed by the selected agent."
-                                                    : "Messages will not be processed until a bot is assigned."}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4 pt-4 border-t border-border/40">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Direct Connections ({facebookPages.length})</h4>
-                                    </div>
-                                    <div className="grid gap-4">
-                                        {facebookPages.map((page) => (
-                                            <div
-                                                key={page.id}
-                                                className="flex items-center justify-between p-4 bg-muted/5 border border-border/40 rounded-2xl hover:bg-muted/10 transition-all duration-300 group"
-                                            >
-                                                <div className="flex items-center gap-5">
-                                                    <div className="p-4 rounded-xl bg-primary/10 text-primary shadow-inner group-hover:rotate-6 transition-transform duration-500">
-                                                        <Facebook className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-lg tracking-tight">{page.name}</h4>
-                                                        <p className="text-sm font-semibold text-muted-foreground opacity-70">{page.category}</p>
-                                                        {page.tasks && page.tasks.length > 0 && (
-                                                            <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                                                {page.tasks.slice(0, 3).map((task: string) => (
-                                                                    <Badge key={task} variant="outline" className="text-[9px] uppercase font-bold tracking-wider py-0 px-2 opacity-60">
-                                                                        {task}
-                                                                    </Badge>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                    {facebookPages.length > 0 && (
+                        <ScrollArea className="h-[300px] -mx-4 px-4">
+                            <div className="space-y-2 py-2">
+                                <p className="text-xs font-medium text-muted-foreground mb-3 px-1 uppercase tracking-wider">Select a terminal to connect</p>
+                                {facebookPages.map((page: any) => (
+                                    <div key={page.id} className="group p-3 rounded-xl border bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background">
+                                                    {page.picture?.data?.url ? (
+                                                        <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Facebook className="w-5 h-5 text-primary" />
+                                                    )}
                                                 </div>
-                                                <Button
-                                                    size="lg"
-                                                    onClick={() => handleConnectFacebookPage(page)}
-                                                    disabled={connectingPage}
-                                                    className="px-8 font-black transition-all"
-                                                >
-                                                    {connectingPage ? 'Connecting...' : 'Link Page'}
-                                                </Button>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-sm truncate leading-tight mb-0.5">{page.name}</p>
+                                                    <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal opacity-70">
+                                                        FB Terminal
+                                                    </Badge>
+                                                </div>
                                             </div>
-                                        ))}
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleConnectFacebookPage(page.id)}
+                                                disabled={connectingPage === page.id}
+                                                className="rounded-lg h-8 px-3 shadow-sm hover:shadow-md transition-all active:scale-95"
+                                            >
+                                                {connectingPage === page.id ? (
+                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    'Connect'
+                                                )}
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
                         </ScrollArea>
-                    </Card>
-                </div>
+                    )}
+                </Card>
             )}
 
             <AlertDialogConfirm
-                open={disconnectId !== null}
-                onOpenChange={(open) => !open && dispatch(setDisconnectId(null))}
-                title="Disconnect Channel"
-                description="Are you sure you want to disconnect this channel? This action cannot be undone."
-                confirmText="Disconnect"
-                cancelText="Cancel"
-                onConfirm={confirmDisconnect}
+                open={!!disconnectId}
+                onOpenChange={(o: boolean) => !o && setDisconnectId(null)}
+                title="Disconnect Terminal"
+                description="Are you sure you want to disconnect this terminal? You will no longer receive messages from this channel until you reconnect."
+                onConfirm={handleDisconnect}
                 variant="destructive"
             />
 
             <AlertDialogConfirm
-                open={deleteConfigId !== null}
-                onOpenChange={(open) => !open && dispatch(setDeleteConfigId(null))}
+                open={!!deleteConfigId}
+                onOpenChange={(o: boolean) => !o && setDeleteConfigId(null)}
                 title="Delete Configuration"
-                description="Are you sure you want to delete this configuration? All connected channels using this config will be disconnected."
-                confirmText="Delete"
-                cancelText="Cancel"
+                description="Are you sure you want to delete this configuration? This will permanently remove the credentials and settings."
                 onConfirm={handleDeleteConfig}
                 variant="destructive"
             />
 
-            {currentWorkspace && (
-                <AssignBotDialog
-                    open={assignBotDialogOpen}
-                    onOpenChange={(open) => dispatch(setAssignBotDialogOpen(open))}
-                    channel={selectedChannel}
-                    workspaceId={currentWorkspace.id}
-                    onSuccess={loadData}
-                />
-            )}
+            <AssignBotDialog
+                open={assignBotDialogOpen}
+                onOpenChange={setAssignBotDialogOpen}
+                channel={selectedChannel}
+                workspaceId={workspaceId!}
+                onSuccess={() => {
+                    dispatch(setSelectedBotId(''));
+                    setAssignBotDialogOpen(false);
+                    refetch();
+                }}
+            />
         </div>
     );
 }

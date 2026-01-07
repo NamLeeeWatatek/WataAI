@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
-import axiosClient from '@/lib/axios-client';
 import { cn } from '@/lib/utils';
+import { useBotConversations } from '@/lib/hooks/features/useBotConversations';
 
 interface SyncFacebookButtonProps {
   channelId: string;
@@ -18,7 +18,7 @@ export function SyncFacebookButton({
   channelType,
   onSyncComplete,
 }: SyncFacebookButtonProps) {
-  const [syncing, setSyncing] = useState(false);
+  const { syncConversations, isSyncing: syncing } = useBotConversations();
 
   const handleSync = async () => {
     if (channelType !== 'facebook') {
@@ -26,34 +26,18 @@ export function SyncFacebookButton({
     }
 
     try {
-      setSyncing(true);
-      toast.info('Syncing conversations from Facebook...');
-
-      const data: any = await axiosClient.post(
-        `/channels/facebook/connections/${channelId}/sync-to-db`,
-        {
+      await syncConversations({
+        channelId,
+        syncParams: {
           conversationLimit: 25,
           messageLimit: 50,
         }
-      );
-
-      if (data.success) {
-        toast.success(`Synced ${data.synced} conversation(s) from Facebook`);
-        if (onSyncComplete) {
-          onSyncComplete();
-        }
-      } else {
-        toast.error('Failed to sync conversations');
+      });
+      if (onSyncComplete) {
+        onSyncComplete();
       }
     } catch (error: any) {
-      console.error('Sync error:', error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to sync conversations';
-      toast.error(errorMessage);
-    } finally {
-      setSyncing(false);
+      // Error handled in hook
     }
   };
 

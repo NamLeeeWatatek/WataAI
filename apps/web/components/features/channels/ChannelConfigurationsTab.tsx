@@ -61,7 +61,7 @@ interface IntegrationConfig {
 interface ChannelConfigurationsTabProps {
   configs: IntegrationConfig[];
   isLoading: boolean;
-  onSaveConfig: (config: any) => Promise<void>;
+  onSaveConfig: (config: any) => Promise<any>;
   onDeleteConfig: (id: string) => void;
   onConnect: (provider: string, configId?: string) => void;
 }

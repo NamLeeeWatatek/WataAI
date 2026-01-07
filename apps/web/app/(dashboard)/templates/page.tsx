@@ -1,31 +1,43 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTemplates } from '@/lib/hooks/useTemplates'
+import { useWorkspace } from '@/lib/hooks/useWorkspace'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Edit, Trash2, LayoutGrid } from 'lucide-react'
+import { Edit, Trash2 } from 'lucide-react'
 import { PageLoading } from '@/components/ui/PageLoading'
 import toast from '@/lib/toast'
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog'
 import { Template } from '@/lib/types/template'
-import { templatesApi } from '@/lib/api/templates'
 import { Pagination } from '@/components/ui/Pagination'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 
-// ...
 export default function TemplatesPage() {
     const router = useRouter()
-    const { templates, loading, refreshTemplates, deleteTemplate } = useTemplates()
+    const { currentWorkspace } = useWorkspace()
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(9);
+
+    const {
+        templates,
+        loading,
+        refreshTemplates,
+        deleteTemplate,
+        updateTemplate,
+        createTemplate,
+        totalCount
+    } = useTemplates({
+        workspaceId: currentWorkspace?.id || '',
+        page: currentPage,
+        limit: pageSize
+    })
+
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
-
-    useEffect(() => {
-        refreshTemplates()
-    }, [refreshTemplates])
 
     const handleDelete = (id: string) => {
         setDeleteId(id)
@@ -34,9 +46,8 @@ export default function TemplatesPage() {
     const confirmDelete = async () => {
         if (!deleteId) return
         try {
-            await templatesApi.delete(deleteId);
+            await deleteTemplate(deleteId);
             toast.success('Template deleted');
-            await refreshTemplates();
         } catch (err: any) {
             toast.error(err.message || 'Failed to delete template');
         } finally {
@@ -47,23 +58,18 @@ export default function TemplatesPage() {
     const handleSaveTemplate = async (data: Partial<Template>) => {
         try {
             if (data.id) {
-                await templatesApi.update(data.id, data);
+                await updateTemplate(data.id, data as any);
             } else {
-                await templatesApi.create(data);
+                await createTemplate(data as any);
             }
             toast.success(data.id ? 'Template updated' : 'Template created');
-            await refreshTemplates();
+            setTemplateDialogOpen(false);
         } catch (err: any) {
             toast.error(err.message || 'Failed to save template');
         }
     }
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(9);
-
-    const paginatedTemplates = templates.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-    if (loading) return <PageLoading />
+    if (loading && templates.length === 0) return <PageLoading />
 
     return (
         <div className="space-y-6">
@@ -77,17 +83,16 @@ export default function TemplatesPage() {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {paginatedTemplates.map(template => (
-                    // ... Card Render
-                    <Card key={template.id} className="p-6 space-y-4 hover:shadow-lg transition-shadow">
+                {templates.map(template => (
+                    <Card key={template.id} className="p-6 space-y-4 hover:shadow-lg transition-all group border-border/40 bg-card/50 backdrop-blur-sm">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h3 className="font-bold text-lg">{template.name}</h3>
-                                <p className="text-sm text-muted-foreground line-clamp-2">{template.description}</p>
+                                <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{template.name}</h3>
+                                <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{template.description}</p>
                             </div>
                         </div>
 
-                        <div className="flex gap-2 justify-end pt-4 border-t">
+                        <div className="flex gap-2 justify-end pt-4 border-t border-border/10">
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -95,10 +100,16 @@ export default function TemplatesPage() {
                                     setEditingTemplate(template);
                                     setTemplateDialogOpen(true);
                                 }}
+                                className="h-8 w-8 p-0"
                             >
                                 <Edit className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(template.id)}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                                onClick={() => handleDelete(template.id)}
+                            >
                                 <Trash2 className="w-4 h-4" />
                             </Button>
                         </div>
@@ -106,26 +117,27 @@ export default function TemplatesPage() {
                 ))}
             </div>
 
-            {templates.length > 0 && (
+            {totalCount > 0 && (
                 <div className="py-4">
                     <Pagination
                         pagination={{
                             page: currentPage,
                             limit: pageSize,
-                            total: templates.length,
-                            totalPages: Math.ceil(templates.length / pageSize),
-                            hasNextPage: currentPage < Math.ceil(templates.length / pageSize)
+                            total: totalCount,
+                            totalPages: Math.ceil(totalCount / pageSize),
+                            hasNextPage: currentPage * pageSize < totalCount
                         }}
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                         pageSizeOptions={[9, 18, 27, 36]}
+                        className="justify-end"
                     />
                 </div>
             )}
 
-            {templates.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                    No templates found. Templates are created through Creation Tools.
+            {templates.length === 0 && !loading && (
+                <div className="text-center py-20 bg-muted/5 rounded-3xl border border-dashed border-border/60">
+                    <p className="text-muted-foreground">No templates found. Templates are created through Creation Tools.</p>
                 </div>
             )}
 

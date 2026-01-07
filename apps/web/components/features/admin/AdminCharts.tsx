@@ -3,12 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/Chart"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Line, LineChart } from "recharts"
-import { motion } from "framer-motion"
+
 
 import { AdminStats } from "@/lib/types"
 
 interface AdminChartsProps {
-    stats: AdminStats
+    stats: AdminStats | undefined
 }
 
 export function AdminCharts({ stats }: AdminChartsProps) {
@@ -66,14 +66,9 @@ export function AdminCharts({ stats }: AdminChartsProps) {
     }
 
     return (
-        <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-        >
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* System Activity trend - Full Width on Mobile, 2 cols on Large */}
-            <motion.div variants={itemVariants} className="md:col-span-2">
+            <div className="md:col-span-2">
                 <Card className="border-border/40 shadow-xl overflow-hidden group">
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
@@ -82,10 +77,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
                                 <CardDescription>Global user interaction and job processing trend</CardDescription>
                             </div>
                             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <motion.div
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ repeat: Infinity, duration: 2 }}
-                                />
+                                <div />
                             </div>
                         </div>
                     </CardHeader>
@@ -125,10 +117,10 @@ export function AdminCharts({ stats }: AdminChartsProps) {
                         </ChartContainer>
                     </CardContent>
                 </Card>
-            </motion.div>
+            </div>
 
             {/* Job Health (Pie Chart) */}
-            <motion.div variants={itemVariants}>
+            <div>
                 <Card className="glass border-border/40 shadow-xl overflow-hidden flex flex-col">
                     <CardHeader>
                         <CardTitle className="text-lg font-bold">Job Health</CardTitle>
@@ -167,10 +159,10 @@ export function AdminCharts({ stats }: AdminChartsProps) {
                         </div>
                     </CardContent>
                 </Card>
-            </motion.div>
+            </div>
 
             {/* Top Creation Tools (Bar Chart) */}
-            <motion.div variants={itemVariants} className="md:col-span-3">
+            <div className="md:col-span-3">
                 <Card className="glass border-border/40 shadow-xl">
                     <CardHeader>
                         <CardTitle className="text-lg font-bold">Tool Performance</CardTitle>
@@ -205,7 +197,7 @@ export function AdminCharts({ stats }: AdminChartsProps) {
                         </ChartContainer>
                     </CardContent>
                 </Card>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     )
 }

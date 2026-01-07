@@ -78,3 +78,10 @@ export async function getOAuthUrl(
 
   return axiosClient.get(`/oauth/login/${provider}`, { params })
 }
+
+/**
+ * Connect Facebook page
+ */
+export async function connectFacebook(data: any): Promise<void> {
+  return axiosClient.post('/channels/facebook/connect', data)
+}

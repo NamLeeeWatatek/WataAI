@@ -109,11 +109,11 @@ export function GlobalActivityCenter() {
 
                     <Tabs defaultValue="active" className="flex-1 flex flex-col mt-6 overflow-hidden">
                         <div className="px-6 mb-4">
-                            <TabsList className="w-full h-10 bg-muted/50 p-1 border border-border/20 rounded-xl">
-                                <TabsTrigger value="active" className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                            <TabsList className="grid w-full grid-cols-2 h-10 rounded-xl">
+                                <TabsTrigger value="active" className="rounded-lg text-xs font-bold">
                                     Active Tasks
                                 </TabsTrigger>
-                                <TabsTrigger value="history" className="flex-1 rounded-lg text-xs font-bold transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                                <TabsTrigger value="history" className="rounded-lg text-xs font-bold">
                                     History Feed
                                 </TabsTrigger>
                             </TabsList>

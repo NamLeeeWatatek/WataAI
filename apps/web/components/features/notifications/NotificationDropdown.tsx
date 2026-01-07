@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { Bell, Check, AlertCircle, Info, X, Settings, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -143,203 +143,196 @@ export function NotificationDropdown({
         )}
       </Button>
 
-      {/* Dropdown */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            ref={dropdownRef}
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={cn(
-              'absolute right-0 mt-2 w-80 bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-50',
-              dropdownClassName
-            )}
-          >
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Bell className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">Notifications</h3>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                    <div className="flex items-center gap-1">
-                      {isConnected ? (
-                        <>
-                          <div className="h-2 w-2 rounded-full bg-success" />
-                          <span>Connected</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="h-2 w-2 rounded-full bg-destructive" />
-                          <span>Disconnected</span>
-                        </>
-                      )}
-                    </div>
-                    <span>•</span>
-                    <span>{notifications.length} notifications</span>
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          className={cn(
+            'absolute right-0 mt-2 w-80 bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200',
+            dropdownClassName
+          )}
+        >
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-border bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Bell className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Notifications</h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                  <div className="flex items-center gap-1">
+                    {isConnected ? (
+                      <>
+                        <div className="h-2 w-2 rounded-full bg-success" />
+                        <span>Connected</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-2 w-2 rounded-full bg-destructive" />
+                        <span>Disconnected</span>
+                      </>
+                    )}
                   </div>
+                  <span>•</span>
+                  <span>{notifications.length} notifications</span>
                 </div>
               </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-muted/50"
+              onClick={() => setIsOpen(false)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Content */}
+          <div className="max-h-96 overflow-y-auto">
+            {isLoading ? (
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto" />
+                <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-6 text-center">
+                <Bell className="w-10 h-10 text-muted-foreground mx-auto" />
+                <h4 className="font-medium mt-3">No notifications</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You're all caught up! Notifications will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={cn(
+                      'p-4 hover:bg-muted/50 transition-colors duration-150 cursor-pointer',
+                      !notification.isRead && 'bg-muted/30'
+                    )}
+                    onClick={async () => {
+                      if (!notification.isRead) {
+                        await markAsRead(notification.id);
+                      }
+
+                      // Navigate to results if applicable
+                      if (
+                        (notification.metadata?.resourceType === 'creation_job') ||
+                        (notification.type === 'job_progress' && [JobStatus.COMPLETED, JobStatus.FAILED].includes(notification.data?.status))
+                      ) {
+                        const jobId = notification.metadata?.resourceId || notification.data?.jobId;
+                        if (jobId) {
+                          router.push(`/my-products?jobId=${jobId}`);
+                        }
+                      }
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'p-2 rounded-lg border flex-shrink-0',
+                        getNotificationColor(notification.type)
+                      )}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-sm font-medium truncate">
+                            {notification.title}
+                          </h4>
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                            {formatTimeAgo(notification.createdAt)}
+                          </span>
+                        </div>
+                        {notification.type === 'job_progress' && notification.data?.progress !== undefined && (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Progress</span>
+                              <span>{notification.data.progress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all duration-300 ease-out"
+                                style={{ width: `${notification.data.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                        {notification.workspaceId && (
+                          <div className="mt-2 flex items-center gap-2">
+                            {notification.data?.status && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-normal">
+                                {notification.data.status}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-normal text-muted-foreground">
+                              WS: {notification.workspaceId.slice(0, 8)}
+                            </Badge>
+                          </div>
+                        )}
+                        {notification.metadata?.resourceType === 'creation_job' && (
+                          <div className="mt-2 flex items-center justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-[10px] px-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/my-products?jobId=${notification.metadata?.resourceId}`);
+                              }}
+                            >
+                              View Results
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {preferences.sound ? (
+                <Volume2 className="w-3.5 h-3.5" />
+              ) : (
+                <VolumeX className="w-3.5 h-3.5" />
+              )}
+              <span>Sound {preferences.sound ? 'on' : 'off'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={handleMarkAllAsRead}
+                disabled={notifications.filter(n => !n.isRead).length === 0}
+              >
+                Mark all as read
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full hover:bg-muted/50"
-                onClick={() => setIsOpen(false)}
+                className="rounded-full"
+                onClick={() => {
+                  // Navigate to settings
+                  router.push('/settings?tab=notifications');
+                  setIsOpen(false);
+                }}
               >
-                <X className="w-4 h-4" />
+                <Settings className="w-4 h-4" />
               </Button>
             </div>
-
-            {/* Content */}
-            <div className="max-h-96 overflow-y-auto">
-              {isLoading ? (
-                <div className="p-6 text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto" />
-                  <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
-                </div>
-              ) : notifications.length === 0 ? (
-                <div className="p-6 text-center">
-                  <Bell className="w-10 h-10 text-muted-foreground mx-auto" />
-                  <h4 className="font-medium mt-3">No notifications</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    You're all caught up! Notifications will appear here.
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={cn(
-                        'p-4 hover:bg-muted/50 transition-colors duration-150 cursor-pointer',
-                        !notification.isRead && 'bg-muted/30'
-                      )}
-                      onClick={async () => {
-                        if (!notification.isRead) {
-                          await markAsRead(notification.id);
-                        }
-
-                        // Navigate to results if applicable
-                        if (
-                          (notification.metadata?.resourceType === 'creation_job') ||
-                          (notification.type === 'job_progress' && [JobStatus.COMPLETED, JobStatus.FAILED].includes(notification.data?.status))
-                        ) {
-                          const jobId = notification.metadata?.resourceId || notification.data?.jobId;
-                          if (jobId) {
-                            router.push(`/my-products?jobId=${jobId}`);
-                          }
-                        }
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          'p-2 rounded-lg border flex-shrink-0',
-                          getNotificationColor(notification.type)
-                        )}>
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <h4 className="text-sm font-medium truncate">
-                              {notification.title}
-                            </h4>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                              {formatTimeAgo(notification.createdAt)}
-                            </span>
-                          </div>
-                          {notification.type === 'job_progress' && notification.data?.progress !== undefined && (
-                            <div className="mt-2 space-y-1">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Progress</span>
-                                <span>{notification.data.progress}%</span>
-                              </div>
-                              <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary transition-all duration-300 ease-out"
-                                  style={{ width: `${notification.data.progress}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {notification.message}
-                          </p>
-                          {notification.workspaceId && (
-                            <div className="mt-2 flex items-center gap-2">
-                              {notification.data?.status && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-normal">
-                                  {notification.data.status}
-                                </Badge>
-                              )}
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-normal text-muted-foreground">
-                                WS: {notification.workspaceId.slice(0, 8)}
-                              </Badge>
-                            </div>
-                          )}
-                          {notification.metadata?.resourceType === 'creation_job' && (
-                            <div className="mt-2 flex items-center justify-end">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-6 text-[10px] px-2"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(`/my-products?jobId=${notification.metadata?.resourceId}`);
-                                }}
-                              >
-                                View Results
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {preferences.sound ? (
-                  <Volume2 className="w-3.5 h-3.5" />
-                ) : (
-                  <VolumeX className="w-3.5 h-3.5" />
-                )}
-                <span>Sound {preferences.sound ? 'on' : 'off'}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={handleMarkAllAsRead}
-                  disabled={notifications.filter(n => !n.isRead).length === 0}
-                >
-                  Mark all as read
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => {
-                    // Navigate to settings
-                    router.push('/settings?tab=notifications');
-                    setIsOpen(false);
-                  }}
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

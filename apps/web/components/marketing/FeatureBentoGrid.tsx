@@ -1,9 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Bot, MessageSquare, Share2, Zap, BarChart3, Lock, CheckCircle2 } from 'lucide-react';
+
+import { Bot, MessageSquare, Zap, BarChart3, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card } from '@/components/ui/Card';
 
 const features = [
     {
@@ -58,12 +57,8 @@ export function FeatureBentoGrid() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-6 auto-rows-[minmax(180px,auto)]">
                     {features.map((feature, idx) => (
-                        <motion.div
+                        <div
                             key={idx}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: idx * 0.1 }}
                             className={cn(
                                 "group relative overflow-hidden rounded-3xl border border-border/40 bg-card/30 backdrop-blur-sm p-8 hover:bg-card/50 transition-colors",
                                 feature.className
@@ -94,7 +89,7 @@ export function FeatureBentoGrid() {
                                     </div>
                                 )}
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
             </div>

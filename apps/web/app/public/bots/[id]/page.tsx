@@ -3,12 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 
 export default function PublicBotPage() {
     const params = useParams()
     const botId = params.id as string
-    const [bot, setBot] = useState<any>(null)
+    const {
+        bot,
+        isBotLoading,
+        createConversation: createConv,
+        sendMessage
+    } = usePublicBot(botId);
+
     const [messages, setMessages] = useState<any[]>([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -17,50 +23,31 @@ export default function PublicBotPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        loadBot()
-        createConversation()
-    }, [botId])
-
-    useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
 
-    const loadBot = async () => {
-        try {
-            const response = await fetch(`${API_URL}/public/bots/${botId}/config`)
-            if (!response.ok) throw new Error('Failed to load bot')
-            const data = await response.json()
-            setBot(data)
-            
-            if (data.welcomeMessage) {
-                setMessages([{
-                    role: 'assistant',
-                    content: data.welcomeMessage,
-                    timestamp: new Date().toISOString()
-                }])
-            }
-        } catch {
+    useEffect(() => {
+        if (bot?.welcomeMessage && messages.length === 0) {
+            setMessages([{
+                role: 'assistant',
+                content: bot.welcomeMessage,
+                timestamp: new Date().toISOString()
+            }])
         }
-    }
+    }, [bot]);
 
-    const createConversation = async () => {
-        try {
-            const response = await fetch(`${API_URL}/public/bots/${botId}/conversations`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    metadata: {
-                        url: window.location.href,
-                        userAgent: navigator.userAgent
-                    } 
-                }),
-            })
-            if (!response.ok) throw new Error('Failed to create conversation')
-            const data = await response.json()
-            setConversationId(data.conversationId)
-        } catch {
-        }
-    }
+    useEffect(() => {
+        const initConversation = async () => {
+            try {
+                const data = await createConv({
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+                setConversationId(data.conversationId);
+            } catch (err) { }
+        };
+        initConversation();
+    }, [botId]);
 
     const handleSend = async () => {
         if (!input.trim() || loading || !conversationId) return
@@ -72,14 +59,8 @@ export default function PublicBotPage() {
         setLoading(true)
 
         try {
-            const response = await fetch(`${API_URL}/public/bots/conversations/${conversationId}/messages`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: messageText }),
-            })
-            if (!response.ok) throw new Error('Failed to send message')
-            
-            const data = await response.json()
+            const data = await sendMessage({ conversationId, message: messageText });
+
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: data.content,
@@ -101,8 +82,8 @@ export default function PublicBotPage() {
 
     const primaryColor = bot.theme?.primaryColor || '#667eea'
     const position = bot.theme?.position || 'bottom-right'
-    const buttonSize = bot.theme?.buttonSize === 'large' ? '64px' : 
-                      bot.theme?.buttonSize === 'small' ? '48px' : '56px'
+    const buttonSize = bot.theme?.buttonSize === 'large' ? '64px' :
+        bot.theme?.buttonSize === 'small' ? '48px' : '56px'
 
     return (
         <>
@@ -118,7 +99,7 @@ export default function PublicBotPage() {
                 }
             `}</style>
 
-            {}
+            { }
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
@@ -149,14 +130,14 @@ export default function PublicBotPage() {
             >
                 <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24">
                     {isOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     )}
                 </svg>
             </button>
 
-            {}
+            { }
             {isOpen && (
                 <div style={{
                     position: 'fixed',
@@ -174,7 +155,7 @@ export default function PublicBotPage() {
                     zIndex: 999998,
                     overflow: 'hidden',
                 }}>
-                    {}
+                    { }
                     <div style={{
                         background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
                         color: 'white',
@@ -213,12 +194,12 @@ export default function PublicBotPage() {
                             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
                         >
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
 
-                    {}
+                    { }
                     <div style={{
                         flex: 1,
                         overflowY: 'auto',
@@ -257,7 +238,7 @@ export default function PublicBotPage() {
                                                 borderRadius: '50%',
                                                 animation: 'bounce 1.4s infinite ease-in-out both',
                                                 animationDelay: `${-0.32 + i * 0.16}s`,
-                                            }}/>
+                                            }} />
                                         ))}
                                     </div>
                                 </div>
@@ -266,7 +247,7 @@ export default function PublicBotPage() {
                         <div ref={messagesEndRef} />
                     </div>
 
-                    {}
+                    { }
                     <div style={{
                         padding: '16px',
                         borderTop: '1px solid #e5e7eb',
@@ -319,7 +300,7 @@ export default function PublicBotPage() {
                             }}
                         >
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </button>
                     </div>
