@@ -41,9 +41,8 @@ async function bootstrap() {
     }),
   );
 
-  // âœ… Add default body parser for all other routes
-  app.use(bodyParser.json({ limit: '50mb' }));
-  app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+  app.use(bodyParser.json({ limit: '500mb' }));
+  app.use(bodyParser.urlencoded({ extended: true, limit: '500mb' }));
 
   app.use(
     helmet({
