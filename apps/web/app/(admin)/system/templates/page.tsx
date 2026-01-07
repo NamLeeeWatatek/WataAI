@@ -4,9 +4,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { templatesApi } from '@/lib/api/templates';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
 import { Template } from '@/lib/types/template';
+import { useTemplates } from '@/lib/hooks/useTemplates';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -39,6 +40,7 @@ export default function TemplatesPage() {
     const initialToolId = searchParams.get('toolId');
 
 
+    const { currentWorkspace } = useWorkspace();
     const [searchQuery, setSearchQuery] = useState('');
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -79,45 +81,45 @@ export default function TemplatesPage() {
     });
 
     // Query for Templates
-    const { data: templatesData, isLoading, refetch } = useQuery({
-        queryKey: ['templates', currentPage, pageSize, querySearch, selectedToolFilter],
-        queryFn: async () => {
-            const filters: any = {};
-            if (selectedToolFilter !== 'all') {
-                filters.creationToolId = selectedToolFilter;
-            }
-            if (querySearch) {
-                filters.name = querySearch;
-            }
-
-            return templatesApi.findAll({
-                page: currentPage,
-                limit: pageSize,
-                filters: JSON.stringify(filters),
-            });
+    const {
+        templates: templatesDataRaw,
+        totalCount,
+        loading: isLoading,
+        refreshTemplates: refetch,
+        createTemplate,
+        updateTemplate,
+        deleteTemplate,
+        bulkUpdateTemplates,
+        bulkDeleteTemplates
+    } = useTemplates({
+        page: currentPage,
+        limit: pageSize,
+        workspaceId: currentWorkspace?.id || '',
+        filters: {
+            ...(selectedToolFilter !== 'all' ? { creationToolId: selectedToolFilter } : {}),
+            ...(querySearch ? { name: querySearch } : {})
         },
-        placeholderData: keepPreviousData,
     });
+
+    const templatesData = { data: templatesDataRaw, total: totalCount };
 
     const templates = Array.isArray(templatesData?.data) ? templatesData.data : [];
     const totalItems = templatesData?.total || 0;
-    const hasNextPage = templatesData?.hasNextPage || false;
     const tools = Array.isArray(toolsData) ? toolsData : [];
 
-    const handleSaveTemplate = async (data: Partial<Template>) => {
+    const handleSaveTemplate = async (data: any) => {
         try {
-            if (data.id) {
-                await templatesApi.update(data.id, data);
+            if (editingTemplate) {
+                await updateTemplate(editingTemplate.id, data);
                 toast.success('Template updated successfully');
             } else {
-                await templatesApi.create(data);
+                await createTemplate(data);
                 toast.success('Template created successfully');
             }
             await refetch();
         } catch (error) {
             const message = handleApiError(error);
             toast.error(message);
-            throw error;
         }
     };
 
@@ -128,20 +130,17 @@ export default function TemplatesPage() {
 
     const handleDelete = async () => {
         if (!templateToDelete) return;
-        const id = templateToDelete;
 
         try {
-            setDeletingId(id);
-            await templatesApi.delete(id);
+            await deleteTemplate(templateToDelete);
             toast.success('Template deleted successfully');
             await refetch();
         } catch (error) {
             const message = handleApiError(error);
             toast.error(message);
         } finally {
-            setDeletingId(null);
-            setDeleteAlertOpen(false);
             setTemplateToDelete(null);
+            setDeleteAlertOpen(false);
         }
     };
 
@@ -178,19 +177,27 @@ export default function TemplatesPage() {
 
     const handleBulkAssign = async (toolId: string) => {
         try {
-            await templatesApi.bulkUpdate(Array.from(selectedIds), { creationToolId: toolId });
+            await bulkUpdateTemplates({
+                ids: Array.from(selectedIds),
+                data: { creationToolId: toolId }
+            });
             toast.success(`Successfully assigned ${selectedIds.size} templates`);
             setSelectedIds(new Set());
             await refetch();
         } catch (error) {
             const message = handleApiError(error);
             toast.error('Failed to assign templates: ' + message);
+        } finally {
+            setAssignDialogOpen(false);
         }
     };
 
     const handleBulkUnassign = async () => {
         try {
-            await templatesApi.bulkUpdate(Array.from(selectedIds), { creationToolId: null as any });
+            await bulkUpdateTemplates({
+                ids: Array.from(selectedIds),
+                data: { creationToolId: null }
+            });
             toast.success(`Successfully unassigned ${selectedIds.size} templates`);
             setSelectedIds(new Set());
             await refetch();
@@ -203,7 +210,7 @@ export default function TemplatesPage() {
     const handleBulkDelete = async () => {
         setBulkDeleting(true);
         try {
-            await templatesApi.bulkDelete(Array.from(selectedIds));
+            await bulkDeleteTemplates(Array.from(selectedIds));
             toast.success(`Successfully deleted ${selectedIds.size} templates`);
             setSelectedIds(new Set());
             await refetch();
@@ -446,7 +453,7 @@ export default function TemplatesPage() {
                                     limit: pageSize,
                                     total: totalItems,
                                     totalPages: Math.ceil(totalItems / pageSize),
-                                    hasNextPage: hasNextPage
+                                    hasNextPage: currentPage * pageSize < totalItems
                                 }}
                                 onPageChange={setCurrentPage}
                                 onPageSizeChange={(newSize) => {

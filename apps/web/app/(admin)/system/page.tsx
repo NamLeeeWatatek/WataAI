@@ -10,7 +10,7 @@ import { AdminStatsCards } from '@/components/features/admin/AdminStatsCards';
 import { AdminCharts } from '@/components/features/admin/AdminCharts';
 import { QdrantMaintenanceCard } from '@/components/features/admin/QdrantMaintenanceCard';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { motion } from 'framer-motion';
+
 
 export default function AdminDashboardPage() {
     const router = useRouter();

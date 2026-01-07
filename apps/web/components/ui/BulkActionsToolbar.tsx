@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -32,18 +32,14 @@ export function BulkActionsToolbar({
     if (selectedCount === 0) return null;
 
     return (
-        <AnimatePresence>
+        <>
             {selectedCount > 0 && (
-                <motion.div
-                    initial={{ y: 20, opacity: 0, scale: 0.95 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    exit={{ y: 20, opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
+                <div
                     className={cn(
                         "fixed bottom-8 left-1/2 -translate-x-1/2 z-50",
                         "flex items-center gap-1 p-1.5 pr-2",
                         "bg-foreground text-background shadow-2xl rounded-full",
-                        "border border-border/50",
+                        "border border-border/50 animate-in slide-in-from-bottom-5 fade-in duration-200",
                         className
                     )}
                 >
@@ -95,8 +91,8 @@ export function BulkActionsToolbar({
                             <span className="sr-only">Clear selection</span>
                         </Button>
                     </div>
-                </motion.div>
+                </div>
             )}
-        </AnimatePresence>
+        </>
     );
 }

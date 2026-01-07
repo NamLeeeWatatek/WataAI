@@ -6,61 +6,42 @@ import { ArrowLeft, MoreVertical, Archive, Trash2, Clock, User, ChevronLeft } fr
 import { ChatInterface } from '@/components/features/chat/ChatInterface';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 
-import axiosClient from '@/lib/axios-client';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/DropdownMenu';
 import { Badge } from '@/components/ui/Badge';
-import { MessageRole } from '@/lib/types/conversations';
+import { MessageRole, ConversationStatus } from '@/lib/types/conversations';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
+import { useBotConversation } from '@/lib/hooks/features/useBotConversations';
 
-interface ConversationDetails {
-    id: string;
-    contactName: string;      // Match backend field name
-    contactAvatar?: string;   // Match backend field name
-    channelType: string;
-    channelName: string;
-    status: string;
-    channelId?: string;       // Detect if it's a channel conversation
-}
 
 export default function ConversationPage() {
     const params = useParams();
     const router = useRouter();
     const conversationId = params.id as string;
 
-    const [conversation, setConversation] = useState<ConversationDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState(false);
+    const {
+        conversation,
+        isLoading: loading,
+        archiveConversation,
+        deleteConversation,
+        sendMessage,
+        isArchiving,
+        isDeleting
+    } = useBotConversation(conversationId);
+
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showArchiveDialog, setShowArchiveDialog] = useState(false);
 
-    useEffect(() => {
-        loadConversation();
-    }, [conversationId]);
-
-    const loadConversation = async () => {
-        try {
-            setLoading(true);
-            const data: any = await axiosClient.get(`/conversations/${conversationId}`);
-            setConversation(data);
-        } catch (error) {
-            toast.error('Failed to load conversation');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleSendMessage = async (content: string) => {
         try {
-            await axiosClient.post(`/conversations/${conversationId}/messages`, {
+            await sendMessage({
                 content,
                 role: MessageRole.ASSISTANT
             });
         } catch (err) {
-            toast.error('Failed to send message');
+            // Error toast handled in hook
             throw err;
         }
     };
@@ -68,29 +49,23 @@ export default function ConversationPage() {
 
 
     const handleArchive = async () => {
-        setActionLoading(true);
         try {
-            await axiosClient.post(`/conversations/${conversationId}/archive`);
-            toast.success('Conversation archived');
+            await archiveConversation();
             router.push('/conversations');
         } catch (error) {
-            toast.error('Failed to archive conversation');
+            // Error toast handled in hook
         } finally {
-            setActionLoading(false);
             setShowArchiveDialog(false);
         }
     };
 
     const handleDelete = async () => {
-        setActionLoading(true);
         try {
-            await axiosClient.delete(`/conversations/${conversationId}`);
-            toast.success('Conversation deleted');
+            await deleteConversation();
             router.push('/conversations');
         } catch (error) {
-            toast.error('Failed to delete conversation');
+            // Error toast handled in hook
         } finally {
-            setActionLoading(false);
             setShowDeleteDialog(false);
         }
     };
@@ -135,7 +110,7 @@ export default function ConversationPage() {
                             </h2>
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={conversation.status === 'open' ? 'default' : 'secondary'}
+                                    variant={conversation.status === ConversationStatus.ACTIVE ? 'default' : 'secondary'}
                                     className="h-5 px-1.5 text-[10px] uppercase tracking-wider font-bold"
                                 >
                                     {conversation.status}

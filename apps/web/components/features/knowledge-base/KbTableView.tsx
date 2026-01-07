@@ -96,7 +96,7 @@ export function KbTableView({
 
 
 
-  const columns = [
+  const columns = React.useMemo(() => [
     {
       key: 'selection',
       label: (
@@ -229,7 +229,7 @@ export function KbTableView({
         </div>
       )
     }
-  ];
+  ], [items, selectedIds, onToggleSelectAll, onToggleSelection, onPreviewDocument, onDownloadDocument, onEditItem, onDeleteItem]);
 
   return (
     <div className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5">

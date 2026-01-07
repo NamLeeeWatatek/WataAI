@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+
 
 const brands = [
     { name: 'TechCorp', opacity: 0.7 },

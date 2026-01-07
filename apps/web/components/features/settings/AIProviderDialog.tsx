@@ -1,10 +1,9 @@
-"use client";
+'use client';
 
 import React, { useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
     Dialog,
@@ -25,29 +24,18 @@ import {
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { axiosClient } from '@/lib/axios-client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Loader2, Save, Cpu, Key, Globe, Shield, RefreshCw, X, Stars } from 'lucide-react';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
-
-interface AiProvider {
-    id: string;
-    key: string;
-    label: string;
-    icon?: string;
-    description?: string;
-    requiredFields: string[];
-    optionalFields: string[];
-    defaultValues: Record<string, any>;
-    isActive: boolean;
-}
+import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
+import { type AiProviderMetadata } from '@/lib/api/ai-providers';
 
 interface AIProviderDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    availableProviders: AiProvider[];
+    availableProviders: AiProviderMetadata[];
     config?: any;
 }
 
@@ -62,8 +50,8 @@ const configSchema = z.object({
 type ConfigFormValues = z.infer<typeof configSchema>;
 
 export function AIProviderDialog({ open, onOpenChange, availableProviders, config }: AIProviderDialogProps) {
-    const queryClient = useQueryClient();
     const isEdit = !!config;
+    const { createConfig, updateConfig, verifyModels, isVerifyingModels, isMutating } = useAiProviders();
 
     const form = useForm<ConfigFormValues>({
         resolver: zodResolver(configSchema),
@@ -76,7 +64,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
         },
     });
 
-    const [isFetchingModels, setIsFetchingModels] = React.useState(false);
     const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true);
 
     const configWatch = form.watch('config');
@@ -102,28 +89,20 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
         }
     }, [config, form, open]);
 
-    const saveMutation = useMutation({
-        mutationFn: (data: ConfigFormValues) => {
-            if (isEdit) {
-                return axiosClient.patch(`/ai-providers/user/configs/${config.id}`, data);
-            }
-            return axiosClient.post('/ai-providers/user/configs', data);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['ai-user-configs'] });
-            toast.success(`Provider ${isEdit ? 'updated' : 'added'} successfully`);
-            onOpenChange(false);
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to save configuration');
-        },
-    });
-
     const selectedProviderId = form.watch('providerId');
     const selectedProvider = availableProviders.find(p => p.id === selectedProviderId);
 
-    const onSubmit: SubmitHandler<ConfigFormValues> = (data) => {
-        saveMutation.mutate(data);
+    const onSubmit: SubmitHandler<ConfigFormValues> = async (data) => {
+        try {
+            if (isEdit) {
+                await updateConfig({ id: config.id, data });
+            } else {
+                await createConfig(data);
+            }
+            onOpenChange(false);
+        } catch (error) {
+            // Error handled in hook
+        }
     };
 
     const handleFetchModels = async (silent = false) => {
@@ -132,43 +111,33 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
         if (!providerId) return;
 
-        // Validation for auto-fetch only
         if (silent) {
             const hasKey = !!configData?.apiKey;
-            const isOllama = providerId === 'ollama';
-            const isCustom = providerId === 'custom';
-
-            if (!hasKey && !isOllama && !isCustom) return;
+            if (!hasKey && providerId !== 'ollama' && providerId !== 'custom') return;
         }
 
-        if (!silent) setIsFetchingModels(true);
         try {
-            const models = await aiProvidersApi.verifyModels(providerId, configData);
+            const models = await verifyModels({ providerId, config: configData });
             if (models && Array.isArray(models)) {
                 const currentModels = form.getValues('modelList') || [];
-                // Only update if different to avoid infinite loop or flickering
                 if (JSON.stringify(currentModels) !== JSON.stringify(models)) {
                     form.setValue('modelList', models);
-                    if (!silent) toast.success(`Fetched ${models.length} models successfully`);
+                    if (!silent) toast.success(`Found ${models.length} models`);
                 }
             }
         } catch (error: any) {
-            if (!silent) toast.error(error.response?.data?.message || 'Failed to fetch models');
-        } finally {
-            if (!silent) setIsFetchingModels(false);
+            if (!silent) toast.error(error.response?.data?.message || 'Verification failed');
         }
     };
 
-    // Auto-fetch effect
     useEffect(() => {
         if (open && autoRefreshEnabled) {
             const isUnchanged = isEdit && config?.config && JSON.stringify(debouncedConfig) === JSON.stringify(config.config);
-
             if (!isUnchanged) {
                 handleFetchModels(true);
             }
         }
-    }, [debouncedConfig, open, autoRefreshEnabled, isEdit, config]);
+    }, [debouncedConfig, open, autoRefreshEnabled]);
 
     const removeModel = (modelToRemove: string) => {
         const currentModels = form.getValues('modelList') || [];
@@ -177,35 +146,33 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none shadow-3xl rounded-[32px]">
-                <div className="h-2 w-full bg-gradient-to-r from-primary via-primary/50 to-primary/20" />
-
+            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
-                        <DialogHeader className="p-8 pb-4">
-                            <div className="flex items-center gap-4 mb-2">
-                                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                                    <Cpu className="w-6 h-6 text-primary" />
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+                        <DialogHeader className="p-6 pb-4 border-b">
+                            <div className="flex items-center gap-4">
+                                <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <Cpu className="size-5 text-primary" />
                                 </div>
                                 <div>
-                                    <DialogTitle className="text-2xl font-black tracking-tight">
-                                        {isEdit ? 'Edit Provider' : 'Connect New Provider'}
+                                    <DialogTitle>
+                                        {isEdit ? 'Edit Provider' : 'Add Provider'}
                                     </DialogTitle>
-                                    <DialogDescription className="text-sm font-medium">
-                                        Connect an AI provider to enable smart features
+                                    <DialogDescription>
+                                        Configure AI provider settings and credentials
                                     </DialogDescription>
                                 </div>
                             </div>
                         </DialogHeader>
 
-                        <div className="p-8 pt-4 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control as any}
                                     name="providerId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Provider Service</FormLabel>
+                                            <FormLabel>Provider</FormLabel>
                                             <Select
                                                 onValueChange={(val) => {
                                                     field.onChange(val);
@@ -213,7 +180,6 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                     if (p && !form.getValues('displayName')) {
                                                         form.setValue('displayName', p.label);
                                                     }
-                                                    // Set default values for config
                                                     if (p) {
                                                         form.setValue('config', { ...p.defaultValues });
                                                     }
@@ -223,14 +189,14 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 disabled={isEdit}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger >
-                                                        <SelectValue placeholder="Select Provider" />
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select provider" />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent className="rounded-2xl border-border/40 bg-card/90 backdrop-blur-xl">
+                                                <SelectContent>
                                                     {availableProviders.map((p) => (
-                                                        <SelectItem key={p.id} value={p.id} className="rounded-xl focus:bg-primary/10">
-                                                            <span className="font-bold">{p.label}</span>
+                                                        <SelectItem key={p.id} value={p.id}>
+                                                            {p.label}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -245,12 +211,11 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="displayName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60">Display Name</FormLabel>
+                                            <FormLabel>Display Name</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="e.g. My OpenAI"
+                                                    placeholder="e.g. Production GPT-4"
                                                     {...field}
-
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -260,99 +225,95 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             </div>
 
                             {selectedProvider && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    <div className="flex items-center gap-2 text-primary">
-                                        <Shield className="w-4 h-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Credentials</span>
+                                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium">
+                                            <Shield className="size-4" />
+                                            Authentication
+                                        </div>
+
+                                        {selectedProvider.requiredFields.map((fieldName) => (
+                                            <FormField
+                                                key={fieldName}
+                                                control={form.control as any}
+                                                name={`config.${fieldName}`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="flex items-center justify-between">
+                                                            <span className="flex items-center gap-2">
+                                                                {fieldName.includes('Key') ? <Key className="size-3" /> : <Globe className="size-3" />}
+                                                                {fieldName.replace(/([A-Z])/g, ' $1')}
+                                                            </span>
+                                                            <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Required</span>
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                type={fieldName.includes('Key') || fieldName.includes('Secret') ? 'password' : 'text'}
+                                                                placeholder={`Enter ${fieldName}...`}
+                                                                {...field}
+                                                                value={(field.value as string) || ''}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        ))}
+
+                                        {selectedProvider.optionalFields.map((fieldName) => (
+                                            <FormField
+                                                key={fieldName}
+                                                control={form.control as any}
+                                                name={`config.${fieldName}`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            {fieldName.replace(/([A-Z])/g, ' $1')} (Optional)
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                {...field}
+                                                                value={(field.value as string) || ''}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        ))}
                                     </div>
 
-                                    {selectedProvider.requiredFields.map((fieldName) => (
-                                        <FormField
-                                            key={fieldName}
-                                            control={form.control as any}
-                                            name={`config.${fieldName}`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <div className="flex items-center justify-between mb-1.5">
-                                                        <FormLabel className="font-bold text-xs capitalize text-muted-foreground flex items-center gap-2">
-                                                            {fieldName.includes('Key') ? <Key className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
-                                                            {fieldName.replace(/([A-Z])/g, ' $1')}
-                                                        </FormLabel>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full ring-1 ring-primary/20">Required</span>
-                                                    </div>
-                                                    <FormControl>
-                                                        <Input
-                                                            type={fieldName.includes('Key') || fieldName.includes('Secret') ? 'password' : 'text'}
-                                                            placeholder={`Enter ${fieldName}...`}
-                                                            {...field}
-                                                            value={(field.value as string) || ''}
-
-                                                            className="font-mono text-sm"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    ))}
-
-                                    {selectedProvider.optionalFields.map((fieldName) => (
-                                        <FormField
-                                            key={fieldName}
-                                            control={form.control as any}
-                                            name={`config.${fieldName}`}
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="font-bold text-xs capitalize text-muted-foreground">
-                                                        {fieldName.replace(/([A-Z])/g, ' $1')} (Optional)
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            {...field}
-                                                            value={(field.value as string) || ''}
-                                                            className="text-sm"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    ))}
-
-                                    <div className="pt-2 pb-2">
+                                    <div className="pt-2">
                                         <Button
                                             type="button"
-                                            variant="outline"
+                                            variant="secondary"
                                             onClick={() => handleFetchModels()}
-                                            disabled={isFetchingModels}
-                                            className={cn(
-                                                "w-full h-12 font-black uppercase tracking-widest text-xs border-2 transition-all active:scale-[0.98]",
-                                                isFetchingModels
-                                                    ? "border-primary/20 text-primary/50 cursor-wait"
-                                                    : "border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40"
-                                            )}
+                                            disabled={isVerifyingModels}
+                                            className="w-full"
                                         >
-                                            {isFetchingModels ? (
+                                            {isVerifyingModels ? (
                                                 <>
-                                                    <Loader2 className="w-4 h-4 mr-2" />
-                                                    Verifying Connection...
+                                                    <Loader2 className="size-4 mr-2 animate-spin" />
+                                                    Connecting...
                                                 </>
                                             ) : (
                                                 <>
-                                                    <RefreshCw className="w-4 h-4 mr-2" />
-                                                    Test Connection & Load Models
+                                                    <RefreshCw className="size-4 mr-2" />
+                                                    Refresh Models
                                                 </>
                                             )}
                                         </Button>
                                     </div>
 
-                                    <div className="space-y-4 pt-2">
-                                        <div className="flex items-center gap-2 text-primary">
-                                            <Stars className="w-4 h-4" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">Detected Capabilities</span>
-                                            <span className="ml-auto text-[9px] font-bold text-muted-foreground/50 bg-muted/10 px-2 py-0.5 rounded-full">
+                                    <div className="space-y-3 pt-4 border-t">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-sm font-medium">
+                                                <Stars className="size-4" />
+                                                Available Models
+                                            </div>
+                                            <Badge variant="outline">
                                                 {(form.getValues('modelList') || []).length} Models
-                                            </span>
+                                            </Badge>
                                         </div>
 
                                         <FormField
@@ -360,27 +321,23 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             name="modelList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <div className="flex flex-wrap gap-2 min-h-[80px] p-4 rounded-xl bg-muted/10 border border-border/10 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                                                    <div className="flex flex-wrap gap-2 min-h-[60px] p-4 rounded-lg bg-muted/50 border transition-all">
                                                         {field.value && field.value.length > 0 ? (
                                                             field.value.map((model: string) => (
                                                                 <Badge
                                                                     key={model}
                                                                     variant="secondary"
-                                                                    className="group font-mono text-[10px] px-2 py-1 bg-background border border-border/40 text-foreground hover:border-destructive/30 hover:bg-destructive/5 hover:text-destructive transition-all rounded-lg cursor-pointer select-none"
+                                                                    className="group pr-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
                                                                     onClick={() => removeModel(model)}
-                                                                    title="Click to remove"
                                                                 >
                                                                     {model}
-                                                                    <X className="w-2.5 h-2.5 ml-1.5 opacity-30 group-hover:opacity-100" />
+                                                                    <X className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100" />
                                                                 </Badge>
                                                             ))
                                                         ) : (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 gap-2">
-                                                                <RefreshCw className="w-5 h-5 opacity-20" />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-center">
-                                                                    No models loaded<br />
-                                                                    Test connection to fetch
-                                                                </span>
+                                                            <div className="w-full flex flex-col items-center justify-center text-muted-foreground gap-2 py-4 text-xs">
+                                                                <RefreshCw className="size-4 opacity-50" />
+                                                                No models loaded. Click Refresh Models.
                                                             </div>
                                                         )}
                                                     </div>
@@ -393,26 +350,24 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             )}
                         </div>
 
-                        <DialogFooter className="p-8 pt-0 gap-3 sm:gap-0">
+                        <DialogFooter className="p-6 pt-0 gap-2 border-t mt-auto pt-6 bg-muted/10">
                             <Button
                                 type="button"
                                 variant="ghost"
                                 onClick={() => onOpenChange(false)}
-                                className="h-14 font-bold text-muted-foreground"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={saveMutation.isPending}
-                                className="h-14 px-8 font-black flex-1 sm:flex-none shadow-xl shadow-primary/20"
+                                disabled={isMutating}
                             >
-                                {saveMutation.isPending ? (
-                                    <Loader2 className="w-5 h-5 mr-2" />
+                                {isMutating ? (
+                                    <Loader2 className="size-4 mr-2 animate-spin" />
                                 ) : (
-                                    <Save className="w-5 h-5 mr-2" />
+                                    <Save className="size-4 mr-2" />
                                 )}
-                                {isEdit ? 'Save Changes' : 'Connect Provider'}
+                                {isEdit ? 'Save Changes' : 'Add Provider'}
                             </Button>
                         </DialogFooter>
                     </form>

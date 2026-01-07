@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
-import { motion } from 'framer-motion'
+
 import { FiActivity } from "react-icons/fi"
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -54,11 +54,9 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
                                     </div>
                                 </div>
                                 <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden">
-                                    <motion.div
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${bot.metric || 0}%` }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                        className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+                                    <div
+                                        style={{ width: `${bot.metric || 0}%`, transition: 'width 1.5s ease-out' }}
+                                        className="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 shadow-[0_0_10px_rgba(139,92,246,0.3)] duration-700"
                                     />
                                 </div>
                             </div>

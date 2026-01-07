@@ -99,22 +99,25 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
             {/* Left Column: Editor */}
             <div className="w-full xl:w-[480px] 2xl:w-[540px] flex-shrink-0 space-y-6 lg:sticky lg:top-8">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-                    <TabsList className="grid w-full grid-cols-3 mb-6 bg-transparent border-none shadow-none">
+                    <TabsList variant="dashboard" className="grid w-full grid-cols-3 mb-6">
                         <TabsTrigger
                             value="design"
-
+                            variant="dashboard"
+                            className="justify-start px-2"
                         >
                             <Palette className="w-4 h-4 mr-2" /> Design
                         </TabsTrigger>
                         <TabsTrigger
                             value="messaging"
-
+                            variant="dashboard"
+                            className="justify-start px-2"
                         >
                             <MessageSquare className="w-4 h-4 mr-2" /> Messaging
                         </TabsTrigger>
                         <TabsTrigger
                             value="behavior"
-
+                            variant="dashboard"
+                            className="justify-start px-2"
                         >
                             <Settings2 className="w-4 h-4 mr-2" /> Behavior
                         </TabsTrigger>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,7 +19,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/Dialog'
 import {
     Form,
@@ -30,32 +29,29 @@ import {
     FormMessage,
 } from '@/components/ui/Form'
 
-import axiosClient from '@/lib/axios-client'
 import { useWorkspace } from '@/lib/hooks/useWorkspace'
-import toast from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import {
     Plus,
     Edit2,
     Trash2,
-    MessageSquare,
     Activity,
-    RefreshCw,
     Settings,
     Bot as BotIcon,
-    LayoutGrid,
     MoreHorizontal
 } from 'lucide-react'
-import { botsApi, type Bot } from '@/lib/api/bots'
+import { type Bot } from '@/lib/api/bots'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 import { Badge } from '@/components/ui/Badge'
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu'
-import * as LucideIcons from 'lucide-react'
+import { iconMap } from '@/lib/icon-map'
+import { useBots } from '@/lib/hooks/features/useBots'
 
 const botFormSchema = z.object({
     name: z.string().min(1, 'Bot name is required'),
@@ -67,17 +63,36 @@ type BotFormValues = z.infer<typeof botFormSchema>
 
 export default function BotsPage() {
     const router = useRouter()
-    const [bots, setBots] = useState<Bot[]>([])
-    const { workspace, workspaceId, isLoading: isWorkspaceLoading } = useWorkspace()
-    const [loading, setLoading] = useState(true)
+    const { workspaceId } = useWorkspace()
     const [showModal, setShowModal] = useState(false)
     const [editingBot, setEditingBot] = useState<Bot | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(12)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!isWorkspaceLoading && !workspaceId) {
-            setLoading(false)
-        }
-    }, [isWorkspaceLoading, workspaceId])
+    const {
+        data: botsData,
+        isLoading,
+        refetch,
+        createBot,
+        updateBot,
+        deleteBot,
+        activateBot,
+        pauseBot
+    } = useBots(workspaceId || undefined, {
+        page: currentPage,
+        limit: pageSize,
+    })
+
+    // Filter bots locally for smoother search UX if needed, 
+    // or pass searchQuery to useBots if API supports it.
+    const bots = (botsData?.data || []).filter((b: Bot) =>
+        !searchQuery ||
+        b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    const totalItems = botsData?.total || 0
 
     const form = useForm<BotFormValues>({
         resolver: zodResolver(botFormSchema),
@@ -87,46 +102,6 @@ export default function BotsPage() {
             icon: 'Bot',
         },
     })
-
-    const [searchQuery, setSearchQuery] = useState('')
-    const [currentPage, setCurrentPage] = useState(1)
-    const [pageSize, setPageSize] = useState(12)
-
-    const [totalItems, setTotalItems] = useState(0)
-
-    const loadBots = useCallback(async () => {
-        if (!workspaceId) {
-            setLoading(false)
-            return
-        }
-
-        try {
-            setLoading(true)
-            const response: any = await botsApi.getAll(workspaceId, {
-                page: currentPage,
-                limit: pageSize,
-                status: undefined // We can add status filter support later if needed
-            })
-
-            const botsData = response.data || []
-            const total = response.total || botsData.length
-
-            setBots(botsData)
-            setTotalItems(total)
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || 'Failed to load bots')
-        } finally {
-            setLoading(false)
-        }
-    }, [workspaceId, currentPage, pageSize])
-
-    useEffect(() => {
-        if (workspaceId) {
-            loadBots()
-        }
-    }, [workspaceId, loadBots])
-
-
 
     const openModal = (bot?: Bot) => {
         if (bot) {
@@ -147,81 +122,54 @@ export default function BotsPage() {
         setShowModal(true)
     }
 
-    const closeModal = () => {
-        setShowModal(false)
-        setEditingBot(null)
-        form.reset()
-    }
-
     const onSubmit = async (values: BotFormValues) => {
         try {
             if (editingBot) {
-                await botsApi.update(editingBot.id, values)
-                toast.success('Bot updated')
+                await updateBot({ id: editingBot.id, data: values })
             } else {
-                await botsApi.create({
-                    ...values,
-                    workspaceId: workspaceId!
-                })
-                toast.success('Bot created')
+                await createBot({ ...values, workspaceId })
             }
-            closeModal()
-            loadBots()
-        } catch (error: any) {
-            const message = error?.response?.data?.message || 'Failed to save bot'
-            toast.error(message)
-        }
-    }
-
-    const [deleteId, setDeleteId] = useState<string | null>(null)
-
-    const deleteBot = async (id: string) => {
-        setDeleteId(id)
+            setShowModal(false)
+        } catch { }
     }
 
     const confirmDelete = async () => {
         if (!deleteId) return
-
         try {
-            await botsApi.delete(deleteId)
-            toast.success('Bot deleted')
-            loadBots()
-        } catch {
-            toast.error('Failed to delete bot')
-        }
+            await deleteBot(deleteId)
+            setDeleteId(null)
+        } catch { }
     }
 
     const toggleStatus = async (bot: Bot) => {
         try {
             if (bot.status === 'active') {
-                await botsApi.pause(bot.id)
+                await pauseBot(bot.id)
             } else {
-                await botsApi.activate(bot.id)
+                await activateBot(bot.id)
             }
-            toast.success('Bot status updated')
-            loadBots()
-        } catch (error) {
-            toast.error('Failed to update status')
-        }
+        } catch { }
     }
+
+    if (isLoading && bots.length === 0) return <PageLoading message="Synchronizing agent fleet..." />
 
     return (
         <div className="space-y-6">
             <PageHeader
-                title="AI Bots"
-                description="Build and manage your custom AI agents"
-                onRefresh={loadBots}
-                refreshing={loading}
+                title="AI Agent Fleet"
+                description="Harness autonomous intelligence across your specialized domains."
+                onRefresh={refetch}
+                refreshing={isLoading}
+                premium
             >
-                <Button onClick={() => openModal()} className="px-6 font-bold h-10">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Bot
+                <Button onClick={() => openModal()} className="px-6 font-bold h-10 shadow-lg shadow-primary/20">
+                    <Plus className="w-4 h-4 mr-2" /> Forge New Agent
                 </Button>
             </PageHeader>
 
             <div className="flex items-center gap-2 max-w-sm">
                 <Search
-                    placeholder="Search bots..."
+                    placeholder="Locate specialized intelligence..."
                     value={searchQuery}
                     onChange={(e: any) => {
                         setSearchQuery(e.target.value)
@@ -235,73 +183,47 @@ export default function BotsPage() {
                 />
             </div>
 
-            {loading && bots.length === 0 ? (
-                <PageLoading message="Loading agents" />
-            ) : bots.length === 0 ? (
-                <Card className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed">
-                    <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-6">
+            {bots.length === 0 ? (
+                <Card className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed bg-muted/5">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">
-                        {searchQuery ? 'No results found' : 'No bots yet'}
+                    <h3 className="text-xl font-bold mb-2">
+                        {searchQuery ? 'Signal Not Found' : 'Hangar Empty'}
                     </h3>
-                    <p className="text-muted-foreground mb-8 max-w-xs text-center text-sm">
+                    <p className="text-muted-foreground mb-8 max-w-xs text-center text-xs font-medium">
                         {searchQuery
-                            ? `We couldn't find any bots matching "${searchQuery}"`
-                            : 'Create your first custom AI bot to start automating your tasks.'
+                            ? `No agents responding to the query identifier "${searchQuery}"`
+                            : 'Initialize your first autonomous agent to orchestrate complex tasks.'
                         }
                     </p>
-                    <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Bot
+                    <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8 font-bold">
+                        <Plus className="w-4 h-4 mr-2" /> Launch Initial Agent
                     </Button>
                 </Card>
             ) : (
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {bots.map((bot) => {
-                            const Icon = (LucideIcons as any)[bot.icon || 'Bot'] || (LucideIcons as any)['BotIcon'] || BotIcon
+                        {bots.map((bot: Bot) => {
+                            const Icon = iconMap[bot.icon || 'Bot'] || iconMap['Bot'] || BotIcon
                             return (
                                 <Card
                                     key={bot.id}
-                                    className="group relative flex flex-col overflow-hidden"
+                                    className="group relative flex flex-col overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5"
                                 >
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-5">
                                             <div className="flex items-center gap-4">
-                                                <div className="relative group/icon">
-                                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex items-center justify-center border border-primary/20 transition-transform duration-300 group-hover:scale-110">
-                                                        <Icon className="w-7 h-7 text-primary" />
-                                                    </div>
-                                                    <div className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover/icon:opacity-100 transition-opacity flex items-center justify-center overflow-hidden">
-                                                        <IconPicker
-                                                            value={bot.icon || 'Bot'}
-                                                            onChange={async (icon) => {
-                                                                try {
-                                                                    await axiosClient.patch(`/bots/${bot.id}`, { icon })
-                                                                    toast.success('Icon updated!')
-                                                                    loadBots()
-                                                                } catch {
-                                                                    toast.error('Failed to update icon')
-                                                                }
-                                                            }}
-                                                            className="w-full h-full border-none bg-transparent hover:bg-transparent text-transparent"
-                                                        />
-                                                    </div>
-                                                    <div className="absolute -bottom-1 -right-1">
-                                                        <div className={cn(
-                                                            "w-4 h-4 rounded-full border-2 border-background",
-                                                            bot.status === 'active' ? "bg-green-500" : "bg-amber-500"
-                                                        )} />
-                                                    </div>
+                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex items-center justify-center border border-primary/20 transition-transform duration-500 group-hover:scale-110 shadow-inner">
+                                                    <Icon className="w-7 h-7 text-primary drop-shadow-md" />
                                                 </div>
                                                 <div className="min-w-0">
                                                     <h3 className="font-bold text-lg leading-tight truncate">{bot.name}</h3>
                                                     <Badge
                                                         variant={bot.status === 'active' ? "default" : "secondary"}
-                                                        className="mt-1.5"
+                                                        className="mt-1.5 text-[10px] uppercase font-black tracking-widest"
                                                     >
-                                                        {bot.status === 'active' ? 'Active' : 'Paused'}
+                                                        {bot.status === 'active' ? 'ONLINE' : 'PAUSED'}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -313,39 +235,38 @@ export default function BotsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
-                                                    <DropdownMenuItem onClick={() => openModal(bot)} className="rounded-lg">
-                                                        <Edit2 className="w-4 h-4 mr-2" />
-                                                        Edit Profile
+                                                    <DropdownMenuItem onClick={() => openModal(bot)}>
+                                                        <Edit2 className="w-4 h-4 mr-2" /> Edit Persona
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => toggleStatus(bot)} className="rounded-lg">
+                                                    <DropdownMenuItem onClick={() => toggleStatus(bot)}>
                                                         <Activity className="w-4 h-4 mr-2" />
-                                                        {bot.status === 'active' ? 'Pause Bot' : 'Activate Bot'}
+                                                        {bot.status === 'active' ? 'Enter Hibernation' : 'Reactivate Core'}
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
                                                     <DropdownMenuItem
-                                                        onClick={() => deleteBot(bot.id)}
-                                                        className="text-destructive focus:text-destructive focus:bg-destructive/10 rounded-lg"
+                                                        onClick={() => setDeleteId(bot.id)}
+                                                        className="text-destructive focus:bg-destructive/10"
                                                     >
-                                                        <Trash2 className="w-4 h-4 mr-2" />
-                                                        Delete Bot
+                                                        <Trash2 className="w-4 h-4 mr-2" /> Decommission
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>
 
-                                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px] leading-relaxed">
-                                            {bot.description || 'Smart AI assistant tailor-made to automate your workflows and enhance productivity.'}
+                                        <p className="text-xs font-medium text-muted-foreground line-clamp-2 min-h-[32px] leading-relaxed">
+                                            {bot.description || 'Advanced neural architecture tailored for complex workflow orchestration.'}
                                         </p>
                                     </div>
 
-                                    <div className="mt-auto p-4 bg-muted/10 border-t border-border/40 flex items-center justify-between">
+                                    <div className="mt-auto p-4 bg-muted/10 border-t border-border/10 flex items-center justify-between">
                                         <Button
-                                            variant="default"
+                                            variant="secondary"
                                             size="sm"
-                                            className="w-full font-bold transition-all h-10 group/btn"
+                                            className="w-full font-bold transition-all h-10 group/btn bg-primary/5 hover:bg-primary hover:text-white"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
-                                            <Settings className="w-4 h-4 mr-2 transition-transform duration-500 " />
-                                            Configure Agent
+                                            <Settings className="w-4 h-4 mr-2" />
+                                            Configure Interface
                                         </Button>
                                     </div>
                                 </Card>
@@ -353,47 +274,38 @@ export default function BotsPage() {
                         })}
                     </div>
 
-                    {bots.length > 0 && (
-                        <Pagination
-                            pagination={{
-                                page: currentPage,
-                                limit: pageSize,
-                                total: totalItems,
-                                totalPages: Math.ceil(totalItems / pageSize),
-                                hasNextPage: currentPage < Math.ceil(totalItems / pageSize)
-                            }}
-                            onPageChange={setCurrentPage}
-                            onPageSizeChange={(size: number) => {
-                                setPageSize(size)
-                                setCurrentPage(1)
-                            }}
-                            pageSizeOptions={[6, 9, 12, 24, 48]}
-                        />
-                    )}
+                    <Pagination
+                        pagination={{
+                            page: currentPage,
+                            limit: pageSize,
+                            total: totalItems,
+                            totalPages: Math.ceil(totalItems / pageSize),
+                            hasNextPage: currentPage < Math.ceil(totalItems / pageSize)
+                        }}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             )}
 
             <Dialog open={showModal} onOpenChange={setShowModal}>
                 <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
                     <DialogHeader className="p-6 bg-muted/20 border-b">
-                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Plus className="w-4 h-4 text-primary" />
-                            </div>
-                            {editingBot ? 'Edit Agent Profile' : 'Create New AI Agent'}
+                        <DialogTitle className="text-xl font-black flex items-center gap-3">
+                            <BotIcon className="w-5 h-5 text-primary" />
+                            {editingBot ? 'Modify Neural Profile' : 'Forge New Intelligence'}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="p-6">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                                 <FormField
                                     control={form.control}
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bot Name</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identifier</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g. Customer Support Hero" {...field} className="bg-muted/50 border-border/50 h-11" />
+                                                <Input placeholder="e.g. Sentinel-7 Alpha" {...field} className="h-11 font-bold" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -405,14 +317,9 @@ export default function BotsPage() {
                                     name="description"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose & Description</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Neural Constraints & Description</FormLabel>
                                             <FormControl>
-                                                <Textarea
-                                                    rows={4}
-                                                    placeholder="Explain what this bot will help you with..."
-                                                    {...field}
-                                                    className="bg-muted/50 border-border/50 resize-none pt-3"
-                                                />
+                                                <Textarea rows={4} placeholder="Define the operational boundaries and objectives..." {...field} className="resize-none font-medium" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -420,11 +327,9 @@ export default function BotsPage() {
                                 />
 
                                 <div className="flex items-center justify-end gap-3 pt-2">
-                                    <Button type="button" variant="ghost" onClick={closeModal} className="font-bold">
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8">
-                                        {editingBot ? 'Save Changes' : 'Launch Agent'}
+                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="font-bold">Abort</Button>
+                                    <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8 shadow-lg shadow-primary/20">
+                                        {editingBot ? 'Commit Changes' : 'Initialize Agent'}
                                     </Button>
                                 </div>
                             </form>
@@ -436,10 +341,8 @@ export default function BotsPage() {
             <AlertDialogConfirm
                 open={deleteId !== null}
                 onOpenChange={(open) => !open && setDeleteId(null)}
-                title="Delete Bot"
-                description="Are you sure you want to delete this bot? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
+                title="Decommission Intelligence"
+                description="Initiating the permanent purge of this agentic entity. All neural weights and logs will be erased. Proceed?"
                 onConfirm={confirmDelete}
                 variant="destructive"
             />

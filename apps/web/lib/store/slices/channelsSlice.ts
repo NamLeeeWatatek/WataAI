@@ -150,7 +150,7 @@ interface ChannelsState {
   // Facebook specific state
   facebookPages: any[];
   facebookTempToken: string;
-  connectingPage: boolean;
+  connectingPage: string | null;
   // Bot selection for Facebook
   bots: any[];
   selectedBotId: string;
@@ -171,7 +171,7 @@ const initialState: ChannelsState = {
   error: null,
   facebookPages: [],
   facebookTempToken: '',
-  connectingPage: false,
+  connectingPage: null,
   bots: [],
   selectedBotId: '',
   loadingBots: false,
@@ -236,7 +236,7 @@ const channelsSlice = createSlice({
     setFacebookTempToken: (state, action: PayloadAction<string>) => {
       state.facebookTempToken = action.payload;
     },
-    setConnectingPage: (state, action: PayloadAction<boolean>) => {
+    setConnectingPage: (state, action: PayloadAction<string | null>) => {
       state.connectingPage = action.payload;
     },
     removeFacebookPage: (state, action: PayloadAction<string>) => {
@@ -368,16 +368,15 @@ const channelsSlice = createSlice({
 
       // Connect Facebook page
       .addCase(connectFacebookPage.pending, (state) => {
-        state.connectingPage = true;
         state.error = null;
       })
       .addCase(connectFacebookPage.fulfilled, (state, action) => {
-        state.connectingPage = false;
+        state.connectingPage = null;
         state.facebookPages = state.facebookPages.filter(p => p.id !== action.payload.pageId);
         // Reload channels data will be handled by component
       })
       .addCase(connectFacebookPage.rejected, (state, action) => {
-        state.connectingPage = false;
+        state.connectingPage = null;
         state.error = action.payload as string;
       });
   },

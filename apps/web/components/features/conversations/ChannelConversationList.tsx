@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Facebook, Instagram, Mail, MessageCircle } from 'lucide-react';
@@ -113,12 +113,9 @@ export function ChannelConversationList({
 
   return (
     <div className="divide-y divide-border/50">
-      {conversations.map((conv, index) => (
-        <motion.button
+      {conversations.map((conv) => (
+        <button
           key={conv.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: Math.min(index * 0.02, 0.2) }}
           onClick={() => onSelect(conv.id)}
           className={cn(
             'w-full px-4 py-3 text-left transition-all duration-200 relative group',
@@ -188,7 +185,7 @@ export function ChannelConversationList({
               </div>
             </div>
           </div>
-        </motion.button>
+        </button>
       ))}
     </div>
   );

@@ -9,7 +9,6 @@ import { Loader2, CheckCircle2, XCircle, Minimize2, Maximize2, X, List, History,
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { cn } from '@/lib/utils';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
-import { AnimatePresence, motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { ProductDetailsDialog } from '../products/ProductDetailsDialog';
 
@@ -26,185 +25,180 @@ export function ActiveJobsWidget() {
 
     return (
         <>
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className={cn(
-                            "fixed z-50 transition-all duration-300",
-                            isMinimized
-                                ? "bottom-4 right-4 w-12 h-12 rounded-full overflow-hidden shadow-2xl"
-                                : "bottom-6 right-6 w-96 overflow-hidden"
-                        )}
-                    >
-                        {isMinimized ? (
-                            <div
-                                onClick={() => setIsMinimized(false)}
-                                className="w-full h-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors relative"
-                            >
-                                {pendingCount > 0 ? (
-                                    <Loader2 className="w-5 h-5 text-primary-foreground" />
-                                ) : (
-                                    <List className="w-5 h-5 text-primary-foreground" />
-                                )}
-                                {pendingCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                                        {pendingCount}
-                                    </span>
-                                )}
+            {isOpen && (
+                <div
+                    className={cn(
+                        "fixed z-50 transition-all duration-300",
+                        isMinimized
+                            ? "bottom-4 right-4 w-12 h-12 rounded-full overflow-hidden shadow-2xl"
+                            : "bottom-6 right-6 w-96 overflow-hidden"
+                    )}
+                >
+                    {isMinimized ? (
+                        <div
+                            onClick={() => setIsMinimized(false)}
+                            className="w-full h-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors relative"
+                        >
+                            {pendingCount > 0 ? (
+                                <Loader2 className="w-5 h-5 text-primary-foreground" />
+                            ) : (
+                                <List className="w-5 h-5 text-primary-foreground" />
+                            )}
+                            {pendingCount > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                                    {pendingCount}
+                                </span>
+                            )}
+                        </div>
+                    ) : (
+                        <Card className="w-full overflow-hidden flex flex-col">
+                            {/* Header */}
+                            <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30 cursor-pointer" onClick={() => setIsMinimized(true)}>
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-primary/10 p-1.5 rounded-lg">
+                                        <History className="w-4 h-4 text-primary" />
+                                    </div>
+                                    <h4 className="text-sm font-bold tracking-tight">Activity</h4>
+                                    <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center rounded-full text-[10px]">
+                                        {activeJobs.length}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}>
+                                        <Minimize2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                </div>
                             </div>
-                        ) : (
-                            <Card className="w-full overflow-hidden flex flex-col">
-                                {/* Header */}
-                                <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30 cursor-pointer" onClick={() => setIsMinimized(true)}>
-                                    <div className="flex items-center gap-2">
-                                        <div className="bg-primary/10 p-1.5 rounded-lg">
-                                            <History className="w-4 h-4 text-primary" />
-                                        </div>
-                                        <h4 className="text-sm font-bold tracking-tight">Activity</h4>
-                                        <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center rounded-full text-[10px]">
-                                            {activeJobs.length}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}>
-                                            <Minimize2 className="w-3.5 h-3.5" />
-                                        </Button>
-                                    </div>
-                                </div>
 
-                                {/* Content */}
-                                <ScrollArea className="max-h-[60vh] min-h-[100px] overflow-hidden">
-                                    <div className="divide-y divide-border/30">
-                                        {activeJobs.map(job => {
-                                            const getDisplayName = () => {
-                                                const toolName = job.creationTool?.name || 'Product';
-                                                const input = job.inputData as any;
-                                                const subject = input?.prompt || input?.title || input?.name || input?.concept || input?.subject || input?.text;
+                            {/* Content */}
+                            <ScrollArea className="max-h-[60vh] min-h-[100px] overflow-hidden">
+                                <div className="divide-y divide-border/30">
+                                    {activeJobs.map(job => {
+                                        const getDisplayName = () => {
+                                            const toolName = job.creationTool?.name || 'Product';
+                                            const input = job.inputData as any;
+                                            const subject = input?.prompt || input?.title || input?.name || input?.concept || input?.subject || input?.text;
 
-                                                if (subject && typeof subject === 'string') {
-                                                    return subject.length > 40 ? subject.substring(0, 37) + '...' : subject;
-                                                }
+                                            if (subject && typeof subject === 'string') {
+                                                return subject.length > 40 ? subject.substring(0, 37) + '...' : subject;
+                                            }
 
-                                                return toolName;
-                                            };
+                                            return toolName;
+                                        };
 
-                                            const displayName = getDisplayName();
+                                        const displayName = getDisplayName();
 
-                                            return (
-                                                <div
-                                                    key={job.id}
-                                                    className={cn(
-                                                        "p-4 transition-all duration-300 group relative cursor-pointer border-l-2 border-transparent",
-                                                        job.status === CreationJobStatus.COMPLETED
-                                                            ? "hover:bg-gradient-to-r hover:from-emerald-500/5 hover:to-transparent hover:border-emerald-500/50"
-                                                            : job.status === CreationJobStatus.FAILED
-                                                                ? "hover:bg-gradient-to-r hover:from-red-500/5 hover:to-transparent hover:border-red-500/50"
-                                                                : "hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent hover:border-primary/50"
-                                                    )}
-                                                    onClick={() => {
-                                                        if (job.status === CreationJobStatus.COMPLETED) {
-                                                            setSelectedJob(job);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div className="min-w-0 pr-2">
-                                                            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5 truncate group-hover:text-primary transition-colors drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]">
-                                                                {displayName}
-                                                            </p>
-                                                            <p className="text-[10px] font-mono text-muted-foreground/60">
-                                                                ID: {job.id.substring(0, 8)}
-                                                            </p>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 shrink-0">
-                                                            <StatusBadge
-                                                                status={job.status}
-                                                                animatePending
-                                                                className={cn(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING ? "animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.2)]" : "")}
-                                                            />
-
-                                                            {/* Allow removing completed/failed/canceled jobs */}
-                                                            {(job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -mr-1 hover:bg-destructive/10 hover:text-destructive"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        removeJob(job.id);
-                                                                    }}
-                                                                >
-                                                                    <X className="w-3 h-3" />
-                                                                </Button>
-                                                            )}
-
-                                                            {/* Allow cancelling active jobs */}
-                                                            {(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors -mr-1"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        cancelJob(job.id);
-                                                                    }}
-                                                                    title="Stop generation"
-                                                                >
-                                                                    <XCircle className="w-3.5 h-3.5" />
-                                                                </Button>
-                                                            )}
-                                                        </div>
+                                        return (
+                                            <div
+                                                key={job.id}
+                                                className={cn(
+                                                    "p-4 transition-all duration-300 group relative cursor-pointer border-l-2 border-transparent",
+                                                    job.status === CreationJobStatus.COMPLETED
+                                                        ? "hover:bg-gradient-to-r hover:from-emerald-500/5 hover:to-transparent hover:border-emerald-500/50"
+                                                        : job.status === CreationJobStatus.FAILED
+                                                            ? "hover:bg-gradient-to-r hover:from-red-500/5 hover:to-transparent hover:border-red-500/50"
+                                                            : "hover:bg-gradient-to-r hover:from-primary/5 hover:to-transparent hover:border-primary/50"
+                                                )}
+                                                onClick={() => {
+                                                    if (job.status === CreationJobStatus.COMPLETED) {
+                                                        setSelectedJob(job);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="min-w-0 pr-2">
+                                                        <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-0.5 truncate group-hover:text-primary transition-colors drop-shadow-[0_0_8px_rgba(var(--primary),0.3)]">
+                                                            {displayName}
+                                                        </p>
+                                                        <p className="text-[10px] font-mono text-muted-foreground/60">
+                                                            ID: {job.id.substring(0, 8)}
+                                                        </p>
                                                     </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <StatusBadge
+                                                            status={job.status}
+                                                            animatePending
+                                                            className={cn(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING ? "animate-pulse shadow-[0_0_10px_rgba(var(--primary),0.2)]" : "")}
+                                                        />
 
-                                                    {job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING ? (
-                                                        <div className="space-y-1.5 mt-2">
-                                                            <div className="flex justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
-                                                                <span className="animate-pulse text-primary drop-shadow-[0_0_5px_rgba(var(--primary),0.5)]">Creating...</span>
-                                                                <span>{job.progress}%</span>
-                                                            </div>
-                                                            <Progress
-                                                                value={job.progress}
-                                                                className="h-1.5 w-full bg-secondary border border-primary/5 shadow-inner"
-                                                                indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(var(--primary),0.3)]"
-                                                            />
-                                                        </div>
-                                                    ) : job.status === CreationJobStatus.COMPLETED ? (
-                                                        <div className="flex items-center justify-between mt-2">
-                                                            <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
-                                                                <CheckCircle2 className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                                                                <span className="drop-shadow-[0_0_5px_rgba(16,185,129,0.2)]">Ready to view</span>
-                                                            </div>
-                                                            <ExternalLink className="w-3 h-3 text-emerald-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-2 mt-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
-                                                            <XCircle className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
-                                                            <span className="drop-shadow-[0_0_5px_rgba(239,68,68,0.2)]">Failed</span>
-                                                        </div>
-                                                    )}
+                                                        {/* Allow removing completed/failed/canceled jobs */}
+                                                        {(job.status === CreationJobStatus.COMPLETED || job.status === CreationJobStatus.FAILED || job.status === CreationJobStatus.CANCELED) && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity -mr-1 hover:bg-destructive/10 hover:text-destructive"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    removeJob(job.id);
+                                                                }}
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </Button>
+                                                        )}
+
+                                                        {/* Allow cancelling active jobs */}
+                                                        {(job.status === CreationJobStatus.PENDING || job.status === CreationJobStatus.PROCESSING) && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-5 w-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors -mr-1"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    cancelJob(job.id);
+                                                                }}
+                                                                title="Stop generation"
+                                                            >
+                                                                <XCircle className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </ScrollArea>
 
-                                {/* Footer */}
-                                <div className="p-2 border-t border-border/50 bg-muted/20">
-                                    <Link
-                                        href="/my-products"
-                                        className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full text-xs h-8")}
-                                    >
-                                        View All in Gallery
-                                    </Link>
+                                                {job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING ? (
+                                                    <div className="space-y-1.5 mt-2">
+                                                        <div className="flex justify-between text-[10px] text-muted-foreground font-bold uppercase tracking-tighter">
+                                                            <span className="animate-pulse text-primary drop-shadow-[0_0_5px_rgba(var(--primary),0.5)]">Creating...</span>
+                                                            <span>{job.progress}%</span>
+                                                        </div>
+                                                        <Progress
+                                                            value={job.progress}
+                                                            className="h-1.5 w-full bg-secondary border border-primary/5 shadow-inner"
+                                                            indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(var(--primary),0.3)]"
+                                                        />
+                                                    </div>
+                                                ) : job.status === CreationJobStatus.COMPLETED ? (
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="flex items-center gap-2 text-emerald-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                                                            <span className="drop-shadow-[0_0_5px_rgba(16,185,129,0.2)]">Ready to view</span>
+                                                        </div>
+                                                        <ExternalLink className="w-3 h-3 text-emerald-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 mt-2 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-bottom-1">
+                                                        <XCircle className="w-3.5 h-3.5 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]" />
+                                                        <span className="drop-shadow-[0_0_5px_rgba(239,68,68,0.2)]">Failed</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            </Card>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            </ScrollArea>
+
+                            {/* Footer */}
+                            <div className="p-2 border-t border-border/50 bg-muted/20">
+                                <Link
+                                    href="/my-products"
+                                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full text-xs h-8")}
+                                >
+                                    View All in Gallery
+                                </Link>
+                            </div>
+                        </Card>
+                    )}
+                </div>
+            )}
 
             <ProductDetailsDialog
                 job={selectedJob}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
+import { CreationTool } from '@/lib/api/creation-tools';
+import { useCreationTools } from '@/lib/hooks/features/useCreationTools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -55,14 +56,17 @@ export default function CreationToolsPage() {
     // Reset to page 1 when search changes
 
 
-    const { data: response, isLoading: loading, refetch } = useQuery({
-        queryKey: ['creation-tools', currentPage, pageSize, querySearch],
-        queryFn: () => creationToolsApi.getAll({
-            page: currentPage,
-            limit: pageSize,
-            filters: querySearch ? { name: querySearch } : undefined
-        }),
-        placeholderData: keepPreviousData,
+    const {
+        data: response,
+        isLoading: loading,
+        refetch,
+        createTool,
+        updateTool,
+        deleteTool
+    } = useCreationTools({
+        page: currentPage,
+        limit: pageSize,
+        filters: querySearch ? { name: querySearch } : undefined
     })
 
     const tools = response && Array.isArray(response.data)
@@ -74,11 +78,9 @@ export default function CreationToolsPage() {
     const handleSaveTool = async (data: Partial<CreationTool>) => {
         try {
             if (data.id) {
-                await creationToolsApi.update(data.id, data);
-                toast.success('Tool updated successfully');
+                await updateTool({ id: data.id, data });
             } else {
-                await creationToolsApi.create(data);
-                toast.success('Tool created successfully');
+                await createTool(data);
             }
             await refetch();
         } catch (error) {
@@ -98,15 +100,13 @@ export default function CreationToolsPage() {
         const id = toolToDelete;
 
         try {
-            setDeletingId(id);
-            await creationToolsApi.delete(id);
+            await deleteTool(id);
             toast.success('Tool deleted successfully');
             await refetch();
         } catch (error) {
             const message = handleApiError(error);
             toast.error(message);
         } finally {
-            setDeletingId(null);
             setDeleteAlertOpen(false);
             setToolToDelete(null);
         }

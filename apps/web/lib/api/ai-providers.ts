@@ -28,10 +28,22 @@ export interface UpdateUserAiProviderDto {
   isActive?: boolean;
 }
 
+export interface AiProviderMetadata {
+  id: string;
+  key: string;
+  label: string;
+  icon?: string;
+  description?: string;
+  requiredFields: string[];
+  optionalFields: string[];
+  defaultValues: Record<string, any>;
+  isActive: boolean;
+}
+
 export const aiProvidersApi = {
   // Available providers (global list)
   getAvailableProviders: () =>
-    axiosClient.get<UserAiProvider[]>('/ai-providers') as unknown as UserAiProvider[],
+    axiosClient.get<AiProviderMetadata[]>('/ai-providers') as unknown as AiProviderMetadata[],
 
   // User provider configs
   getUserConfigs: () =>

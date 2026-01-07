@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/Card"
-import { motion } from 'framer-motion'
+
 import { Badge } from "@/components/ui/Badge"
 import { Users, LayoutGrid, Wrench, Sparkles, TrendingUp, TrendingDown, ClipboardList } from "lucide-react"
 import { cn } from '@/lib/utils'
@@ -109,11 +109,8 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
                 const style = gradients[card.color] || gradients.primary;
 
                 return (
-                    <motion.div
+                    <div
                         key={card.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.1 }}
                     >
                         <Card className="group h-full flex flex-col relative overflow-hidden border-border/50 hover:border-border/80 transition-all duration-500 hover:shadow-lg">
                             {/* Background Gradient Mesh */}
@@ -154,7 +151,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
                                 </div>
                             </CardContent>
                         </Card>
-                    </motion.div>
+                    </div>
                 )
             })}
         </div>

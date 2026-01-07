@@ -27,52 +27,80 @@ export function useTemplates(params?: QueryTemplateDto) {
       return await templatesApi.findAll(params)
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 15, // 15 minutes
   })
 
-  // Mutations can be re-implemented if needed, for now we focus on reading/execution
-  // keeping the structure to avoid breaking other imports, but methods might throw or need impl
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (data: CreateTemplateDto) => templatesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() })
+    },
+  })
 
-  const createTemplate = useCallback(async (data: CreateTemplateDto) => {
-    // Implement if needed
-    throw new Error('Not implemented yet')
-  }, [])
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateTemplateDto }) =>
+      templatesApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: templateKeys.detail(variables.id) })
+    },
+  })
 
-  const updateTemplate = useCallback(async (id: string, data: UpdateTemplateDto) => {
-    // Implement if needed
-    throw new Error('Not implemented yet')
-  }, [])
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => templatesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() })
+    },
+  })
 
-  const deleteTemplate = useCallback(async (id: string) => {
-    // Implement if needed
-    throw new Error('Not implemented yet')
-  }, [])
+  const activateMutation = useMutation({
+    mutationFn: (id: string) => templatesApi.activate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: templateKeys.detail(id) })
+    },
+  })
 
-  const activateTemplate = useCallback(async (id: string) => {
-    // Implement if needed
-    throw new Error('Not implemented yet')
-  }, [])
+  const deactivateMutation = useMutation({
+    mutationFn: (id: string) => templatesApi.deactivate(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: templateKeys.detail(id) })
+    },
+  })
 
-  const deactivateTemplate = useCallback(async (id: string) => {
-    // Implement if needed
-    throw new Error('Not implemented yet')
-  }, [])
+  const bulkUpdateMutation = useMutation({
+    mutationFn: ({ ids, data }: { ids: string[]; data: any }) => templatesApi.bulkUpdate(ids, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => templatesApi.bulkDelete(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+    },
+  });
 
   const executeTemplate = useCallback(async (id: string, data: any) => {
+    // Note: This matches the old implementation, optionally could be a mutation too
     const { generationJobsApi } = await import('@/lib/api/generation-jobs');
     return generationJobsApi.create({ templateId: id, inputData: data });
   }, [])
 
   return {
     templates: templatesResult?.data || [],
-    totalCount: 0, // templatesResult?.total || 0, // Check response type
+    totalCount: templatesResult?.total || 0,
     loading,
     error,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
-    activateTemplate,
-    deactivateTemplate,
+    createTemplate: createMutation.mutateAsync,
+    updateTemplate: (id: string, data: UpdateTemplateDto) => updateMutation.mutateAsync({ id, data }),
+    deleteTemplate: deleteMutation.mutateAsync,
+    activateTemplate: activateMutation.mutateAsync,
+    deactivateTemplate: deactivateMutation.mutateAsync,
+    bulkUpdateTemplates: bulkUpdateMutation.mutateAsync,
+    bulkDeleteTemplates: bulkDeleteMutation.mutateAsync,
     executeTemplate,
     refreshTemplates,
   }
@@ -83,8 +111,7 @@ export function useTemplate(id: string) {
     queryKey: templateKeys.detail(id),
     queryFn: () => templatesApi.findOne(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 5,
   })
 }
 
@@ -93,7 +120,6 @@ export function useTemplatesByWorkspace(workspaceId: string) {
     queryKey: templateKeys.workspace(workspaceId),
     queryFn: () => templatesApi.findByWorkspace(workspaceId),
     enabled: !!workspaceId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 15, // 15 minutes
+    staleTime: 1000 * 60 * 5,
   })
 }

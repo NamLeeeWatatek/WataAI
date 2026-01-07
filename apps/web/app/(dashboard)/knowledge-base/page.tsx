@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { KBCollectionDialog } from '@/components/features/knowledge-base';
 import {
     Database,
@@ -10,21 +9,13 @@ import {
     MoreVertical,
     Edit2,
     Trash2,
-    RefreshCw,
-    FolderOpen,
     FileText,
-    ChevronRight,
-    SearchX
 } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
-import toast from '@/lib/toast';
-
-import { getKnowledgeBases, createKnowledgeBase, deleteKnowledgeBase, updateKnowledgeBase } from '@/lib/api/knowledge-base';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import {
     DropdownMenu,
@@ -36,57 +27,32 @@ import {
 import { PageLoading } from '@/components/ui/PageLoading';
 import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
-
-
-
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
 
 export default function KnowledgeBasePage() {
     const router = useRouter();
-    const { workspaceId, isLoading: isWorkspaceLoading } = useWorkspace();
+    const { workspaceId } = useWorkspace();
     const [searchQuery, setSearchQuery] = useState('');
-    const [querySearch, setQuerySearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [deleteItem, setDeleteItem] = useState<KnowledgeBase | null>(null);
     const [editingKb, setEditingKb] = useState<KnowledgeBase | null>(null);
 
-    const searchTimerRef = useRef<NodeJS.Timeout>();
-
-    // Cleanup timer
-    useEffect(() => {
-        return () => {
-            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-        }
-    }, []);
-
-    const { data: kbData, isLoading: loading, refetch } = useQuery({
-        queryKey: ['knowledge-bases', workspaceId, currentPage, pageSize, querySearch],
-        queryFn: async (): Promise<{ data: KnowledgeBase[], total: number }> => {
-            if (!workspaceId) return { data: [], total: 0 };
-
-            const data: any = await getKnowledgeBases({
-                page: currentPage,
-                limit: pageSize,
-                workspaceId,
-                filters: JSON.stringify({
-                    search: querySearch
-                })
-            });
-
-            // Normalize return
-            if (Array.isArray(data)) {
-                return { data, total: data.length };
-            }
-            return { data: data.data || [], total: data.total || 0 };
-        },
-        enabled: !!workspaceId,
-        placeholderData: keepPreviousData,
+    const {
+        knowledgeBases,
+        total: totalItems,
+        isLoading: loading,
+        refetch,
+        createKB,
+        updateKB,
+        deleteKB
+    } = useKnowledgeBases(workspaceId || undefined, {
+        page: currentPage,
+        limit: pageSize,
+        filters: JSON.stringify({ search: searchQuery })
     });
-
-    const knowledgeBases = kbData?.data || [];
-    const totalItems = kbData?.total || 0;
 
     const formatSize = (bytes: string | number) => {
         const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -97,54 +63,34 @@ export default function KnowledgeBasePage() {
         return Math.round(size / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    const handleSaveKnowledgeBase = async (data: { name: string; description?: string; aiProviderId?: string; ragModel?: string; embeddingModel?: string; color?: string; isPublic?: boolean }) => {
+    const handleSaveKnowledgeBase = async (data: any) => {
         if (!workspaceId) return;
         try {
             if (editingKb) {
-                await updateKnowledgeBase(editingKb.id, {
-                    ...data,
-                });
-                toast.success('Knowledge Base updated successfully');
+                await updateKB({ id: editingKb.id, data });
             } else {
-                await createKnowledgeBase({
-                    name: data.name,
-                    description: data.description,
-                    aiProviderId: data.aiProviderId,
-                    ragModel: data.ragModel,
-                    embeddingModel: data.embeddingModel,
-                    color: data.color || '#3B82F6',
-                    isPublic: data.isPublic || false,
-                    workspaceId
-                });
-                toast.success('Knowledge Base created successfully');
+                await createKB({ ...data, workspaceId });
             }
             setDialogOpen(false);
             setEditingKb(null);
-            refetch();
-        } catch (error) {
-            toast.error(editingKb ? 'Failed to update knowledge base' : 'Failed to create knowledge base');
-        }
+        } catch { }
     };
 
     const handleDeleteKnowledgeBase = async () => {
         if (!deleteItem) return;
         try {
-            await deleteKnowledgeBase(deleteItem.id);
-            toast.success('Knowledge Base deleted successfully');
+            await deleteKB(deleteItem.id);
             setDeleteItem(null);
-            refetch();
-        } catch (error) {
-            toast.error('Failed to delete knowledge base');
-        }
+        } catch { }
     };
 
-    if (loading && knowledgeBases.length === 0) return <PageLoading message="Loading knowledge bases" />;
+    if (loading && knowledgeBases.length === 0) return <PageLoading message="Synchronizing vaults..." />;
 
     return (
         <div className="h-full flex flex-col space-y-6">
             <PageHeader
-                title="Knowledge Base"
-                description="Manage your intelligence assets and structured documentation."
+                title="Knowledge Engine"
+                description="Manage hierarchical intelligence assets and RAG protocols."
                 onRefresh={refetch}
                 refreshing={loading}
                 premium
@@ -153,38 +99,27 @@ export default function KnowledgeBasePage() {
                     <Button onClick={() => {
                         setEditingKb(null);
                         setDialogOpen(true);
-                    }} className="font-bold">
+                    }} className="font-bold shadow-lg shadow-primary/10">
                         <Plus className="w-4 h-4 mr-2" />
-                        New Knowledge Base
+                        Init New Engine
                     </Button>
                 </div>
             </PageHeader>
 
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-4">
-                    <Search
-                        placeholder="Search system intelligence..."
-                        value={searchQuery}
-                        onChange={(e: any) => {
-                            const val = e.target.value;
-                            setSearchQuery(val);
-
-                            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-                            searchTimerRef.current = setTimeout(() => {
-                                setQuerySearch(val);
-                                setCurrentPage(1);
-                            }, 500);
-                        }}
-                        onClear={() => {
-                            setSearchQuery("");
-                            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-                            setQuerySearch("");
-                            setCurrentPage(1);
-                        }}
-                        className="max-w-sm"
-
-                    />
-                </div>
+                <Search
+                    placeholder="Query system intelligence library..."
+                    value={searchQuery}
+                    onChange={(e: any) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    onClear={() => {
+                        setSearchQuery("");
+                        setCurrentPage(1);
+                    }}
+                    className="max-w-sm"
+                />
             </div>
 
             {knowledgeBases.length === 0 && !loading ? (
@@ -195,14 +130,10 @@ export default function KnowledgeBasePage() {
                     </div>
                     <h3 className="text-2xl font-black mb-2 tracking-tight">Intelligence Vault Empty</h3>
                     <p className="text-muted-foreground mb-8 text-center max-w-sm font-medium leading-relaxed">
-                        {searchQuery ? 'Adjust your search parameters to locate specific intelligence assets.' : 'Initialize your first knowledge base engine to power your AI agents.'}
+                        {searchQuery ? 'Shift your query parameters or initialize a fresh intelligence core.' : 'Initialize your first knowledge engine to augment your agentic capabilities.'}
                     </p>
-                    <Button onClick={() => {
-                        setEditingKb(null);
-                        setDialogOpen(true);
-                    }} className="px-8 font-bold">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Construct First Vault
+                    <Button onClick={() => { setEditingKb(null); setDialogOpen(true); }} className="px-8 font-bold">
+                        <Plus className="w-4 h-4 mr-2" /> Bootstrap First Engine
                     </Button>
                 </div>
             ) : (
@@ -211,12 +142,12 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                className="p-6 cursor-pointer"
+                                className="group p-6 cursor-pointer border-border/40 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform group-hover:scale-110" style={{ backgroundColor: kb.color || '#3B82F6' }}>
-                                        <Database className="w-6 h-6 text-white" />
+                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform group-hover:scale-110 shadow-inner" style={{ backgroundColor: kb.color || '#3B82F6' }}>
+                                        <Database className="w-6 h-6 text-white drop-shadow-md" />
                                     </div>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -225,55 +156,36 @@ export default function KnowledgeBasePage() {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuItem
-                                                className="cursor-pointer"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEditingKb(kb);
-                                                    setDialogOpen(true);
-                                                }}
-                                            >
-                                                <Edit2 className="w-4 h-4 mr-2" />
-                                                Edit Properties
+                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingKb(kb); setDialogOpen(true); }}>
+                                                <Edit2 className="w-4 h-4 mr-2" /> Edit Specs
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setDeleteItem(kb);
-                                                }}
-                                            >
-                                                <Trash2 className="w-4 h-4 mr-2" />
-                                                Delete Asset
+                                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteItem(kb); }}>
+                                                <Trash2 className="w-4 h-4 mr-2" /> Decommission Engine
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg mb-1 line-clamp-1">{kb.name}</h3>
-                                    <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                                        {kb.description || 'No description available'}
+                                    <h3 className="font-bold text-lg mb-1 truncate">{kb.name}</h3>
+                                    <p className="text-muted-foreground text-xs mb-4 line-clamp-2 font-medium">
+                                        {kb.description || 'General purpose intelligence storage protocol active.'}
                                     </p>
-                                    <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-4 border-t border-border/10 pt-4">
-                                        <div className="flex items-center gap-1.5">
-                                            <FileText className="w-3.5 h-3.5 text-primary" />
-                                            <span>{kb.totalDocuments} Docs</span>
+                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-4 border-t border-border/10 pt-4">
+                                        <div className="flex items-center gap-1.5 text-primary">
+                                            <FileText className="w-3.5 h-3.5" /> <span>{kb.totalDocuments} Slots</span>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Database className="w-3.5 h-3.5 text-primary" />
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
                                             <span>{formatSize(kb.totalSize)}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
+                                        <Badge variant="secondary" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0">
                                             {kb.embeddingModel}
                                         </Badge>
-                                        {(kb as any).isActive && (
-                                            <Badge variant="default" className="text-[10px] font-bold uppercase tracking-tight py-0.5 px-2">
-                                                Active
-                                            </Badge>
-                                        )}
+                                        <Badge variant="outline" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0 border-primary/20 text-primary">
+                                            STABLE
+                                        </Badge>
                                     </div>
                                 </div>
                             </Card>
@@ -294,19 +206,14 @@ export default function KnowledgeBasePage() {
                                 setPageSize(size);
                                 setCurrentPage(1);
                             }}
-                            pageSizeOptions={[6, 9, 12, 24, 48]}
                         />
                     )}
                 </div>
-            )
-            }
+            )}
 
             <KBCollectionDialog
                 open={dialogOpen}
-                onOpenChange={(open) => {
-                    setDialogOpen(open);
-                    if (!open) setEditingKb(null);
-                }}
+                onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingKb(null); }}
                 knowledgeBase={editingKb}
                 onSubmit={handleSaveKnowledgeBase}
             />
@@ -314,11 +221,11 @@ export default function KnowledgeBasePage() {
             <AlertDialogConfirm
                 open={deleteItem !== null}
                 onOpenChange={(open) => !open && setDeleteItem(null)}
-                title="Delete Knowledge Base"
-                description={`Are you sure you want to delete "${deleteItem?.name}"? This action cannot be undone and will permanently remove all documents and folders in this knowledge base.`}
+                title="Decommission Knowledge Engine"
+                description={`Initiating destruction of "${deleteItem?.name}". This protocol will purge all stored documents and vectors. Proceed with caution.`}
                 onConfirm={handleDeleteKnowledgeBase}
                 variant="destructive"
             />
-        </div >
+        </div>
     );
 }

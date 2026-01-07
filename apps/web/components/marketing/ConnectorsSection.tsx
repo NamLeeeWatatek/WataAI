@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Spline from '@splinetool/react-spline';
-import { motion } from 'framer-motion';
+
 import { ArrowRightLeft } from 'lucide-react';
 
 const SPLINE_SCENE_URL = "https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"; // Replace with your own "Connect" 3D scene
@@ -42,10 +42,7 @@ export function ConnectorsSection() {
                         {/* Loading / Fallback State (Premium Glass Card) */}
                         {isLoading && (
                             <div className="absolute inset-0 z-10 flex items-center justify-center">
-                                <motion.div
-                                    initial={{ opacity: 0.5, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+                                <div
                                     className="relative w-64 h-64 rounded-full bg-primary/5 border border-primary/20 backdrop-blur-3xl flex items-center justify-center"
                                 >
                                     <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/20 to-transparent blur-xl" />
@@ -55,9 +52,10 @@ export function ConnectorsSection() {
                                     <p className="absolute -bottom-12 text-sm font-medium text-muted-foreground animate-pulse">
                                         Loading 3D Experience...
                                     </p>
-                                </motion.div>
+                                </div>
                             </div>
                         )}
+
 
                         {/* Decorative 'Grid' Floor (Static fallback visual layer) */}
                         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[140%] h-[50%] bg-primary/5 blur-[80px] -z-10 rounded-[100%]" />

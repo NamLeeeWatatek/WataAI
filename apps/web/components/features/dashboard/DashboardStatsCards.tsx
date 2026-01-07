@@ -1,18 +1,16 @@
 import { Card, CardContent } from "@/components/ui/Card"
-import { motion } from 'framer-motion'
 import { Users, Zap, MessageSquare, Activity, TrendingUp, TrendingDown } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { DashboardStats } from "@/lib/types"
 
-import { Variants } from 'framer-motion'
 
 interface DashboardStatsCardsProps {
     stats: DashboardStats | undefined
-    itemVariants: Variants
+    itemVariants?: any
 }
 
-export function DashboardStatsCards({ stats, itemVariants }: DashboardStatsCardsProps) {
+export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
     const { t } = useTranslation()
 
     const formatGrowthRate = (rate: number) => {
@@ -107,7 +105,7 @@ export function DashboardStatsCards({ stats, itemVariants }: DashboardStatsCards
             {cards.map((card) => {
                 const style = gradients[card.color] || gradients.primary;
                 return (
-                    <motion.div key={card.id} variants={itemVariants}>
+                    <div key={card.id}>
                         <Card className="group relative overflow-hidden h-full border-border/50 hover:border-border/80 transition-all duration-500 hover:shadow-lg">
                             {/* Background Gradient Mesh */}
                             <div className={cn(
@@ -147,7 +145,7 @@ export function DashboardStatsCards({ stats, itemVariants }: DashboardStatsCards
                                 </div>
                             </CardContent>
                         </Card>
-                    </motion.div>
+                    </div>
                 );
             })}
         </div>

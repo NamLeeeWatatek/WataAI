@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button"
 import { FiDownload } from "react-icons/fi"
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { motion } from 'framer-motion'
 import { DashboardStatsCards } from '@/components/features/dashboard/DashboardStatsCards'
 import { DashboardTopBots } from '@/components/features/dashboard/DashboardTopBots'
 import { DashboardWorkspaceOverview } from '@/components/features/dashboard/DashboardWorkspaceOverview'
@@ -18,23 +17,6 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { useState } from 'react'
 import { subDays } from 'date-fns'
-
-const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.6,
-            staggerChildren: 0.1
-        }
-    }
-}
-
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-}
 
 export function DashboardClient() {
     const { t } = useTranslation()
@@ -64,13 +46,10 @@ export function DashboardClient() {
         )
     }
     return (
-        <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
+        <div
             className="w-full min-h-full pb-12 bg-grid-pattern"
         >
-            <motion.div variants={itemVariants}>
+            <div>
                 <PageHeader
                     title={t('dashboard.title')}
                     description={t('dashboard.welcomeBack', { name: user?.name || t('welcome') })}
@@ -84,31 +63,31 @@ export function DashboardClient() {
                         </Button>
                     </div>
                 </PageHeader>
-            </motion.div>
+            </div>
 
             {/* Stats Cards */}
-            <DashboardStatsCards stats={stats} itemVariants={itemVariants} />
+            <DashboardStatsCards stats={stats} />
 
             {/* Professional Charts Section */}
             {stats && (
-                <motion.div variants={itemVariants} className="mt-8">
+                <div className="mt-8">
                     <DashboardCharts
                         activityTrend={stats.activityTrend || []}
                         stats={stats}
                     />
-                </motion.div>
+                </div>
             )}
 
             {/* Summary Cards */}
             <div className="grid gap-8 lg:grid-cols-2 mt-12">
-                <motion.div variants={itemVariants}>
+                <div>
                     <DashboardTopBots stats={stats} />
-                </motion.div>
+                </div>
 
-                <motion.div variants={itemVariants}>
+                <div>
                     <DashboardWorkspaceOverview stats={stats} />
-                </motion.div>
+                </div>
             </div>
-        </motion.div>
+        </div>
     )
 }

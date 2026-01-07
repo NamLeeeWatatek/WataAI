@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageShell } from '@/components/layout/PageShell';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -11,10 +11,10 @@ import {
     ShieldCheck,
     Plus,
     Edit2,
-    CheckCircle2,
     Boxes,
     Save,
-    Trash2
+    Trash2,
+    RefreshCw
 } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { Input } from '@/components/ui/Input';
@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/AlertDialog';
 
 export default function RolesPermissionsPage() {
+    const queryClient = useQueryClient();
     const [selectedRole, setSelectedRole] = useState<RoleEntity | null>(null);
     const [search, setSearch] = useState('');
 
@@ -76,7 +77,7 @@ export default function RolesPermissionsPage() {
         }
     }, [])
 
-    const { data: rolesData, refetch: refetchRoles } = useQuery({
+    const { data: rolesData, isLoading: loadingRoles, refetch: refetchRoles } = useQuery({
         queryKey: ['roles', querySearch],
         queryFn: async () => {
             const rolesRes = await adminApi.getRoles({ search: querySearch });
@@ -87,7 +88,7 @@ export default function RolesPermissionsPage() {
 
     const roles = Array.isArray(rolesData) ? rolesData : [];
 
-    const { data: permissionsData, refetch: refetchPermissions } = useQuery({
+    const { data: permissionsData, isLoading: loadingPermissions, refetch: refetchPermissions } = useQuery({
         queryKey: ['permissions', queryPermissionSearch],
         queryFn: async () => {
             const permissionsRes = await adminApi.getPermissions({ search: queryPermissionSearch });
@@ -111,6 +112,64 @@ export default function RolesPermissionsPage() {
         }
     }, [selectedRole]);
 
+    // Mutations
+    const updateRolePermissionsMutation = useMutation({
+        mutationFn: ({ id, permissionIds }: { id: number; permissionIds: string[] }) =>
+            adminApi.updateRole(id, { permissionIds }),
+        onSuccess: () => {
+            toast.success('Role permissions updated');
+            setHasChanges(false);
+            queryClient.invalidateQueries({ queryKey: ['roles'] });
+        },
+        onError: () => toast.error('Failed to update role permissions'),
+    });
+
+    const saveRoleMutation = useMutation({
+        mutationFn: ({ id, data }: { id?: number; data: any }) =>
+            id ? adminApi.updateRole(id, data) : adminApi.createRole(data),
+        onSuccess: () => {
+            toast.success('Role saved successfully');
+            setIsRoleDialogOpen(false);
+            setRoleToEdit(null);
+            queryClient.invalidateQueries({ queryKey: ['roles'] });
+        },
+        onError: () => toast.error('Failed to save role'),
+    });
+
+    const deleteRoleMutation = useMutation({
+        mutationFn: (id: number) => adminApi.deleteRole(id),
+        onSuccess: (_, id) => {
+            toast.success('Role deleted');
+            setIsDeleteDialogOpen(false);
+            setRoleToDeleteId(null);
+            if (selectedRole?.id === id) setSelectedRole(null);
+            queryClient.invalidateQueries({ queryKey: ['roles'] });
+        },
+        onError: () => toast.error('Failed to delete role'),
+    });
+
+    const createPermissionMutation = useMutation({
+        mutationFn: (data: any) => adminApi.createPermission(data),
+        onSuccess: () => {
+            toast.success('Permission created');
+            setIsPermissionDialogOpen(false);
+            setPermissionToEdit({ resource: '', action: '', description: '' });
+            queryClient.invalidateQueries({ queryKey: ['permissions'] });
+        },
+        onError: () => toast.error('Failed to create permission'),
+    });
+
+    const deletePermissionMutation = useMutation({
+        mutationFn: (id: string) => adminApi.deletePermission(id),
+        onSuccess: () => {
+            toast.success('Permission deleted');
+            setIsDeletePermissionOpen(false);
+            setPermissionToDeleteId(null);
+            queryClient.invalidateQueries({ queryKey: ['permissions'] });
+        },
+        onError: () => toast.error('Failed to delete permission'),
+    });
+
     const handlePermissionToggle = (permId: string) => {
         const newSetup = rolePermissions.includes(permId)
             ? rolePermissions.filter(id => id !== permId)
@@ -120,48 +179,20 @@ export default function RolesPermissionsPage() {
         setHasChanges(true);
     };
 
-    const handleSaveRole = async () => {
+    const handleSaveRole = () => {
         if (!selectedRole) return;
-        try {
-            await adminApi.updateRole(selectedRole.id, {
-                permissionIds: rolePermissions
-            });
-            toast.success('Role permissions updated');
-            setHasChanges(false);
-
-            refetchRoles();
-
-            // We need to wait for refetch to update local state fully if we want to be pure
-            // But we can just rely on the next render
-            setSelectedRole(prev => prev ? { ...prev, permissions: permissions.filter(p => rolePermissions.includes(p.id)) } : null);
-        } catch (error) {
-            toast.error('Failed to update role');
-        }
+        updateRolePermissionsMutation.mutate({
+            id: selectedRole.id as number,
+            permissionIds: rolePermissions
+        });
     };
 
-    const handleCreateOrUpdateRole = async () => {
+    const handleCreateOrUpdateRole = () => {
         if (!roleToEdit) return;
-        try {
-            if (selectedRole && !isRoleDialogOpen) {
-                // This is for updating name/description when not in create mode
-                // But let's use the dialog for both for simplicity
-            }
-
-            if (selectedRole && (roleToEdit.name !== selectedRole.name || roleToEdit.description !== selectedRole.description)) {
-                if (selectedRole.id) {
-                    await adminApi.updateRole(selectedRole.id as number, roleToEdit);
-                    toast.success('Role updated');
-                }
-            } else {
-                await adminApi.createRole(roleToEdit);
-                toast.success('Role created');
-            }
-            setIsRoleDialogOpen(false);
-            setRoleToEdit(null);
-            refetchRoles();
-        } catch (error) {
-            toast.error('Failed to save role');
-        }
+        saveRoleMutation.mutate({
+            id: selectedRole && roleToEdit.name === selectedRole.name ? (selectedRole.id as number) : undefined,
+            data: roleToEdit
+        });
     };
 
     const handleOpenCreateDialog = () => {
@@ -175,48 +206,19 @@ export default function RolesPermissionsPage() {
         setIsRoleDialogOpen(true);
     };
 
-    const handleDeleteRole = async () => {
+    const handleDeleteRole = () => {
         if (!roleToDeleteId) return;
-        try {
-            await adminApi.deleteRole(roleToDeleteId);
-            toast.success('Role deleted');
-            setIsDeleteDialogOpen(false);
-            setRoleToDeleteId(null);
-            if (selectedRole?.id === roleToDeleteId) {
-                setSelectedRole(null);
-            }
-            refetchRoles();
-        } catch (error) {
-            toast.error('Failed to delete role');
-        }
+        deleteRoleMutation.mutate(roleToDeleteId);
     };
 
-    const handleCreatePermission = async () => {
-        try {
-            await adminApi.createPermission(permissionToEdit);
-            toast.success('Permission created');
-            setIsPermissionDialogOpen(false);
-            setPermissionToEdit({ resource: '', action: '', description: '' });
-            refetchPermissions();
-        } catch (error) {
-            toast.error('Failed to create permission');
-        }
+    const handleCreatePermission = () => {
+        createPermissionMutation.mutate(permissionToEdit);
     };
 
-    const handleDeletePermission = async () => {
+    const handleDeletePermission = () => {
         if (!permissionToDeleteId) return;
-        try {
-            await adminApi.deletePermission(permissionToDeleteId);
-            toast.success('Permission deleted');
-            setIsDeletePermissionOpen(false);
-            setPermissionToDeleteId(null);
-            refetchPermissions();
-        } catch (error) {
-            toast.error('Failed to delete permission');
-        }
+        deletePermissionMutation.mutate(permissionToDeleteId);
     };
-
-
 
     // Group permissions
     const groupedPermissions = permissions.reduce((acc, perm: PermissionEntity) => {
@@ -224,8 +226,6 @@ export default function RolesPermissionsPage() {
         acc[perm.resource].push(perm);
         return acc;
     }, {} as Record<string, PermissionEntity[]>);
-
-
 
     return (
         <PageShell
@@ -252,16 +252,17 @@ export default function RolesPermissionsPage() {
             <div className="h-full flex flex-col space-y-4">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
                     <div className="flex items-center justify-between border-b pb-4 shrink-0">
-                        <TabsList className="bg-muted/50 p-1">
-                            <TabsTrigger value="roles" className="gap-2 data-[state=active]:bg-background">
+                        <TabsList>
+                            <TabsTrigger value="roles" className="gap-2">
                                 <Shield className="w-4 h-4" />
                                 Roles
                             </TabsTrigger>
-                            <TabsTrigger value="permissions" className="gap-2 data-[state=active]:bg-background">
+                            <TabsTrigger value="permissions" className="gap-2">
                                 <Boxes className="w-4 h-4" />
                                 Permissions Library
                             </TabsTrigger>
                         </TabsList>
+                        {(loadingRoles || loadingPermissions) && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
                     </div>
 
                     <TabsContent value="roles" className="m-0 flex-1 overflow-hidden pt-4">
@@ -357,7 +358,7 @@ export default function RolesPermissionsPage() {
                                                     </div>
                                                 </div>
                                                 {hasChanges && (
-                                                    <Button onClick={handleSaveRole} className="gap-2">
+                                                    <Button onClick={handleSaveRole} loading={updateRolePermissionsMutation.isPending} className="gap-2 font-bold">
                                                         <Save className="w-4 h-4" />
                                                         Save Changes
                                                     </Button>
@@ -380,7 +381,7 @@ export default function RolesPermissionsPage() {
                                                                             id={`perm-${perm.id}`}
                                                                             checked={rolePermissions.includes(perm.id)}
                                                                             onCheckedChange={() => handlePermissionToggle(perm.id)}
-                                                                            disabled={selectedRole.name === 'Admin' && resource === 'all'} // Prevent locking out admin
+                                                                            disabled={selectedRole.name.toLowerCase() === 'admin' && resource === 'all'} // Prevent locking out admin
                                                                         />
                                                                         <div className="space-y-1">
                                                                             <Label
@@ -477,7 +478,7 @@ export default function RolesPermissionsPage() {
                 <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>{roleToEdit?.name ? 'Edit Role' : 'Create New Role'}</DialogTitle>
+                            <DialogTitle>{roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Edit Role' : 'Create New Role'}</DialogTitle>
                             <DialogDescription>
                                 Enter the role name and a brief description of its purpose.
                             </DialogDescription>
@@ -504,8 +505,8 @@ export default function RolesPermissionsPage() {
                         </div>
                         <DialogFooter>
                             <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleCreateOrUpdateRole} disabled={!roleToEdit?.name}>
-                                {roleToEdit?.name && selectedRole ? 'Save Changes' : 'Create Role'}
+                            <Button onClick={handleCreateOrUpdateRole} loading={saveRoleMutation.isPending} disabled={!roleToEdit?.name}>
+                                {roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Save Changes' : 'Create Role'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -525,13 +526,15 @@ export default function RolesPermissionsPage() {
                             <AlertDialogCancel onClick={() => setRoleToDeleteId(null)}>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDeleteRole}
+                                disabled={deleteRoleMutation.isPending}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                                Delete Role
+                                {deleteRoleMutation.isPending ? 'Deleting...' : 'Delete Role'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
                 {/* Permission Create Dialog */}
                 <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
                     <DialogContent>
@@ -576,6 +579,7 @@ export default function RolesPermissionsPage() {
                             <Button variant="ghost" onClick={() => setIsPermissionDialogOpen(false)}>Cancel</Button>
                             <Button
                                 onClick={handleCreatePermission}
+                                loading={createPermissionMutation.isPending}
                                 disabled={!permissionToEdit.resource || !permissionToEdit.action}
                             >
                                 Create Permission
@@ -598,9 +602,10 @@ export default function RolesPermissionsPage() {
                             <AlertDialogCancel onClick={() => setPermissionToDeleteId(null)}>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDeletePermission}
+                                disabled={deletePermissionMutation.isPending}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                                Delete
+                                {deletePermissionMutation.isPending ? 'Deleting...' : 'Delete'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

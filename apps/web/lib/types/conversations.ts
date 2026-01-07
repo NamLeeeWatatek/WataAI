@@ -34,6 +34,10 @@ export interface BotConversation {
   channelId?: string | null;
   externalId: string;
   status: ConversationStatus;
+  contactName?: string;    // From backend join
+  contactAvatar?: string;  // From backend join
+  channelType?: string;    // From backend join
+  channelName?: string;    // From backend join
   metadata: Record<string, any>;
   createdAt: string;
   updatedAt: string;

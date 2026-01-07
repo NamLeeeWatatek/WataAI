@@ -129,9 +129,9 @@ export function AiChatInterface({
       <ScrollArea className="flex-1 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
           {messages.length === 0 ? (
-            <div className="min-h-[70vh] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-700">
+            <div className="min-h-[70vh] flex flex-col items-center justify-center text-center">
               <div className="w-24 h-24 mb-10 rounded-3xl bg-gradient-to-br from-primary via-primary/80 to-primary/40 flex items-center justify-center shadow-2xl shadow-primary/20 relative group">
-                <div className="absolute inset-0 rounded-3xl bg-primary animate-ping opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                <div className="absolute inset-0 rounded-3xl bg-primary opacity-10 group-hover:opacity-20 transition-opacity"></div>
                 <Bot className="w-12 h-12 text-primary-foreground relative z-10" />
               </div>
               <h2 className="text-4xl font-black mb-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
@@ -163,10 +163,9 @@ export function AiChatInterface({
               <div
                 key={index}
                 className={cn(
-                  'flex gap-5 animate-in fade-in slide-in-from-bottom-4 duration-500',
+                  'flex gap-5',
                   message.role === MessageRole.USER ? 'flex-row-reverse' : 'flex-row'
                 )}
-                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className={cn(
                   'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transition-transform hover:scale-105',
@@ -281,7 +280,7 @@ export function AiChatInterface({
           )}
 
           {(loading || sending) && (
-            <div className="flex gap-5 animate-in fade-in duration-300">
+            <div className="flex gap-5">
               <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center animate-pulse">
                 <Bot className="w-5 h-5 text-primary" />
               </div>
@@ -326,7 +325,7 @@ export function AiChatInterface({
                   onClick={handleSend}
                   disabled={sending || loading}
                   size="icon"
-                  className="h-9 w-9 rounded-2xl transition-all shadow-lg shadow-primary/20 animate-in zoom-in duration-200"
+                  className="h-9 w-9 rounded-2xl transition-all shadow-lg shadow-primary/20"
                 >
                   {sending || loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

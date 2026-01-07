@@ -32,7 +32,8 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 import { useKnowledgeBaseController } from '@/lib/hooks/features/useKnowledgeBaseController'
 import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'
-import { queryKnowledgeBase, updateKnowledgeBase } from '@/lib/api/knowledge-base'
+import { queryKnowledgeBase } from '@/lib/api/knowledge-base'
+import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases'
 import toast from '@/lib/toast'
 
 export default function KnowledgeBaseDetailPage() {
@@ -76,6 +77,8 @@ export default function KnowledgeBaseDetailPage() {
         updateFolder,
         updateDocument
     } = useKnowledgeBaseController(kbId)
+
+    const { updateKB } = useKnowledgeBases()
 
     // --- Local UI State ---
     const [folderDialogOpen, setFolderDialogOpen] = useState(false)
@@ -151,10 +154,13 @@ export default function KnowledgeBaseDetailPage() {
     }
 
     const handleSaveSettings = async (data: any) => {
-        await updateKnowledgeBase(kbId, data)
-        toast.success('Settings saved')
-        setSettingsDialogOpen(false)
-        refresh()
+        try {
+            await updateKB({ id: kbId, data })
+            setSettingsDialogOpen(false)
+            refresh()
+        } catch (error) {
+            // Error handled in hook if we add error toast there
+        }
     }
 
     // --- Render ---

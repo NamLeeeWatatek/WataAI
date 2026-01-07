@@ -39,6 +39,11 @@ export interface BotChannel {
   updatedAt: string
 }
 
+export interface PaginatedBots {
+  data: Bot[]
+  total: number
+}
+
 export interface CreateBotDto {
   name: string
   description?: string
@@ -62,18 +67,18 @@ export interface CreateBotDto {
 export interface UpdateBotDto extends Partial<CreateBotDto> { }
 
 export const botsApi = {
-  async getAll(workspaceId: string, options?: { page?: number; limit?: number; status?: string }) {
+  async getAll(workspaceId: string, options?: { page?: number; limit?: number; status?: string }): Promise<PaginatedBots> {
     const filters: any = { workspaceId }
     if (options?.status) filters.status = options.status
 
     return await axiosClient.get('/bots', {
       params: {
-        workspaceId, // Pass explicitly for @CurrentWorkspace decorator
+        workspaceId,
         page: options?.page || 1,
         limit: options?.limit || 10,
         filters: JSON.stringify(filters)
       }
-    })
+    }) as any
   },
 
   async getOne(id: string): Promise<Bot> {
@@ -191,6 +196,14 @@ export const botsApi = {
       response: data.answer,
       sources: data.sources || []
     };
+  },
+
+  async getWidgetAppearance(botId: string): Promise<any> {
+    return await axiosClient.get(`/bots/${botId}/widget/appearance`)
+  },
+
+  async updateWidgetAppearance(botId: string, data: any): Promise<any> {
+    return await axiosClient.put(`/bots/${botId}/widget/appearance`, data)
   },
 }
 
