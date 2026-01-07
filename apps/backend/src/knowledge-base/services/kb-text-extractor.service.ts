@@ -52,19 +52,19 @@ export class KBTextExtractorService {
           return await this.extractFromDOCX(buffer);
 
         case 'text/html':
-          return MarkdownProcessorUtil.htmlToMarkdown(buffer.toString('utf-8'))
-            .content;
+          return this.processText(
+            MarkdownProcessorUtil.htmlToMarkdown(buffer.toString('utf-8'))
+              .content,
+          );
 
         case 'text/plain':
         case 'text/markdown':
-          return MarkdownProcessorUtil.cleanMarkdown(buffer.toString('utf-8'));
-
         case 'application/json':
-          return buffer.toString('utf-8');
+          return this.processText(buffer.toString('utf-8'));
 
         default:
           this.logger.warn(`⚠️ Unknown mime type ${mimeType}, trying as text`);
-          return buffer.toString('utf-8');
+          return this.processText(buffer.toString('utf-8'));
       }
     } catch (error) {
       this.logger.error(`❌ Failed to extract text: ${error.message}`);
@@ -127,12 +127,11 @@ export class KBTextExtractorService {
             }
           }
 
-          // Final normalization for Vietnamese characters
-          text = text.normalize('NFC').trim();
-          text = text.replace(/·/g, '·'); // Preserve special chars
+          // Final processing using standard pipeline
+          const processed = this.processText(text);
 
-          this.logger.log(`PDF extraction completed: ${text.length} chars`);
-          resolve(text);
+          this.logger.log(`PDF extraction completed: ${processed.length} chars`);
+          resolve(processed);
         } catch (error) {
           clearTimeout(timeoutId);
           this.logger.error(`PDF text processing error: ${error.message}`);
@@ -222,7 +221,18 @@ export class KBTextExtractorService {
               if (lastX !== -1 && item.transform[4] - (lastX + lastWidth) > 3) {
                 lineText += ' ';
               }
-              lineText += item.str;
+
+              let textContent = item.str;
+              // Attempt to fix common encoding issues where text is URI encoded or double encoded
+              try {
+                if (textContent.includes('%')) {
+                  textContent = decodeURIComponent(textContent);
+                }
+              } catch (e) {
+                // Keep original if decode fails
+              }
+
+              lineText += textContent;
               lastX = item.transform[4];
               lastWidth = item.width || 0;
             }
@@ -243,7 +253,8 @@ export class KBTextExtractorService {
           this.logger.log(
             `PDF extraction completed (pdfjs-dist): ${fullText.length} chars`,
           );
-          return MarkdownProcessorUtil.cleanMarkdown(fullText);
+          // Use the centralized processText to ensure consistent cleaning/decoding/normalization
+          return this.processText(fullText);
         } else {
           throw new Error('Extracted text is empty');
         }
@@ -261,30 +272,76 @@ export class KBTextExtractorService {
     return this.extractPdfWithPdf2json(buffer);
   }
 
-  private async extractFromDOCX(buffer: Buffer): Promise<string> {
+  private processText(text: string): string {
+    // 1. Attempt to fix URL encoding if present
     try {
-      // Use convertToHtml to preserve semantic structure (headers, lists, tables)
-      const result = await mammoth.convertToHtml({ buffer });
-      const { content } = MarkdownProcessorUtil.htmlToMarkdown(result.value);
-
-      if (!content || content.length === 0) {
-        // Fallback to raw text if HTML conversion yields nothing
-        const rawResult = await mammoth.extractRawText({ buffer });
-        return MarkdownProcessorUtil.cleanMarkdown(rawResult.value);
+      if (text.includes('%')) {
+        // Try to decode URI component but continue if it fails
+        const decoded = decodeURIComponent(text);
+        // If decoded length is significantly different or looks valid, use it
+        if (decoded.length < text.length) {
+          text = decoded;
+        }
       }
-
-      if (result.messages.length > 0) {
-        this.logger.warn(`DOCX extraction warnings: ${result.messages.length}`);
-      }
-
-      this.logger.log(
-        `✅ Extracted structured Markdown (${content.length} chars) from DOCX`,
-      );
-      return content;
-    } catch (error) {
-      this.logger.error(`Failed to parse DOCX: ${error.message}`);
-      throw error;
+    } catch (e) {
+      // Ignore decode errors
     }
+
+    // 2. Normalize Unicode (NFC)
+    text = text.normalize('NFC').trim();
+
+    // 3. Clean special characters
+    text = text.replace(/·/g, '·');
+
+    // 4. Use Markdown cleaning for final polish
+    return MarkdownProcessorUtil.cleanMarkdown(text);
+  }
+
+  private async extractFromDOCX(buffer: Buffer): Promise<string> {
+    const timeoutPromise = new Promise<string>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('DOCX extraction timed out after 60s'));
+      }, 60000);
+    });
+
+    const extractionPromise = (async () => {
+      try {
+        // Use convertToHtml to preserve semantic structure (headers, lists, tables)
+        const result = await mammoth.convertToHtml({ buffer });
+
+        // If mammoth returns nothing or empty, try raw text
+        if (!result || !result.value) {
+          const rawResult = await mammoth.extractRawText({ buffer });
+          if (rawResult.value) {
+            return this.processText(rawResult.value);
+          }
+          throw new Error('Empty result from DOCX extractor');
+        }
+
+        const { content } = MarkdownProcessorUtil.htmlToMarkdown(result.value);
+
+        if (!content || content.length === 0) {
+          // Fallback to raw text if HTML conversion yields nothing textually
+          const rawResult = await mammoth.extractRawText({ buffer });
+          return this.processText(rawResult.value);
+        }
+
+        if (result.messages.length > 0) {
+          this.logger.warn(`DOCX extraction warnings: ${result.messages.length}`);
+        }
+
+        const processed = this.processText(content);
+        this.logger.log(
+          `✅ Extracted structured Markdown (${processed.length} chars) from DOCX`,
+        );
+        return processed;
+      } catch (error) {
+        this.logger.error(`Failed to parse DOCX: ${error.message}`);
+        throw error;
+      }
+    })();
+
+    return await Promise.race([extractionPromise, timeoutPromise]);
   }
 
   isSupportedFileType(mimeType: string): boolean {
