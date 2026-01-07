@@ -23,8 +23,12 @@ interface WidgetAppearanceSettings {
     widgetButtonSize?: 'small' | 'medium' | 'large';
     welcomeMessage?: string;
     placeholderText?: string;
+
     showAvatar?: boolean;
     showTimestamp?: boolean;
+    userMessageTextColor?: string;
+    inputBackgroundColor?: string;
+    inputTextColor?: string;
 }
 
 interface Props {
@@ -45,8 +49,12 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
         widgetButtonSize: 'medium',
         welcomeMessage: 'Hello! How can I help you today?',
         placeholderText: 'Type your message...',
+
         showAvatar: true,
         showTimestamp: true,
+        userMessageTextColor: '#ffffff',
+        inputBackgroundColor: '#ffffff',
+        inputTextColor: '#000000',
     });
 
     const [activeTab, setActiveTab] = useState('design');
@@ -193,6 +201,35 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                     className="w-full h-10 p-1 cursor-pointer"
                                                     value={settings.botMessageTextColor}
                                                     onChange={(e) => updateSetting('botMessageTextColor', e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6 pt-6 border-t border-border/40">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-primary/10 rounded-lg">
+                                                <Settings2 className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Input Styling</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div className="space-y-3">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Background</Label>
+                                                <Input
+                                                    type="color"
+                                                    className="w-full h-10 p-1 cursor-pointer"
+                                                    value={settings.inputBackgroundColor || '#ffffff'}
+                                                    onChange={(e) => updateSetting('inputBackgroundColor', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-3">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Text</Label>
+                                                <Input
+                                                    type="color"
+                                                    className="w-full h-10 p-1 cursor-pointer"
+                                                    value={settings.inputTextColor || '#000000'}
+                                                    onChange={(e) => updateSetting('inputTextColor', e.target.value)}
                                                 />
                                             </div>
                                         </div>

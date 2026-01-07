@@ -199,11 +199,6 @@ export default function ChannelsPageRefactored() {
     };
 
     const handleConnectFacebookPage = async (page: any) => {
-        if (!selectedBotId) {
-            toast.error('Please select a bot first');
-            return;
-        }
-
         if (!facebookTempToken) {
             toast.error('Session expired. Please reconnect Facebook again.');
             dispatch(setFacebookPages([]));
@@ -218,11 +213,16 @@ export default function ChannelsPageRefactored() {
                 pageName: page.name,
                 userAccessToken: facebookTempToken,
                 category: page.category,
-                botId: selectedBotId
+                // Pass undefined if selectedBotId is empty string
+                botId: selectedBotId || undefined
             });
 
             const selectedBot = bots.find(b => b.id === selectedBotId);
-            toast.success(`Connected ${page.name} to bot "${selectedBot?.name}"`);
+            if (selectedBot) {
+                toast.success(`Connected ${page.name} to bot "${selectedBot.name}"`);
+            } else {
+                toast.success(`Connected ${page.name} to workspace`);
+            }
 
             dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
             dispatch(loadChannelsData());
@@ -329,7 +329,7 @@ export default function ChannelsPageRefactored() {
                             <div>
                                 <h3 className="text-2xl font-black tracking-tight">Connect Facebook Pages</h3>
                                 <p className="text-sm text-muted-foreground mt-1 font-medium">
-                                    Select a target bot and link your available pages
+                                    Link your available pages to the workspace
                                 </p>
                             </div>
                             <Button
@@ -344,46 +344,45 @@ export default function ChannelsPageRefactored() {
 
                         <ScrollArea className="flex-1 overflow-y-auto p-6">
                             <div className="space-y-8">
-                                <AlertBanner variant="info" title="Select Bot Gateway" className="rounded-xl border-primary/20 bg-primary/5">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+                                            <Settings className="w-3 h-3" />
+                                            Assign Bot Gateway (Optional)
+                                        </h4>
+                                    </div>
+
                                     {loadingBots ? (
-                                        <div className="flex items-center gap-3 py-2 font-bold text-primary">
+                                        <div className="flex items-center gap-3 py-4 font-bold text-primary p-4 border border-border/40 rounded-xl bg-card">
                                             <RefreshCw className="w-4 h-4 animate-spin" />
                                             <span>Synchronizing bots...</span>
-                                        </div>
-                                    ) : bots.length === 0 ? (
-                                        <div className="flex flex-col items-center gap-4 py-8">
-                                            <p className="font-bold opacity-80 text-muted-foreground">No active AI agents found in this workspace.</p>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => window.open('/bots', '_blank')}
-                                                className="bg-background"
-                                            >
-                                                <UserPlus className="w-4 h-4 mr-2" />
-                                                Create Your First Bot
-                                            </Button>
                                         </div>
                                     ) : (
                                         <div className="p-1">
                                             <select
-                                                value={selectedBotId}
+                                                value={selectedBotId || ''}
                                                 onChange={(e) => dispatch(setSelectedBotId(e.target.value))}
-                                                className="w-full bg-background/50 rounded-xl px-4 py-3 border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/50 mb-3 font-bold transition-all"
+                                                className="w-full bg-background/50 rounded-xl px-4 py-3 border border-border/40 focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold transition-all text-sm"
                                             >
+                                                <option value="" className="bg-card text-muted-foreground">
+                                                    Do not assign a bot (Connect only)
+                                                </option>
                                                 {bots.map((bot) => (
                                                     <option key={bot.id} value={bot.id} className="bg-card">
                                                         {bot.name}
                                                     </option>
                                                 ))}
                                             </select>
-                                            <p className="text-xs font-semibold text-muted-foreground opacity-80">
-                                                All incoming messages from linked pages will be processed by this agent.
+                                            <p className="text-[11px] font-medium text-muted-foreground/60 mt-2 px-1">
+                                                {selectedBotId
+                                                    ? "Incoming messages will be processed by the selected agent."
+                                                    : "Messages will not be processed until a bot is assigned."}
                                             </p>
                                         </div>
                                     )}
-                                </AlertBanner>
+                                </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 pt-4 border-t border-border/40">
                                     <div className="flex items-center justify-between">
                                         <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Direct Connections ({facebookPages.length})</h4>
                                     </div>
@@ -414,7 +413,7 @@ export default function ChannelsPageRefactored() {
                                                 <Button
                                                     size="lg"
                                                     onClick={() => handleConnectFacebookPage(page)}
-                                                    disabled={connectingPage || !selectedBotId || bots.length === 0}
+                                                    disabled={connectingPage}
                                                     className="px-8 font-black transition-all"
                                                 >
                                                     {connectingPage ? 'Connecting...' : 'Link Page'}

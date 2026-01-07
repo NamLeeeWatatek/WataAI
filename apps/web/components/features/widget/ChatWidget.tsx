@@ -256,7 +256,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-zinc-900/50 scroll-smooth">
+                        <div
+                            className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-zinc-900/50 scroll-smooth"
+                            style={config.theme.backgroundColor ? { backgroundColor: config.theme.backgroundColor } : undefined}
+                        >
                             {messages.length === 0 && !loading && !error && (
                                 <div className="h-full flex flex-col items-center justify-center opacity-40 gap-2">
                                     <MessageCircle className="w-8 h-8" />
@@ -283,7 +286,14 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                                     ? "text-white rounded-br-none"
                                                     : "bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-bl-none text-foreground"
                                             )}
-                                            style={isUser ? { backgroundColor: primaryColor } : {}}
+                                            style={{
+                                                backgroundColor: isUser
+                                                    ? primaryColor
+                                                    : (config.theme.botMessageColor || undefined),
+                                                color: isUser
+                                                    ? (config.theme.userMessageTextColor || undefined)
+                                                    : (config.theme.botMessageTextColor || undefined)
+                                            }}
                                         >
                                             {msg.isError ? (
                                                 <div className="flex items-center gap-2 text-red-500">
@@ -315,7 +325,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                     animate={{ opacity: 1 }}
                                     className="flex justify-start"
                                 >
-                                    <div className="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-2xl rounded-bl-none p-4 shadow-sm">
+                                    <div
+                                        className="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-2xl rounded-bl-none p-4 shadow-sm"
+                                        style={config.theme.botMessageColor ? { backgroundColor: config.theme.botMessageColor } : undefined}
+                                    >
                                         <div className="flex gap-1.5">
                                             <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: primaryColor }} />
                                             <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: primaryColor }} />
@@ -342,7 +355,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
 
                         {/* Input Area */}
                         <div className="p-3 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-white/5">
-                            <div className="relative flex items-end gap-2 bg-gray-50 dark:bg-zinc-900 rounded-xl border border-gray-200 dark:border-zinc-800 focus-within:ring-2 focus-within:ring-primary/20 transition-all p-1.5 px-2">
+                            <div
+                                className="relative flex items-end gap-2 bg-secondary/30 hover:bg-secondary/50 focus-within:bg-white dark:focus-within:bg-zinc-900 rounded-xl border border-border/40 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all p-1.5 px-2"
+                                style={config.theme.inputBackgroundColor ? { backgroundColor: config.theme.inputBackgroundColor } : undefined}
+                            >
                                 <input
                                     ref={inputRef}
                                     type="text"
@@ -351,7 +367,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                                     placeholder={config.placeholderText || "Type a message..."}
                                     disabled={loading || Boolean(error)}
-                                    className="flex-1 bg-transparent border-none focus:outline-none p-2 min-h-[44px] max-h-[120px] text-sm resize-none"
+                                    className="flex-1 bg-transparent border-none focus:outline-none p-2 min-h-[44px] max-h-[120px] text-sm resize-none placeholder:text-muted-foreground/50"
+                                    style={{
+                                        color: config.theme.inputTextColor || config.theme.userMessageTextColor || 'inherit'
+                                    }}
                                 />
                                 <button
                                     onClick={handleSend}

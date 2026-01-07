@@ -125,7 +125,7 @@ export class KnowledgeBaseDocumentsController {
   constructor(
     private readonly documentsService: KBDocumentsService,
     private readonly crawlerService: KBCrawlerService,
-  ) {}
+  ) { }
 
   @Post('documents')
   @ApiOperation({ summary: 'Create document' })
@@ -168,11 +168,11 @@ export class KnowledgeBaseDocumentsController {
       title: doc.title ? decodeFilename(doc.title) : doc.title,
       metadata: doc.metadata
         ? {
-            ...doc.metadata,
-            originalName: doc.metadata.originalName
-              ? decodeFilename(doc.metadata.originalName)
-              : doc.metadata.originalName,
-          }
+          ...doc.metadata,
+          originalName: doc.metadata.originalName
+            ? decodeFilename(doc.metadata.originalName)
+            : doc.metadata.originalName,
+        }
         : doc.metadata,
     }));
 
@@ -348,38 +348,21 @@ export class KnowledgeBaseDocumentsController {
       };
     }
 
-    let content: string;
-    try {
-      content = await this.documentsService.extractTextFromFile(
-        file.buffer,
-        file.mimetype,
-      );
-    } catch (error) {
-      return {
-        success: false,
-        error: `Failed to extract text: ${error.message}`,
-      };
-    }
-
-    if (!content || content.length === 0) {
-      return { success: false, error: 'File content is empty or invalid' };
-    }
-
     const createdDoc: any = await this.documentsService.create(userId, {
       knowledgeBaseId,
       folderId,
       name: sanitizedFilename,
-      content,
+      content: '', // Content will be extracted in background
       workspaceId: req.user.workspaceId,
       fileType: file.mimetype,
       mimeType: file.mimetype,
       fileUrl,
       metadata: {
-        originalName: fileNameFixed, // Store the fixed version
+        originalName: fileNameFixed,
         size: file.size,
-        extractedLength: content.length,
         uploadedAt: new Date().toISOString(),
         fileId,
+        processingStatus: 'queued', // Explicitly mark as queued for processing
       },
     });
 
@@ -392,11 +375,11 @@ export class KnowledgeBaseDocumentsController {
         : createdDoc.title,
       metadata: createdDoc.metadata
         ? {
-            ...createdDoc.metadata,
-            originalName: createdDoc.metadata.originalName
-              ? decodeFilename(createdDoc.metadata.originalName)
-              : createdDoc.metadata.originalName,
-          }
+          ...createdDoc.metadata,
+          originalName: createdDoc.metadata.originalName
+            ? decodeFilename(createdDoc.metadata.originalName)
+            : createdDoc.metadata.originalName,
+        }
         : createdDoc.metadata,
     };
   }

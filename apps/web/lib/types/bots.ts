@@ -224,6 +224,12 @@ export interface AiSuggestWidgetProps {
 
 export interface BotWidgetTheme {
   primaryColor: string
+  backgroundColor?: string
+  botMessageColor?: string
+  botMessageTextColor?: string
+  userMessageTextColor?: string
+  inputBackgroundColor?: string
+  inputTextColor?: string
   position: string
   buttonSize: string
   showAvatar: boolean
