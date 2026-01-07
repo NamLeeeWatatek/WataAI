@@ -35,7 +35,7 @@ export class FacebookOAuthController {
     private readonly channelStrategy: ChannelStrategy,
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
-  ) {}
+  ) { }
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -209,6 +209,7 @@ export class FacebookOAuthController {
           category: page.category,
           tasks: page.tasks,
           botId: body.botId,
+          userAccessToken: body.userAccessToken, // Store user token to fetch pages later
         },
       );
 
