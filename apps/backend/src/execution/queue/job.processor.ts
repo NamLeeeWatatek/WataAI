@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { JOB_QUEUE } from './execution-queue.constants';
 import { CreationToolsService } from '../../creation-tools/creation-tools.service';
 import { ExecutionStrategyResolver } from '../execution-strategy.resolver';
-import { ExecutionFlow } from '../../creation-tools/domain/creation-tool';
+import { ExecutionFlow, ExecutionType } from '../../creation-tools/domain/creation-tool';
 import { GenerationJob } from '../../generation-jobs/domain/generation-job';
 import {
   CreationJob,
@@ -125,7 +125,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
 
       // Check for Async Pattern
       // If true, we do NOT complete the job here. We rely on external callback.
-      if ((config as any).asyncPattern) {
+      if (config.type === ExecutionType.HTTP_WEBHOOK && config.asyncPattern) {
         this.logger.log(
           `Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`,
         );

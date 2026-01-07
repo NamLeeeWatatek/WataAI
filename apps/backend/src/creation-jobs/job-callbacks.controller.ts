@@ -6,10 +6,12 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CreationJobsService } from './creation-jobs.service';
 import { CreationJobStatus } from './domain/creation-jobs';
 import { Public } from '../utils/public.decorator';
+
+import { CompleteJobDto } from './dto/complete-job.dto';
 
 @ApiTags('Creation Job Callbacks')
 @Public()
@@ -18,7 +20,7 @@ import { Public } from '../utils/public.decorator';
   version: '1',
 })
 export class JobCallbacksController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post(':id/complete')
   @ApiOperation({
@@ -27,25 +29,10 @@ export class JobCallbacksController {
       'Updates a creation job status and output data. This endpoint is public to allow external tools (n8n, make, etc.) to call back.',
   })
   @ApiParam({ name: 'id', description: 'The Creation Job ID' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        status: {
-          type: 'string',
-          enum: ['COMPLETED', 'FAILED'],
-          default: 'COMPLETED',
-        },
-        outputData: { type: 'object' },
-        error: { type: 'string' },
-      },
-    },
-  })
   @HttpCode(HttpStatus.OK)
   async complete(
     @Param('id') id: string,
-    @Body()
-    body: { status?: CreationJobStatus; outputData?: any; error?: string },
+    @Body() body: CompleteJobDto,
   ) {
     const status = body.status || CreationJobStatus.COMPLETED;
 

@@ -19,7 +19,7 @@ export class OAuthController {
     private readonly oauthService: OAuthService,
     private readonly channelsService: ChannelsService,
     private readonly integrationsService: IntegrationsService,
-  ) {}
+  ) { }
 
   @Get('login/:provider')
   @ApiOperation({ summary: 'Start OAuth flow' })
@@ -80,7 +80,12 @@ export class OAuthController {
 
     let accessToken: string;
     let refreshToken: string | undefined;
-    let pages: any[] = [];
+    let pages: {
+      id: string;
+      name: string;
+      access_token: string;
+      category: string;
+    }[] = [];
 
     try {
       switch (provider) {
@@ -90,7 +95,11 @@ export class OAuthController {
             credential.clientSecret!,
             code,
           );
-          accessToken = tokenData.accessToken;
+          if (typeof tokenData === 'string') {
+            accessToken = tokenData;
+          } else {
+            accessToken = tokenData.accessToken;
+          }
 
           pages = await this.oauthService.getFacebookPages(accessToken);
           break;
@@ -153,7 +162,9 @@ export class OAuthController {
               },
               userId,
             );
-          } catch {}
+          } catch {
+            // Ignore instagram creation error
+          }
         }
       } else {
         await this.channelsService.create(
@@ -177,12 +188,18 @@ export class OAuthController {
         },
       };
     } catch (error) {
+      const axios = (await import('axios')).default;
+      let message = 'Failed to connect channel';
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.error?.message || error.message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
       return {
         status: 'error',
-        message:
-          error.response?.data?.error?.message ||
-          error.message ||
-          'Failed to connect channel',
+        message,
       };
     }
   }

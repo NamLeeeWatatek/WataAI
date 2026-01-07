@@ -15,6 +15,7 @@ import { AiConversationsService } from './ai-conversations.service';
 import {
   CreateAiConversationDto,
   UpdateAiConversationDto,
+  AddAiMessageDto,
 } from './dto/ai-conversation.dto';
 
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
@@ -24,7 +25,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'ai-conversations', version: '1' })
 export class AiConversationsController {
-  constructor(private readonly conversationsService: AiConversationsService) {}
+  constructor(private readonly conversationsService: AiConversationsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all AI conversations' })
@@ -73,13 +74,7 @@ export class AiConversationsController {
   async addMessage(
     @Param('id') id: string,
     @Request() req,
-    @Body()
-    message: {
-      role: 'user' | 'assistant' | 'system';
-      content: string;
-      timestamp: string;
-      metadata?: any;
-    },
+    @Body() message: AddAiMessageDto,
   ) {
     const userId = req.user.id;
     return this.conversationsService.addMessage(id, userId, message);

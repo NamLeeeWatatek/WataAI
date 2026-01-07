@@ -26,31 +26,27 @@ import { Notification } from './domain/notification';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 
+import { FindAllNotificationsDto } from './dto/find-all-notifications.dto';
+
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'notifications', version: '1' })
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(private readonly notificationsService: NotificationsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get user notifications' })
-  @ApiQuery({ name: 'workspaceId', required: false })
-  @ApiQuery({ name: 'isRead', required: false, type: Boolean })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  getNotifications(
+  async getNotifications(
     @Request() req,
     @CurrentWorkspace() workspaceId: string | undefined,
-    @Query('isRead') isRead?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query() query: FindAllNotificationsDto,
   ) {
     return this.notificationsService.getNotifications(req.user.id, {
-      workspaceId,
-      isRead: isRead !== undefined ? isRead === 'true' : undefined,
-      page: page ? Number(page) : undefined,
-      limit: limit ? Number(limit) : undefined,
+      workspaceId: query.workspaceId || workspaceId, // Query param takes precedence if needed, or fallback to current workspace
+      isRead: query.isRead,
+      page: query.page,
+      limit: query.limit,
     });
   }
 

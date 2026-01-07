@@ -60,37 +60,6 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         toast.success("Copied to clipboard");
     };
 
-    const renderFormattedAttributes = (data: any) => {
-        if (!data || typeof data !== 'object') return null;
-
-        const entries = Object.entries(data).filter(([key, value]) => {
-            // Filter out common metadata or complex objects that aren't user-friendly
-            const internalKeys = ['id', 'jobId', 'createdAt', 'updatedAt', 'workspaceId', 'createdBy'];
-            return !internalKeys.includes(key) && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
-        });
-
-        if (entries.length === 0) return null;
-
-        return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border/50">
-                {entries.map(([key, value]) => (
-                    <div key={key} className="space-y-1">
-                        <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
-                        <div className="text-sm font-medium leading-tight">
-                            {key === 'knowledgeBaseId' && kbName ? (
-                                <div className="flex flex-col">
-                                    <span>{kbName}</span>
-                                    <span className="text-[10px] text-muted-foreground font-mono">{String(value)}</span>
-                                </div>
-                            ) : (
-                                String(value)
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
-    };
 
     const renderOutput = () => {
         if (!job.outputData) return <div className="text-muted-foreground italic text-sm py-4">Generating your product, please wait...</div>;
@@ -145,10 +114,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                             <Copy className="w-4 h-4" />
                         </Button>
                     </div>
-                ) : (
-                    // If it's a complex object but no explicit 'result' field, format its attributes
-                    !finalMediaUrl && renderFormattedAttributes(data)
-                )}
+                ) : null}
             </div>
         );
     }
@@ -177,7 +143,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                     {job.creationTool.name}
                                 </Badge>
                             )}
-                            <DialogTitle className="text-xl font-bold leading-tight">
+                            <DialogTitle className="text-lg font-bold leading-tight line-clamp-2">
                                 {getDisplayName()}
                             </DialogTitle>
                         </div>
@@ -191,8 +157,6 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                             <Clock className="w-3 h-3" />
                             {format(new Date(job.createdAt), 'PPpp')}
                         </span>
-                        <span>•</span>
-                        <span className="uppercase">ID: {job.id}</span>
                     </div>
                 </DialogHeader>
 
@@ -206,37 +170,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                         {renderOutput()}
                     </div>
 
-                    {/* Inputs Section - Collapsed or Secondary */}
-                    <div className="space-y-3 pt-4 border-t border-dashed">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="h-4 w-1 bg-muted-foreground/30 rounded-full" />
-                                <h4 className="text-sm font-bold text-muted-foreground/70 uppercase tracking-tight">Technical details</h4>
-                            </div>
-                        </div>
 
-                        {renderFormattedAttributes(job.inputData)}
-
-                        <details className="group">
-                            <summary className="text-[10px] text-muted-foreground cursor-pointer uppercase font-bold tracking-widest hover:text-primary transition-colors list-none flex items-center gap-1">
-                                <span className="group-open:rotate-90 transition-transform">▶</span>
-                                View Raw Source Data (Advanced)
-                            </summary>
-                            <div className="relative mt-2">
-                                <pre className="p-4 rounded-xl bg-muted/30 overflow-auto text-[10px] font-mono border border-border/50 max-h-[150px]">
-                                    {JSON.stringify(job.inputData, null, 2)}
-                                </pre>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-2 right-2 h-6 w-6"
-                                    onClick={() => handleCopy(JSON.stringify(job.inputData, null, 2))}
-                                >
-                                    <Copy className="w-3 h-3" />
-                                </Button>
-                            </div>
-                        </details>
-                    </div>
                 </div>
             </DialogContent>
         </Dialog>

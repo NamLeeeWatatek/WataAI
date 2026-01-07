@@ -18,8 +18,10 @@ import { WorkspaceMemberEntity } from '../workspaces/infrastructure/persistence/
 import { WorkspaceHelperService } from '../workspaces/workspace-helper.service';
 import { WidgetVersionService } from './services/widget-version.service';
 import { CreateBotDto } from './dto/create-bot.dto';
+import { CreateBotChannelDto, UpdateBotChannelDto } from './dto/bot-channel.dto';
 import { UpdateBotDto, LinkKnowledgeBaseDto } from './dto/update-bot.dto';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
+import { FilterBotDto, SortBotDto } from './dto/query-bot.dto';
 
 @Injectable()
 export class BotsService {
@@ -35,7 +37,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -110,7 +112,7 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-    } catch (error) {}
+    } catch (error) { }
 
     return savedBot;
   }
@@ -133,8 +135,8 @@ export class BotsService {
     sortOptions,
     paginationOptions,
   }: {
-    filterOptions?: any;
-    sortOptions?: any[];
+    filterOptions?: FilterBotDto | null;
+    sortOptions?: SortBotDto[] | null;
     paginationOptions?: { page: number; limit: number };
   }) {
     const query = this.botRepository
@@ -388,7 +390,6 @@ export class BotsService {
 
     if (options?.validated) {
       query.andWhere('channel.isActive = :isActive', { isActive: true });
-      // Ensure it has a connection linked (meaning it was verified)
       // query.andWhere('channel.connectionId IS NOT NULL');
     }
 
@@ -397,12 +398,7 @@ export class BotsService {
 
   async createBotChannel(
     botId: string,
-    dto: {
-      type: string;
-      name: string;
-      config?: Record<string, any>;
-      connectionId?: string;
-    },
+    dto: CreateBotChannelDto,
     userId: string,
   ) {
     const bot = await this.findOne(botId);
@@ -424,12 +420,7 @@ export class BotsService {
   async updateBotChannel(
     botId: string,
     channelId: string,
-    dto: {
-      name?: string;
-      config?: Record<string, any>;
-      isActive?: boolean;
-      connectionId?: string;
-    },
+    dto: UpdateBotChannelDto,
     userId: string,
   ) {
     const channel = await this.channelRepository.findOne({

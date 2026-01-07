@@ -144,8 +144,6 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                             <Calendar className="w-3 h-3" />
                             {formatDateTime(job.createdAt)}
                         </span>
-                        <span>•</span>
-                        <span className="font-mono">{job.id.substring(0, 6)}</span>
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 pb-4">

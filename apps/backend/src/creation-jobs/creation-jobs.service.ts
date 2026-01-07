@@ -32,7 +32,7 @@ export class CreationJobsService {
     job.status = CreationJobStatus.PENDING;
     job.creationToolId = createDto.creationToolId;
     job.inputData = createDto.inputData;
-    job.outputData = null;
+    job.outputData = undefined;
     job.progress = 0;
     job.createdBy = userId;
     job.workspaceId = workspaceId;
@@ -198,7 +198,7 @@ export class CreationJobsService {
 
   async completeJob(
     id: string,
-    resultData: any,
+    resultData?: Record<string, any>,
     status: CreationJobStatus = CreationJobStatus.COMPLETED,
     error?: string,
   ): Promise<void> {

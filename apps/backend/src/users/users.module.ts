@@ -1,5 +1,4 @@
-﻿import { Module, forwardRef, OnModuleInit } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+﻿import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { RelationalUserPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
@@ -20,4 +19,4 @@ const infrastructurePersistenceModule = (databaseConfig() as DatabaseConfig)
   providers: [UsersService],
   exports: [UsersService, infrastructurePersistenceModule],
 })
-export class UsersModule {}
+export class UsersModule { }

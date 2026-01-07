@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { ChannelConnectionEntity } from '../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
 import { CreateConnectionDto } from '../integrations/dto/create-connection.dto';
+import { UpdateConnectionDto } from './dto/update-connection.dto';
 import {
   ChannelConnectionStatus,
   ChannelType,
@@ -15,7 +16,7 @@ export class ChannelsService {
   constructor(
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+  ) { }
 
   async findAll(workspaceId?: string): Promise<ChannelConnectionEntity[]> {
     const where: FindOptionsWhere<ChannelConnectionEntity> = {};
@@ -90,7 +91,7 @@ export class ChannelsService {
 
   async update(
     id: string,
-    dto: { botId?: string | null; name?: string; metadata?: any },
+    dto: UpdateConnectionDto,
     workspaceId?: string,
   ): Promise<ChannelConnectionEntity> {
     const where: FindOptionsWhere<ChannelConnectionEntity> = { id };

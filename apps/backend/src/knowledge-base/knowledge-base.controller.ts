@@ -18,7 +18,10 @@ import {
   ApiOkResponse,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { KnowledgeBaseEntity } from './infrastructure/persistence/relational/entities/knowledge-base.entity';
+import {
+  KnowledgeBaseEntity,
+  KbDocumentEntity,
+} from './infrastructure/persistence/relational/entities/knowledge-base.entity';
 import { QueryKnowledgeBaseDto } from './dto/query-knowledge-base.dto';
 import {
   InfinityPaginationResponse,
@@ -36,6 +39,7 @@ import {
   BatchDeleteDto,
   BatchMoveDto,
 } from './dto/kb-management.dto';
+import { ChatWithKnowledgeBaseDto } from './dto/chat-with-kb.dto';
 import { KBFoldersService } from './services/kb-folders.service';
 import { KBDocumentsService } from './services/kb-documents.service';
 import { KBEmbeddingsService } from './services/kb-embeddings.service';
@@ -59,7 +63,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) {}
+  ) { }
 
   @Permissions('kb:List')
   @Get()
@@ -156,7 +160,7 @@ export class KnowledgeBaseController {
     const totalFoldersCount = allFolders.length;
     const docOffset = Math.max(0, foldersStartIndex - totalFoldersCount);
 
-    let documents: any[] = [];
+    let documents: KbDocumentEntity[] = [];
     let totalDocs = 0;
 
     // Only fetch documents if we have space left or if we are past the folder region
@@ -441,17 +445,7 @@ export class KnowledgeBaseController {
   @ApiOperation({ summary: 'Chat with knowledge base using RAG' })
   async chatWithKnowledgeBase(
     @Request() req,
-    @Body()
-    body: {
-      message: string;
-      botId?: string;
-      knowledgeBaseIds?: string[];
-      conversationHistory?: Array<{
-        role: 'user' | 'assistant';
-        content: string;
-      }>;
-      model?: string;
-    },
+    @Body() body: ChatWithKnowledgeBaseDto,
   ) {
     const userId = req.user.id;
 

@@ -9,7 +9,7 @@ export class CreationJobsMapper {
     domainEntity.status = raw.status;
     domainEntity.creationToolId = raw.creationToolId;
     domainEntity.inputData = raw.inputData;
-    domainEntity.outputData = raw.outputData;
+    domainEntity.outputData = raw.outputData || undefined;
     domainEntity.progress = raw.progress;
     domainEntity.createdBy = raw.createdBy;
     domainEntity.workspaceId = raw.workspaceId;
@@ -32,7 +32,7 @@ export class CreationJobsMapper {
     persistenceEntity.status = domainEntity.status;
     persistenceEntity.creationToolId = domainEntity.creationToolId;
     persistenceEntity.inputData = domainEntity.inputData;
-    persistenceEntity.outputData = domainEntity.outputData;
+    persistenceEntity.outputData = domainEntity.outputData || null;
     persistenceEntity.progress = domainEntity.progress;
     persistenceEntity.createdBy = domainEntity.createdBy;
     persistenceEntity.workspaceId = domainEntity.workspaceId;

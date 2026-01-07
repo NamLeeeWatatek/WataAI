@@ -13,7 +13,12 @@ import {
   MessageEntity,
   MessageFeedbackEntity,
 } from './infrastructure/persistence/relational/entities/conversation.entity';
-import { ConversationStatus, MessageRole } from './conversations.enum';
+import {
+  ConversationStatus,
+  MessageRole,
+  ConversationSource,
+  ConversationType,
+} from './conversations.enum';
 import { ContactEntity } from './infrastructure/persistence/relational/entities/contact.entity';
 import { KBRagService } from '../knowledge-base/services/kb-rag.service';
 import {
@@ -52,14 +57,14 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) {}
+  ) { }
 
   async create(
     createDto: CreateConversationDto & {
       workspaceId?: string;
-      source?: any;
-      type?: any;
-      status?: any;
+      source?: ConversationSource;
+      type?: ConversationType;
+      status?: ConversationStatus;
     },
   ) {
     // Validate channel if provided
@@ -83,14 +88,16 @@ export class ConversationsService {
     }
 
     const conversation = this.conversationRepository.create({
-      ...createDto,
-      workspaceId: createDto.workspaceId,
+      botId: createDto.botId,
+      channelId: createDto.channelId,
       channelType: createDto.channelType ?? 'web',
-      source: createDto.source ?? 'web',
-      type: createDto.type ?? 'support',
+      workspaceId: createDto.workspaceId,
+      source: createDto.source ?? ConversationSource.WEB,
+      type: createDto.source === ConversationSource.WIDGET ? ConversationType.SUPPORT : ConversationType.SUPPORT, // Logic handling
       status: ConversationStatus.ACTIVE,
       contactId,
-      metadata: createDto.metadata || {},
+      metadata: createDto.metadata ?? {},
+      externalId: createDto.externalId,
     });
     return this.conversationRepository.save(conversation);
   }
@@ -245,7 +252,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (error) {}
+        } catch (error) { }
 
         return {
           ...item,

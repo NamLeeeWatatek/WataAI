@@ -5,7 +5,9 @@ import {
   IsBoolean,
   IsUUID,
   IsArray,
+  IsEnum,
 } from 'class-validator';
+import { MessageRole } from '../conversations.enum';
 
 export class CreateAiConversationDto {
   @ApiProperty({ example: 'My Chat with AI' })
@@ -67,9 +69,27 @@ export class UpdateAiConversationDto {
   @IsOptional()
   @IsArray()
   messages?: Array<{
-    role: 'user' | 'assistant' | 'system';
+    role: MessageRole;
     content: string;
     timestamp: string;
     metadata?: any;
   }>;
+}
+
+export class AddAiMessageDto {
+  @ApiProperty({ enum: MessageRole })
+  @IsEnum(MessageRole)
+  role: MessageRole;
+
+  @ApiProperty({ example: 'Hello AI' })
+  @IsString()
+  content: string;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00.000Z' })
+  @IsString()
+  timestamp: string;
+
+  @ApiPropertyOptional({ type: Object })
+  @IsOptional()
+  metadata?: Record<string, any>;
 }

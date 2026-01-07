@@ -2,6 +2,23 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationsService } from '../notifications.service';
 
+export interface CreationJobCompletedEvent {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  inputData: {
+    prompt?: string;
+    [key: string]: any;
+  };
+}
+
+export interface CreationJobFailedEvent {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  error?: string;
+}
+
 @Injectable()
 export class NotificationEventListener {
   private readonly logger = new Logger(NotificationEventListener.name);
@@ -9,7 +26,7 @@ export class NotificationEventListener {
   constructor(private readonly notificationsService: NotificationsService) { }
 
   @OnEvent('creation-job.completed')
-  async handleCreationJobCompleted(payload: any) {
+  async handleCreationJobCompleted(payload: CreationJobCompletedEvent) {
     this.logger.log(
       `Handling creation-job.completed event for job ${payload.id}`,
     );
@@ -31,13 +48,13 @@ export class NotificationEventListener {
       });
     } catch (error) {
       this.logger.error(
-        `Error handling creation-job.completed: ${error.message}`,
+        `Error handling creation-job.completed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
 
   @OnEvent('creation-job.failed')
-  async handleCreationJobFailed(payload: any) {
+  async handleCreationJobFailed(payload: CreationJobFailedEvent) {
     this.logger.log(`Handling creation-job.failed event for job ${payload.id}`);
     try {
       await this.notificationsService.create({
@@ -53,7 +70,7 @@ export class NotificationEventListener {
         },
       });
     } catch (error) {
-      this.logger.error(`Error handling creation-job.failed: ${error.message}`);
+      this.logger.error(`Error handling creation-job.failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

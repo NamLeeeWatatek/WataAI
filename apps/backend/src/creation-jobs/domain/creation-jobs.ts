@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CreationTool } from '../../creation-tools/domain/creation-tool';
 
 export enum CreationJobStatus {
   PENDING = 'PENDING',
@@ -20,11 +21,11 @@ export class CreationJob {
   @ApiProperty()
   creationToolId: string;
 
-  @ApiProperty()
-  inputData: any;
+  @ApiProperty({ type: Object })
+  inputData: Record<string, any>;
 
-  @ApiProperty({ required: false })
-  outputData?: any;
+  @ApiProperty({ required: false, type: Object })
+  outputData?: Record<string, any>;
 
   @ApiProperty()
   progress: number;
@@ -35,8 +36,8 @@ export class CreationJob {
   @ApiProperty({ required: false })
   workspaceId?: string;
 
-  @ApiProperty({ required: false })
-  creationTool?: any;
+  @ApiProperty({ required: false, type: () => CreationTool })
+  creationTool?: CreationTool;
 
   @ApiProperty()
   createdAt: Date;

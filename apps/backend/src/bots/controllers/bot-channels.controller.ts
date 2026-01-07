@@ -17,21 +17,19 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiCreatedResponse,
-  ApiOkResponse,
   ApiQuery,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { BotsService } from '../bots.service';
-
 import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.guard';
+import { CreateBotChannelDto, UpdateBotChannelDto } from '../dto/bot-channel.dto';
 
 @ApiTags('Bot Channels')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/channels', version: '1' })
 export class BotChannelsController {
-  constructor(private readonly botsService: BotsService) {}
+  constructor(private readonly botsService: BotsService) { }
 
   @Get()
   @ApiOperation({ summary: 'Get bot channels' })
@@ -48,7 +46,11 @@ export class BotChannelsController {
   @ApiOperation({ summary: 'Create bot channel' })
   @ApiParam({ name: 'id', type: String, description: 'Bot ID' })
   @HttpCode(HttpStatus.CREATED)
-  createBotChannel(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  createBotChannel(
+    @Param('id') id: string,
+    @Body() dto: CreateBotChannelDto,
+    @Request() req,
+  ) {
     return this.botsService.createBotChannel(id, dto, req.user.id);
   }
 
@@ -59,7 +61,7 @@ export class BotChannelsController {
   updateBotChannel(
     @Param('id') id: string,
     @Param('channelId') channelId: string,
-    @Body() dto: any,
+    @Body() dto: UpdateBotChannelDto,
     @Request() req,
   ) {
     return this.botsService.updateBotChannel(id, channelId, dto, req.user.id);
