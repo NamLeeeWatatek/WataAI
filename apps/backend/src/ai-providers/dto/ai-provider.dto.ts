@@ -1,4 +1,5 @@
-﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+﻿import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
@@ -7,7 +8,29 @@ import {
   IsBoolean,
   IsArray,
   IsObject,
+  ValidateNested,
+  IsUrl,
 } from 'class-validator';
+
+export class AiConfigDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  apiKey?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString() // We don't use @IsUrl because it might be a partial path or localhost
+  baseUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  organizationId?: string;
+
+  // Allow other properties but known ones are improved
+  [key: string]: any;
+}
 
 export class CreateUserAiProviderConfigDto {
   @ApiProperty({ description: 'UUID of the AI provider' })
@@ -22,12 +45,13 @@ export class CreateUserAiProviderConfigDto {
 
   @ApiProperty({
     description: 'Configuration object for the provider',
-    type: 'object',
-    additionalProperties: true,
+    type: AiConfigDto,
   })
   @IsNotEmpty()
   @IsObject()
-  config: Record<string, any>; // e.g., { apiKey: "sk-...", baseUrl: "https://..." }
+  @ValidateNested()
+  @Type(() => AiConfigDto)
+  config: AiConfigDto;
 
   @ApiPropertyOptional({
     type: [String],
@@ -48,12 +72,13 @@ export class UpdateUserAiProviderConfigDto {
 
   @ApiPropertyOptional({
     description: 'Updated configuration object for the provider',
-    type: 'object',
-    additionalProperties: true,
+    type: AiConfigDto,
   })
   @IsOptional()
   @IsObject()
-  config?: Record<string, any>;
+  @ValidateNested()
+  @Type(() => AiConfigDto)
+  config?: AiConfigDto;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
@@ -80,12 +105,13 @@ export class CreateWorkspaceAiProviderConfigDto {
 
   @ApiProperty({
     description: 'Configuration object for the provider',
-    type: 'object',
-    additionalProperties: true,
+    type: AiConfigDto,
   })
   @IsNotEmpty()
   @IsObject()
-  config: Record<string, any>;
+  @ValidateNested()
+  @Type(() => AiConfigDto)
+  config: AiConfigDto;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
@@ -102,12 +128,13 @@ export class UpdateWorkspaceAiProviderConfigDto {
 
   @ApiPropertyOptional({
     description: 'Updated configuration object for the provider',
-    type: 'object',
-    additionalProperties: true,
+    type: AiConfigDto,
   })
   @IsOptional()
   @IsObject()
-  config?: Record<string, any>;
+  @ValidateNested()
+  @Type(() => AiConfigDto)
+  config?: AiConfigDto;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
@@ -124,19 +151,20 @@ export class UpdateWorkspaceAiProviderConfigDto {
 export class VerifyApiKeyDto {
   @ApiProperty({
     description: 'Configuration to verify',
-    type: 'object',
-    additionalProperties: true,
+    type: AiConfigDto,
   })
   @IsNotEmpty()
   @IsObject()
-  config: Record<string, any>;
+  @ValidateNested()
+  @Type(() => AiConfigDto)
+  config: AiConfigDto;
 
   @ApiProperty({
     enum: ['openai', 'anthropic', 'google', 'azure', 'ollama', 'custom'],
   })
   @IsNotEmpty()
   @IsString()
-  providerName: string; // Now it's the provider name for verification
+  providerName: string;
 }
 
 export class UpdateSystemAiSettingsDto {

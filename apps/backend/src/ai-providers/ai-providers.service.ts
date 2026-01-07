@@ -35,7 +35,7 @@ export class AiProvidersService {
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
-  ) {}
+  ) { }
 
   /**
    * Encrypt an API key
@@ -471,23 +471,27 @@ export class AiProvidersService {
 
   private async getApiKey(providerKey: string): Promise<string> {
     // 1. Check System Settings (DB)
-    // const settings = await this.getSystemAiSettings(); // TODO: Add keys to system settings
+    const settings = await this.systemAiSettingsRepository.findSystemSettings();
+    // const config = settings?.encryptedConfig || {};
+    // Assuming keys might be stored in 'apiKeys' object in config or similar, 
+    // but typically we'd decrypt them. 
+    // For now, since we don't have a standardized System Key storage structure defined in this file,
+    // we will strictly DISABLE the env var fallback to prevent unauthorized usage of system level keys.
 
-    // 2. Fallback to Env Vars (via ConfigService if available, or process.env for now)
+    // If you want to enable System Keys, they must be strictly managed in SystemAiSettings
+    // and explicitly retrieved here after checking permissions (which should be done at Controller level).
+
+    /* 
+    // DANGEROUS: Auto-fallback to env vars allows any user to use system quota
     const key = providerKey.toUpperCase();
-    let apiKey = '';
+    if (key === 'GOOGLE') return process.env.GOOGLE_API_KEY || '';
+    if (key === 'OPENAI') return process.env.OPENAI_API_KEY || '';
+    if (key === 'ANTHROPIC') return process.env.ANTHROPIC_API_KEY || '';
+    */
 
-    if (key === 'GOOGLE') apiKey = process.env.GOOGLE_API_KEY || '';
-    if (key === 'OPENAI') apiKey = process.env.OPENAI_API_KEY || '';
-    if (key === 'ANTHROPIC') apiKey = process.env.ANTHROPIC_API_KEY || '';
-
-    if (!apiKey) {
-      this.logger.error(`Missing API Key for provider: ${providerKey}`);
-      throw new InternalServerErrorException(
-        `Missing API configuration for ${providerKey}`,
-      );
-    }
-
-    return apiKey;
+    this.logger.error(`Missing API Key for provider: ${providerKey} (Env fallback disabled for security)`);
+    throw new InternalServerErrorException(
+      `Missing API configuration for ${providerKey}. Please configure your own API key in Settings.`,
+    );
   }
 }

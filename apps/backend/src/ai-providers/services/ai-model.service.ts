@@ -235,6 +235,9 @@ export class AiModelService {
       if (key === 'ollama') {
         let url = config.baseURL || 'http://127.0.0.1:11434';
 
+        // SSRF Protection: Validate URL
+        this.validateBaseUrl(url);
+
         // Helper to try fetching
         const checkOllama = async (checkUrl: string) => {
           this.logger.debug(`Verifying Ollama connection at: ${checkUrl}`);
@@ -538,5 +541,24 @@ export class AiModelService {
       improvements,
       suggestions,
     };
+  }
+
+  private validateBaseUrl(url: string): void {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname;
+
+      // Block access to AWS/GCP Metadata services
+      if (hostname === '169.254.169.254') {
+        throw new BadRequestException('Access to metadata services is restricted.');
+      }
+
+      // Additional block list can be added here
+      // e.g. internal range 10.x.x.x etc, but that might be valid for self-hosted LLMs.
+
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      // Invalid URL format
+    }
   }
 }

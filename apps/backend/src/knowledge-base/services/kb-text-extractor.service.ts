@@ -78,7 +78,12 @@ export class KBTextExtractorService {
     return new Promise((resolve, reject) => {
       const pdfParser = new PDFParser();
 
+      const timeoutId = setTimeout(() => {
+        reject(new Error('pdf2json extraction timed out after 60s'));
+      }, 60000);
+
       pdfParser.on('pdfParser_dataError', (errData: any) => {
+        clearTimeout(timeoutId);
         const parserError =
           errData?.parserError || errData?.message || String(errData);
         this.logger.error(`PDF parsing error: ${parserError}`);
@@ -86,6 +91,7 @@ export class KBTextExtractorService {
       });
 
       pdfParser.on('pdfParser_dataReady', (pdfData: PDFData) => {
+        clearTimeout(timeoutId);
         try {
           let text = '';
 
@@ -128,84 +134,122 @@ export class KBTextExtractorService {
           this.logger.log(`PDF extraction completed: ${text.length} chars`);
           resolve(text);
         } catch (error) {
+          clearTimeout(timeoutId);
           this.logger.error(`PDF text processing error: ${error.message}`);
           reject(error);
         }
       });
 
-      pdfParser.parseBuffer(buffer);
+      try {
+        pdfParser.parseBuffer(buffer);
+      } catch (err) {
+        clearTimeout(timeoutId);
+        reject(err);
+      }
     });
   }
 
   private async extractFromPDF(buffer: Buffer): Promise<string> {
+    const PDF_MAGIC_BYTES = '%PDF';
+    const header = buffer.subarray(0, 1024).toString('ascii'); // Check first 1KB
+
+    if (!header.includes(PDF_MAGIC_BYTES)) {
+      this.logger.error(
+        `❌ Invalid PDF header. First 20 chars: ${buffer
+          .subarray(0, 20)
+          .toString('utf-8')}`,
+      );
+      this.logger.error(
+        `❌ Hex dump: ${buffer.subarray(0, 20).toString('hex')}`,
+      );
+      throw new Error('Invalid PDF format: Missing %PDF header');
+    }
+
     try {
       this.logger.log('Using pdfjs-dist for PDF extraction (Primary)');
-      // Use pdfjs-dist first as it handles encoded fonts/cmaps better
-      const loadingTask = pdfjsLib.getDocument({
-        data: new Uint8Array(buffer),
-        useSystemFonts: true,
+
+      // Set a timeout for extraction to prevent infinite hanging
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('PDF extraction timed out after 60s'));
+        }, 60000); // 60 seconds timeout
       });
 
-      const pdfDocument = await loadingTask.promise;
-      const textPages: string[] = [];
+      const extractionPromise = (async () => {
+        // Use pdfjs-dist first as it handles encoded fonts/cmaps better
+        // Note: loadingTask is a weird object in recent pdfjs-dist versions for Node
+        const loadingTask = pdfjsLib.getDocument({
+          data: new Uint8Array(buffer),
+          useSystemFonts: false, // process.env.NODE_ENV !== 'production', // Safer to disable in some envs
+          disableFontFace: true, // Disable font face loading to improve stability on servers
+          verbosity: 0, // Suppress warnings
+        });
 
-      for (let i = 1; i <= pdfDocument.numPages; i++) {
-        const page = await pdfDocument.getPage(i);
-        const textContent = await page.getTextContent();
-        const items = textContent.items as PDFTextItem[];
+        const pdfDocument = await loadingTask.promise;
+        const textPages: string[] = [];
 
-        if (items.length === 0) continue;
+        for (let i = 1; i <= pdfDocument.numPages; i++) {
+          const page = await pdfDocument.getPage(i);
+          const textContent = await page.getTextContent();
+          const items = textContent.items as PDFTextItem[];
 
-        // Group items by their vertical position (Y coordinate)
-        const lines: Map<number, PDFTextItem[]> = new Map();
-        const yThreshold = 2;
+          if (items.length === 0) continue;
 
-        for (const item of items) {
-          const y = Math.round(item.transform[5] / yThreshold) * yThreshold;
-          if (!lines.has(y)) {
-            lines.set(y, []);
-          }
-          lines.get(y)!.push(item);
-        }
+          // Group items by their vertical position (Y coordinate)
+          const lines: Map<number, PDFTextItem[]> = new Map();
+          const yThreshold = 2;
 
-        const sortedY = Array.from(lines.keys()).sort((a, b) => b - a);
-        let pageText = '';
-
-        for (const y of sortedY) {
-          const lineItems = lines.get(y)!;
-          lineItems.sort((a, b) => a.transform[4] - b.transform[4]);
-
-          let lineText = '';
-          let lastX = -1;
-          let lastWidth = 0;
-
-          for (const item of lineItems) {
-            if (lastX !== -1 && item.transform[4] - (lastX + lastWidth) > 3) {
-              lineText += ' ';
+          for (const item of items) {
+            const y = Math.round(item.transform[5] / yThreshold) * yThreshold;
+            if (!lines.has(y)) {
+              lines.set(y, []);
             }
-            lineText += item.str;
-            lastX = item.transform[4];
-            lastWidth = item.width || 0;
+            lines.get(y)!.push(item);
           }
-          pageText += lineText + '\n';
+
+          const sortedY = Array.from(lines.keys()).sort((a, b) => b - a);
+          let pageText = '';
+
+          for (const y of sortedY) {
+            const lineItems = lines.get(y)!;
+            lineItems.sort((a, b) => a.transform[4] - b.transform[4]);
+
+            let lineText = '';
+            let lastX = -1;
+            let lastWidth = 0;
+
+            for (const item of lineItems) {
+              if (lastX !== -1 && item.transform[4] - (lastX + lastWidth) > 3) {
+                lineText += ' ';
+              }
+              lineText += item.str;
+              lastX = item.transform[4];
+              lastWidth = item.width || 0;
+            }
+            pageText += lineText + '\n';
+          }
+          textPages.push(pageText.trim());
         }
-        textPages.push(pageText.trim());
-      }
 
-      let fullText = textPages.join('\n\n').trim();
-      fullText = fullText.normalize('NFC');
+        let fullText = textPages.join('\n\n').trim();
+        fullText = fullText.normalize('NFC');
 
-      fullText = fullText
-        .replace(/[ \t]+/g, ' ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+        fullText = fullText
+          .replace(/[ \t]+/g, ' ')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
 
-      if (fullText.length > 50) {
-        this.logger.log(
-          `PDF extraction completed (pdfjs-dist): ${fullText.length} chars`,
-        );
-        return MarkdownProcessorUtil.cleanMarkdown(fullText);
-      }
+        if (fullText.length > 0) {
+          this.logger.log(
+            `PDF extraction completed (pdfjs-dist): ${fullText.length} chars`,
+          );
+          return MarkdownProcessorUtil.cleanMarkdown(fullText);
+        } else {
+          throw new Error('Extracted text is empty');
+        }
+      })();
+
+      return await Promise.race([extractionPromise, timeoutPromise]);
     } catch (error) {
       this.logger.warn(
         `pdfjs-dist failed, falling back to pdf2json: ${error.message}`,

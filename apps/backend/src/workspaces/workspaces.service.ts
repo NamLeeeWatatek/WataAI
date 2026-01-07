@@ -25,7 +25,7 @@ export class WorkspacesService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private memberRepository: Repository<WorkspaceMemberEntity>,
-  ) {}
+  ) { }
 
   async create(createDto: CreateWorkspaceDto, ownerId: string) {
     const existing = await this.workspaceRepository.findOne({
@@ -194,7 +194,7 @@ export class WorkspacesService {
     return this.memberRepository.save(member);
   }
 
-  // Internal method for Invitation Service
+  // INTERNAL USE ONLY - Do not expose to Controller
   async addDirectMember(workspaceId: string, userId: string, roleId: number) {
     const existing = await this.memberRepository.findOne({
       where: { workspaceId, userId },
