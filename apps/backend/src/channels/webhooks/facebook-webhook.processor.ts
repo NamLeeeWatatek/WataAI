@@ -162,9 +162,7 @@ export class FacebookWebhookProcessor extends BaseMessageProcessor<FacebookWebho
 
     const botId = channel.metadata?.botId as string | undefined;
 
-    if (!botId) {
-      throw new Error(`No botId configured for channel: ${channel.id}`);
-    }
+
 
     let contactName = 'Facebook User';
     let contactAvatar: string | undefined;

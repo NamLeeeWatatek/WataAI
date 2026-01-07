@@ -46,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) {}
+  ) { }
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);
@@ -142,20 +142,25 @@ export class KBDocumentsService {
     }
 
     const sanitizedName = sanitizeText(createDto.name);
-    const sanitizedContent = extractCleanText(
+
+    // Only extract/sanitize content if provided (e.g. pasted text), 
+    // otherwise it will be handled by background worker for files
+    const sanitizedContent = createDto.content ? extractCleanText(
       createDto.content,
       createDto.mimeType,
-    );
+    ) : '';
+
     const sanitizedMetadata = sanitizeMetadata(createDto.metadata);
 
-    if (!sanitizedName || !sanitizedContent) {
+    // If it's a direct text paste (no fileUrl), content is required immediately
+    if (!createDto.fileUrl && (!sanitizedName || !sanitizedContent)) {
       throw new Error(
         'Document name and content cannot be empty after sanitization',
       );
     }
 
     this.logger.log(
-      `Creating document: ${sanitizedName} (${sanitizedContent.length} chars)`,
+      `Creating document: ${sanitizedName} (Initial content length: ${sanitizedContent.length})`,
     );
 
     const document = this.documentRepository.create({
@@ -163,7 +168,7 @@ export class KBDocumentsService {
       workspaceId: kb.workspaceId,
       title: sanitizedName,
       name: sanitizedName,
-      content: sanitizedContent.length < 50000 ? sanitizedContent : '',
+      content: sanitizedContent,
       metadata: sanitizedMetadata,
       fileType: createDto.fileType || 'text',
       fileSize: String(sanitizedContent.length),

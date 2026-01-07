@@ -12,6 +12,7 @@ import { KBEmbeddingsService } from './kb-embeddings.service';
 import { KBProcessingQueueService } from './kb-processing-queue.service';
 import { KBManagementService } from './kb-management.service';
 import { KbProcessingStatus } from '../knowledge-base.enum';
+import { KBTextExtractorService } from './kb-text-extractor.service';
 import { sanitizeText, sanitizeMetadata } from '../utils/text-sanitizer';
 
 @Processor('kb-processing')
@@ -26,6 +27,7 @@ export class KBProcessor extends WorkerHost {
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly processingQueue: KBProcessingQueueService,
     private readonly kbManagementService: KBManagementService,
+    private readonly textExtractorService: KBTextExtractorService,
   ) {
     super();
   }
@@ -66,15 +68,57 @@ export class KBProcessor extends WorkerHost {
       document.processingStatus = KbProcessingStatus.PROCESSING;
       await this.documentRepository.save(document);
 
-      // We rely on content being already extracted and stored in 'content' field for manual/uploaded docs
-      // or we might need to fetch it from S3 if it's too large (future proofing)
-      const content = document.content;
+      let content = document.content;
 
-      if (!content && document.fileUrl) {
-        // Fallback or extra extraction logic could go here
-        this.logger.warn(
-          `Document ${documentId} has no content but has fileUrl. Extraction should have happened before queuing.`,
-        );
+      // If document has no content but has a file URL, we need to extract it now
+      if ((!content || content.length === 0) && document.fileUrl) {
+        this.logger.log(`📥 Downloading file for extraction: ${document.fileUrl}`);
+
+        try {
+          // 1. Get download URL (could be S3 signed URL or local)
+          // In current Files implementation, fileUrl in DB is mostly the signed URL or identifier
+          // We can use filesService.generateDownloadUrl logic in reverse or just use what we have if it's http
+
+          let buffer: Buffer;
+
+          if (document.fileUrl.startsWith('http')) {
+            const response = await (await import('axios')).default.get(document.fileUrl, {
+              responseType: 'arraybuffer'
+            });
+            buffer = Buffer.from(response.data);
+          } else {
+            // Fallback for non-http paths (e.g. local or just key)
+            // This might need adjustment based on how FilesService stores paths
+            throw new Error(`Cannot download file with URL: ${document.fileUrl}`);
+          }
+
+          // 2. Extract Text
+          const ext = document.name.split('.').pop()?.toLowerCase();
+          // Simple mime inference if missing (though usually saved in mimeType)
+          let mimeType = document.mimeType || 'application/octet-stream';
+          if (!document.mimeType) {
+            if (ext === 'pdf') mimeType = 'application/pdf';
+            else if (ext === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            else if (ext === 'txt') mimeType = 'text/plain';
+          }
+
+          this.logger.log(`📄 Extracting text from downloaded file (${buffer.length} bytes, ${mimeType})`);
+          content = await this.textExtractorService.extractText(buffer, mimeType);
+
+          // Update document with extracted content
+          document.content = content;
+          document.metadata = {
+            ...document.metadata,
+            extractedAt: new Date().toISOString(),
+            extractedLength: content.length,
+          };
+          await this.documentRepository.save(document);
+          this.logger.log(`✅ Text extracted and saved to DB (${content.length} chars)`);
+
+        } catch (extractError) {
+          this.logger.error(`❌ Background extraction failed: ${extractError.message}`);
+          throw extractError;
+        }
       }
 
       if (!content || content.length === 0) {

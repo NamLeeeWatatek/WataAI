@@ -187,12 +187,7 @@ export default function KnowledgeBaseDetailPage() {
 
     return (
         <div className="h-full flex flex-col space-y-6">
-            <div className="flex items-center gap-2 mb-2">
-                <Button variant="ghost" size="sm" onClick={() => router.push('/knowledge-base')} className="text-muted-foreground hover:text-foreground">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back
-                </Button>
-            </div>
+
 
             <PageHeader
                 title={kb.name}

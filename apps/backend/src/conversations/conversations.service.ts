@@ -784,19 +784,23 @@ Message: ${currentMessage}`;
   }
 
   async findOrCreateByExternalId(
-    botId: string,
+    botId: string | null | undefined,
     externalId: string,
     channelType: string,
     contactInfo?: { name?: string; avatar?: string },
     workspaceId?: string,
   ) {
     let conversation = await this.conversationRepository.findOne({
-      where: { botId, externalId, channelType },
+      where: {
+        botId: botId || undefined, // Handle null/undefined
+        externalId,
+        channelType,
+      } as any, // Type cast to avoid strict check issues if needed, or rely on optional
     });
 
     if (!conversation) {
       conversation = await this.create({
-        botId,
+        botId: botId || undefined,
         externalId,
         channelType,
         workspaceId,
@@ -811,7 +815,7 @@ Message: ${currentMessage}`;
   }
 
   async findOrCreateFromWebhook(params: {
-    botId: string;
+    botId?: string | null;
     channelId: string;
     channelType: string;
     externalId: string;
@@ -824,9 +828,9 @@ Message: ${currentMessage}`;
     let conversation = await this.conversationRepository.findOne({
       where: {
         externalId: params.externalId,
-        botId: params.botId,
+        botId: params.botId || undefined,
         channelType: params.channelType,
-      },
+      } as any,
       order: {
         createdAt: 'DESC',
       },

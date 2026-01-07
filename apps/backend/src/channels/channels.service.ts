@@ -106,7 +106,7 @@ export class ChannelsService {
 
     // Update fields
     if (dto.botId !== undefined) {
-      // connection.botId = dto.botId;
+      connection.metadata = { ...connection.metadata, botId: dto.botId };
     }
     if (dto.name !== undefined) {
       connection.name = dto.name;

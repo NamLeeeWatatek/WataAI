@@ -22,10 +22,10 @@ import {
 } from '../conversations.enum';
 
 export class CreateConversationDto {
-  @ApiProperty({ description: 'Bot ID' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ description: 'Bot ID' })
+  @IsOptional()
   @IsUUID()
-  botId: string;
+  botId?: string | null;
 
   @ApiPropertyOptional({
     enum: ['web', 'messenger', 'telegram', 'instagram', 'whatsapp', 'api'],
