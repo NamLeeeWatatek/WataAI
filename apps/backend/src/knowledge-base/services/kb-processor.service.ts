@@ -83,9 +83,27 @@ export class KBProcessor extends WorkerHost {
 
           if (document.fileUrl.startsWith('http')) {
             const response = await (await import('axios')).default.get(document.fileUrl, {
-              responseType: 'arraybuffer'
+              responseType: 'arraybuffer',
+              validateStatus: () => true, // Don't throw on error status yet so we can log it
             });
+
+            this.logger.log(`📥 Download status: ${response.status} ${response.statusText}`);
+            this.logger.log(`📥 Content-Type: ${response.headers['content-type']}`);
+
+            if (response.status >= 400) {
+              this.logger.error(`❌ Failed to download file. Status: ${response.status}`);
+              // Accessing data from arraybuffer might be tricky if it's text, but Buffer.from handles it
+              const errorBody = Buffer.from(response.data).toString('utf8').slice(0, 200);
+              this.logger.error(`❌ Response body preview: ${errorBody}`);
+              throw new Error(`Failed to download file: Server returned ${response.status}`);
+            }
+
             buffer = Buffer.from(response.data);
+
+            // Debug: Check if it looks like a PDF
+            const preview = buffer.toString('utf8', 0, 50);
+            this.logger.log(`📥 File header preview (hex): ${buffer.toString('hex', 0, 20)}`);
+            this.logger.log(`📥 File header preview (text): ${preview}`);
           } else {
             // Fallback for non-http paths (e.g. local or just key)
             // This might need adjustment based on how FilesService stores paths
