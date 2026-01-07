@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axiosClient from '@/lib/axios-client';
 import { FormField } from '@/lib/api/creation-tools';
+import { useCallback } from 'react';
 
 export interface DynamicOption {
     label: string;
@@ -8,10 +9,70 @@ export interface DynamicOption {
     [key: string]: any;
 }
 
+interface ChannelMetadata {
+    pages?: Array<{
+        id: string;
+        name: string;
+        [key: string]: any;
+    }>;
+    [key: string]: any;
+}
+
+interface Channel {
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    metadata?: ChannelMetadata;
+}
+
 export function useDynamicOptions(field: FormField) {
     const optionsConfig = typeof field.options === 'string' && field.options.startsWith('dynamic:')
         ? field.options.replace('dynamic:', '')
         : (field.type === 'channel-select' || field.type === 'channel-selector' ? 'channels' : null);
+
+    const selectFn = useCallback((data: any[]) => {
+        if (!optionsConfig) return [];
+
+        if (optionsConfig === 'channels') {
+            // Professional transformation with TanStack Query 'select'
+            // Flattens channels and their sub-pages into a single selectable list
+            return data.flatMap((channel: Channel) => {
+                // If channel has pages in metadata (e.g. Facebook), expand them
+                if (channel.metadata?.pages && Array.isArray(channel.metadata.pages) && channel.metadata.pages.length > 0) {
+                    return channel.metadata.pages.map((page) => ({
+                        // Base properties first
+                        ...page,
+                        // Overrides
+                        label: `${page.name} (${channel.name})`,
+                        value: `${channel.id}:${page.id}`, // Composite ID
+                        id: `${channel.id}:${page.id}`,
+                        type: channel.type,
+                        // Extra metadata
+                        originalName: channel.name,
+                        isPage: true,
+                        pageId: page.id,
+                        baseChannelId: channel.id
+                    }));
+                }
+
+                // Default: Return the channel itself as a target
+                return [{
+                    ...channel,
+                    label: channel.name || channel.type,
+                    value: channel.id,
+                    // Ensure consistent shape if needed, or allow loose shape since consumer checks types
+                    isPage: false,
+                    originalName: channel.name,
+                    baseChannelId: channel.id,
+                    pageId: undefined as unknown as string // Force compatibility for now, or better yet, simply omit if the consuming code handles it.
+                }];
+            });
+        }
+
+        // Default pass-through for other dynamic types (e.g. ai-models)
+        return data;
+    }, [optionsConfig]);
 
     const { data: options = [], isLoading, error } = useQuery({
         queryKey: ['dynamic-options', field.name, optionsConfig],
@@ -20,17 +81,17 @@ export function useDynamicOptions(field: FormField) {
 
             if (optionsConfig.startsWith('ai-models:')) {
                 const typeFilter = optionsConfig.split(':')[1];
-                // Cast to unknown then any[] because axios interceptor unwraps the response
                 const response = await axiosClient.get<any[]>(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
                 return response as unknown as any[];
             } else if (optionsConfig === 'channels') {
-                const response = await axiosClient.get<any[]>('/channels/');
-                return response as unknown as any[];
+                const response = await axiosClient.get<Channel[]>('/channels/');
+                return response as unknown as Channel[];
             }
             return [];
         },
+        select: selectFn, // Transformation happens here, memoized by TanStack Query
         enabled: !!optionsConfig,
-        staleTime: 5 * 60 * 1000, // 5 minutes cache
+        staleTime: 5 * 60 * 1000,
     });
 
     return { options, isLoading, error, optionsConfig };

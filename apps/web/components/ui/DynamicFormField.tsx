@@ -31,11 +31,12 @@ interface OptionItem {
     [key: string]: any
 }
 
-// TODO: Move ChannelSelector to its own file if it grows, keeping inline for now as it shares types
 function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps) {
     const { options: dynamicOptions } = useDynamicOptions(field as unknown as FormField);
 
-    const activeChannels = dynamicOptions.filter((c: any) => c.status === 'active' || c.status === 'connected');
+    const activeChannels = dynamicOptions.filter((c: any) =>
+        c.status === 'active' || c.status === 'connected' || c.isPage === true
+    );
     const selectedValues: string[] = Array.isArray(value) ? value : (value ? [value] : []);
 
     const getPlatformIcon = (type: string) => {
@@ -60,14 +61,19 @@ function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps)
                         <div className="flex flex-wrap gap-1">
                             {selectedValues.length > 0 ? (
                                 selectedValues.map((val) => {
-                                    const platformOpt = (field.options as OptionItem[])?.find((o) => o.value === val)
+                                    const platformOpt = activeChannels.find((o) => o.id === val);
+                                    // Fallback to finding by original ID if not found (backward compatibility)
+                                    const label = platformOpt
+                                        ? platformOpt.name
+                                        : ((field.options as OptionItem[])?.find((o) => o.value === val)?.label || val);
+
                                     return (
                                         <Badge
                                             key={val}
                                             variant="secondary"
                                             className="bg-primary/10 text-primary border-primary/20"
                                         >
-                                            {platformOpt?.label || val}
+                                            {label}
                                         </Badge>
                                     )
                                 })
@@ -79,7 +85,7 @@ function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps)
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto">
-                    {dynamicOptions.map((channel: any) => {
+                    {activeChannels.map((channel: any) => {
                         const isSelected = selectedValues.includes(channel.id)
                         return (
                             <DropdownMenuCheckboxItem
@@ -94,7 +100,12 @@ function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps)
                             >
                                 <div className="flex items-center gap-2">
                                     {getPlatformIcon(channel.type)}
-                                    <span>{channel.name || channel.type}</span>
+                                    <span className="flex flex-col">
+                                        <span>{channel.name || channel.type}</span>
+                                        {channel.isPage && (
+                                            <span className="text-xs text-muted-foreground">via {channel.originalName}</span>
+                                        )}
+                                    </span>
                                 </div>
                             </DropdownMenuCheckboxItem>
                         )
@@ -133,14 +144,20 @@ function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps)
                                     <span className="text-sm font-medium truncate">
                                         {channel.name || channel.type}
                                     </span>
-                                    <span className="text-xs text-muted-foreground capitalize">
-                                        {channel.type}
-                                    </span>
+                                    {channel.isPage ? (
+                                        <span className="text-xs text-muted-foreground">
+                                            Page • {channel.originalName}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-muted-foreground capitalize">
+                                            {channel.type}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         )
                     })
-                ) : (
+                ) : ( // ... empty state
                     <div className="col-span-full flex flex-col items-center justify-center p-6 border border-dashed rounded-md bg-muted/10 text-center gap-2">
                         <Monitor className="w-8 h-8 text-muted-foreground/50" />
                         <div className="space-y-1">
