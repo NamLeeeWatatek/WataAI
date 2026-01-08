@@ -118,7 +118,6 @@ export default function MyProductsPage() {
                             onPageChange={setPage}
                             onPageSizeChange={setPageSize}
                             pageSizeOptions={[12, 24, 48]}
-                            className="justify-end"
                         />
                     </div>
                 </>

@@ -599,7 +599,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {providers.map((provider) => (
-                                        <SelectItem key={provider.id} value={provider.id}>
+                                        <SelectItem key={`${provider.id}-${provider.providerId}`} value={provider.id}>
                                             <div className="flex items-center gap-2">
                                                 <span>{provider.displayName}</span>
                                                 <Badge variant="secondary" className="text-xs">

@@ -115,7 +115,6 @@ export default function CreationToolsPage() {
                             setCurrentPage(1);
                         }}
                         pageSizeOptions={[12, 24, 48]}
-                        className="justify-end"
                     />
                 </div>
             )}

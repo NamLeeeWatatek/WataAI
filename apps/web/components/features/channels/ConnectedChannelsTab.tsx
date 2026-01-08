@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { DataTable } from '@/components/ui/DataTable';
 import { Pagination } from '@/components/ui/Pagination';
 import { Badge } from '@/components/ui/Badge';
@@ -32,21 +31,13 @@ import {
   Send,
   Book,
   BarChart,
-  Zap,
-  MoreHorizontal
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/date';
 import { Search } from '@/components/ui/Search';
-
-interface Channel {
-  id: string;
-  name: string;
-  type: string;
-  status: string;
-  metadata?: any;
-  createdAt: string;
-}
+import type { Channel } from '@/lib/types/channel';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface ConnectedChannelsTabProps {
   channels: Channel[];
@@ -74,14 +65,11 @@ export function ConnectedChannelsTab({
   viewMode,
   currentPage,
   pageSize,
-  totalCount,
   selectedIds,
   onSearchChange,
   onViewModeChange,
   onPageChange,
   onPageSizeChange,
-  onToggleSelection,
-  onClearSelection,
   onAssignBot,
   onDisconnect,
   onLoadData,
@@ -163,20 +151,84 @@ export function ConnectedChannelsTab({
     currentPage * pageSize
   );
 
+  const columns = React.useMemo<ColumnDef<Channel>[]>(() => [
+    {
+      id: 'name',
+      header: 'Channel Name',
+      accessorKey: 'name',
+      cell: ({ row, getValue }) => (
+        <div className="flex items-center gap-3">
+          <div className={cn("p-2 rounded-lg", getColor(row.original.type))}>
+            {getIcon(row.original.type)}
+          </div>
+          <div>
+            <div className="font-semibold text-sm">{getValue() as React.ReactNode}</div>
+            <div className="text-xs text-muted-foreground capitalize">{row.original.type}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: () => (
+        <Badge variant="default" className="font-bold">
+          <CheckCircle2 className="w-3 h-3 mr-1" /> Active
+        </Badge>
+      )
+    },
+    {
+      id: 'bot',
+      header: 'Assigned Bot',
+      cell: ({ row }) => row.original.metadata?.botId ? (
+        <Badge variant="secondary">Bot Assigned</Badge>
+      ) : (
+        <span className="text-xs text-muted-foreground">Disconnected</span>
+      )
+    },
+    {
+      id: 'createdAt',
+      header: 'Connected',
+      accessorKey: 'createdAt',
+      cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground">{formatDate(getValue() as string)}</span>
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onAssignBot(row.original)}
+            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDisconnect(row.original.id)}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )
+    }
+  ], [onAssignBot, onDisconnect]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Controls Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
-
-
         <div className="relative flex-1 w-full max-w-sm group">
           <Search
             placeholder="Search connected channels..."
             value={searchQuery}
-            onChange={(e: any) => onSearchChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
             onClear={() => onSearchChange("")}
             className="w-full"
-
           />
         </div>
 
@@ -281,70 +333,7 @@ export function ConnectedChannelsTab({
             <Card className="overflow-hidden">
               <DataTable
                 data={paginatedChannels}
-                columns={[
-                  {
-                    key: 'name',
-                    label: 'Channel Name',
-                    render: (value, row) => (
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${getColor(row.type)}`}>
-                          {getIcon(row.type)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-sm">{value}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{row.type}</div>
-                        </div>
-                      </div>
-                    )
-                  },
-                  {
-                    key: 'status',
-                    label: 'Status',
-                    render: (_, row) => (
-                      <Badge variant="default" className="font-bold">
-                        <CheckCircle2 className="w-3 h-3 mr-1" /> Active
-                      </Badge>
-                    )
-                  },
-                  {
-                    key: 'bot',
-                    label: 'Assigned Bot',
-                    render: (_, row) => row.metadata?.botId ? (
-                      <Badge variant="secondary">Bot Assigned</Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Disconnected</span>
-                    )
-                  },
-                  {
-                    key: 'createdAt',
-                    label: 'Connected',
-                    render: (value) => <span className="text-xs font-medium text-muted-foreground">{formatDate(value)}</span>
-                  },
-                  {
-                    key: 'actions',
-                    label: '',
-                    render: (_, row) => (
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onAssignBot(row)}
-                          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                        >
-                          <Settings className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDisconnect(row.id)}
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )
-                  }
-                ]}
+                columns={columns}
                 searchable={false}
                 className="border-none"
                 tableClassName="border-none shadow-none bg-transparent"

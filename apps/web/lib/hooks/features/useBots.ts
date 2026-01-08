@@ -35,9 +35,6 @@ export function useBots(workspaceId?: string, filters: any = {}) {
             queryClient.invalidateQueries({ queryKey: botKeys.lists() });
             toast.success('Bot created successfully');
         },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Failed to create bot');
-        },
     });
 
     const updateMutation = useMutation({
@@ -47,9 +44,6 @@ export function useBots(workspaceId?: string, filters: any = {}) {
             queryClient.invalidateQueries({ queryKey: botKeys.detail(variables.id) });
             toast.success('Bot updated successfully');
         },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Failed to update bot');
-        },
     });
 
     const deleteMutation = useMutation({
@@ -57,9 +51,6 @@ export function useBots(workspaceId?: string, filters: any = {}) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: botKeys.lists() });
             toast.success('Bot deleted successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Failed to delete bot');
         },
     });
 
@@ -118,9 +109,6 @@ export function useBot(id: string) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [...botKeys.detail(id), 'appearance'] });
             toast.success('Visual identity synchronized');
-        },
-        onError: (error: any) => {
-            toast.error(error?.response?.data?.message || 'Sync failed');
         },
     });
 

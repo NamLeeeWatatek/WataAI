@@ -31,15 +31,10 @@ export default function BotChatPage() {
     await sendMessage(content);
   };
 
-  const chatMessages: Array<{
-    role: MessageRole;
-    content: string;
-    timestamp: string;
-    metadata?: any;
-  }> = messages.map((msg: BotRagMessage) => ({
+  const chatMessages = messages.map((msg: BotRagMessage) => ({
     role: msg.role,
     content: msg.content,
-    timestamp: msg.timestamp,
+    sentAt: msg.timestamp,
     metadata: msg.metadata,
   }));
 

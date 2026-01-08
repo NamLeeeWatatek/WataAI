@@ -1,21 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, X, Send, Sparkles, AlertCircle, RefreshCcw } from 'lucide-react'
+import { MessageCircle, X, Send, Sparkles, AlertCircle } from 'lucide-react'
 import { MessageRole } from '@/lib/types/conversations'
 import { Media } from '@/components/ui/Media'
-
-import { BotWidgetConfig } from '@/lib/types/bots'
 import { cn } from '@/lib/utils'
-import ReactMarkdown from 'react-markdown' // Assuming you have this or similar for rendering markdown
-
-interface Message {
-    role: MessageRole
-    content: string
-    timestamp: string
-    metadata?: Record<string, unknown>
-    isError?: boolean
-}
+import ReactMarkdown from 'react-markdown'
+import { usePublicChat } from '@/lib/hooks/features/usePublicChat'
 
 interface ChatWidgetProps {
     botId: string
@@ -24,134 +15,42 @@ interface ChatWidgetProps {
 
 export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [config, setConfig] = useState<BotWidgetConfig | null>(null)
-    const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [conversationId, setConversationId] = useState<string | null>(null)
-    const [error, setError] = useState<string | null>(null)
-    const [isInitializing, setIsInitializing] = useState(false)
+
+    const {
+        config,
+        messages,
+        loading,
+        conversationId,
+        error,
+        createConversation,
+        sendMessage
+    } = usePublicChat({ botId, apiUrl })
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
-    const hasInitialized = useRef(false)
-
-    // Load Bot Config on Mount
-    useEffect(() => {
-        const loadConfig = async () => {
-            try {
-                const response = await fetch(`${apiUrl}/public/bots/${botId}/config`)
-                if (!response.ok) throw new Error('Failed to load bot configuration')
-                const data = await response.json()
-                setConfig(data)
-            } catch (err) {
-                console.error("Widget Config Error:", err)
-                setError("Unable to load chat widget")
-            }
-        }
-        loadConfig()
-    }, [botId, apiUrl])
 
     // Initialize Conversation when opened
     useEffect(() => {
-        if (isOpen && !conversationId && !isInitializing && !hasInitialized.current) {
+        if (isOpen && !conversationId) {
             createConversation()
         }
         // Focus input on open
         if (isOpen) {
             setTimeout(() => inputRef.current?.focus(), 300)
         }
-    }, [isOpen])
+    }, [isOpen, conversationId, createConversation])
 
     // Scroll to bottom effect
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, loading])
 
-    const createConversation = async () => {
-        setIsInitializing(true)
-        setError(null)
-        try {
-            const response = await fetch(`${apiUrl}/public/bots/${botId}/conversations`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userAgent: navigator.userAgent,
-                    metadata: {
-                        url: typeof window !== 'undefined' ? window.location.href : '',
-                        referrer: typeof document !== 'undefined' ? document.referrer : '',
-                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    },
-                }),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json() // Try to get detailed error from backend
-                throw new Error(errorData.message || 'Failed to start conversation')
-            }
-
-            const data = await response.json()
-            setConversationId(data.conversationId)
-            hasInitialized.current = true
-
-            // Add welcome message if configured
-            if (config?.welcomeMessage) {
-                setMessages([{
-                    role: MessageRole.ASSISTANT,
-                    content: config.welcomeMessage,
-                    timestamp: new Date().toISOString(),
-                }])
-            }
-        } catch (err) {
-            console.error("Init Error:", err)
-            setError("Failed to connect to the assistant")
-        } finally {
-            setIsInitializing(false)
-        }
-    }
-
     const handleSend = async () => {
         if (!input.trim() || loading || !conversationId) return
-
-        const messageText = input.trim()
+        const text = input.trim()
         setInput('')
-
-        // Optimistic UI update
-        const userMessage: Message = {
-            role: MessageRole.USER,
-            content: messageText,
-            timestamp: new Date().toISOString(),
-        }
-        setMessages(prev => [...prev, userMessage])
-        setLoading(true)
-
-        try {
-            const response = await fetch(`${apiUrl}/public/bots/conversations/${conversationId}/messages`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: messageText }),
-            })
-
-            if (!response.ok) throw new Error('Failed to send message')
-
-            const data = await response.json()
-            const assistantMessage: Message = {
-                role: MessageRole.ASSISTANT,
-                content: data.content,
-                timestamp: data.timestamp,
-                metadata: data.metadata,
-            }
-            setMessages(prev => [...prev, assistantMessage])
-        } catch (err) {
-            setMessages(prev => [...prev, {
-                role: MessageRole.ASSISTANT,
-                content: "I'm having trouble connecting right now. Please try again.",
-                timestamp: new Date().toISOString(),
-                isError: true
-            }])
-        } finally {
-            setLoading(false)
-        }
+        await sendMessage(text)
     }
 
     const formatTime = (isoString: string) => {
@@ -162,13 +61,11 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
         }
     }
 
-    if (error && !isOpen) return null // Hide if broken and closed
-    if (!config) return null // Loading state implicitly handled by having nothing
+    // Hide if broken and closed or config not loaded
+    if ((error && !isOpen) || !config) return null
 
-    const primaryColor = config.theme.primaryColor || '#3B82F6'
-
-    // safe positioning logic
-    const pos = config.theme.position || 'bottom-right'
+    const primaryColor = config.theme?.primaryColor || '#3B82F6'
+    const pos = config.theme?.position || 'bottom-right'
     const isRight = pos.includes('right')
     const isBottom = pos.includes('bottom')
 
@@ -188,9 +85,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                     style={{
                         ...positionStyles,
                         backgroundColor: primaryColor,
-                        width: config.theme.buttonSize === 'large' ? '64px' : '56px',
-                        height: config.theme.buttonSize === 'large' ? '64px' : '56px',
+                        width: config.theme?.buttonSize === 'large' ? '64px' : '56px',
+                        height: config.theme?.buttonSize === 'large' ? '64px' : '56px',
                     }}
+                    aria-label="Open chat"
                 >
                     <MessageCircle className="w-7 h-7" />
                 </button>
@@ -214,7 +112,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                     >
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/10 to-transparent pointer-events-none" />
 
-                        {config.theme.showAvatar && (
+                        {config.theme?.showAvatar && (
                             <div className="relative z-10 w-10 h-10 rounded-full bg-white/20 border border-white/20 flex items-center justify-center shrink-0 overflow-hidden">
                                 {config.avatarUrl ? (
                                     <Media
@@ -238,6 +136,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                         <button
                             onClick={() => setIsOpen(false)}
                             className="relative z-10 p-2 hover:bg-white/20 rounded-lg transition-colors"
+                            aria-label="Close chat"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -246,7 +145,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                     {/* Messages Area */}
                     <div
                         className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-zinc-900/50 scroll-smooth"
-                        style={config.theme.backgroundColor ? { backgroundColor: config.theme.backgroundColor } : undefined}
+                        style={config.theme?.backgroundColor ? { backgroundColor: config.theme.backgroundColor } : undefined}
                     >
                         {messages.length === 0 && !loading && !error && (
                             <div className="h-full flex flex-col items-center justify-center opacity-40 gap-2">
@@ -275,29 +174,22 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                         style={{
                                             backgroundColor: isUser
                                                 ? primaryColor
-                                                : (config.theme.botMessageColor || undefined),
+                                                : (config.theme?.botMessageColor || undefined),
                                             color: isUser
-                                                ? (config.theme.userMessageTextColor || undefined)
-                                                : (config.theme.botMessageTextColor || undefined)
+                                                ? (config.theme?.userMessageTextColor || undefined)
+                                                : (config.theme?.botMessageTextColor || undefined)
                                         }}
                                     >
-                                        {msg.isError ? (
-                                            <div className="flex items-center gap-2 text-red-500">
-                                                <AlertCircle className="w-4 h-4" />
-                                                <span>{msg.content}</span>
-                                            </div>
-                                        ) : (
-                                            <div className="prose prose-sm dark:prose-invert max-w-none break-words leading-relaxed">
-                                                <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                            </div>
-                                        )}
+                                        <div className="prose prose-sm dark:prose-invert max-w-none break-words leading-relaxed">
+                                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                        </div>
 
-                                        {config.theme.showTimestamp && (
+                                        {config.theme?.showTimestamp && (
                                             <p className={cn(
                                                 "text-[10px] mt-1.5 opacity-60 text-right font-medium",
                                                 isUser ? "text-white/80" : "text-muted-foreground"
                                             )}>
-                                                {formatTime(msg.timestamp)}
+                                                {formatTime(msg.sentAt || msg.timestamp || '')}
                                             </p>
                                         )}
                                     </div>
@@ -306,12 +198,10 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                         })}
 
                         {loading && (
-                            <div
-                                className="flex justify-start"
-                            >
+                            <div className="flex justify-start">
                                 <div
                                     className="bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-2xl rounded-bl-none p-4 shadow-sm"
-                                    style={config.theme.botMessageColor ? { backgroundColor: config.theme.botMessageColor } : undefined}
+                                    style={config.theme?.botMessageColor ? { backgroundColor: config.theme.botMessageColor } : undefined}
                                 >
                                     <div className="flex gap-1.5">
                                         <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: primaryColor }} />
@@ -341,7 +231,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                     <div className="p-3 bg-white dark:bg-zinc-950 border-t border-gray-100 dark:border-white/5">
                         <div
                             className="relative flex items-end gap-2 bg-secondary/30 hover:bg-secondary/50 focus-within:bg-white dark:focus-within:bg-zinc-900 rounded-xl border border-border/40 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all p-1.5 px-2"
-                            style={config.theme.inputBackgroundColor ? { backgroundColor: config.theme.inputBackgroundColor } : undefined}
+                            style={config.theme?.inputBackgroundColor ? { backgroundColor: config.theme.inputBackgroundColor } : undefined}
                         >
                             <input
                                 ref={inputRef}
@@ -353,7 +243,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                 disabled={loading || Boolean(error)}
                                 className="flex-1 bg-transparent border-none focus:outline-none p-2 min-h-[44px] max-h-[120px] text-sm resize-none placeholder:text-muted-foreground/50"
                                 style={{
-                                    color: config.theme.inputTextColor || config.theme.userMessageTextColor || 'inherit'
+                                    color: config.theme?.inputTextColor || config.theme?.userMessageTextColor || 'inherit'
                                 }}
                             />
                             <button
@@ -361,6 +251,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                 disabled={!input.trim() || loading || Boolean(error)}
                                 className="p-2 rounded-lg text-white transition-all disabled:opacity-30 disabled:scale-95 hover:scale-105 active:scale-95 shrink-0 mb-0.5"
                                 style={{ backgroundColor: primaryColor }}
+                                aria-label="Send message"
                             >
                                 <Send className="w-4 h-4" />
                             </button>
@@ -376,4 +267,3 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
         </>
     )
 }
-

@@ -33,6 +33,7 @@ import { useConversations } from '@/lib/hooks/features/useConversations'
 import { useBots } from '@/lib/hooks/features/useBots'
 import { useQuery } from '@tanstack/react-query'
 import { useAiChat } from '@/lib/hooks/features/useAiChat'
+import { handleApiError } from '@/lib/utils/api-error'
 
 export default function ChatWithAIPage() {
     const { currentWorkspace } = useWorkspace()
@@ -53,8 +54,9 @@ export default function ChatWithAIPage() {
         queryKey: ['knowledge-bases', currentWorkspace?.id],
         queryFn: async () => {
             if (!currentWorkspace?.id) return []
-            const data: any = await getKnowledgeBases({ workspaceId: currentWorkspace.id, limit: 100 })
-            return Array.isArray(data) ? data : (data?.data || [])
+            const data = await getKnowledgeBases({ workspaceId: currentWorkspace.id, limit: 100 } as any)
+            const items = Array.isArray(data) ? data : data.items || []
+            return items
         },
         enabled: !!currentWorkspace?.id
     })
@@ -198,9 +200,12 @@ export default function ChatWithAIPage() {
         }
 
         const userMessage: AiMessage = {
+            id: `temp-${Date.now()}`,
+            conversationId: conversationId || 'temp',
             role: MessageRole.USER,
             content: input,
-            timestamp: new Date().toISOString(),
+            sentAt: new Date().toISOString(),
+            metadata: {}
         }
 
         const updatedMessages = [...messages, userMessage]
@@ -209,7 +214,7 @@ export default function ChatWithAIPage() {
 
         try {
             let responseText = ''
-            let sources: any[] = []
+            let sources: unknown[] = []
             let modelName = config.botId !== 'none'
                 ? bots.find((b: Bot) => b.id === config.botId)?.aiModelName || 'gemini-2.0-flash'
                 : 'gemini-2.0-flash'
@@ -224,34 +229,50 @@ export default function ChatWithAIPage() {
                 responseText = res.response
                 sources = res.sources || []
             } else {
-                const res: any = await chatWithKB({
+                const res = await chatWithKB({
                     message: input,
                     model: modelName,
                     conversationHistory: updatedMessages.map(m => ({ role: m.role, content: m.content })),
                     knowledgeBaseIds: config.useKnowledgeBase ? config.knowledgeBaseIds : undefined
                 })
-                responseText = res.answer || res.response || 'No response'
+                responseText = res.answer || (res as any).response || 'No response'
             }
 
             const assistantMessage: AiMessage = {
+                id: `temp-${Date.now() + 1}`,
+                conversationId: conversationId || 'temp',
                 role: MessageRole.ASSISTANT,
                 content: responseText,
-                timestamp: new Date().toISOString(),
+                sentAt: new Date().toISOString(),
                 metadata: {
                     bot: config.botId !== 'none' ? bots.find((b: Bot) => b.id === config.botId)?.name : undefined,
                     model: modelName,
-                    sources: sources.length > 0 ? sources : undefined,
                 },
+                sources: sources.length > 0 ? sources as any : undefined,
             }
 
             const finalMessages = [...updatedMessages, assistantMessage]
             setMessages(finalMessages)
 
             if (conversationId) {
+                // Ensure messages match the expected type for updateConversation based on your API definition
+                // If updateConversation expects a specific payload, cast or transform here
                 await updateConversation({ id: conversationId, data: { messages: finalMessages } })
             }
         } catch (error) {
-            toast.error('Failed to get AI response')
+            const errorMessage = handleApiError(error)
+            toast.error(errorMessage)
+
+            const errorAssistantMessage: AiMessage = {
+                id: `error-${Date.now()}`,
+                conversationId: conversationId || 'temp',
+                role: MessageRole.ASSISTANT,
+                content: `❌ **AI Configuration Error:** ${errorMessage}\n\nPlease ensure you have configured an AI provider for this bot or workspace in the Settings.`,
+                sentAt: new Date().toISOString(),
+                metadata: {},
+                isError: true,
+            }
+            setMessages(prev => [...prev, errorAssistantMessage])
         } finally {
             setLoading(false)
         }
@@ -264,7 +285,7 @@ export default function ChatWithAIPage() {
             const updated = await updateConversation({
                 id: currentConversation.id,
                 data: {
-                    botId: config.botId !== 'none' ? config.botId : null as any,
+                    botId: config.botId !== 'none' ? config.botId : null as unknown as string,
                     useKnowledgeBase: config.useKnowledgeBase,
                     metadata: {
                         ...currentConversation.metadata,
@@ -393,7 +414,7 @@ export default function ChatWithAIPage() {
             {/* Main */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
                 <AiChatInterface
-                    messages={messages}
+                    messages={messages as any} // Temporary cast until UiMessage and AiMessage alignment is perfect
                     onSendMessage={handleSend}
                     loading={loading}
                     botName={bots.find((b: Bot) => b.id === config.botId)?.name || 'AI Assistant'}
@@ -450,10 +471,10 @@ export default function ChatWithAIPage() {
                             <label className="text-xs font-bold flex items-center gap-2">
                                 <Zap className="w-3.5 h-3.5 text-primary" /> Model Routing
                             </label>
-                            <Tabs defaultValue={config.botId === 'none' ? 'system' : 'user'} onValueChange={(v) => v === 'system' && setConfig(p => ({ ...p, botId: 'none' }))}>
-                                <TabsList className="w-full grid grid-cols-2">
-                                    <TabsTrigger value="system">Pure AI</TabsTrigger>
-                                    <TabsTrigger value="user">My Bots</TabsTrigger>
+                            <Tabs defaultValue={config.botId === 'none' ? 'system' : 'user'} onValueChange={(v) => v === 'system' && setConfig(p => ({ ...p, botId: 'none' }))} className="w-full">
+                                <TabsList variant="pills" className="w-full">
+                                    <TabsTrigger value="system" variant="pills" className="flex-1">Pure AI</TabsTrigger>
+                                    <TabsTrigger value="user" variant="pills" className="flex-1">My Bots</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="user" className="space-y-2 pt-2">
                                     {bots.map((bot: Bot) => (

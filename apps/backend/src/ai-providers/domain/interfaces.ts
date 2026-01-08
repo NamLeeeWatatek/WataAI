@@ -15,9 +15,9 @@ export interface IAiProvider {
   createdAt: Date;
   updatedAt: Date;
   requiredFields: ConfigField[];
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
   getRequiredConfigFields(): ConfigField[];
-  getDefaultValues(): Record<string, any>;
+  getDefaultValues(): Record<string, unknown>;
   supportsStreaming(): boolean;
   getContextWindow(model?: string): number;
   hasFunctionCalling(model?: string): boolean;
@@ -40,7 +40,7 @@ export interface ConfigField {
   label: string;
   type: string;
   required?: boolean;
-  default?: any;
+  default?: unknown;
   options?: Array<{ value: string; label: string }>;
   validation?: {
     min?: number;
@@ -154,28 +154,28 @@ export interface CreateProviderRequest {
   label: string;
   description?: string;
   requiredFields: ConfigField[];
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
   isActive?: boolean;
 }
 
 export interface CreateUserConfigRequest {
   providerId: string;
   displayName: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   modelList: string[];
 }
 
 export interface CreateWorkspaceConfigRequest {
   providerId: string;
   displayName: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   modelList: string[];
   workspaceId: string;
 }
 
 export interface UpdateConfigRequest {
   displayName?: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   modelList?: string[];
   isActive?: boolean;
   isDefault?: boolean;
@@ -213,7 +213,7 @@ export interface AiProviderErrorDetails {
   message: string;
   provider?: ProviderKey;
   retryable: boolean;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 // Supporting types
@@ -272,13 +272,13 @@ export interface RateLimitStatus {
 export interface UserProviderConfig extends IProviderConfiguration {
   userId: string;
   displayName: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   modelList: string[];
 }
 
 export interface WorkspaceProviderConfig extends IProviderConfiguration {
   workspaceId: string;
   displayName: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
   modelList: string[];
 }

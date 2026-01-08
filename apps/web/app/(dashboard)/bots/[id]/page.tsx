@@ -35,7 +35,7 @@ import { useWidgetVersions, useWidgetDeployments } from '@/lib/hooks/use-widget-
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useBot, useBots } from '@/lib/hooks/features/useBots';
-import { useQuery } from '@tanstack/react-query';
+import { BotStatus, BotWidgetPosition, BotWidgetButtonSize } from '@/lib/types/bots';
 
 export default function BotDetailPage() {
     const params = useParams();
@@ -45,10 +45,8 @@ export default function BotDetailPage() {
     const {
         bot,
         channels: botChannels,
-        appearance: botSettings,
         isLoading: botLoading,
         refetch: refetchBot,
-        updateAppearance
     } = useBot(botId);
 
     const { updateBot, isMutating: saving } = useBots();
@@ -61,32 +59,52 @@ export default function BotDetailPage() {
 
     const activeVersion = versions?.find(v => v.isActive && v.status === 'published');
 
+    // Aligned with Backend Bot domain entity for Flat structure
     interface BotFormData {
         name: string;
         description: string;
         systemPrompt: string;
-        aiProviderId: string | undefined;
+        aiProviderId: string | null;
         aiModelName: string;
         aiParameters: {
             temperature: number;
-            max_tokens: number;
+            maxTokens: number; // Corrected from max_tokens
         };
         enableAutoLearn: boolean;
-        isActive: boolean;
+        status: BotStatus;
+
+        // Widget Config (Flat)
+        widgetEnabled: boolean;
+        welcomeMessage: string | null;
+        placeholderText: string | null;
+        primaryColor: string | null;
+        widgetPosition: BotWidgetPosition;
+        widgetButtonSize: BotWidgetButtonSize;
+        showAvatar: boolean;
+        showTimestamp: boolean;
     }
 
     const [formData, setFormData] = useState<BotFormData>({
         name: '',
         description: '',
         systemPrompt: '',
-        aiProviderId: undefined as string | undefined,
+        aiProviderId: null,
         aiModelName: '',
         aiParameters: {
             temperature: 0.7,
-            max_tokens: 1000,
+            maxTokens: 1000,
         },
         enableAutoLearn: false,
-        isActive: false,
+        status: 'draft',
+
+        widgetEnabled: true,
+        welcomeMessage: '',
+        placeholderText: '',
+        primaryColor: '#667eea',
+        widgetPosition: 'bottom-right',
+        widgetButtonSize: 'medium',
+        showAvatar: true,
+        showTimestamp: true,
     });
 
     // Sync form data when bot is loaded
@@ -96,24 +114,36 @@ export default function BotDetailPage() {
                 name: bot.name,
                 description: bot.description || '',
                 systemPrompt: bot.systemPrompt || '',
-                aiProviderId: bot.aiProviderId || undefined,
+                aiProviderId: bot.aiProviderId || null,
                 aiModelName: bot.aiModelName || '',
-                aiParameters: (bot.aiParameters as any) || { temperature: 0.7, max_tokens: 1000 },
+                aiParameters: {
+                    temperature: bot.aiParameters?.temperature ?? 0.7,
+                    maxTokens: bot.aiParameters?.maxTokens ?? 1000,
+                },
                 enableAutoLearn: bot.enableAutoLearn || false,
-                isActive: bot.isActive || false,
-            } as BotFormData);
+                status: bot.status || 'draft',
+
+                widgetEnabled: bot.widgetEnabled ?? true,
+                welcomeMessage: bot.welcomeMessage || '',
+                placeholderText: bot.placeholderText || '',
+                primaryColor: bot.primaryColor || '#667eea',
+                widgetPosition: bot.widgetPosition || 'bottom-right',
+                widgetButtonSize: bot.widgetButtonSize || 'medium',
+                showAvatar: bot.showAvatar ?? true,
+                showTimestamp: bot.showTimestamp ?? true,
+            });
             setHasChanges(false);
         }
     }, [bot]);
 
-    const handleChange = (updates: Partial<typeof formData>) => {
+    const handleChange = (updates: Partial<BotFormData>) => {
         setFormData((prev) => ({ ...prev, ...updates }));
         setHasChanges(true);
     };
 
     const handleSave = async () => {
         if (!formData.name.trim()) {
-            toast.error('Identifier is required');
+            toast.error('Identity identifier is required');
             return;
         }
 
@@ -124,17 +154,7 @@ export default function BotDetailPage() {
         } catch { }
     };
 
-    const handleSaveAppearance = async (settings: any) => {
-        try {
-            await updateAppearance({
-                ...settings,
-                position: settings.widgetPosition,
-                buttonSize: settings.widgetButtonSize,
-            });
-        } catch {
-            // Error handled in hook
-        }
-    };
+    const isOnline = formData.status === 'active';
 
     if (botLoading && !bot) return <PageLoading message="Connecting to neural interface..." />;
 
@@ -148,22 +168,21 @@ export default function BotDetailPage() {
             </div>
         );
     }
-    if (!bot) return null;
 
     return (
         <div className="h-full overflow-y-auto scrollbar-hide bg-grid-pattern">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8">
                 <PageHeader
-                    title={bot.name}
+                    title={bot?.name || 'Agent'}
                     description="Neural architecture and interface protocol management"
                     onRefresh={refetchBot}
                     refreshing={botLoading}
                     premium
                 >
                     <div className="flex items-center gap-3">
-                        <Badge variant={bot.isActive ? "default" : "secondary"} className="h-8 px-3 font-black tracking-widest text-[10px]">
-                            {bot.isActive ? <Eye className="w-3.5 h-3.5 mr-2" /> : <EyeOff className="w-3.5 h-3.5 mr-2" />}
-                            {bot.isActive ? 'ONLINE' : 'OFFLINE'}
+                        <Badge variant={isOnline ? "default" : "secondary"} className="h-8 px-3 font-black tracking-widest text-[10px]">
+                            {isOnline ? <Eye className="w-3.5 h-3.5 mr-2" /> : <EyeOff className="w-3.5 h-3.5 mr-2" />}
+                            {isOnline ? 'ONLINE' : 'OFFLINE'}
                         </Badge>
                         <Button
                             onClick={handleSave}
@@ -225,22 +244,13 @@ export default function BotDetailPage() {
                                     <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3 uppercase">Interface Identity</h2>
                                     <p className="text-sm font-medium text-muted-foreground/60 mb-8">Synchronize the visual aesthetics and messaging protocols of the public widget.</p>
 
-                                    {!botSettings ? (
-                                        <div className="h-64 flex flex-col items-center justify-center bg-muted/10 rounded-3xl border border-dashed">
-                                            <RefreshCw className="w-10 h-10 text-primary/20 animate-spin mb-4" />
-                                            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">Querying identity matrix...</p>
-                                        </div>
-                                    ) : (
-                                        <WidgetAppearanceSettings
-                                            botId={botId}
-                                            currentSettings={{
-                                                ...(botSettings as any),
-                                                widgetPosition: (botSettings as any).position,
-                                                widgetButtonSize: (botSettings as any).buttonSize,
-                                            }}
-                                            onSave={handleSaveAppearance}
-                                        />
-                                    )}
+                                    <WidgetAppearanceSettings
+                                        botId={botId}
+                                        currentSettings={formData}
+                                        onSave={(updated) => {
+                                            handleChange(updated as any);
+                                        }}
+                                    />
                                 </div>
 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12 border-t border-border/10">
@@ -266,7 +276,8 @@ export default function BotDetailPage() {
                         <TabsContent value="settings" className="m-0 focus-visible:outline-none">
                             <BotSettingsTab
                                 enableAutoLearn={formData.enableAutoLearn}
-                                onChange={(enableAutoLearn) => handleChange({ enableAutoLearn })}
+                                status={formData.status}
+                                onChange={(updates) => handleChange(updates)}
                                 onDelete={() => router.push('/bots')}
                             />
                         </TabsContent>

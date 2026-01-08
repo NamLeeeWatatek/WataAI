@@ -1,5 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getSession } from 'next-auth/react';
+import { logger } from '@/lib/logger';
+import { ApiError, handleApiError } from '@/lib/utils/api-error';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
@@ -142,12 +144,13 @@ axiosClient.interceptors.response.use(
           // CRITICAL: Prevent infinite loop if NextAuth returns the same expired token
           // This happens if client/server clocks are out of sync or if refresh logic skipped
           if (newToken === cachedToken) {
-            console.error("[Axios] Helper: Token refresh returned distinct same token. Forcing logout/reload.");
+            logger.error("[Axios] Helper: Token refresh returned distinct same token. Forcing logout/reload.");
             processQueue(new Error("Token refresh loop detected"), null);
             cachedToken = null;
             // Optional: Force reload to reset application state
             if (typeof window !== 'undefined') {
-              window.location.href = '/login';
+              // Critical auth failure requires hard reset
+              window.location.assign('/login');
             }
             return Promise.reject(error);
           }
@@ -167,7 +170,7 @@ axiosClient.interceptors.response.use(
           if (typeof window !== 'undefined') {
             // Avoid infinite redirect loop if already on login
             if (!window.location.pathname.startsWith('/login')) {
-              window.location.href = '/login';
+              window.location.assign('/login');
             }
           }
           throw new Error("Session refresh failed");
@@ -184,7 +187,14 @@ axiosClient.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    // Convert to standard ApiError for easier handling in components/mutations
+    const apiError = new ApiError(
+      handleApiError(error),
+      error.response?.status,
+      error.response?.data
+    );
+
+    return Promise.reject(apiError);
   }
 );
 

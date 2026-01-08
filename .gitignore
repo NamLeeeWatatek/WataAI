@@ -58,6 +58,7 @@ out/
 # === Logs ===
 logs/
 *.log
+build_log*.txt
 
 # === Docker runtime data – KHÔNG BAO GIỜ commit lên Git ===
 .docker/

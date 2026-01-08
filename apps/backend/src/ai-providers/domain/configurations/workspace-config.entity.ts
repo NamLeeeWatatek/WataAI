@@ -12,6 +12,7 @@ import {
   ConnectionConfig,
   ModelSettings,
 } from '../interfaces';
+import { ProviderConfig } from '../ai-provider';
 
 export class WorkspaceProviderConfig implements IWorkspaceProviderConfig {
   @ApiProperty({ type: String })
@@ -34,7 +35,7 @@ export class WorkspaceProviderConfig implements IWorkspaceProviderConfig {
     description: 'Provider-specific configuration',
     additionalProperties: true,
   })
-  config: Record<string, any>;
+  config: ProviderConfig;
 
   @ApiProperty({
     type: [String],
@@ -165,18 +166,31 @@ export class WorkspaceProviderConfig implements IWorkspaceProviderConfig {
       this.config.usageStats = {};
     }
 
-    if (!this.config.usageStats[today]) {
-      this.config.usageStats[today] = {
+    const usageStats = this.config.usageStats;
+
+    if (!usageStats[today]) {
+      usageStats[today] = {
         chat: 0,
         embedding: 0,
         moderation: 0,
-        users: new Set(),
+        users: new Set<string>(),
         cost: 0,
       };
     }
 
-    this.config.usageStats[today][action]++;
-    this.config.usageStats[today].users.add(userId);
+    const stats = usageStats[today];
+    if (action === 'chat') stats.chat++;
+    else if (action === 'embedding') stats.embedding++;
+    else if (action === 'moderation') stats.moderation++;
+
+    if (stats.users instanceof Set) {
+      stats.users.add(userId);
+    } else if (Array.isArray(stats.users)) {
+      if (!stats.users.includes(userId)) {
+        stats.users.push(userId);
+      }
+    }
+
     this.updatedAt = new Date();
   }
 
@@ -188,11 +202,18 @@ export class WorkspaceProviderConfig implements IWorkspaceProviderConfig {
       return { chat: 0, embedding: 0, moderation: 0, uniqueUsers: 0, cost: 0 };
     }
 
+    let uniqueUsers = 0;
+    if (stats.users instanceof Set) {
+      uniqueUsers = stats.users.size;
+    } else if (Array.isArray(stats.users)) {
+      uniqueUsers = stats.users.length;
+    }
+
     return {
       chat: stats.chat || 0,
       embedding: stats.embedding || 0,
       moderation: stats.moderation || 0,
-      uniqueUsers: stats.users?.size || 0,
+      uniqueUsers,
       cost: stats.cost || 0,
     };
   }
@@ -281,7 +302,7 @@ export class WorkspaceProviderConfig implements IWorkspaceProviderConfig {
     workspaceId: string,
     providerId: string,
     displayName: string,
-    config: Record<string, any>,
+    config: ProviderConfig,
     modelList: string[],
     createdBy: string,
   ): WorkspaceProviderConfig {

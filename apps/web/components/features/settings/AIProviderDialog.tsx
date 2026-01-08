@@ -31,18 +31,19 @@ import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
 import { type AiProviderMetadata } from '@/lib/api/ai-providers';
+import type { AiProviderConfig, UserAiProviderConfig } from '@/lib/types/ai-provider';
 
 interface AIProviderDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     availableProviders: AiProviderMetadata[];
-    config?: any;
+    config?: UserAiProviderConfig | null;
 }
 
 const configSchema = z.object({
     providerId: z.string().min(1, 'Provider is required'),
     displayName: z.string().min(1, 'Display name is required'),
-    config: z.record(z.string(), z.any()),
+    config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.undefined()])),
     modelList: z.array(z.string()),
     isActive: z.boolean(),
 });
@@ -94,10 +95,27 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
     const onSubmit: SubmitHandler<ConfigFormValues> = async (data) => {
         try {
-            if (isEdit) {
-                await updateConfig({ id: config.id, data });
+            // Transform form data to match API DTOs
+            const apiKey = data.config?.apiKey as string || '';
+            const provider = selectedProvider?.key as 'openai' | 'anthropic' | 'google' | 'azure' | 'custom' || 'custom';
+
+            if (isEdit && config) {
+                await updateConfig({
+                    id: config.id,
+                    data: {
+                        displayName: data.displayName,
+                        config: data.config,
+                        modelList: data.modelList,
+                        isActive: data.isActive,
+                    }
+                });
             } else {
-                await createConfig(data);
+                await createConfig({
+                    providerId: data.providerId,
+                    displayName: data.displayName,
+                    config: data.config,
+                    modelList: data.modelList,
+                });
             }
             onOpenChange(false);
         } catch (error) {
@@ -181,7 +199,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                         form.setValue('displayName', p.label);
                                                     }
                                                     if (p) {
-                                                        form.setValue('config', { ...p.defaultValues });
+                                                        form.setValue('config', { ...p.defaultValues } as any);
                                                     }
                                                 }}
                                                 defaultValue={field.value}
@@ -195,7 +213,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 </FormControl>
                                                 <SelectContent>
                                                     {availableProviders.map((p) => (
-                                                        <SelectItem key={p.id} value={p.id}>
+                                                        <SelectItem key={`${p.id}-${p.key}`} value={p.id}>
                                                             {p.label}
                                                         </SelectItem>
                                                     ))}

@@ -15,7 +15,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { DataTable, Column } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
+import { ColumnDef } from '@tanstack/react-table';
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
 import { AlertDialogConfirm } from "@/components/ui/AlertDialogConfirm";
 import { formatDateTime } from "@/lib/utils/date";
@@ -95,23 +96,24 @@ export function ProductsTable({
         return job.creationTool?.name || 'Untitled Product';
     };
 
-    const columns = React.useMemo<Column<CreationJob>[]>(() => [
+    const columns = React.useMemo<ColumnDef<CreationJob>[]>(() => [
         {
-            key: 'selection',
-            label: '',
+            id: 'selection',
+            header: '',
         },
         {
-            key: 'name',
-            label: 'Product',
-            render: (_, row) => {
-                if (row.status === CreationJobStatus.FAILED) {
+            id: 'name',
+            header: 'Product',
+            cell: ({ row }) => {
+                const job = row.original;
+                if (job.status === CreationJobStatus.FAILED) {
                     return (
                         <div className="flex flex-col">
-                            <span className="font-medium text-sm text-destructive line-clamp-2 max-w-[300px]" title={row.error || "Unknown error"}>
-                                {row.error ? `Error: ${row.error}` : "Job Failed"}
+                            <span className="font-medium text-sm text-destructive line-clamp-2 max-w-[300px]" title={job.error || "Unknown error"}>
+                                {job.error ? `Error: ${job.error}` : "Job Failed"}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                                ID: {row.id.substring(0, 8)}
+                                ID: {job.id.substring(0, 8)}
                             </span>
                         </div>
                     );
@@ -119,99 +121,107 @@ export function ProductsTable({
                 return (
                     <div className="flex flex-col">
                         <span className="font-medium text-sm line-clamp-1 max-w-[300px]">
-                            {getDisplayName(row)}
+                            {getDisplayName(job)}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                            ID: {row.id.substring(0, 8)}
+                            ID: {job.id.substring(0, 8)}
                         </span>
                     </div>
                 );
             }
         },
         {
-            key: 'creationToolId',
-            label: 'Tool Name',
-            render: (value, row) => <span className="text-sm font-medium">{row.creationTool?.name || value}</span>
+            id: 'creationToolId',
+            header: 'Tool Name',
+            cell: ({ row, getValue }) => <span className="text-sm font-medium">{row.original.creationTool?.name || (getValue() as React.ReactNode)}</span>
         },
         {
-            key: 'status',
-            label: 'Status',
-            render: (value, row) => (
-                <StatusBadge status={row.status} />
+            id: 'status',
+            header: 'Status',
+            accessorKey: 'status',
+            cell: ({ getValue }) => (
+                <StatusBadge status={getValue() as CreationJobStatus} />
             )
         },
         {
-            key: 'progress',
-            label: 'Progress',
-            render: (value) => (
-                <div className="flex flex-col gap-1.5 w-32">
-                    <div className="flex justify-between text-[9px] uppercase font-bold tracking-tighter text-muted-foreground">
-                        <span>{value}%</span>
+            id: 'progress',
+            header: 'Progress',
+            accessorKey: 'progress',
+            cell: ({ getValue }) => {
+                const value = getValue() as number;
+                return (
+                    <div className="flex flex-col gap-1.5 w-32">
+                        <div className="flex justify-between text-[9px] uppercase font-bold tracking-tighter text-muted-foreground">
+                            <span>{value}%</span>
+                        </div>
+                        <Progress
+                            value={value}
+                            className="h-1.5 bg-secondary border border-border/50 shadow-inner"
+                            indicatorClassName={cn(
+                                "transition-all duration-500",
+                                value === 100
+                                    ? "bg-green-500"
+                                    : "bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
+                            )}
+                        />
                     </div>
-                    <Progress
-                        value={value}
-                        className="h-1.5 bg-secondary border border-border/50 shadow-inner"
-                        indicatorClassName={cn(
-                            "transition-all duration-500",
-                            value === 100
-                                ? "bg-green-500"
-                                : "bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
-                        )}
-                    />
-                </div>
-            )
+                );
+            }
         },
         {
-            key: 'createdAt',
-            label: 'Created At',
-            render: (value) => (
+            id: 'createdAt',
+            header: 'Created At',
+            accessorKey: 'createdAt',
+            cell: ({ getValue }) => (
                 <span className="text-muted-foreground text-sm">
-                    {formatDateTime(value)}
+                    {formatDateTime(getValue() as string | Date)}
                 </span>
             )
         },
         {
-            key: 'actions',
-            label: 'Actions',
-            className: 'text-right',
-            render: (_, row) => (
-                <div className="flex justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => {
-                                    navigator.clipboard.writeText(row.id);
-                                    toast.success("Job ID copied");
-                                }}
-                            >
-                                <Copy className="mr-2 h-4 w-4" />
-                                Copy Job ID
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {row.status === CreationJobStatus.COMPLETED && (
-                                <DropdownMenuItem onClick={() => setSelectedJob(row)}>
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    View Details
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => {
+                const job = row.original;
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(job.id);
+                                        toast.success("Job ID copied");
+                                    }}
+                                >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copy Job ID
                                 </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                                onClick={() => onDelete?.(row.id)}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )
+                                <DropdownMenuSeparator />
+                                {job.status === CreationJobStatus.COMPLETED && (
+                                    <DropdownMenuItem onClick={() => setSelectedJob(job)}>
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        View Details
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                    onClick={() => onDelete?.(job.id)}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            }
         }
     ], [onDelete]);
 

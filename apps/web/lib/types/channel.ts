@@ -1,9 +1,13 @@
+/**
+ * Channel Type Definitions
+ * Strongly typed interfaces for channel management
+ */
 
 export interface ChannelType {
   id: string
   name: string
   description: string
-  category: 'messaging' | 'social' | 'ecommerce' | 'crm' | 'marketing' | 'support' | 'automation' | 'productivity' | 'business'
+  category: ChannelCategory
   icon: string
   color: string
   multiAccount: boolean
@@ -11,6 +15,17 @@ export interface ChannelType {
   createdAt?: string
   updatedAt?: string
 }
+
+export type ChannelCategory =
+  | 'messaging'
+  | 'social'
+  | 'ecommerce'
+  | 'crm'
+  | 'marketing'
+  | 'support'
+  | 'automation'
+  | 'productivity'
+  | 'business'
 
 export enum ChannelPlatform {
   FACEBOOK = 'facebook',
@@ -28,6 +43,33 @@ export enum ChannelConnectionStatus {
   DISCONNECTED = 'disconnected',
 }
 
+/** Metadata stored with a channel connection */
+export interface ChannelMetadata {
+  botId?: string
+  pageId?: string
+  pageName?: string
+  pageAccessToken?: string
+  webhookVerified?: boolean
+  lastSyncAt?: string
+  errorMessage?: string
+  pages?: FacebookPage[]
+  [key: string]: unknown
+}
+
+/** Facebook page data structure */
+export interface FacebookPage {
+  id: string
+  name: string
+  access_token?: string
+  picture?: {
+    data: {
+      url: string
+    }
+  }
+  category?: string
+  isPage?: boolean
+}
+
 export interface Channel {
   id: string
   name: string
@@ -38,7 +80,9 @@ export interface Channel {
   accessToken?: string
   refreshToken?: string
   expiresAt?: string
-  metadata?: Record<string, any> // ✅ For storing botId and other data
+  botId?: string
+  bot?: { id: string; name: string } | null
+  metadata?: ChannelMetadata
 }
 
 export interface IntegrationConfig {

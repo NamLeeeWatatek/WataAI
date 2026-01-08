@@ -206,6 +206,7 @@ export default function KnowledgeBasePage() {
                                 setPageSize(size);
                                 setCurrentPage(1);
                             }}
+                            pageSizeOptions={[12, 24, 36, 48]}
                         />
                     )}
                 </div>

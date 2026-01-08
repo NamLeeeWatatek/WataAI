@@ -23,28 +23,27 @@ import {
 } from "@/components/ui/DropdownMenu"
 
 import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ColumnDef } from '@tanstack/react-table'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils/date'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar'
+
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 export default function AdminUsersPage() {
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1)
     const [limit, setLimit] = useState(10)
     const [search, setSearch] = useState('')
-    const [querySearch, setQuerySearch] = useState('')
+    const debouncedSearch = useDebounce(search, 500)
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isEditRoleOpen, setIsEditRoleOpen] = useState(false)
     const [newRoleId, setNewRoleId] = useState<string>('')
 
-    const searchTimerRef = useRef<NodeJS.Timeout>()
-
-    // Cleanup timer
+    // Reset page to 1 when search changes
     useEffect(() => {
-        return () => {
-            if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-        }
-    }, [])
+        setPage(1)
+    }, [debouncedSearch])
 
     // Roles Query
     const { data: rolesData } = useQuery({
@@ -56,28 +55,27 @@ export default function AdminUsersPage() {
 
     // Users Query
     const { data: usersResponse, isLoading, refetch: refetchUsers } = useQuery({
-        queryKey: ['users', page, limit, querySearch],
+        queryKey: ['users', page, limit, debouncedSearch],
         queryFn: () => adminApi.getUsers({
             page,
             limit,
-            search: querySearch
+            search: debouncedSearch
         }),
         placeholderData: keepPreviousData
     })
 
-    const users = usersResponse?.data || []
+    const users = usersResponse?.items || []
     const totalUsers = usersResponse?.total || 0
     const totalPages = Math.ceil(totalUsers / limit)
 
     // Mutations
     const updateUserMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string | number; data: any }) => adminApi.updateUser(String(id), data),
+        mutationFn: ({ id, data }: { id: string | number; data: Record<string, unknown> }) => adminApi.updateUser(String(id), data),
         onSuccess: () => {
             toast.success('User profile updated');
             setIsEditRoleOpen(false);
             queryClient.invalidateQueries({ queryKey: ['users'] });
         },
-        onError: () => toast.error('Failed to update user'),
     });
 
     const handleEditRole = (user: User) => {
@@ -95,11 +93,12 @@ export default function AdminUsersPage() {
         });
     }
 
-    const columns = React.useMemo(() => [
+    const columns = React.useMemo<ColumnDef<User>[]>(() => [
         {
-            key: 'name',
-            label: 'User Identity',
-            render: (_: any, user: User) => {
+            id: 'name',
+            header: 'User Identity',
+            cell: ({ row }) => {
+                const user = row.original;
                 const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ');
                 const displayName = fullName || user.email.split('@')[0];
                 const initials = (displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
@@ -125,9 +124,10 @@ export default function AdminUsersPage() {
             }
         },
         {
-            key: 'role',
-            label: 'System Access',
-            render: (_: any, user: User) => {
+            id: 'role',
+            header: 'System Access',
+            cell: ({ row }) => {
+                const user = row.original;
                 const roleName = user.role?.name || 'User';
                 const isAdmin = roleName.toLowerCase() === 'admin';
                 return (
@@ -145,9 +145,9 @@ export default function AdminUsersPage() {
             }
         },
         {
-            key: 'status',
-            label: 'Network Status',
-            render: (_: any, user: User) => (
+            id: 'status',
+            header: 'Network Status',
+            cell: () => (
                 <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/5 w-fit border border-green-500/10">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                     <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Active</span>
@@ -155,18 +155,18 @@ export default function AdminUsersPage() {
             )
         },
         {
-            key: 'createdAt',
-            label: 'Member Since',
-            render: (_: any, user: User) => (
+            id: 'createdAt',
+            header: 'Member Since',
+            cell: ({ row }) => (
                 <div className="text-xs text-muted-foreground font-medium">
-                    {formatDate(user.createdAt)}
+                    {formatDate(row.original.createdAt)}
                 </div>
             )
         },
         {
-            key: 'actions',
-            label: 'Actions',
-            render: (_: any, user: User) => (
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => handleEditRole(user)}>
+                        <DropdownMenuItem onClick={() => handleEditRole(row.original)}>
                             Change Role
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive focus:bg-destructive/10">
@@ -235,20 +235,11 @@ export default function AdminUsersPage() {
                                 placeholder="Find by name or signal identifier..."
                                 className="h-10"
                                 value={search}
-                                onChange={(e: any) => {
-                                    const value = e.target.value
-                                    setSearch(value)
-
-                                    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-                                    searchTimerRef.current = setTimeout(() => {
-                                        setQuerySearch(value)
-                                        setPage(1)
-                                    }, 500)
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    setSearch(e.target.value)
                                 }}
                                 onClear={() => {
                                     setSearch('')
-                                    setQuerySearch('')
-                                    setPage(1)
                                 }}
                             />
                         </div>

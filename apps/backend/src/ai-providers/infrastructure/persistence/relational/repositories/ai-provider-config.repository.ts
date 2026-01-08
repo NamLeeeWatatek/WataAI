@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AiProviderOwnerType } from '../../../../ai-providers.enum';
@@ -18,12 +19,13 @@ import {
   AiProvider,
   UserAiProviderConfig,
   WorkspaceAiProviderConfig,
+  AiUsageLog,
+  AiUsageStats,
 } from '../../../../domain/ai-provider';
 
 @Injectable()
 export class AiProviderConfigRelationalRepository
-  implements AiProviderConfigRepository
-{
+  implements AiProviderConfigRepository {
   constructor(
     @InjectRepository(AiProviderEntity)
     private readonly aiProviderRepository: Repository<AiProviderEntity>,
@@ -35,7 +37,7 @@ export class AiProviderConfigRelationalRepository
     private readonly workspaceConfigRepository: Repository<WorkspaceAiProviderConfigEntity>,
     @InjectRepository(AiUsageLogEntity)
     private readonly usageLogRepository: Repository<AiUsageLogEntity>,
-  ) {}
+  ) { }
 
   // AiProvider operations
   async findAvailableProviders(): Promise<AiProvider[]> {
@@ -59,7 +61,7 @@ export class AiProviderConfigRelationalRepository
     data: {
       providerId: string;
       displayName: string;
-      config: Record<string, any>;
+      config: Record<string, unknown>;
       modelList: string[];
     },
   ): Promise<UserAiProviderConfig> {
@@ -102,7 +104,7 @@ export class AiProviderConfigRelationalRepository
   async updateUserConfig(
     userId: string,
     id: string,
-    payload: Partial<UserAiProviderConfig>,
+    payload: DeepPartial<UserAiProviderConfig>,
   ): Promise<UserAiProviderConfig> {
     const entity = await this.userConfigRepository.findOne({
       where: { id, userId },
@@ -117,7 +119,7 @@ export class AiProviderConfigRelationalRepository
         UserAiProviderConfigMapper.toPersistence({
           ...UserAiProviderConfigMapper.toDomain(entity),
           ...payload,
-        }),
+        } as UserAiProviderConfig),
       ),
     );
 
@@ -180,7 +182,7 @@ export class AiProviderConfigRelationalRepository
     data: {
       providerId: string;
       displayName: string;
-      config: Record<string, any>;
+      config: Record<string, unknown>;
       modelList: string[];
     },
   ): Promise<WorkspaceAiProviderConfig> {
@@ -226,7 +228,7 @@ export class AiProviderConfigRelationalRepository
   async updateWorkspaceConfig(
     workspaceId: string,
     id: string,
-    payload: Partial<WorkspaceAiProviderConfig>,
+    payload: DeepPartial<WorkspaceAiProviderConfig>,
   ): Promise<WorkspaceAiProviderConfig> {
     const entity = await this.workspaceConfigRepository.findOne({
       where: { id, workspaceId },
@@ -241,7 +243,7 @@ export class AiProviderConfigRelationalRepository
         WorkspaceAiProviderConfigMapper.toPersistence({
           ...WorkspaceAiProviderConfigMapper.toDomain(entity),
           ...payload,
-        }),
+        } as WorkspaceAiProviderConfig),
       ),
     );
 
@@ -261,7 +263,7 @@ export class AiProviderConfigRelationalRepository
       provider?: string;
       limit?: number;
     },
-  ): Promise<any[]> {
+  ): Promise<AiUsageLog[]> {
     let query = this.usageLogRepository
       .createQueryBuilder('log')
       .where('log.workspace_id = :workspaceId', { workspaceId });
@@ -294,15 +296,113 @@ export class AiProviderConfigRelationalRepository
   async getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<any> {
-    // TODO: Implement actual usage stats calculation
-    return {};
+  ): Promise<AiUsageStats> {
+    const now = new Date();
+    const startDate = new Date();
+
+    switch (period) {
+      case 'day':
+        startDate.setDate(now.getDate() - 1);
+        break;
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    const queryInfo = this.usageLogRepository
+      .createQueryBuilder('log')
+      .where('log.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('log.requested_at >= :startDate', { startDate });
+
+    const totalStats = await queryInfo
+      .select('SUM(log.input_tokens)', 'totalInputTokens')
+      .addSelect('SUM(log.output_tokens)', 'totalOutputTokens')
+      .addSelect('SUM(log.cost)', 'totalCost')
+      .addSelect('COUNT(log.id)', 'totalRequests')
+      .getRawOne();
+
+    const providerStats = await this.usageLogRepository
+      .createQueryBuilder('log')
+      .where('log.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('log.requested_at >= :startDate', { startDate })
+      .select('log.provider', 'provider')
+      .addSelect('SUM(log.input_tokens)', 'inputTokens')
+      .addSelect('SUM(log.output_tokens)', 'outputTokens')
+      .addSelect('SUM(log.cost)', 'cost')
+      .addSelect('COUNT(log.id)', 'requests')
+      .groupBy('log.provider')
+      .getRawMany();
+
+    const modelStats = await this.usageLogRepository
+      .createQueryBuilder('log')
+      .where('log.workspace_id = :workspaceId', { workspaceId })
+      .andWhere('log.requested_at >= :startDate', { startDate })
+      .select('log.model', 'model')
+      .addSelect('SUM(log.input_tokens)', 'inputTokens')
+      .addSelect('SUM(log.output_tokens)', 'outputTokens')
+      .addSelect('SUM(log.cost)', 'cost')
+      .addSelect('COUNT(log.id)', 'requests')
+      .groupBy('log.model')
+      .getRawMany();
+
+    const byProvider: Record<
+      string,
+      {
+        inputTokens: number;
+        outputTokens: number;
+        cost: number;
+        requests: number;
+      }
+    > = {};
+
+    providerStats.forEach((p) => {
+      byProvider[p.provider] = {
+        inputTokens: Number(p.inputTokens || 0),
+        outputTokens: Number(p.outputTokens || 0),
+        cost: Number(p.cost || 0),
+        requests: Number(p.requests || 0),
+      };
+    });
+
+    const byModel: Record<
+      string,
+      {
+        inputTokens: number;
+        outputTokens: number;
+        cost: number;
+        requests: number;
+      }
+    > = {};
+
+    modelStats.forEach((m) => {
+      byModel[m.model] = {
+        inputTokens: Number(m.inputTokens || 0),
+        outputTokens: Number(m.outputTokens || 0),
+        cost: Number(m.cost || 0),
+        requests: Number(m.requests || 0),
+      };
+    });
+
+    return {
+      totalInputTokens: Number(totalStats.totalInputTokens || 0),
+      totalOutputTokens: Number(totalStats.totalOutputTokens || 0),
+      totalCost: Number(totalStats.totalCost || 0),
+      totalRequests: Number(totalStats.totalRequests || 0),
+      byProvider,
+      byModel,
+    };
   }
 
   async getApiKeyByProviderId(
     providerId: string,
     scope?: 'user' | 'workspace' | 'system',
-  ): Promise<any> {
+  ): Promise<NullableType<string>> {
     if (scope === 'system') {
       const config = await this.configRepository.findOne({
         where: {
@@ -320,14 +420,14 @@ export class AiProviderConfigRelationalRepository
       const config = await this.userConfigRepository.findOne({
         where: { providerId, isActive: true },
       });
-      return config?.config?.apiKey || null;
+      return (config?.config?.apiKey as string) || null;
     }
 
     if (scope === 'workspace') {
       const config = await this.workspaceConfigRepository.findOne({
         where: { providerId, isActive: true },
       });
-      return config?.config?.apiKey || null;
+      return (config?.config?.apiKey as string) || null;
     }
 
     // Default: try system first
@@ -365,7 +465,7 @@ export class AiProviderConfigRelationalRepository
     providerId: string,
     scope: 'user' | 'workspace',
     scopeId: string,
-  ): Promise<any> {
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
     if (scope === 'user') {
       const entity = await this.userConfigRepository.findOne({
         where: { userId: scopeId, providerId, isActive: true },
@@ -390,7 +490,7 @@ export class AiProviderConfigRelationalRepository
     inputTokens: number;
     outputTokens: number;
     cost?: number;
-  }): Promise<any> {
+  }): Promise<AiUsageLog> {
     const log = this.usageLogRepository.create({
       ...data,
       cost: data.cost ?? 0,

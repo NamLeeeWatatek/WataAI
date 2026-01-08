@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-quer
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useDebounce } from '../useDebounce';
 import type { CreationJob } from '@/lib/types/creation-job';
 import { DateRange } from 'react-day-picker';
 
@@ -27,6 +28,8 @@ export function useCreationJobs(initialParams: {
     const queryClient = useQueryClient();
     const { user, accessToken } = useAuth();
 
+    const debouncedSearch = useDebounce(searchFilter, 500);
+
     const queryParams = {
         page,
         limit: pageSize,
@@ -34,7 +37,7 @@ export function useCreationJobs(initialParams: {
         startDate: dateRange?.from?.toISOString(),
         endDate: dateRange?.to?.toISOString(),
         status: statusFilter,
-        search: searchFilter,
+        search: debouncedSearch,
     };
 
     const { data: jobsData, isLoading, refetch, isRefetching } = useQuery({

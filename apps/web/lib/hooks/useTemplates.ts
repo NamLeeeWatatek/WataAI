@@ -70,7 +70,7 @@ export function useTemplates(params?: QueryTemplateDto) {
   })
 
   const bulkUpdateMutation = useMutation({
-    mutationFn: ({ ids, data }: { ids: string[]; data: any }) => templatesApi.bulkUpdate(ids, data),
+    mutationFn: ({ ids, data }: { ids: string[]; data: Omit<UpdateTemplateDto, 'id'> }) => templatesApi.bulkUpdate(ids, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
     },

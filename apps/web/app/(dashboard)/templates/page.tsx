@@ -48,8 +48,9 @@ export default function TemplatesPage() {
         try {
             await deleteTemplate(deleteId);
             toast.success('Template deleted');
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to delete template');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to delete template';
+            toast.error(message);
         } finally {
             setDeleteId(null)
         }
@@ -64,8 +65,9 @@ export default function TemplatesPage() {
             }
             toast.success(data.id ? 'Template updated' : 'Template created');
             setTemplateDialogOpen(false);
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to save template');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to save template';
+            toast.error(message);
         }
     }
 
@@ -130,7 +132,6 @@ export default function TemplatesPage() {
                         onPageChange={setCurrentPage}
                         onPageSizeChange={setPageSize}
                         pageSizeOptions={[9, 18, 27, 36]}
-                        className="justify-end"
                     />
                 </div>
             )}

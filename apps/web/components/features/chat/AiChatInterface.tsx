@@ -1,29 +1,30 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Bot, User, Copy, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/Badge';
-import { MessageRole } from '@/lib/types/conversations';
+import { MessageRole, type AiMessage, type AiSource, type MessageMetadata } from '@/lib/types/conversations';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-export interface AiMessage {
+// Flexible message interface for UI display (handles both persisted and optimistic messages)
+export interface UiMessage {
   role: MessageRole;
   content: string;
-  timestamp: string;
-  metadata?: {
-    bot?: string;
-    model?: string;
-    sources?: any[];
-  };
+  sentAt?: string;
+  timestamp?: string; // Legacy support
+  metadata?: MessageMetadata;
+  sources?: AiSource[];
+  id?: string; // Optional for optimistic updates
+  isError?: boolean;
 }
 
 interface AiChatInterfaceProps {
-  messages: AiMessage[];
+  messages: UiMessage[];
   onSendMessage: (content: string) => Promise<void>;
   loading?: boolean;
   botName?: string;
@@ -34,7 +35,8 @@ interface AiChatInterfaceProps {
   headerActions?: React.ReactNode;
 }
 
-const formatTime = (timestamp: string) => {
+const formatTime = (timestamp?: string) => {
+  if (!timestamp) return '';
   try {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) {
@@ -48,6 +50,145 @@ const formatTime = (timestamp: string) => {
     return '';
   }
 };
+
+const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }: {
+  message: UiMessage,
+  index: number,
+  botName?: string,
+  onCopy: (content: string, index: number) => void,
+  copiedIndex: number | null
+}) => {
+  return (
+    <div
+      className={cn(
+        'flex gap-5',
+        message.role === MessageRole.USER ? 'flex-row-reverse' : 'flex-row'
+      )}
+    >
+      <div className={cn(
+        'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transition-transform hover:scale-105',
+        message.role === MessageRole.ASSISTANT
+          ? 'bg-gradient-to-br from-primary to-primary/60 text-primary-foreground'
+          : 'bg-gradient-to-br from-zinc-700 to-zinc-900 text-white'
+      )}>
+        {message.role === MessageRole.ASSISTANT ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
+      </div>
+
+      <div className={cn(
+        'flex flex-col gap-2 max-w-[85%]',
+        message.role === MessageRole.USER ? 'items-end' : 'items-start'
+      )}>
+        <div className={cn(
+          'group relative px-5 py-4 rounded-3xl shadow-sm border transition-all',
+          message.role === MessageRole.USER
+            ? 'bg-primary text-primary-foreground border-primary/20 rounded-tr-none'
+            : cn(
+              'bg-card border-border/50 rounded-tl-none hover:border-border hover:shadow-md',
+              message.isError && 'border-destructive/30 bg-destructive/5'
+            )
+        )}>
+          {message.role === MessageRole.ASSISTANT && (
+            <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border/10">
+              <span className="font-bold text-xs uppercase tracking-wider opacity-80">
+                {message.metadata?.bot || botName}
+              </span>
+              {message.metadata?.model && (
+                <Badge variant="outline" className="text-[10px] h-4 px-1 bg-primary/10 border-primary/20 text-primary">
+                  {String(message.metadata.model)}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed break-words">
+            {message.role === MessageRole.ASSISTANT ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  code({ node, inline, className, children, ...props }: { node?: unknown, inline?: boolean, className?: string, children?: React.ReactNode } & React.HTMLAttributes<HTMLElement>) {
+                    return !inline ? (
+                      <div className="relative my-4 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800">
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
+                          <span className="text-xs text-zinc-400">Code</span>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:text-white" onClick={() => navigator.clipboard.writeText(String(children))}>
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <pre className="p-4 overflow-x-auto text-sm text-zinc-100 font-mono">
+                          <code {...props} className={className}>
+                            {children}
+                          </code>
+                        </pre>
+                      </div>
+                    ) : (
+                      <code className="bg-zinc-800/50 text-zinc-200 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+                        {children}
+                      </code>
+                    )
+                  }
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            ) : (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            )}
+          </div>
+
+          {/* RAG Sources Display */}
+          {message.sources && message.sources.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-border/20">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Sources
+              </p>
+              <div className="grid gap-2">
+                {message.sources.map((source: AiSource, idx: number) => (
+                  <div key={idx} className="bg-background/40 hover:bg-background/80 transition-colors border border-border/30 rounded-lg p-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-semibold text-primary truncate">
+                        {String(source.metadata?.title || source.documentId || `Source ${idx + 1}`)}
+                      </span>
+                      {source.score && (
+                        <Badge variant="secondary" className="h-4 text-[9px] px-1">
+                          {Math.round(source.score * 100)}% Match
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground/80 line-clamp-2 leading-relaxed">
+                      {source.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 px-1">
+          <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">
+            {formatTime(message.sentAt || message.timestamp)}
+          </span>
+          <button
+            onClick={() => onCopy(message.content, index)}
+            className="text-muted-foreground/40 hover:text-primary transition-colors"
+          >
+            {copiedIndex === index ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  // Custom comparison for performance
+  return (
+    prev.message.id === next.message.id &&
+    prev.message.content === next.message.content &&
+    prev.message.role === next.message.role &&
+    prev.copiedIndex === next.copiedIndex &&
+    prev.index === next.index // Index check for copied state reference
+  );
+});
+MessageItem.displayName = 'MessageItem';
 
 export function AiChatInterface({
   messages,
@@ -159,123 +300,18 @@ export function AiChatInterface({
               </div>
             </div>
           ) : (
+
+
+            // ... inside main component map ...
             messages.map((message, index) => (
-              <div
+              <MessageItem
                 key={index}
-                className={cn(
-                  'flex gap-5',
-                  message.role === MessageRole.USER ? 'flex-row-reverse' : 'flex-row'
-                )}
-              >
-                <div className={cn(
-                  'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg transition-transform hover:scale-105',
-                  message.role === MessageRole.ASSISTANT
-                    ? 'bg-gradient-to-br from-primary to-primary/60 text-primary-foreground'
-                    : 'bg-gradient-to-br from-zinc-700 to-zinc-900 text-white'
-                )}>
-                  {message.role === MessageRole.ASSISTANT ? <Bot className="w-5 h-5" /> : <User className="w-5 h-5" />}
-                </div>
-
-                <div className={cn(
-                  'flex flex-col gap-2 max-w-[85%]',
-                  message.role === MessageRole.USER ? 'items-end' : 'items-start'
-                )}>
-                  <div className={cn(
-                    'group relative px-5 py-4 rounded-3xl shadow-sm border transition-all',
-                    message.role === MessageRole.USER
-                      ? 'bg-primary text-primary-foreground border-primary/20 rounded-tr-none'
-                      : 'bg-card border-border/50 rounded-tl-none hover:border-border hover:shadow-md'
-                  )}>
-                    {message.role === MessageRole.ASSISTANT && (
-                      <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border/10">
-                        <span className="font-bold text-xs uppercase tracking-wider opacity-80">
-                          {message.metadata?.bot || botName}
-                        </span>
-                        {message.metadata?.model && (
-                          <Badge variant="outline" className="text-[10px] h-4 px-1 bg-primary/10 border-primary/20 text-primary">
-                            {message.metadata.model}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed break-words">
-                      {message.role === MessageRole.ASSISTANT ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            code({ node, inline, className, children, ...props }: any) {
-                              return !inline ? (
-                                <div className="relative my-4 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800">
-                                  <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-                                    <span className="text-xs text-zinc-400">Code</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:text-white" onClick={() => navigator.clipboard.writeText(String(children))}>
-                                      <Copy className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  <pre className="p-4 overflow-x-auto text-sm text-zinc-100 font-mono">
-                                    <code {...props} className={className}>
-                                      {children}
-                                    </code>
-                                  </pre>
-                                </div>
-                              ) : (
-                                <code className="bg-zinc-800/50 text-zinc-200 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
-                                  {children}
-                                </code>
-                              )
-                            }
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
-                      ) : (
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                      )}
-                    </div>
-
-                    {/* RAG Sources Display */}
-                    {message.metadata?.sources && message.metadata.sources.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-border/20">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Sources
-                        </p>
-                        <div className="grid gap-2">
-                          {message.metadata.sources.map((source: any, idx: number) => (
-                            <div key={idx} className="bg-background/40 hover:bg-background/80 transition-colors border border-border/30 rounded-lg p-2.5 text-xs">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <span className="font-semibold text-primary truncate">
-                                  {source.metadata?.title || source.documentId || `Source ${idx + 1}`}
-                                </span>
-                                {source.score && (
-                                  <Badge variant="secondary" className="h-4 text-[9px] px-1">
-                                    {Math.round(source.score * 100)}% Match
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-muted-foreground/80 line-clamp-2 leading-relaxed">
-                                {source.content}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 px-1">
-                    <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">
-                      {formatTime(message.timestamp)}
-                    </span>
-                    <button
-                      onClick={() => handleCopy(message.content, index)}
-                      className="text-muted-foreground/40 hover:text-primary transition-colors"
-                    >
-                      {copiedIndex === index ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
+                index={index}
+                message={message}
+                botName={botName}
+                onCopy={handleCopy}
+                copiedIndex={copiedIndex}
+              />
             ))
           )}
 

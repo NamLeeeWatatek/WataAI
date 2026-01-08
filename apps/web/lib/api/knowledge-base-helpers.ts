@@ -13,11 +13,11 @@ import type { CreateKnowledgeBaseDto } from '../types/knowledge-base'
 export async function getWorkspaceKnowledgeBases() {
   const session = await getSession()
   const workspaceId = session?.workspace?.id
-  
+
   if (!workspaceId) {
   }
-  
-  return getKnowledgeBases(workspaceId)
+
+  return getKnowledgeBases({ workspaceId } as any)
 }
 
 /**
@@ -29,11 +29,11 @@ export async function createWorkspaceKnowledgeBase(
 ) {
   const session = await getSession()
   const workspaceId = session?.workspace?.id
-  
+
   if (!workspaceId) {
     throw new Error('No workspace found in session')
   }
-  
+
   return createKnowledgeBase({
     ...data,
     workspaceId,

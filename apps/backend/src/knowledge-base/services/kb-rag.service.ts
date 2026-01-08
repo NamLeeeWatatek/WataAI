@@ -1,4 +1,9 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+﻿import {
+  Injectable,
+  Logger,
+  UnprocessableEntityException,
+  NotFoundException,
+} from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +19,7 @@ import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/en
 import { KBChunkEntity } from '../infrastructure/persistence/relational/entities/kb-chunk.entity';
 import { KbAiConfig } from '../config/kb-ai.config';
 import { ILike } from 'typeorm';
+import { isUUID } from '../../utils/is-uuid';
 
 export interface ChunkSource {
   content: string;
@@ -50,7 +56,7 @@ export class KBRagService {
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -221,7 +227,7 @@ export class KBRagService {
 
       const relevantChunks = await this.query(
         question,
-        'system',
+        'default', // Use 'default' or some valid string for Qdrant, but handle it in query
         knowledgeBaseId,
         limit,
         threshold,
@@ -286,10 +292,11 @@ export class KBRagService {
       const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
 
       if (kb && kb.aiProviderId) {
-        const userId = kb.createdBy || 'system';
+        const userId = kb.createdBy;
 
         if (
           kb.workspaceId &&
+          isUUID(kb.workspaceId) &&
           (await this.aiProvidersService.configExists(
             kb.aiProviderId,
             'workspace',
@@ -307,11 +314,13 @@ export class KBRagService {
             kb.workspaceId,
           );
         } else if (
-          await this.aiProvidersService.configExists(
+          userId &&
+          isUUID(userId) &&
+          (await this.aiProvidersService.configExists(
             kb.aiProviderId,
             'user',
             userId,
-          )
+          ))
         ) {
           this.logger.log(
             `🔎 Using KB's user AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
@@ -321,7 +330,7 @@ export class KBRagService {
             finalModel,
             kb.aiProviderId,
             'user',
-            userId as string,
+            userId,
           );
         }
       }
@@ -361,7 +370,7 @@ export class KBRagService {
       });
 
       if (!bot) {
-        throw new Error(`Bot ${agentId} not found`);
+        throw new NotFoundException(`Bot ${agentId} not found`);
       }
 
       const workspaceId = bot.workspaceId ?? undefined;
@@ -428,12 +437,12 @@ export class KBRagService {
 
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiProviderId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiProviderId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -493,21 +502,21 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiProviderId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiProviderId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
-        throw new Error(`Bot ${botId} not found`);
+        throw new NotFoundException(`Bot ${botId} not found`);
       }
 
       const systemPrompt = bot?.systemPrompt || 'You are a helpful assistant.';
@@ -561,7 +570,7 @@ export class KBRagService {
       );
 
       if (!providerConfig) {
-        throw new Error(
+        throw new UnprocessableEntityException(
           `No AI provider configured. Please configure an AI provider in Settings first.`,
         );
       }
@@ -637,7 +646,7 @@ export class KBRagService {
     scopeId: string;
     modelName?: string;
   } | null> {
-    if (knowledgeBaseId) {
+    if (knowledgeBaseId && isUUID(knowledgeBaseId)) {
       const kb = await this.kbRepository.findOne({
         where: { id: knowledgeBaseId },
       });
@@ -645,6 +654,7 @@ export class KBRagService {
       if (kb?.aiProviderId) {
         if (
           kb.workspaceId &&
+          isUUID(kb.workspaceId) &&
           (await this.aiProvidersService.configExists(
             kb.aiProviderId,
             'workspace',
@@ -659,27 +669,30 @@ export class KBRagService {
           };
         }
 
-        const userId = kb.createdBy || 'system';
+        const userId = kb.createdBy;
         if (
-          await this.aiProvidersService.configExists(
+          userId &&
+          isUUID(userId) &&
+          (await this.aiProvidersService.configExists(
             kb.aiProviderId,
             'user',
             userId,
-          )
+          ))
         ) {
           return {
             providerId: kb.aiProviderId,
             scope: 'user',
-            scopeId: userId as string,
+            scopeId: userId,
             modelName: kb.ragModel || undefined,
           };
         }
       }
     }
 
-    if (bot?.aiProviderId) {
+    if (bot?.aiProviderId && isUUID(bot.aiProviderId)) {
       if (
         bot.workspaceId &&
+        isUUID(bot.workspaceId) &&
         (await this.aiProvidersService.configExists(
           bot.aiProviderId,
           'workspace',
@@ -695,23 +708,25 @@ export class KBRagService {
       }
 
       if (
-        await this.aiProvidersService.configExists(
+        bot.createdBy &&
+        isUUID(bot.createdBy) &&
+        (await this.aiProvidersService.configExists(
           bot.aiProviderId,
           'user',
-          bot.createdBy || 'system',
-        )
+          bot.createdBy,
+        ))
       ) {
         return {
           providerId: bot.aiProviderId,
           scope: 'user',
-          scopeId: bot.createdBy || 'system',
+          scopeId: bot.createdBy,
           modelName: bot.aiModelName || undefined,
         };
       }
     }
 
     // Fallback: Try to find ANY configured provider for the workspace
-    if (bot?.workspaceId) {
+    if (bot?.workspaceId && isUUID(bot.workspaceId)) {
       const workspaceConfigs =
         await this.aiProvidersService.getWorkspaceConfigs(bot.workspaceId);
       if (workspaceConfigs.length > 0) {
@@ -728,21 +743,23 @@ export class KBRagService {
     }
 
     // Fallback: Try to find ANY configured provider for the user
-    const fallbackUserId = bot?.createdBy || 'system';
-    try {
-      const userConfigs =
-        await this.aiProvidersService.getUserConfigs(fallbackUserId);
-      if (userConfigs.length > 0) {
-        const verifiedConfig =
-          userConfigs.find((c) => c.config?.isVerified) || userConfigs[0];
-        return {
-          providerId: verifiedConfig.id,
-          scope: 'user',
-          scopeId: fallbackUserId,
-        };
+    const fallbackUserId = bot?.createdBy;
+    if (fallbackUserId && isUUID(fallbackUserId)) {
+      try {
+        const userConfigs =
+          await this.aiProvidersService.getUserConfigs(fallbackUserId);
+        if (userConfigs.length > 0) {
+          const verifiedConfig =
+            userConfigs.find((c) => c.config?.isVerified) || userConfigs[0];
+          return {
+            providerId: verifiedConfig.id,
+            scope: 'user',
+            scopeId: fallbackUserId,
+          };
+        }
+      } catch (e) {
+        // Ignore
       }
-    } catch (e) {
-      // Ignore
     }
 
     return null;

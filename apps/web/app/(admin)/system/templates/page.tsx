@@ -2,16 +2,16 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
-import { Template } from '@/lib/types/template';
+import { Template, CreateTemplateDto, UpdateTemplateDto } from '@/lib/types/template';
 import { useTemplates } from '@/lib/hooks/useTemplates';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Sparkles, Filter, icons, Folder, X } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Sparkles, Filter, icons, X, Folder } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { AssignToolDialog } from '@/components/features/creation-tools/AssignToolDialog';
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
@@ -22,6 +22,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -42,6 +43,7 @@ export default function TemplatesPage() {
 
     const { currentWorkspace } = useWorkspace();
     const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 500);
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -60,17 +62,10 @@ export default function TemplatesPage() {
     const [bulkDeleteAlertOpen, setBulkDeleteAlertOpen] = useState(false);
     const [bulkDeleting, setBulkDeleting] = useState(false);
 
-    const [querySearch, setQuerySearch] = useState('')
-    const searchTimerRef = useRef<NodeJS.Timeout>()
-
-    // Cleanup timer
-    useEffect(() => {
-        return () => {
-            if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-        }
-    }, [])
-
     // Reset page on search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
 
     // Query for Creation Tools (for filter)
@@ -97,7 +92,7 @@ export default function TemplatesPage() {
         workspaceId: currentWorkspace?.id || '',
         filters: {
             ...(selectedToolFilter !== 'all' ? { creationToolId: selectedToolFilter } : {}),
-            ...(querySearch ? { name: querySearch } : {})
+            ...(debouncedSearch ? { name: debouncedSearch } : {})
         },
     });
 
@@ -107,13 +102,13 @@ export default function TemplatesPage() {
     const totalItems = templatesData?.total || 0;
     const tools = Array.isArray(toolsData) ? toolsData : [];
 
-    const handleSaveTemplate = async (data: any) => {
+    const handleSaveTemplate = async (data: CreateTemplateDto | UpdateTemplateDto) => {
         try {
             if (editingTemplate) {
-                await updateTemplate(editingTemplate.id, data);
+                await updateTemplate(editingTemplate.id, data as UpdateTemplateDto);
                 toast.success('Template updated successfully');
             } else {
-                await createTemplate(data);
+                await createTemplate(data as CreateTemplateDto);
                 toast.success('Template created successfully');
             }
             await refetch();
@@ -196,7 +191,7 @@ export default function TemplatesPage() {
         try {
             await bulkUpdateTemplates({
                 ids: Array.from(selectedIds),
-                data: { creationToolId: null }
+                data: { creationToolId: null as any }
             });
             toast.success(`Successfully unassigned ${selectedIds.size} templates`);
             setSelectedIds(new Set());
@@ -223,11 +218,6 @@ export default function TemplatesPage() {
         }
     };
 
-
-
-
-
-
     return (
         <PageShell
             title="Template Library"
@@ -247,24 +237,15 @@ export default function TemplatesPage() {
             <div className="space-y-6">
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-4 p-1">
-                    <div className="relative flex-1 max-w-md">
+                    <div className="relative flex-1 max-md">
                         <Search
                             placeholder="Search templates..."
                             value={searchQuery}
-                            onChange={(e: any) => {
-                                const value = e.target.value
-                                setSearchQuery(value)
-
-                                if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-                                searchTimerRef.current = setTimeout(() => {
-                                    setQuerySearch(value)
-                                    setCurrentPage(1)
-                                }, 500)
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                setSearchQuery(e.target.value);
                             }}
                             onClear={() => {
                                 setSearchQuery('')
-                                setQuerySearch('')
-                                setCurrentPage(1)
                             }}
                         />
                     </div>
@@ -315,9 +296,8 @@ export default function TemplatesPage() {
                 />
 
                 {/* Templates Grid */}
-                {templates.length === 0 ? (
+                {templates.length === 0 && !isLoading ? (
                     <div className="flex flex-col items-center justify-center py-16 border rounded-lg bg-card/30 border-dashed">
-                        {/* Empty state remains same */}
                         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 ring-1 ring-primary/20">
                             <Sparkles className="w-8 h-8 text-primary" />
                         </div>
@@ -368,7 +348,6 @@ export default function TemplatesPage() {
                                         selectedIds.has(template.id) ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:shadow-xl hover:-translate-y-1"
                                     )}
                                     onClick={(e) => {
-                                        // Allow selection by clicking card if not clicking a button/interactive element
                                         const target = e.target as HTMLElement;
                                         if (!target.closest('button') && !target.closest('.no-select')) {
                                             toggleSelection(template.id);
@@ -392,7 +371,6 @@ export default function TemplatesPage() {
                                             autoPlayOnHover={true}
                                             icon={template.icon}
                                         />
-                                        {/* Always visible badge */}
                                         <div className="absolute top-3 right-3 z-10">
                                             <Badge variant="secondary" className="backdrop-blur-md bg-black/40 text-white border-white/20 shadow-sm hover:bg-black/60">
                                                 {getToolName(template.creationToolId || '')}
@@ -477,7 +455,7 @@ export default function TemplatesPage() {
                     template={editingTemplate}
                     creationToolId={editingTemplate?.creationToolId}
                     onSave={async (data) => {
-                        await handleSaveTemplate(data);
+                        await handleSaveTemplate(data as unknown as CreateTemplateDto | UpdateTemplateDto);
                         setTemplateDialogOpen(false);
                         setEditingTemplate(null);
                     }}

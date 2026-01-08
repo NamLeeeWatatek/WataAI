@@ -52,10 +52,10 @@ export function GlobalActivityCenter() {
         if (!workspace?.id) return;
         setLoadingHistory(true);
         try {
-            const { data } = await auditApi.getMyActivity(workspace.id, {
+            const response = await auditApi.getMyActivity(workspace.id, {
                 limit: 30
-            });
-            setHistoryLogs(data.items);
+            }) as any;
+            setHistoryLogs(response?.items || []);
         } catch (error) {
             console.error('Failed to fetch activity history', error);
         } finally {
@@ -109,11 +109,11 @@ export function GlobalActivityCenter() {
 
                     <Tabs defaultValue="active" className="flex-1 flex flex-col mt-6 overflow-hidden">
                         <div className="px-6 mb-4">
-                            <TabsList className="grid w-full grid-cols-2 h-10 rounded-xl">
-                                <TabsTrigger value="active" className="rounded-lg text-xs font-bold">
+                            <TabsList variant="pills" className="w-full justify-start">
+                                <TabsTrigger value="active" variant="pills" className="flex-1 text-xs font-bold">
                                     Active Tasks
                                 </TabsTrigger>
-                                <TabsTrigger value="history" className="rounded-lg text-xs font-bold">
+                                <TabsTrigger value="history" variant="pills" className="flex-1 text-xs font-bold">
                                     History Feed
                                 </TabsTrigger>
                             </TabsList>

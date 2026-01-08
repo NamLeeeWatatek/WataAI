@@ -1,3 +1,7 @@
+/**
+ * Creation Job Type Definitions
+ */
+
 export enum CreationJobStatus {
     PENDING = 'PENDING',
     PROCESSING = 'PROCESSING',
@@ -6,17 +10,39 @@ export enum CreationJobStatus {
     CANCELED = 'CANCELED',
 }
 
+/** Creation tool metadata within a job */
+export interface CreationToolInfo {
+    name: string;
+    slug: string;
+    description?: string;
+    icon?: string;
+    category?: string;
+}
+
+/** Input data for creation jobs */
+export interface CreationJobInput {
+    templateId?: string;
+    parameters?: Record<string, unknown>;
+    files?: string[];
+    options?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
+/** Output data from creation jobs */
+export interface CreationJobOutput {
+    result?: unknown;
+    files?: string[];
+    metadata?: Record<string, unknown>;
+    [key: string]: unknown;
+}
+
 export interface CreationJob {
     id: string;
     status: CreationJobStatus;
     creationToolId: string;
-    creationTool?: {
-        name: string;
-        slug: string;
-        [key: string]: any;
-    };
-    inputData: any;
-    outputData?: any;
+    creationTool?: CreationToolInfo;
+    inputData: CreationJobInput;
+    outputData?: CreationJobOutput;
     progress: number;
     createdBy?: string;
     workspaceId?: string;
@@ -27,5 +53,5 @@ export interface CreationJob {
 
 export interface CreateCreationJobDto {
     creationToolId: string;
-    inputData: any;
+    inputData: CreationJobInput;
 }

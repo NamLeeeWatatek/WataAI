@@ -53,7 +53,7 @@ export default function CreationToolDetailPage() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const debouncedSearch = useDebounce(searchQuery, 500);
 
-    const form = useForm<z.infer<any>>({
+    const form = useForm<Record<string, unknown>>({
         defaultValues: {},
     });
 
@@ -93,8 +93,8 @@ export default function CreationToolDetailPage() {
         if (params.slug) setBreadcrumbName(params.slug as string, tool.name);
 
         // Form Defaults Setup
-        const defaults: Record<string, any> = {};
-        const zodShape: Record<string, any> = {};
+        const defaults: Record<string, unknown> = {};
+        const zodShape: Record<string, z.ZodTypeAny> = {};
 
         tool.formConfig.fields.forEach((field) => {
             if (field.defaultValue !== undefined) {
@@ -105,32 +105,34 @@ export default function CreationToolDetailPage() {
             }
 
             // --- Zod Schema Generation (Keeping original logic) ---
-            let schema: any;
+            let schema: z.ZodTypeAny;
             if (field.type === 'number') {
-                schema = z.number({ message: "Must be a number" });
-                if (field.validation?.min !== undefined) schema = schema.min(field.validation.min);
-                if (field.validation?.max !== undefined) schema = schema.max(field.validation.max);
+                let numSchema = z.number({ message: "Must be a number" });
+                if (field.validation?.min !== undefined) numSchema = numSchema.min(field.validation.min);
+                if (field.validation?.max !== undefined) numSchema = numSchema.max(field.validation.max);
+                schema = numSchema;
             } else if (field.type === 'checkbox') {
                 schema = z.boolean();
             } else if (field.type === 'channel-selector') {
                 schema = z.array(z.string());
                 if (field.validation?.required) {
-                    schema = (schema as z.ZodArray<any>).min(1, "Please select at least one channel");
+                    schema = (schema as z.ZodArray<z.ZodString>).min(1, "Please select at least one channel");
                 }
             } else if (field.type === 'file') {
                 schema = z.any().refine((val) => val && val.url, "File is required");
             } else {
-                schema = z.string();
-                if (field.validation?.minLength) schema = schema.min(field.validation.minLength, `Minimum ${field.validation.minLength} characters`);
-                if (field.validation?.maxLength) schema = schema.max(field.validation.maxLength, `Maximum ${field.validation.maxLength} characters`);
-                if (field.validation?.pattern) schema = schema.regex(new RegExp(field.validation.pattern), "Invalid format");
+                let strSchema = z.string();
+                if (field.validation?.minLength) strSchema = strSchema.min(field.validation.minLength, `Minimum ${field.validation.minLength} characters`);
+                if (field.validation?.maxLength) strSchema = strSchema.max(field.validation.maxLength, `Maximum ${field.validation.maxLength} characters`);
+                if (field.validation?.pattern) strSchema = strSchema.regex(new RegExp(field.validation.pattern), "Invalid format");
+                schema = strSchema;
             }
 
             if (!field.validation?.required && field.type !== 'checkbox') {
                 schema = schema.optional().or(z.literal(''));
             } else if (field.validation?.required) {
                 if (field.type === 'text' || field.type === 'textarea') {
-                    schema = schema.min(1, "This field is required");
+                    schema = (schema as z.ZodString).min(1, "This field is required");
                 }
             }
             zodShape[field.name] = schema;
@@ -152,7 +154,7 @@ export default function CreationToolDetailPage() {
         queryFn: async () => {
             if (!tool?.id) return [];
 
-            const filters: any = {
+            const filters: Record<string, string | number | boolean> = {
                 creationToolId: tool.id
             };
 
@@ -183,7 +185,7 @@ export default function CreationToolDetailPage() {
         // Existing logic derived it from templates.
         if (templates.length === 0) return ['all'];
 
-        const distinctCategories = ['all', ...Array.from(new Set(templates.map((t: any) => {
+        const distinctCategories = ['all', ...Array.from(new Set(templates.map((t) => {
             if (t.category && typeof t.category === 'object') {
                 return t.category.slug || t.category.name || 'other';
             }
@@ -196,7 +198,7 @@ export default function CreationToolDetailPage() {
     useEffect(() => {
         const queryTemplateId = searchParams.get('templateId');
         if (queryTemplateId && !selectedTemplate && templates.length > 0) {
-            const match = templates.find((t: any) => t.id === queryTemplateId);
+            const match = templates.find((t) => t.id === queryTemplateId);
             if (match) {
                 handleTemplateSelect(match);
             }
@@ -213,12 +215,12 @@ export default function CreationToolDetailPage() {
         }
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: Record<string, unknown>) => {
         if (!tool) return;
         setSubmitting(true);
 
         try {
-            const inputData: any = {
+            const inputData: Record<string, unknown> = {
                 ...data,
                 includeTemplate: includeTemplate
             };
@@ -329,7 +331,7 @@ export default function CreationToolDetailPage() {
                                         <SearchInput
                                             placeholder="Search templates..."
                                             value={searchQuery}
-                                            onChange={(e: any) => setSearchQuery(e.target.value)}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
                                             onClear={() => setSearchQuery("")}
                                             className="h-9"
                                         />
@@ -426,7 +428,7 @@ export default function CreationToolDetailPage() {
                                                     {template.category && (
                                                         <div className="flex items-center gap-2 mt-1.5">
                                                             <Badge variant="secondary" className="bg-white/20 text-white">
-                                                                {typeof template.category === 'object' ? (template.category as any).name || (template.category as any).slug : template.category}
+                                                                {typeof template.category === 'object' ? (template.category as unknown as { name: string, slug: string }).name || (template.category as unknown as { name: string, slug: string }).slug : template.category}
                                                             </Badge>
                                                         </div>
                                                     )}

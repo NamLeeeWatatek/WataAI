@@ -19,12 +19,13 @@ import {
     Facebook,
     Settings,
     RefreshCw,
+    Activity,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 // import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { AssignBotDialog } from '@/components/features/channels/AssignBotDialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import { ConnectedChannelsTab, ChannelConfigurationsTab } from '@/components/features/channels';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -33,6 +34,7 @@ import { useChannels } from '@/lib/hooks/features/useChannels';
 import { getOAuthUrl } from '@/lib/api/channels';
 import { useBots } from '@/lib/hooks/features/useBots';
 import { type Bot } from '@/lib/api/bots';
+import type { Channel, FacebookPage, IntegrationConfig } from '@/lib/types/channel';
 
 export default function ChannelsPage() {
     const { currentWorkspace } = useWorkspace();
@@ -73,7 +75,7 @@ export default function ChannelsPage() {
     const [disconnectId, setDisconnectId] = useState<string | null>(null);
     const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
     const [assignBotDialogOpen, setAssignBotDialogOpen] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<any>(null);
+    const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
 
     const handleConnect = async (provider: string, configId?: string) => {
         dispatch(setConnecting(provider));
@@ -194,66 +196,68 @@ export default function ChannelsPage() {
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
-                    <TabsTrigger value="connected">
-                        <div className="flex items-center gap-2">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'connected' | 'configurations')} className="flex-1 flex flex-col">
+                <TabsHeader>
+                    <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
+                        <TabsTrigger value="connected" variant="pills">
+                            <Activity className="w-4 h-4 mr-2" />
                             <span>Connected Terminals</span>
-                            <Badge variant="secondary" className="ml-1 opacity-70">
+                            <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
                                 {channels.length}
                             </Badge>
-                        </div>
-                    </TabsTrigger>
-                    <TabsTrigger value="configurations">
-                        <div className="flex items-center gap-2">
+                        </TabsTrigger>
+                        <TabsTrigger value="configurations" variant="pills">
+                            <Settings className="w-4 h-4 mr-2" />
                             <span>Configurations</span>
-                            <Badge variant="secondary" className="ml-1 opacity-70">
+                            <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
                                 {configs.length}
                             </Badge>
-                        </div>
-                    </TabsTrigger>
-                </TabsList>
+                        </TabsTrigger>
+                    </TabsList>
+                </TabsHeader>
 
-                <TabsContent value="connected" className="m-0 focus-visible:outline-none">
-                    <ConnectedChannelsTab
-                        channels={channels.filter((c: any) =>
-                            c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            c.type?.toLowerCase().includes(searchQuery.toLowerCase())
-                        ) as any[]}
-                        searchQuery={searchQuery}
-                        viewMode={viewMode}
-                        currentPage={page}
-                        pageSize={pageSize}
-                        totalCount={channels.length}
-                        selectedIds={[]}
-                        onSearchChange={setSearchQuery}
-                        onViewModeChange={setViewMode}
-                        onPageChange={setPage}
-                        onPageSizeChange={setPageSize}
-                        onToggleSelection={() => { }}
-                        onClearSelection={() => { }}
-                        isLoading={isLoading}
-                        onDisconnect={(id: string) => setDisconnectId(id)}
-                        onAssignBot={(channel: any) => {
-                            setSelectedChannel(channel);
-                            dispatch(setSelectedBotId(channel.botId));
-                            setAssignBotDialogOpen(true);
-                        }}
-                        onLoadData={refetch}
-                    />
-                </TabsContent>
+                <div className="flex-1">
+                    <TabsContent value="connected" className="m-0 focus-visible:outline-none">
+                        <ConnectedChannelsTab
+                            channels={channels.filter((c: Channel) =>
+                                c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                c.type?.toLowerCase().includes(searchQuery.toLowerCase())
+                            )}
+                            searchQuery={searchQuery}
+                            viewMode={viewMode}
+                            currentPage={page}
+                            pageSize={pageSize}
+                            totalCount={channels.length}
+                            selectedIds={[]}
+                            onSearchChange={setSearchQuery}
+                            onViewModeChange={setViewMode}
+                            onPageChange={setPage}
+                            onPageSizeChange={setPageSize}
+                            onToggleSelection={() => { }}
+                            onClearSelection={() => { }}
+                            isLoading={isLoading}
+                            onDisconnect={(id: string) => setDisconnectId(id)}
+                            onAssignBot={(channel: Channel) => {
+                                setSelectedChannel(channel);
+                                dispatch(setSelectedBotId(channel.botId || ''));
+                                setAssignBotDialogOpen(true);
+                            }}
+                            onLoadData={refetch}
+                        />
+                    </TabsContent>
 
-                <TabsContent value="configurations" className="m-0">
-                    <ChannelConfigurationsTab
-                        configs={configs.filter((c: any) =>
-                            c.provider?.toLowerCase().includes(searchQuery.toLowerCase())
-                        ) as any[]}
-                        isLoading={isLoading}
-                        onConnect={handleConnect}
-                        onDeleteConfig={(id: string) => setDeleteConfigId(id)}
-                        onSaveConfig={(config: any) => handleSaveConfig(config)}
-                    />
-                </TabsContent>
+                    <TabsContent value="configurations" className="m-0">
+                        <ChannelConfigurationsTab
+                            configs={configs.filter((c: IntegrationConfig) =>
+                                c.provider?.toLowerCase().includes(searchQuery.toLowerCase())
+                            )}
+                            isLoading={isLoading}
+                            onConnect={handleConnect}
+                            onDeleteConfig={(id: string) => setDeleteConfigId(id)}
+                            onSaveConfig={(config: Partial<IntegrationConfig>) => handleSaveConfig(config)}
+                        />
+                    </TabsContent>
+                </div>
             </Tabs>
 
             { }
@@ -283,7 +287,7 @@ export default function ChannelsPage() {
                         <ScrollArea className="h-[300px] -mx-4 px-4">
                             <div className="space-y-2 py-2">
                                 <p className="text-xs font-medium text-muted-foreground mb-3 px-1 uppercase tracking-wider">Select a terminal to connect</p>
-                                {facebookPages.map((page: any) => (
+                                {facebookPages.map((page: FacebookPage) => (
                                     <div key={page.id} className="group p-3 rounded-xl border bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200">
                                         <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-3 min-w-0">

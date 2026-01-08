@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreationTool } from '@/lib/api/creation-tools';
 import { useCreationTools } from '@/lib/hooks/features/useCreationTools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Folder } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { ToolDialog } from '@/components/features/creation-tools/ToolDialog';
 import { PageLoading } from '@/components/ui/PageLoading';
@@ -15,6 +15,7 @@ import toast from '@/lib/toast';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
 import { Pagination } from '@/components/ui/Pagination';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -27,11 +28,10 @@ import {
 } from '@/components/ui/AlertDialog';
 
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-
 export default function CreationToolsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 500);
     const [toolDialogOpen, setToolDialogOpen] = useState(false);
     const [editingTool, setEditingTool] = useState<CreationTool | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -42,18 +42,10 @@ export default function CreationToolsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
-
-    const [querySearch, setQuerySearch] = useState('')
-    const searchTimerRef = useRef<NodeJS.Timeout>()
-
-    // Cleanup timer
-    useEffect(() => {
-        return () => {
-            if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-        }
-    }, [])
-
     // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
 
     const {
@@ -66,7 +58,7 @@ export default function CreationToolsPage() {
     } = useCreationTools({
         page: currentPage,
         limit: pageSize,
-        filters: querySearch ? { name: querySearch } : undefined
+        filters: debouncedSearch ? { name: debouncedSearch } : undefined
     })
 
     const tools = response && Array.isArray(response.data)
@@ -140,20 +132,11 @@ export default function CreationToolsPage() {
                         <Search
                             placeholder="Search tools..."
                             value={searchQuery}
-                            onChange={(e: any) => {
-                                const value = e.target.value
-                                setSearchQuery(value);
-
-                                if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-                                searchTimerRef.current = setTimeout(() => {
-                                    setQuerySearch(value)
-                                    setCurrentPage(1)
-                                }, 500)
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                setSearchQuery(e.target.value);
                             }}
                             onClear={() => {
                                 setSearchQuery('')
-                                setQuerySearch('')
-                                setCurrentPage(1)
                             }}
                         />
                     </div>
@@ -161,9 +144,7 @@ export default function CreationToolsPage() {
 
                 {/* Tools Grid */}
                 {tools.length === 0 && !loading ? (
-                    // ... No Results UI
                     <div className="flex flex-col items-center justify-center py-16 border rounded-lg bg-card/30 border-dashed">
-                        {/* ... content ... */}
                         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 ring-1 ring-primary/20">
                             <Wrench className="w-8 h-8 text-primary" />
                         </div>
@@ -198,9 +179,9 @@ export default function CreationToolsPage() {
                                     <CardHeader className="pb-3">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="p-2.5 rounded-lg bg-primary/5 ring-1 ring-primary/10 group-hover:bg-primary/10 transition-colors">
-                                                {tool.icon && (icons as any)[tool.icon] ? (
+                                                {tool.icon && (icons as Record<string, React.ElementType>)[tool.icon] ? (
                                                     (() => {
-                                                        const IconComponent = (icons as any)[tool.icon];
+                                                        const IconComponent = (icons as Record<string, React.ElementType>)[tool.icon];
                                                         return <IconComponent className="w-5 h-5 text-primary" />;
                                                     })()
                                                 ) : (

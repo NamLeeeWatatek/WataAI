@@ -24,7 +24,6 @@ export function useCreationTools(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: toolKeys.lists() });
             toast.success('Tool created successfully');
         },
-        onError: () => toast.error('Failed to create tool'),
     });
 
     const updateMutation = useMutation({
@@ -33,7 +32,6 @@ export function useCreationTools(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: toolKeys.all });
             toast.success('Tool updated successfully');
         },
-        onError: () => toast.error('Failed to update tool'),
     });
 
     const deleteMutation = useMutation({
@@ -42,7 +40,6 @@ export function useCreationTools(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: toolKeys.lists() });
             toast.success('Tool deleted successfully');
         },
-        onError: () => toast.error('Failed to delete tool'),
     });
 
     return {

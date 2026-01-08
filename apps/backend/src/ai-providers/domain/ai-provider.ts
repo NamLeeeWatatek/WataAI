@@ -32,7 +32,7 @@ export class AiProvider {
     description: 'Default values for fields',
     additionalProperties: true,
   })
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
 
   @ApiProperty({ type: Boolean, default: true })
   isActive: boolean;
@@ -82,7 +82,7 @@ export class AiProviderConfig {
   useStream: boolean;
 
   // @ApiProperty({ type: 'object', description: 'Provider-specific extra fields' })
-  // extra: Record<string, any>;
+  // extra: Record<string, unknown>;
 
   @ApiProperty({ enum: AiProviderOwnerType })
   ownerType: AiProviderOwnerType;
@@ -137,8 +137,61 @@ export class AiUsageLog {
 }
 
 /**
+ * AiUsageStats interface
+ */
+export interface AiUsageStats {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCost: number;
+  totalRequests: number;
+  byProvider: Record<string, {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+    requests: number;
+  }>;
+  byModel: Record<string, {
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+    requests: number;
+  }>;
+}
+
+/**
+ * ProviderConfig interface for better type safety
+ */
+export interface DailyUsageStats {
+  chat: number;
+  embedding: number;
+  moderation: number;
+  users: any; // Can be Set<string> in memory or string[] from JSON
+  cost: number;
+  [key: string]: any;
+}
+
+export interface ProviderConfig {
+  apiKey?: string;
+  baseUrl?: string;
+  baseURL?: string;
+  apiVersion?: string;
+  isVerified?: boolean;
+  timeout?: number;
+  useStream?: boolean;
+  retryAttempts?: number;
+  rateLimitPerMinute?: number;
+  defaultModel?: string;
+  contextWindow?: number;
+  supportsFunctionCalling?: boolean;
+  teamMembers?: string[];
+  usageStats?: Record<string, DailyUsageStats>;
+  monthlyBudget?: number;
+  budgetWarnings?: number;
+  [key: string]: any;
+}
+
+/**
  * UserAiProviderConfig domain entity
- * Table: user_ai_provider_configs
  */
 export class UserAiProviderConfig {
   @ApiProperty({ type: String })
@@ -161,7 +214,7 @@ export class UserAiProviderConfig {
     description: 'Provider configuration',
     additionalProperties: true,
   })
-  config: Record<string, any>;
+  config: ProviderConfig;
 
   @ApiProperty({ type: [String], example: ['gpt-4', 'gpt-3.5-turbo'] })
   modelList: string[];
@@ -201,7 +254,7 @@ export class WorkspaceAiProviderConfig {
     description: 'Provider configuration',
     additionalProperties: true,
   })
-  config: Record<string, any>;
+  config: ProviderConfig;
 
   @ApiProperty({ type: [String] })
   modelList: string[];

@@ -1,19 +1,20 @@
 "use client"
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-
-import { useEffect, useState, useRef } from "react"
+import * as React from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, Folder } from "lucide-react"
 import { icons } from "lucide-react"
+import { ColumnDef } from '@tanstack/react-table'
 
 import { PageShell } from "@/components/layout/PageShell"
-import { DataTable, Column } from "@/components/ui/DataTable"
+import { DataTable } from "@/components/ui/DataTable"
 import { Button } from "@/components/ui/Button"
 import { CategoryDialog } from "@/components/features/categories/CategoryDialog"
 import { Category } from "@/lib/api/categories"
 import { useCategories } from "@/lib/hooks/features/useCategories"
 import { PaginationInfo } from "@/components/ui/Pagination"
+import { useDebounce } from "@/lib/hooks/useDebounce"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -33,17 +34,12 @@ export default function CategoriesPage() {
     const [deleteId, setDeleteId] = useState<string | null>(null)
 
     const [search, setSearch] = useState('')
-    const [querySearch, setQuerySearch] = useState('')
-    const searchTimerRef = useRef<NodeJS.Timeout>()
-
-    // Cleanup timer
-    useEffect(() => {
-        return () => {
-            if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-        }
-    }, [])
+    const debouncedSearch = useDebounce(search, 500)
 
     // Reset page 1 when search changes
+    useEffect(() => {
+        setPage(1)
+    }, [debouncedSearch])
 
 
     const {
@@ -51,7 +47,7 @@ export default function CategoriesPage() {
         isLoading,
         refetch,
         deleteCategory
-    } = useCategories({ page, limit, search: querySearch })
+    } = useCategories({ page, limit, search: debouncedSearch })
 
     const data = response?.data || []
     const total = response?.total || 0
@@ -69,63 +65,52 @@ export default function CategoriesPage() {
         }
     }
 
-    const columns: Column<Category>[] = [
+    const columns = React.useMemo<ColumnDef<Category>[]>(() => [
         {
-            key: "name",
-            label: "Name",
-            sortable: true,
-            render: (value, row) => {
-                const IconComponent = row.icon && (icons as any)[row.icon]
-                    ? (icons as any)[row.icon]
+            id: "name",
+            header: "Name",
+            accessorKey: "name",
+            cell: ({ row }) => {
+                const category = row.original;
+                const IconComponent = category.icon && (icons as Record<string, React.ElementType>)[category.icon]
+                    ? (icons as Record<string, React.ElementType>)[category.icon]
                     : Folder;
                 return (
                     <div className="flex items-center gap-2">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                             <IconComponent className="w-4 h-4" />
                         </div>
-                        <span className="font-medium">{value}</span>
+                        <span className="font-medium">{category.name}</span>
                     </div>
                 )
             }
         },
         {
-            key: "slug",
-            label: "Slug",
-            className: "text-muted-foreground font-mono text-sm"
-        },
-        {
-            key: "description",
-            label: "Description",
-            className: "text-muted-foreground max-w-xs truncate",
-            render: (value) => <span className="truncate block" title={value}>{value || "-"}</span>
-        },
-        {
-            key: "type",
-            label: "Type",
-            render: (value) => (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground capitalize">
-                    {value || "system"}
-                </span>
+            id: "slug",
+            header: "Slug",
+            accessorKey: "slug",
+            cell: ({ getValue }) => (
+                <span className="text-muted-foreground font-mono text-sm">{getValue() as string}</span>
             )
         },
         {
-            key: "createdAt",
-            label: "Created At",
-            render: (value) => new Date(value).toLocaleDateString()
+            id: "description",
+            header: "Description",
+            accessorKey: "description",
+            cell: ({ getValue }) => (
+                <span className="text-muted-foreground text-sm line-clamp-1">{getValue() as string || "—"}</span>
+            )
         },
         {
-            key: "actions",
-            label: "Actions",
-            width: 100,
-            render: (_, row) => (
-                <div className="flex items-center gap-2">
+            id: "actions",
+            header: "",
+            cell: ({ row }) => (
+                <div className="flex justify-end gap-2">
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setEditingCategory(row)
+                        onClick={() => {
+                            setEditingCategory(row.original)
                             setDialogOpen(true)
                         }}
                     >
@@ -134,31 +119,28 @@ export default function CategoriesPage() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setDeleteId(row.id)
-                        }}
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleteId(row.original.id)}
                     >
                         <Trash2 className="w-4 h-4" />
                     </Button>
                 </div>
             )
         }
-    ]
+    ], [])
 
     const pagination: PaginationInfo = {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
-        hasNextPage: page < Math.ceil(total / limit)
+        hasNextPage: page * limit < total
     }
 
     return (
         <PageShell
             title="Categories"
-            description="Manage system-wide categories for tools and content."
+            description="Manage your product and content categories"
             actions={
                 <Button onClick={() => {
                     setEditingCategory(null)
@@ -173,49 +155,43 @@ export default function CategoriesPage() {
                 data={data}
                 columns={columns}
                 loading={isLoading}
+                searchValue={search}
+                onSearch={setSearch}
                 pagination={pagination}
                 onPageChange={setPage}
-                onPageSizeChange={(newLimit) => {
-                    setLimit(newLimit)
-                    setPage(1)
-                }}
-                searchable={true}
-                searchPlaceholder="Search categories..."
-                searchValue={search}
-                onSearch={(value) => {
-                    setSearch(value);
-
-                    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
-                    searchTimerRef.current = setTimeout(() => {
-                        setQuerySearch(value)
-                        setPage(1)
-                    }, 500)
-                }}
+                onPageSizeChange={setLimit}
+                emptyMessage="No categories found. Create your first category to get started."
             />
 
             <CategoryDialog
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 category={editingCategory}
-                onSuccess={() => refetch()}
+                onSuccess={() => {
+                    refetch()
+                    setDialogOpen(false)
+                }}
             />
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the category. Tools assigned to this category may need to be updated.
+                            This action cannot be undone. This will permanently delete the category.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </PageShell >
+        </PageShell>
     )
 }

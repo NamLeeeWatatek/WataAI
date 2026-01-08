@@ -104,18 +104,36 @@ export class AuthService {
       hash,
     });
 
-    // Check for pending invitations and join workspaces BEFORE ensuring workspace
+    let workspace: any = null;
+    let hasPendingInvitation = false;
+
     if (user.email) {
-      await this.workspaceInvitationsService.acceptPendingInvitations(
-        user.email,
-        user.id,
-      );
+      const invitations =
+        await this.workspaceInvitationsService.getPendingInvitationsByEmail(
+          user.email,
+        );
+      
+      if (invitations && invitations.length > 0) {
+        hasPendingInvitation = true;
+        await this.workspaceInvitationsService.acceptPendingInvitations(
+          user.email,
+          user.id,
+        );
+      }
     }
 
-    const workspace = await this.workspaceHelper.ensureUserHasWorkspace(
-      user.id,
-      user.name || undefined,
-    );
+    // Only create workspace if user has no pending invitations
+    if (!hasPendingInvitation) {
+      workspace = await this.workspaceHelper.ensureUserHasWorkspace(
+        user.id,
+        user.name || undefined,
+      );
+    } else {
+      // Get the workspace from accepted invitations
+      const workspaces =
+        await this.workspaceHelper.getUserWorkspaces(user.id);
+      workspace = workspaces.length > 0 ? workspaces[0] : null;
+    }
 
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: user.id,
@@ -158,12 +176,31 @@ export class AuthService {
     }
 
     if (user) {
-      if (socialEmail && !userByEmail) {
-        user.email = socialEmail;
+      // ✅ FIX: Don't auto-update email from social login without confirmation
+      // If social email differs from current email, flag for confirmation
+      if (socialEmail && user.email !== socialEmail) {
+        this.logger.log(
+          `Social login email (${socialEmail}) differs from user email (${user.email}). Keeping existing email.`,
+        );
+        // Don't update email - require email confirmation flow
       }
-      await this.usersService.update(user.id, user);
+      // Update social ID and provider if not set
+      if (!user.socialId || !user.provider) {
+        user.socialId = socialData.id;
+        user.provider = authProvider;
+        await this.usersService.update(user.id, user);
+      }
     } else if (userByEmail) {
-      user = userByEmail;
+      // User exists with same email - link social account
+      user = {
+        ...userByEmail,
+        socialId: socialData.id,
+        provider: authProvider,
+      } as User;
+      await this.usersService.update(user.id, {
+        socialId: socialData.id,
+        provider: authProvider,
+      });
     } else if (socialData.id) {
       user = await this.usersService.create({
         email: socialEmail ?? null,
@@ -566,19 +603,22 @@ export class AuthService {
       hash,
     });
 
-    // Ensure we have a valid workspace for the token
-    // This fixes the issue where refreshing token lost the workspace context
-    const workspace = await this.workspaceHelper.ensureUserHasWorkspace(
+    // ✅ FIX: Preserve workspace context from existing token
+    // Don't call ensureUserHasWorkspace which may create new workspace
+    // Get existing workspace or first workspace user belongs to
+    const existingWorkspaces = await this.workspaceHelper.getUserWorkspaces(
       user.id,
-      user.name || undefined,
     );
+    
+    // Use first workspace user belongs to (preserve context)
+    const workspaceId = existingWorkspaces.length > 0 ? existingWorkspaces[0].id : undefined;
 
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: session.user.id,
       role: user.role,
       sessionId: session.id,
       hash,
-      workspaceId: workspace?.id,
+      workspaceId,
     });
 
     return {

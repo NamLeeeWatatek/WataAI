@@ -39,7 +39,7 @@ export function BulkActionsToolbar({
                         "fixed bottom-8 left-1/2 -translate-x-1/2 z-50",
                         "flex items-center gap-1 p-1.5 pr-2",
                         "bg-foreground text-background shadow-2xl rounded-full",
-                        "border border-border/50 animate-in slide-in-from-bottom-5 fade-in duration-200",
+                        "border border-border/50",
                         className
                     )}
                 >

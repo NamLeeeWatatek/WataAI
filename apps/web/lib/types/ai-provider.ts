@@ -4,19 +4,35 @@ export enum AiProviderOwnerType {
     WORKSPACE = 'workspace',
 }
 
+// Matches backend ProviderConfig
 export interface AiProviderConfig {
-    id: string;
-    providerId: string;
-    model: string;
-    apiKey: string; // Should be handled with care (e.g. masked on fetch)
+    apiKey?: string;
     baseUrl?: string;
+    baseURL?: string;
     apiVersion?: string;
+    isVerified?: boolean;
     timeout?: number;
-    useStream: boolean;
-    ownerType: AiProviderOwnerType;
-    ownerId?: string;
-    isDefault: boolean;
+    useStream?: boolean;
+    retryAttempts?: number;
+    rateLimitPerMinute?: number;
+    defaultModel?: string;
+    contextWindow?: number;
+    supportsFunctionCalling?: boolean;
+    teamMembers?: string[];
+    monthlyBudget?: number;
+    budgetWarnings?: number;
+    [key: string]: unknown;
+}
+
+export interface UserAiProviderConfig {
+    id: string;
+    userId: string;
+    providerId: string;
+    displayName: string;
+    config: AiProviderConfig;
+    modelList: string[];
     isActive: boolean;
+    isDefault: boolean;
     createdAt: string;
     updatedAt: string;
 }
@@ -29,7 +45,7 @@ export interface AiProvider {
     description?: string;
     requiredFields: string[];
     optionalFields: string[];
-    defaultValues: Record<string, any>;
+    defaultValues: AiProviderConfig;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

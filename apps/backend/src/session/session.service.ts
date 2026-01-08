@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 
 import { SessionRepository } from './infrastructure/persistence/session.repository';
 import { Session } from './domain/session';
@@ -7,10 +7,27 @@ import { NullableType } from '../utils/types/nullable.type';
 
 @Injectable()
 export class SessionService {
+  private readonly logger = new Logger(SessionService.name);
+  private readonly SESSION_EXPIRY_DAYS = 30;
+
   constructor(private readonly sessionRepository: SessionRepository) {}
 
-  findById(id: Session['id']): Promise<NullableType<Session>> {
-    return this.sessionRepository.findById(id);
+  async findById(id: Session['id']): Promise<NullableType<Session>> {
+    const session = await this.sessionRepository.findById(id);
+    
+    if (session) {
+      // ✅ FIX: Check session expiry
+      const expiryDate = new Date(session.createdAt);
+      expiryDate.setDate(expiryDate.getDate() + this.SESSION_EXPIRY_DAYS);
+      
+      if (new Date() > expiryDate) {
+        this.logger.log(`Session ${id} has expired, deleting...`);
+        await this.deleteById(id);
+        return null;
+      }
+    }
+    
+    return session;
   }
 
   create(

@@ -7,7 +7,13 @@ import { Spinner } from '@/components/ui/Spinner'
 import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import { Zap, Check, X } from 'lucide-react'
-import type { AiSuggestWidgetProps } from '@/lib/types'
+export interface AiSuggestWidgetProps {
+    functionId: string;
+    task: string;
+    context?: string;
+    onApply?: (suggestion: string) => void;
+    className?: string;
+}
 
 export function AiSuggestWidget({
     functionId,

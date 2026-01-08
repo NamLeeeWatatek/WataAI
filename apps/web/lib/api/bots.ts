@@ -1,30 +1,6 @@
 import axiosClient from '../axios-client'
 import { MessageRole } from '../types/conversations'
-
-export interface Bot {
-  id: string
-  workspaceId: string
-  name: string
-  description?: string
-  avatarUrl?: string
-  defaultLanguage: string
-  timezone: string
-  status: 'draft' | 'active' | 'paused' | 'archived'
-  createdBy: string
-  icon?: string
-  isActive?: boolean
-  flowId?: string | null
-  systemPrompt?: string | null
-  functions?: string[] | null
-  functionConfig?: Record<string, any> | null
-  aiProviderId?: string | null
-  aiModelName?: string | null
-  aiParameters?: Record<string, any> | null
-  knowledgeBaseIds?: string[] | null
-  enableAutoLearn?: boolean
-  createdAt: string
-  updatedAt: string
-}
+import { Bot, CreateBotDto, UpdateBotDto } from '../types/bots'
 
 export interface BotChannel {
   id: string
@@ -44,55 +20,35 @@ export interface PaginatedBots {
   total: number
 }
 
-export interface CreateBotDto {
-  name: string
-  description?: string
-  avatarUrl?: string
-  defaultLanguage?: string
-  timezone?: string
-  status?: 'draft' | 'active' | 'paused' | 'archived'
-  workspaceId?: string
-  systemPrompt?: string
-  functions?: string[]
-  functionConfig?: Record<string, any>
-  aiProviderId?: string
-  aiModelName?: string
-  aiParameters?: Record<string, any>
-  knowledgeBaseIds?: string[]
-  enableAutoLearn?: boolean
-  icon?: string
-  isActive?: boolean
-}
-
-export interface UpdateBotDto extends Partial<CreateBotDto> { }
-
 export const botsApi = {
   async getAll(workspaceId: string, options?: { page?: number; limit?: number; status?: string }): Promise<PaginatedBots> {
-    const filters: any = { workspaceId }
-    if (options?.status) filters.status = options.status
+    const filters: Record<string, string | number | boolean> = { workspaceId };
+    if (options?.status) filters.status = options.status;
 
-    return await axiosClient.get('/bots', {
+    const response = await axiosClient.get<PaginatedBots>('/bots', {
       params: {
         workspaceId,
         page: options?.page || 1,
         limit: options?.limit || 10,
         filters: JSON.stringify(filters)
       }
-    }) as any
+    });
+
+    return response as unknown as PaginatedBots;
   },
 
   async getOne(id: string): Promise<Bot> {
-    return await axiosClient.get(`/bots/${id}`)
+    return axiosClient.get<Bot>(`/bots/${id}`) as unknown as Promise<Bot>;
   },
 
   async create(data: CreateBotDto): Promise<Bot> {
-    return await axiosClient.post('/bots', data, {
+    return axiosClient.post('/bots', data, {
       params: { workspaceId: data.workspaceId }
-    })
+    }) as unknown as Promise<Bot>
   },
 
   async update(id: string, data: UpdateBotDto): Promise<Bot> {
-    return await axiosClient.patch(`/bots/${id}`, data)
+    return axiosClient.patch(`/bots/${id}`, data) as unknown as Promise<Bot>
   },
 
   async delete(id: string): Promise<void> {
@@ -170,14 +126,7 @@ export const botsApi = {
     conversationHistory?: Array<{ role: MessageRole; content: string }>,
     knowledgeBaseIds?: string[]
   ): Promise<{ response: string; sources?: any[] }> {
-    console.log('[Bot Chat]', {
-      botId,
-      message: message.substring(0, 50),
-      knowledgeBaseIds,
-      historyLength: conversationHistory?.length || 0,
-    });
-
-    const data: any = await axiosClient.post(`/knowledge-bases/chat`, {
+    const response = await axiosClient.post<{ answer: string; sources: any[] }>(`/knowledge-bases/chat`, {
       message,
       botId,
       knowledgeBaseIds: knowledgeBaseIds && knowledgeBaseIds.length > 0 ? knowledgeBaseIds : undefined,
@@ -185,16 +134,11 @@ export const botsApi = {
         role: m.role,
         content: m.content
       })),
-    });
-
-    console.log('[Bot Chat Response]', {
-      answerLength: data.answer?.length || 0,
-      sourcesCount: data.sources?.length || 0,
-    });
+    }) as unknown as { answer: string; sources: any[] };
 
     return {
-      response: data.answer,
-      sources: data.sources || []
+      response: response.answer,
+      sources: response.sources || []
     };
   },
 
@@ -202,10 +146,10 @@ export const botsApi = {
     return await axiosClient.get(`/bots/${botId}/widget/appearance`)
   },
 
-  async updateWidgetAppearance(botId: string, data: any): Promise<any> {
+  async updateWidgetAppearance(botId: string, data: Record<string, any>): Promise<any> {
     return await axiosClient.put(`/bots/${botId}/widget/appearance`, data)
   },
 }
 
 export const executeBotFunction = botsApi.executeFunction.bind(botsApi)
-
+export type { Bot };

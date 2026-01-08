@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { KbFileIcon } from './KbFileIcon';
 import type { SortDirection } from '@/components/ui/DataTable';
 import type { PaginationInfo } from '@/components/ui/Pagination';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface KbItem {
   id: string;
@@ -94,12 +95,10 @@ export function KbTableView({
     )
   };
 
-
-
-  const columns = React.useMemo(() => [
+  const columns = React.useMemo<ColumnDef<KbItem>[]>(() => [
     {
-      key: 'selection',
-      label: (
+      id: 'selection',
+      header: () => (
         <Checkbox
           checked={items.length > 0 && items.every(item => selectedIds.includes(item.id))}
           onCheckedChange={(checked) => onToggleSelectAll?.(!!checked)}
@@ -107,86 +106,86 @@ export function KbTableView({
           className="translate-y-[2px]"
         />
       ),
-      width: 40,
-      sortable: false,
-      render: (_: any, row: KbItem) => (
+      size: 40,
+      cell: ({ row }) => (
         <div className="flex justify-center" onClick={e => e.stopPropagation()}>
           <Checkbox
-            checked={selectedIds.includes(row.id)}
-            onCheckedChange={() => onToggleSelection(row.id)}
+            checked={selectedIds.includes(row.original.id)}
+            onCheckedChange={() => onToggleSelection(row.original.id)}
             aria-label="Select row"
           />
         </div>
       )
     },
     {
-      key: 'name',
-      label: 'Name',
-      sortable: true,
-      render: (value: any, row: KbItem) => (
+      id: 'name',
+      header: 'Name',
+      accessorKey: 'name',
+      cell: ({ row, getValue }) => (
         <div className="flex items-center gap-4 py-1 group max-w-md">
           <div className={cn(
             "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
             "group-hover:scale-105 group-hover:shadow-md",
-            row.type === 'folder'
+            row.original.type === 'folder'
               ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
               : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
           )}>
-            {/* <KbFileIcon name={row.name} type={row.type} className="w-5 h-5" /> */}
-            <KbFileIcon name={row.name} type={row.type} className="w-5 h-5" />
+            <KbFileIcon name={row.original.name} type={row.original.type} className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{value}</div>
-            {row.description && <div className="text-[10px] text-muted-foreground truncate font-medium mt-0.5">{row.description}</div>}
+            <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{String(getValue())}</div>
+            {row.original.description && <div className="text-[10px] text-muted-foreground truncate font-medium mt-0.5">{row.original.description}</div>}
           </div>
         </div>
       )
     },
     {
-      key: 'type',
-      label: 'Type',
-      width: 100,
-      render: (_: any, row: KbItem) => (
+      id: 'type',
+      header: 'Type',
+      accessorKey: 'type',
+      size: 100,
+      cell: ({ row }) => (
         <Badge
-          variant={row.type === 'folder' ? 'outline' : 'secondary'}
+          variant={row.original.type === 'folder' ? 'outline' : 'secondary'}
           className="font-bold text-[9px] px-2 py-0 border-primary/20 bg-primary/5 text-primary tracking-wider"
         >
-          {row.type === 'folder' ? 'FOLDER' : 'DOC'}
+          {row.original.type === 'folder' ? 'FOLDER' : 'DOC'}
         </Badge>
       )
     },
     {
-      key: 'processingStatus',
-      label: 'Status',
-      width: 150,
-      render: (value: any, row: KbItem) => row.type === 'document' ? (
+      id: 'processingStatus',
+      header: 'Status',
+      accessorKey: 'processingStatus',
+      size: 150,
+      cell: ({ row, getValue }) => row.original.type === 'document' ? (
         <div className="flex items-center gap-2">
-          {getStatusIcon(value)}
-          <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground/80">{value}</span>
+          {getStatusIcon(String(getValue()))}
+          <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground/80">{String(getValue())}</span>
         </div>
       ) : <span className="opacity-20">—</span>
     },
     {
-      key: 'fileSize',
-      label: 'Size',
-      width: 100,
-      render: (value: any, row: KbItem) => row.type === 'document' ? (
-        <span className="text-xs font-bold text-muted-foreground/70">{formatSize(value)}</span>
+      id: 'fileSize',
+      header: 'Size',
+      accessorKey: 'fileSize',
+      size: 100,
+      cell: ({ row, getValue }) => row.original.type === 'document' ? (
+        <span className="text-xs font-bold text-muted-foreground/70">{formatSize(typeof getValue() === 'number' || typeof getValue() === 'string' ? getValue() as string | number : 0)}</span>
       ) : <span className="opacity-20">—</span>
     },
     {
-      key: 'updatedAt',
-      label: 'Updated',
-      sortable: true,
-      width: 120,
-      render: (value: any) => <span className="text-xs font-medium text-muted-foreground/60">{new Date(value).toLocaleDateString()}</span>
+      id: 'updatedAt',
+      header: 'Updated',
+      accessorKey: 'updatedAt',
+      size: 120,
+      cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground/60">{new Date(String(getValue())).toLocaleDateString()}</span>
     },
     {
-      key: 'actions',
-      label: '',
-      width: 60,
-      sortable: false,
-      render: (_: any, row: KbItem) => (
+      id: 'actions',
+      header: '',
+      size: 60,
+      cell: ({ row }) => (
         <div className="flex justify-end" onClick={e => e.stopPropagation()}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -195,17 +194,17 @@ export function KbTableView({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-premium border-border/50 bg-card/95 backdrop-blur-xl">
-              {row.type === 'document' && onPreviewDocument && (
+              {row.original.type === 'document' && onPreviewDocument && (
                 <>
                   <DropdownMenuItem
                     className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
-                    onClick={() => onPreviewDocument(row.id)}
+                    onClick={() => onPreviewDocument(row.original.id)}
                   >
                     <Eye className="w-4 h-4 text-primary" /> Preview
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
-                    onClick={() => onDownloadDocument?.(row.id, row.name)}
+                    onClick={() => onDownloadDocument?.(row.original.id, row.original.name)}
                   >
                     <Download className="w-4 h-4 text-primary" /> Download
                   </DropdownMenuItem>
@@ -214,13 +213,13 @@ export function KbTableView({
               )}
               <DropdownMenuItem
                 className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
-                onClick={() => onEditItem(row)}
+                onClick={() => onEditItem(row.original)}
               >
                 <Edit2 className="w-4 h-4 text-primary" /> Edit Properties
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3 text-destructive focus:text-destructive focus:bg-destructive/10"
-                onClick={() => onDeleteItem(row)}
+                onClick={() => onDeleteItem(row.original)}
               >
                 <Trash2 className="w-4 h-4" /> Delete Item
               </DropdownMenuItem>

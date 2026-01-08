@@ -196,8 +196,8 @@ export function KBCollectionDialog({
                                             </FormControl>
                                             <SelectContent>
                                                 {providers.map(provider => (
-                                                    <SelectItem key={provider.id} value={provider.id}>
-                                                        {provider.displayName || provider.provider}
+                                                    <SelectItem key={`${provider.id}-${provider.providerId}`} value={provider.id}>
+                                                        {provider.displayName || provider.providerId}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>

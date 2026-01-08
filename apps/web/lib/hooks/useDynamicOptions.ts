@@ -6,16 +6,23 @@ import { useCallback } from 'react';
 export interface DynamicOption {
     label: string;
     value: string | number;
-    [key: string]: any;
+    id?: string;
+    type?: string;
+    status?: string;
+    isPage?: boolean;
+    pageId?: string;
+    originalName?: string;
+    baseChannelId?: string;
+    [key: string]: unknown;
 }
 
 interface ChannelMetadata {
     pages?: Array<{
         id: string;
         name: string;
-        [key: string]: any;
+        [key: string]: unknown;
     }>;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface Channel {
@@ -31,13 +38,14 @@ export function useDynamicOptions(field: FormField) {
         ? field.options.replace('dynamic:', '')
         : (field.type === 'channel-select' || field.type === 'channel-selector' ? 'channels' : null);
 
-    const selectFn = useCallback((data: any[]) => {
+    const selectFn = useCallback((data: unknown[]) => {
         if (!optionsConfig) return [];
 
         if (optionsConfig === 'channels') {
             // Professional transformation with TanStack Query 'select'
             // Flattens channels and their sub-pages into a single selectable list
-            return data.flatMap((channel: Channel) => {
+            const channelData = data as Channel[];
+            return channelData.flatMap((channel: Channel): DynamicOption[] => {
                 // If channel has pages in metadata (e.g. Facebook), expand them
                 if (channel.metadata?.pages && Array.isArray(channel.metadata.pages) && channel.metadata.pages.length > 0) {
                     return channel.metadata.pages.map((page) => ({
@@ -65,13 +73,13 @@ export function useDynamicOptions(field: FormField) {
                     isPage: false,
                     originalName: channel.name,
                     baseChannelId: channel.id,
-                    pageId: undefined as unknown as string // Force compatibility for now, or better yet, simply omit if the consuming code handles it.
+                    pageId: undefined
                 }];
             });
         }
 
         // Default pass-through for other dynamic types (e.g. ai-models)
-        return data;
+        return data as DynamicOption[];
     }, [optionsConfig]);
 
     const { data: options = [], isLoading, error } = useQuery({
@@ -81,11 +89,11 @@ export function useDynamicOptions(field: FormField) {
 
             if (optionsConfig.startsWith('ai-models:')) {
                 const typeFilter = optionsConfig.split(':')[1];
-                const response = await axiosClient.get<any[]>(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
-                return response as unknown as any[];
+                const response = await axiosClient.get<DynamicOption[]>(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
+                return response.data;
             } else if (optionsConfig === 'channels') {
                 const response = await axiosClient.get<Channel[]>('/channels/');
-                return response as unknown as Channel[];
+                return response.data;
             }
             return [];
         },

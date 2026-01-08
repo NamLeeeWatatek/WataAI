@@ -135,7 +135,7 @@ export default function DashboardLayout({
                                 </ErrorBoundary>
                             </div>
                         </div>
-                        {/* <ActiveJobsWidget /> */}
+                        <ActiveJobsWidget />
                     </CreationJobsProvider>
                 </main >
 

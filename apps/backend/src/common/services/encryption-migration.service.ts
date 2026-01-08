@@ -75,7 +75,7 @@ export class EncryptionMigrationService {
     repo: Repository<any>,
   ): Promise<boolean> {
     // For new schema, API key is stored in config.apiKey
-    const apiKeyEncrypted = provider.config?.apiKey;
+    const apiKeyEncrypted = provider.config?.apiKey as string | undefined;
 
     if (!apiKeyEncrypted) {
       return false;

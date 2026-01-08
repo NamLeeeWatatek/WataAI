@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
+import { logger } from '@/lib/logger'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -28,7 +29,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    logger.error('ErrorBoundary caught an error:', error, errorInfo)
 
     this.setState({
       error,
@@ -56,7 +57,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
     // Send to error tracking service
     // Example: Sentry, LogRocket, Bugsnag, etc.
-    console.error('Error Report:', errorReport)
+    logger.error('Error Report:', errorReport)
 
     // You could also store in localStorage for debugging
     try {
@@ -68,7 +69,15 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       }
       localStorage.setItem('errorLogs', JSON.stringify(existingErrors))
     } catch (e) {
-      // Ignore localStorage errors
+      // Handle quota exceeded or other storage errors safely
+      if (e instanceof DOMException && (
+        e.code === 22 ||
+        e.code === 1014 ||
+        e.name === 'QuotaExceededError' ||
+        e.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+      )) {
+        logger.warn('LocalStorage quota exceeded, unable to save error log.');
+      }
     }
   }
 
@@ -92,6 +101,13 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
 // Default error fallback component
 function DefaultErrorFallback({ error, retry }: { error?: Error; retry?: () => void }) {
+  // Use state to prevent hydration mismatch for dev tools
+  const [isDev, setIsDev] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsDev(process.env.NODE_ENV === 'development');
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="max-w-md w-full p-6 text-center">
@@ -107,7 +123,7 @@ function DefaultErrorFallback({ error, retry }: { error?: Error; retry?: () => v
           Xin lỗi, đã có lỗi không mong muốn xảy ra. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp tục.
         </p>
 
-        {process.env.NODE_ENV === 'development' && error && (
+        {isDev && error && (
           <details className="mb-4 text-left bg-muted p-3 rounded text-sm">
             <summary className="cursor-pointer font-medium mb-2">
               Chi tiết lỗi (Development)
@@ -120,14 +136,14 @@ function DefaultErrorFallback({ error, retry }: { error?: Error; retry?: () => v
         )}
 
         <div className="flex gap-3 justify-center">
-          <Button onClick={retry} className="flex items-center gap-2">
+          <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
             <FiRefreshCw className="w-4 h-4" />
-            Thử lại
+            Tải lại trang
           </Button>
 
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/'}
+            onClick={() => window.location.assign('/')}
           >
             Về trang chủ
           </Button>

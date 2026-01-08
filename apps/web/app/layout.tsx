@@ -43,11 +43,13 @@ export default function RootLayout({
                     <I18nProvider>
                         <SessionProvider>
                             <ReduxProvider>
-                                <ErrorBoundary>
-                                    <SessionWatcher />
-                                    {children}
-                                </ErrorBoundary>
-                                <Toaster />
+                                <ThemeProviderWrapper>
+                                    <ErrorBoundary>
+                                        <SessionWatcher />
+                                        {children}
+                                    </ErrorBoundary>
+                                    <Toaster />
+                                </ThemeProviderWrapper>
                             </ReduxProvider>
                         </SessionProvider>
                     </I18nProvider>

@@ -98,7 +98,7 @@ export function useBotConversation(id: string) {
 
     const sendMutation = useMutation({
         mutationFn: (data: { content: string; role: any }) =>
-            import('@/lib/api/conversations').then(api => api.addBotConversationMessage(id, { content: data.content, sender: data.role })),
+            import('@/lib/api/conversations').then(api => api.addBotConversationMessage(id, { content: data.content, role: data.role })),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: botConversationKeys.detail(id) });
         },

@@ -9,21 +9,21 @@ import type { Channel, ChannelType, IntegrationConfig, CreateIntegrationDto, Upd
  * Get all available channel types
  */
 export async function getChannelTypes(): Promise<ChannelType[]> {
-  return axiosClient.get('/channels/types')
+  return axiosClient.get('/channels/types') as unknown as Promise<ChannelType[]>
 }
 
 /**
  * Get channel type categories
  */
 export async function getChannelCategories(): Promise<string[]> {
-  return axiosClient.get('/channels/types/categories')
+  return axiosClient.get('/channels/types/categories') as unknown as Promise<string[]>
 }
 
 /**
  * Get all connected channels
  */
 export async function getChannels(workspaceId?: string): Promise<Channel[]> {
-  return axiosClient.get('/channels/', { params: { workspaceId } })
+  return axiosClient.get('/channels/', { params: { workspaceId } }) as unknown as Promise<Channel[]>
 }
 
 /**
@@ -37,7 +37,7 @@ export async function disconnectChannel(id: string): Promise<void> {
  * Get all integration configurations
  */
 export async function getIntegrations(workspaceId?: string): Promise<IntegrationConfig[]> {
-  return axiosClient.get('/integrations/', { params: { workspaceId } })
+  return axiosClient.get('/integrations/', { params: { workspaceId } }) as unknown as Promise<IntegrationConfig[]>
 }
 
 /**
@@ -47,14 +47,14 @@ export async function createIntegration(
   data: CreateIntegrationDto,
   workspaceId?: string
 ): Promise<IntegrationConfig> {
-  return axiosClient.post('/integrations/', data, { params: { workspaceId } })
+  return axiosClient.post('/integrations/', data, { params: { workspaceId } }) as unknown as Promise<IntegrationConfig>
 }
 
 /**
  * Update integration configuration
  */
 export async function updateIntegration(id: string, data: UpdateIntegrationDto): Promise<IntegrationConfig> {
-  return axiosClient.patch(`/integrations/${id}`, data)
+  return axiosClient.patch(`/integrations/${id}`, data) as unknown as Promise<IntegrationConfig>
 }
 
 /**
@@ -62,6 +62,11 @@ export async function updateIntegration(id: string, data: UpdateIntegrationDto):
  */
 export async function deleteIntegration(id: string): Promise<void> {
   await axiosClient.delete(`/integrations/${id}`)
+}
+
+export interface OAuthParams {
+  configId?: string
+  workspaceId?: string
 }
 
 /**
@@ -72,16 +77,22 @@ export async function getOAuthUrl(
   configId?: string,
   workspaceId?: string
 ): Promise<{ url: string }> {
-  const params: any = {}
+  const params: OAuthParams = {}
   if (configId) params.configId = configId
   if (workspaceId) params.workspaceId = workspaceId
 
-  return axiosClient.get(`/oauth/login/${provider}`, { params })
+  return axiosClient.get(`/oauth/login/${provider}`, { params }) as unknown as Promise<{ url: string }>
+}
+
+export interface ConnectFacebookDto {
+  facebookPageId: string
+  botId?: string | null
+  accessToken?: string | null
 }
 
 /**
  * Connect Facebook page
  */
-export async function connectFacebook(data: any): Promise<void> {
+export async function connectFacebook(data: ConnectFacebookDto): Promise<void> {
   return axiosClient.post('/channels/facebook/connect', data)
 }

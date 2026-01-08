@@ -105,6 +105,14 @@ export class UsersService {
 
     let password = updateUserDto.password;
     if (password) {
+      if (password.length < 8) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            password: 'minLength',
+          },
+        });
+      }
       const salt = await bcrypt.genSalt();
       password = await bcrypt.hash(password, salt);
     }
@@ -146,13 +154,14 @@ export class UsersService {
         ? this.transformRole(updateUserDto.role)
         : undefined;
 
+    // FIX: Separate providerId and socialId instead of conflating them
     const payload: Partial<User> = {
       email,
       name,
       avatarUrl: updateUserDto.avatarUrl,
       password,
       provider: updateUserDto.provider,
-      providerId: updateUserDto.providerId ?? updateUserDto.socialId,
+      providerId: updateUserDto.providerId,
       isActive: updateUserDto.isActive,
       role,
       roleId: updateUserDto.roleId,
@@ -171,15 +180,17 @@ export class UsersService {
     const updatedUser = await this.usersRepository.update(id, payload);
 
     if (updatedUser) {
-      if (updatedUser.avatarUrl) {
-        await this.filesService.confirmFromUrl(updatedUser.avatarUrl);
-      }
-
-      if (
-        currentUser?.avatarUrl &&
-        currentUser.avatarUrl !== updatedUser.avatarUrl
-      ) {
+      const newAvatarUrl = updatedUser.avatarUrl;
+      
+      // ✅ FIX: Only delete old avatar after confirming new avatar works
+      if (currentUser?.avatarUrl && newAvatarUrl !== currentUser.avatarUrl) {
+        // Confirm new avatar first, then delete old
+        if (newAvatarUrl) {
+          await this.filesService.confirmFromUrl(newAvatarUrl);
+        }
         await this.filesService.deleteFromUrl(currentUser.avatarUrl);
+      } else if (newAvatarUrl && !currentUser?.avatarUrl) {
+        await this.filesService.confirmFromUrl(newAvatarUrl);
       }
     }
 

@@ -34,9 +34,9 @@ export interface LoadingLogoProps {
   text?: string
 }
 
-export interface JsonEditorProps {
-  value: any
-  onChange: (value: any) => void
+export interface JsonEditorProps<T = unknown> {
+  value: T
+  onChange: (value: T) => void
   height?: string
   readOnly?: boolean
 }
@@ -49,8 +49,16 @@ export interface IconPickerProps {
 
 export type CheckboxProps = React.InputHTMLAttributes<HTMLInputElement>
 
+export interface UploadedFileData {
+  url: string
+  filename: string
+  size: number
+  mimeType: string
+  key?: string
+}
+
 export interface FileUploadProps {
-  onUploadComplete?: (fileUrl: string, fileData: any) => void
+  onUploadComplete?: (fileUrl: string, fileData: UploadedFileData) => void
   onUploadError?: (error: Error) => void
   accept?: string
   maxSize?: number

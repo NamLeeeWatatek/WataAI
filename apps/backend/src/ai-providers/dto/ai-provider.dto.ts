@@ -29,7 +29,7 @@ export class AiConfigDto {
   organizationId?: string;
 
   // Allow other properties but known ones are improved
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export class CreateUserAiProviderConfigDto {

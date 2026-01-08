@@ -31,7 +31,7 @@ import { PageLoading } from '@/components/ui/PageLoading'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 import { useKnowledgeBaseController } from '@/lib/hooks/features/useKnowledgeBaseController'
-import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'
+import type { KBFolder, KBDocument, CreateKnowledgeBaseDto } from '@/lib/types/knowledge-base'
 import { queryKnowledgeBase } from '@/lib/api/knowledge-base'
 import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases'
 import toast from '@/lib/toast'
@@ -153,7 +153,7 @@ export default function KnowledgeBaseDetailPage() {
         }
     }
 
-    const handleSaveSettings = async (data: any) => {
+    const handleSaveSettings = async (data: Partial<CreateKnowledgeBaseDto>) => {
         try {
             await updateKB({ id: kbId, data })
             setSettingsDialogOpen(false)
@@ -279,7 +279,7 @@ export default function KnowledgeBaseDetailPage() {
                         onToggleSelection={toggleSelection}
                         onToggleSelectAll={(checked) => toggleSelectAll(checked)}
                         onSort={() => { }} // TODO: Implement sort in controller
-                        onEditItem={(item) => setEditingItem({ type: item.type, item: item as any })}
+                        onEditItem={(item) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
                         onDeleteItem={(item) => setDeleteItem({ type: item.type, id: item.id })}
                         onPreviewDocument={(id) => {
                             import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
@@ -304,7 +304,7 @@ export default function KnowledgeBaseDetailPage() {
                         onDragStart={(item) => setDraggedItem({ type: item.type, id: item.id })}
                         onDragOver={(folderId) => setDragOverFolder(folderId)}
                         onDrop={handleDrop}
-                        onEditItem={(item) => setEditingItem({ type: item.type, item: item as any })}
+                        onEditItem={(item) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
                         onDeleteItem={(item) => setDeleteItem({ type: item.type, id: item.id })}
                         onPreviewDocument={(id) => {
                             import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));

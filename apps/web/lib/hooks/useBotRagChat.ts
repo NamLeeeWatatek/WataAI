@@ -8,15 +8,17 @@
  * - Error handling: Clear messages for missing configurations
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { chatWithBotAndRAG } from '@/lib/api/knowledge-base';
 import { MessageRole } from '@/lib/types/conversations';
+import { logger } from '@/lib/logger';
+import { handleApiError } from '@/lib/utils/api-error';
 
 export interface BotRagMessage {
   role: MessageRole;
   content: string;
-  timestamp: string;
+  timestamp?: string; // Optional for pending messages
   metadata?: {
     botId?: string;
     botName?: string;
@@ -28,6 +30,7 @@ export interface BotRagMessage {
     }>;
     error?: string;
   };
+  isError?: boolean;
 }
 
 export interface UseBotRagChatOptions {
@@ -54,23 +57,41 @@ export function useBotRagChat({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Use ref to keep track of messages for API calls without triggering re-renders or dependency loops
+  const messagesRef = useRef<BotRagMessage[]>([]);
+
+  // Sync ref with state
+  const updateMessages = useCallback((newMessages: BotRagMessage[] | ((prev: BotRagMessage[]) => BotRagMessage[])) => {
+    setMessages((prev) => {
+      const updated = typeof newMessages === 'function' ? newMessages(prev) : newMessages;
+      messagesRef.current = updated;
+      return updated;
+    });
+  }, []);
+
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || loading) return;
 
     const userMessage: BotRagMessage = {
       role: MessageRole.USER,
       content: content.trim(),
-      timestamp: new Date().toISOString(),
     };
 
     // Add user message immediately
-    setMessages(prev => [...prev, userMessage]);
+    updateMessages(prev => [...prev, userMessage]);
     setLoading(true);
     setError(null);
 
     try {
-      // Extract conversation history (exclude system messages)
-      const conversationHistory: Array<{ role: MessageRole; content: string }> = messages
+      // Extract conversation history from REF to ensure we have the very latest including the one just added
+      // (Note: state update might be async, but our local variable 'userMessage' is available, 
+      //  and previous history is in ref. However, safest is to construct history from ref + current)
+
+      const currentHistory = [...messagesRef.current];
+      // Note: messagesRef already updated in updateMessages above? 
+      // Actually setState updater runs later. So we manually construct the history for the API call.
+
+      const conversationHistory: Array<{ role: MessageRole; content: string }> = currentHistory
         .filter(msg => msg.role !== MessageRole.SYSTEM)
         .map(msg => ({
           role: msg.role,
@@ -89,7 +110,6 @@ export function useBotRagChat({
         const assistantMessage: BotRagMessage = {
           role: MessageRole.ASSISTANT,
           content: response.answer,
-          timestamp: new Date().toISOString(),
           metadata: {
             botId,
             botName,
@@ -98,41 +118,39 @@ export function useBotRagChat({
           },
         };
 
-        setMessages(prev => [...prev, assistantMessage]);
+        updateMessages(prev => [...prev, assistantMessage]);
       } else {
         throw new Error('Failed to get response from bot');
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message ||
-        err.message ||
-        'Failed to communicate with bot';
+      const errorMessage = handleApiError(err);
 
+      logger.error('Bot RAG Chat Error:', err);
       setError(errorMessage);
 
       // Add error message to chat
       const errorBotMessage: BotRagMessage = {
         role: MessageRole.ASSISTANT,
         content: `❌ **AI Provider Error:** ${errorMessage}\n\nPlease configure an AI provider for this bot in Settings.`,
-        timestamp: new Date().toISOString(),
         metadata: {
           botId,
           botName,
           error: errorMessage,
         },
+        isError: true,
       };
 
-      setMessages(prev => [...prev, errorBotMessage]);
-
+      updateMessages(prev => [...prev, errorBotMessage]);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [messages, loading, botId, botName, knowledgeBaseIds]);
+  }, [loading, botId, botName, knowledgeBaseIds, updateMessages]); // Removed 'messages' dependency
 
   const clearMessages = useCallback(() => {
-    setMessages([]);
+    updateMessages([]);
     setError(null);
-  }, []);
+  }, [updateMessages]);
 
   return {
     messages,

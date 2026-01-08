@@ -17,6 +17,7 @@ import {
   WorkspaceAiProviderConfig,
   AiProvider,
   AiUsageLog,
+  AiUsageStats,
 } from '../domain/ai-provider';
 import { NullableType } from '../../utils/types/nullable.type';
 
@@ -25,7 +26,7 @@ export class AiConfigService {
   constructor(
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
-  ) {}
+  ) { }
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -107,8 +108,7 @@ export class AiConfigService {
     const mergedConfig = { ...existingDecrypted.config };
 
     if (dto.config) {
-      Object.keys(dto.config).forEach((key) => {
-        const val = dto.config![key];
+      Object.entries(dto.config).forEach(([key, val]) => {
         if (val !== '••••••••••••') {
           mergedConfig[key] = val;
         }
@@ -198,8 +198,7 @@ export class AiConfigService {
     const mergedConfig = { ...existingDecrypted.config };
 
     if (dto.config) {
-      Object.keys(dto.config).forEach((key) => {
-        const val = dto.config![key];
+      Object.entries(dto.config).forEach(([key, val]) => {
         if (val !== '••••••••••••') {
           mergedConfig[key] = val;
         }
@@ -244,7 +243,7 @@ export class AiConfigService {
   async getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<any> {
+  ): Promise<AiUsageStats> {
     return this.aiProviderConfigRepository.getUsageStats(workspaceId, period);
   }
 }

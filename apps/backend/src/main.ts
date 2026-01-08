@@ -14,6 +14,7 @@ import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import helmet from 'helmet';
 import * as bodyParser from 'body-parser';
+import { HttpExceptionFilter } from './utils/filters/http-exception.filter';
 
 import { Request, Response, NextFunction } from 'express';
 
@@ -68,6 +69,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe(validationOptions));
   app.useGlobalInterceptors(
     new ResolvePromisesInterceptor(),

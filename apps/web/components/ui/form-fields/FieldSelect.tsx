@@ -4,11 +4,13 @@ import { DynamicFormFieldProps } from "./types"
 import { useDynamicOptions } from "@/lib/hooks/useDynamicOptions"
 import { FormField } from "@/lib/api/creation-tools"
 
+import { ReactNode } from "react"
+
 interface OptionItem {
     label: string
     value: string | number
     icon?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export function FieldSelect({ field, value, onChange, allValues }: DynamicFormFieldProps) {
@@ -59,8 +61,8 @@ export function FieldSelect({ field, value, onChange, allValues }: DynamicFormFi
                         const optValue = isChannel ? opt.id : (typeof opt === 'string' ? opt : opt.value)
                         const optLabel = isChannel ? (opt.name || opt.type) : (typeof opt === 'string' ? opt : opt.label)
                         return (
-                            <SelectItem key={optValue} value={String(optValue)}>
-                                {optLabel}
+                            <SelectItem key={String(optValue)} value={String(optValue)}>
+                                {optLabel as ReactNode}
                             </SelectItem>
                         )
                     })}

@@ -59,7 +59,32 @@ export class WorkspaceInvitationsService {
       }
     }
 
-    // 3. Create invitation
+    const roleId = getWorkspaceRoleId(createDto.role || WorkspaceRole.MEMBER);
+    const existingInvitation = await this.findExistingInvitation(
+      workspaceId,
+      createDto.email,
+      roleId,
+    );
+
+    if (existingInvitation) {
+      this.logger.log(
+        `Returning existing invitation for ${createDto.email} in workspace ${workspaceId}`,
+      );
+      // Update expiration and resend email
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+      existingInvitation.expiresAt = expiresAt;
+      await this.invitationRepository.save(existingInvitation);
+
+      const workspace = await this.workspacesService.findOne(workspaceId);
+      await this.mailService.sendWorkspaceInvitation({
+        to: createDto.email,
+        data: { workspaceName: workspace.name },
+      });
+
+      return existingInvitation;
+    }
+
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
@@ -68,7 +93,7 @@ export class WorkspaceInvitationsService {
       workspaceId,
       senderId,
       email: createDto.email,
-      roleId: getWorkspaceRoleId(createDto.role || WorkspaceRole.MEMBER),
+      roleId,
       token,
       expiresAt,
     });
@@ -155,5 +180,35 @@ export class WorkspaceInvitationsService {
     }
 
     return acceptedWorkspaces;
+  }
+
+  async getPendingInvitationsByEmail(
+    email: string,
+  ): Promise<WorkspaceInvitationEntity[]> {
+    return this.invitationRepository.find({
+      where: {
+        email,
+        acceptedAt: IsNull(),
+        expiresAt: MoreThan(new Date()),
+      },
+      relations: ['workspace'],
+    });
+  }
+
+ 
+  async findExistingInvitation(
+    workspaceId: string,
+    email: string,
+    roleId: number,
+  ): Promise<WorkspaceInvitationEntity | null> {
+    return this.invitationRepository.findOne({
+      where: {
+        workspaceId,
+        email,
+        roleId,
+        acceptedAt: IsNull(),
+        expiresAt: MoreThan(new Date()),
+      },
+    });
   }
 }

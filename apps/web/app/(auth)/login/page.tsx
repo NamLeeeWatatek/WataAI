@@ -16,6 +16,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { FaGoogle, FaFacebook } from 'react-icons/fa6'
 import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 
 const loginSchema = (t: any) => z.object({
     email: z.string().email(t('validation.invalid')),
@@ -82,7 +83,7 @@ function LoginPageContent() {
                 setLoginError(t('login.errors.invalidCredentials'))
                 setIsLoading(false)
             } else {
-                console.log('[Login] Success, prefetching dashboard...')
+                logger.info('[Login] Success, prefetching dashboard...')
                 setIsRedirecting(true)
                 router.prefetch('/dashboard')
                 const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
@@ -115,7 +116,7 @@ function LoginPageContent() {
                         <h1 className="text-3xl font-black mb-3 tracking-tighter">
                             <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent uppercase tracking-tight">{t('login.welcomeBack')}</span>
                         </h1>
-                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60" suppressHydrationWarning>
+                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">
                             {t('login.subtitle')}
                         </p>
                     </div>
@@ -130,15 +131,6 @@ function LoginPageContent() {
                             <FaGoogle className="mr-2 h-4 w-4" />
                             Google
                         </Button>
-                        {/* <Button
-                            variant="secondary"
-                            className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
-                            onClick={() => handleSocialLogin('facebook')}
-                            disabled={isLoading}
-                        >
-                            <FaFacebook className="mr-2 h-4 w-4 text-[#1877F2]" />
-                            Facebook
-                        </Button> */}
                     </div>
 
                     <div className="relative mb-8">
@@ -170,7 +162,7 @@ function LoginPageContent() {
                             <div className="flex items-center justify-between px-1">
                                 <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('login.password')}</Label>
                                 <Link
-                                    href={"/forgot-password" as any}
+                                    href="/forgot-password"
                                     className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline hover:opacity-80 transition-all"
                                 >
                                     {t('login.forgotPassword')}
@@ -210,7 +202,6 @@ function LoginPageContent() {
                                 type="submit"
                                 disabled={isLoading}
                                 className="relative w-full h-12 font-bold shadow-lg transition-all active:scale-95 bg-primary hover:bg-primary/90 text-primary-foreground"
-                                suppressHydrationWarning
                             >
                                 {isLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -223,13 +214,13 @@ function LoginPageContent() {
                     {/* Footer */}
                     <div className="mt-10 text-center text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
                         {t('login.noAccount')}{' '}
-                        <Link href={"/register" as any} className="text-primary hover:text-primary/80 transition-colors">
+                        <Link href="/register" className="text-primary hover:text-primary/80 transition-colors">
                             {t('login.signUp')}
                         </Link>
                     </div>
 
                     <div className="mt-8 text-center">
-                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back" suppressHydrationWarning>
+                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back">
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             {t('login.backToHome')}
                         </Link>
@@ -242,7 +233,11 @@ function LoginPageContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div />}>
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <LoadingLogo size="md" />
+            </div>
+        }>
             <LoginPageContent />
         </Suspense>
     )
