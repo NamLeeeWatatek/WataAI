@@ -19,7 +19,11 @@ export const generateZodSchema = (fields: FormField[]) => {
             (field as any).mandatory
         );
 
-        console.log(`Field: [${name}] | Required: ${isRequired}`, {
+        // Determine if this field should be an array (multi-file or multi-select)
+        const isArrayType = ['multi-select', 'files'].includes(type as any) ||
+            ((type === 'file' || type === 'select') && (field as any).multiple === true);
+
+        console.log(`Field: [${name}] | Type: [${type}] | isArray: ${isArrayType} | Required: ${isRequired}`, {
             raw: field,
             val: validation
         });
@@ -31,7 +35,7 @@ export const generateZodSchema = (fields: FormField[]) => {
             schema = z.coerce.number();
         } else if (type === 'boolean' || type === 'checkbox') {
             schema = z.boolean();
-        } else if (['multi-select', 'files', 'file'].includes(type as any)) {
+        } else if (isArrayType) {
             schema = z.array(z.any());
         } else {
             schema = z.string();
@@ -43,7 +47,7 @@ export const generateZodSchema = (fields: FormField[]) => {
                 schema = (schema as z.ZodBoolean).refine(val => val === true, { message: 'This field is required' });
             } else if (type === 'number' || type === 'slider') {
                 schema = (schema as z.ZodNumber).refine(val => val !== undefined && val !== null && !isNaN(val), { message: 'Number is required' });
-            } else if (['multi-select', 'files', 'file'].includes(type as any)) {
+            } else if (isArrayType) {
                 schema = (schema as z.ZodArray<any>).min(1, { message: 'Please select at least one' });
             } else {
                 schema = z.string({ message: 'This field is required' })
@@ -56,7 +60,7 @@ export const generateZodSchema = (fields: FormField[]) => {
                 schema = schema.optional().or(z.literal('')).or(z.null());
             } else if (type === 'boolean' || type === 'checkbox') {
                 schema = schema.optional();
-            } else if (['multi-select', 'files', 'file'].includes(type as any)) {
+            } else if (isArrayType) {
                 schema = schema.optional().default([]);
             } else {
                 schema = schema.optional().or(z.literal(''));

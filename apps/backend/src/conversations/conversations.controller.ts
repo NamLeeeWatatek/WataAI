@@ -91,6 +91,7 @@ export class ConversationsController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('source') source?: 'all' | 'channel' | 'widget',
+    @Query('search') search?: string,
   ) {
     let onlyChannelConversations: boolean | undefined;
     if (source === 'channel') {
@@ -109,6 +110,7 @@ export class ConversationsController {
       limit: limit ? Number(limit) : undefined,
       workspaceId,
       onlyChannelConversations,
+      search,
     });
   }
 

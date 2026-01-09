@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -52,6 +52,7 @@ import {
 } from '@/components/ui/DropdownMenu'
 import { iconMap } from '@/lib/icon-map'
 import { useBots } from '@/lib/hooks/features/useBots'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 
 const botFormSchema = z.object({
     name: z.string().min(1, 'Bot name is required'),
@@ -67,6 +68,7 @@ export default function BotsPage() {
     const [showModal, setShowModal] = useState(false)
     const [editingBot, setEditingBot] = useState<Bot | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
+    const debouncedSearch = useDebounce(searchQuery, 500)
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize, setPageSize] = useState(12)
     const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -83,15 +85,15 @@ export default function BotsPage() {
     } = useBots(workspaceId || undefined, {
         page: currentPage,
         limit: pageSize,
+        search: debouncedSearch
     })
 
-    // Filter bots locally for smoother search UX if needed, 
-    // or pass searchQuery to useBots if API supports it.
-    const bots = (botsData?.data || []).filter((b: Bot) =>
-        !searchQuery ||
-        b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [debouncedSearch])
+
+    const bots = botsData?.data || []
     const totalItems = botsData?.total || 0
 
     const form = useForm<BotFormValues>({

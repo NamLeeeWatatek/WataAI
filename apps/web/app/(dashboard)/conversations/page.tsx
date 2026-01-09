@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useCallback, useMemo, Suspense } from 'react';
+import { useState, useCallback, useMemo, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import { Pagination } from '@/components/ui/Pagination';
 import {
   MessageSquare,
   Clock,
@@ -207,8 +209,11 @@ function ConversationsPageContent() {
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const { syncConversations, isSyncing: syncing } = useBotConversations();
 
   // ✅ FIX: Use local state instead of URL params for selected conversation
@@ -241,7 +246,16 @@ function ConversationsPageContent() {
     source: 'channel' as const,
     channelId: selectedChannel !== 'all' ? selectedChannel : undefined,
     channelType: selectedChannel !== 'all' ? channels.find((c: any) => c.id === selectedChannel)?.type : undefined,
-  }), [selectedChannel, channels]);
+    search: debouncedSearch || undefined,
+    status: statusFilter !== 'all' ? (statusFilter === 'active' ? 'active' : statusFilter) as any : undefined,
+    page: currentPage,
+    limit: pageSize,
+  }), [selectedChannel, channels, debouncedSearch, statusFilter, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedChannel, statusFilter]);
 
   const conversationsQueryKey = useMemo(() => botConversationKeys.list(conversationsParams), [conversationsParams]);
 
@@ -249,7 +263,8 @@ function ConversationsPageContent() {
     data: conversationsResponse,
     isLoading: conversationsLoading,
     refetch: refetchConversations,
-    isRefetching: refreshing
+    isRefetching: refreshing,
+    total: totalConversations
   } = useBotConversations(conversationsParams);
 
   const conversations = useMemo(() => {
@@ -382,27 +397,8 @@ function ConversationsPageContent() {
     }
   };
 
-  const filteredConversations = useMemo(() => {
-    if (!conversations) return [];
-
-    let result = conversations;
-
-    // Filter by search
-    if (searchQuery) {
-      result = result.filter((conv: Conversation) =>
-        conv.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        conv.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Filter by status (Frontend filter)
-    if (statusFilter !== 'all') {
-      const targetStatus = statusFilter === 'active' ? 'open' : statusFilter;
-      result = result.filter((c: Conversation) => c.status === targetStatus);
-    }
-
-    return result;
-  }, [conversations, searchQuery, statusFilter]);
+  // ✅ REMOVED: Frontend filtering, now using server-side search
+  // const filteredConversations = useMemo(() => { ... });
 
   // ✅ FIX: Select conversation without navigation
   const handleSelectConversation = (id: string) => {
@@ -626,7 +622,7 @@ function ConversationsPageContent() {
             >
               <LoadingLogo size="md" text="Loading conversations..." />
             </div>
-          ) : filteredConversations.length === 0 ? (
+          ) : conversations.length === 0 ? (
             <div
               className="flex flex-col items-center justify-center py-20 px-6 text-center"
             >
@@ -654,7 +650,7 @@ function ConversationsPageContent() {
             <div
               className="divide-y divide-border/50"
             >
-              {filteredConversations.map((conv: Conversation, index: number) => (
+              {conversations.map((conv: Conversation, index: number) => (
                 <button
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv.id)}
@@ -745,6 +741,23 @@ function ConversationsPageContent() {
                   </div>
                 </button>
               ))}
+
+              {totalConversations > pageSize && (
+                <div className="p-4 border-t border-border/50">
+                  <Pagination
+                    pagination={{
+                      page: currentPage,
+                      limit: pageSize,
+                      total: totalConversations,
+                      totalPages: Math.ceil(totalConversations / pageSize),
+                      hasNextPage: currentPage < Math.ceil(totalConversations / pageSize)
+                    }}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={setPageSize}
+                    pageSizeOptions={[10, 20, 50, 100]}
+                  />
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>

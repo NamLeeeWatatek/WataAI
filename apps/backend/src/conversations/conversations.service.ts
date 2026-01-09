@@ -110,7 +110,7 @@ export class ConversationsService {
     avatar?: string;
   }): Promise<ContactEntity> {
     // This prevents the same person having multiple contacts with different externalIds
-    
+
     let contact: ContactEntity | null = null;
     const searchConditions: any[] = [];
 
@@ -132,7 +132,7 @@ export class ConversationsService {
     if (searchConditions.length > 0) {
       // Use OR query to find contact by either externalId or email
       const queryBuilder = this.contactRepository.createQueryBuilder('contact');
-      
+
       if (searchConditions.length === 1) {
         queryBuilder.where('contact.workspaceId = :workspaceId', {
           workspaceId: params.workspaceId,
@@ -215,19 +215,30 @@ export class ConversationsService {
     limit?: number;
     workspaceId?: string;
     onlyChannelConversations?: boolean;
+    search?: string;
   }) {
-    // ðŸ” DEBUG: Log filter options
+    // 🔍 DEBUG: Log filter options
     this.logger.log('========== FIND ALL CHANNEL CONVERSATIONS ==========');
     this.logger.log('Options:', JSON.stringify(options, null, 2));
 
-    // âœ… PROFESSIONAL: This service ONLY handles CHANNEL conversations
+    // ✅ PROFESSIONAL: This service ONLY handles CHANNEL conversations
     // AI chat conversations are handled by AiConversationsService
     const query = this.conversationRepository
       .createQueryBuilder('conversation')
+      .leftJoinAndSelect('conversation.contact', 'contact')
       .where('conversation.deletedAt IS NULL')
-      .andWhere('conversation.channelId IS NOT NULL'); // âœ… ALWAYS filter for channel conversations
+      .andWhere('conversation.channelId IS NOT NULL'); // ✅ ALWAYS filter for channel conversations
 
-    // âœ… Use decentralized workspaceId for direct filtering
+    // ✅ Search Filter
+    if (options.search) {
+      this.logger.log(`🔍 Search Query: ${options.search}`);
+      query.andWhere(
+        '(contact.name ILIKE :search OR contact.email ILIKE :search OR conversation.externalId ILIKE :search)',
+        { search: `%${options.search}%` },
+      );
+    }
+
+    // ✅ Use decentralized workspaceId for direct filtering
     if (options.workspaceId) {
       this.logger.log(`âœ… Filter: workspaceId = ${options.workspaceId}`);
       query.andWhere('conversation.workspaceId = :workspaceId', {
@@ -794,9 +805,9 @@ Message: ${currentMessage}`;
 
     if (existing) {
       // ✅ FIX: Track if this is an update for notification
-      const isUpdate = existing.rating !== dto.rating || 
-                       (existing.comment !== dto.comment);
-      
+      const isUpdate = existing.rating !== dto.rating ||
+        (existing.comment !== dto.comment);
+
       existing.rating = dto.rating;
       existing.comment = dto.comment;
       const saved = await this.feedbackRepository.save(existing);
@@ -811,7 +822,7 @@ Message: ${currentMessage}`;
       this.logger.log(
         `Feedback ${isUpdate ? 'updated' : 'created'} for message ${messageId}`,
       );
-      
+
       // TODO: Emit 'feedback:updated' event to WebSocket for real-time UI updates
       // this.conversationsGateway.server.to(message.conversationId)
       //   .emit('feedback:updated', { messageId, ...dto });
@@ -826,7 +837,7 @@ Message: ${currentMessage}`;
     });
 
     const saved = await this.feedbackRepository.save(feedback);
-    
+
     this.logger.log(`Feedback created for message ${messageId}`);
 
     return saved;

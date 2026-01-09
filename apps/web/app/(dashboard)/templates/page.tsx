@@ -1,18 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTemplates } from '@/lib/hooks/useTemplates'
 import { useWorkspace } from '@/lib/hooks/useWorkspace'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Edit, Trash2 } from 'lucide-react'
+import { Edit, Trash2, Search as SearchIcon } from 'lucide-react'
 import { PageLoading } from '@/components/ui/PageLoading'
 import toast from '@/lib/toast'
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog'
 import { Template } from '@/lib/types/template'
 import { Pagination } from '@/components/ui/Pagination'
+import { Search } from '@/components/ui/Search'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 
 export default function TemplatesPage() {
@@ -20,6 +22,8 @@ export default function TemplatesPage() {
     const { currentWorkspace } = useWorkspace()
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(9);
+    const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
     const {
         templates,
@@ -32,12 +36,18 @@ export default function TemplatesPage() {
     } = useTemplates({
         workspaceId: currentWorkspace?.id || '',
         page: currentPage,
-        limit: pageSize
+        limit: pageSize,
+        filters: debouncedSearch ? { name: debouncedSearch } : undefined
     })
 
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
+
+    // Reset page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch])
 
     const handleDelete = (id: string) => {
         setDeleteId(id)
@@ -83,6 +93,15 @@ export default function TemplatesPage() {
                 refreshing={loading}
                 className="px-1"
             />
+
+            <div className="max-w-md">
+                <Search
+                    placeholder="Search templates..."
+                    value={searchQuery}
+                    onChange={(e: any) => setSearchQuery(e.target.value)}
+                    onClear={() => setSearchQuery('')}
+                />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map(template => (

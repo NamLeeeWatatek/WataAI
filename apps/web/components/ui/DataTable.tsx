@@ -186,6 +186,7 @@ function DataTableInner<TData, TValue>({
     getSubRows: (row) => (row as any)[childrenKey],
     getRowId: (row) => (row as any).id || (row as any).key,
     enableRowSelection: true,
+    manualPagination: true,
   })
 
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue)
