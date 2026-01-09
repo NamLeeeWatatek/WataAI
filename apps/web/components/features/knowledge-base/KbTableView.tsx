@@ -41,9 +41,15 @@ interface KbTableViewProps {
   onPreviewDocument?: (documentId: string) => void;
   onDownloadDocument?: (documentId: string, filename: string) => void;
   onDragStart?: (item: KbItem) => void;
-  onDragOver?: (folderId: string) => void;
-  onDrop?: (targetFolderId: string) => void;
+  onDragOver?: (folderId: string | null) => void;
+  onDrop?: (targetFolderId: string | null) => void;
   onToggleSelectAll?: (checked: boolean) => void;
+  headerActions?: React.ReactNode;
+  actions?: React.ReactNode;
+  searchable?: boolean;
+  searchValue?: string;
+  onSearch?: (value: string) => void;
+  searchPlaceholder?: string;
 }
 
 export function KbTableView({
@@ -65,7 +71,13 @@ export function KbTableView({
   onDragStart,
   onDragOver,
   onDrop,
-  onToggleSelectAll
+  onToggleSelectAll,
+  headerActions,
+  actions,
+  searchable,
+  searchValue,
+  onSearch,
+  searchPlaceholder,
 }: KbTableViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -231,12 +243,17 @@ export function KbTableView({
   ], [items, selectedIds, onToggleSelectAll, onToggleSelection, onPreviewDocument, onDownloadDocument, onEditItem, onDeleteItem]);
 
   return (
-    <div className="rounded-xl border border-border/50 bg-card/30 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5">
+    <div>
       <DataTable
         data={items}
         columns={columns}
         loading={isLoading}
-        searchable={false}
+        searchable={searchable}
+        searchValue={searchValue}
+        onSearch={onSearch}
+        searchPlaceholder={searchPlaceholder}
+        headerActions={headerActions}
+        actions={actions}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={onSort}
@@ -247,6 +264,7 @@ export function KbTableView({
         onRowClick={onItemClick}
         className="w-full"
         tableClassName="bg-transparent border-0"
+        noCard
         onRowDragStart={(e, row) => {
           if (onDragStart) onDragStart(row);
         }}

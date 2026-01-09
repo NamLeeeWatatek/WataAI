@@ -1,18 +1,40 @@
-import { useState } from 'react';
-import { FormConfig, FormField } from '@/lib/api/creation-tools';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Plus, Trash2, Settings, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
-import { Checkbox } from '@/components/ui/Checkbox';
-import { toast } from 'sonner';
+'use client'
+
+import React, { useState, useEffect, useCallback } from 'react'
+import { FormConfig, FormField, FormStep, LayoutRow, ZoneConfig, FieldRow } from '@/lib/api/creation-tools'
+import { Button } from '@/components/ui/Button'
+import {
+    Plus, Trash2, X, Box, GripVertical, Settings, LayoutGrid
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
+import { StrictModeDroppable } from '@/components/ui/StrictModeDroppable'
+import { Badge } from '@/components/ui/Badge'
+import { FormBuilderZone } from './FormBuilderZone'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/AlertDialog'
+import { Input } from "@/components/ui/Input"
+import { Label } from "@/components/ui/Label"
+import { Textarea } from "@/components/ui/Textarea"
+import { Checkbox } from "@/components/ui/Checkbox"
+import { Switch } from "@/components/ui/Switch"
+import { Separator } from "@/components/ui/Separator"
+import { Check } from "lucide-react"
+
+// --- Types & Constants ---
 
 interface FormBuilderProps {
-    config: FormConfig;
-    onChange: (config: FormConfig) => void;
+    config: FormConfig
+    onChange: (config: FormConfig) => void
 }
 
 const FIELD_TYPES = [
@@ -22,6 +44,7 @@ const FIELD_TYPES = [
     { value: 'select', label: 'Select Dropdown' },
     { value: 'radio', label: 'Radio Group' },
     { value: 'checkbox', label: 'Checkbox' },
+    { value: 'boolean', label: 'Switch (Boolean)' },
     { value: 'slider', label: 'Slider' },
     { value: 'file', label: 'Single File' },
     { value: 'files', label: 'Multiple Files' },
@@ -31,304 +54,922 @@ const FIELD_TYPES = [
     { value: 'color', label: 'Color Picker' },
     { value: 'json', label: 'JSON Editor' },
     { value: 'key-value', label: 'Key-Value Editor' },
-] as const;
+    { value: 'template-selector', label: 'Template Selector' },
+] as const
 
-type FieldType = typeof FIELD_TYPES[number]['value'];
+type FieldType = typeof FIELD_TYPES[number]['value']
 
-const slugify = (text: string) => {
-    return text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/(^_|_$)+/g, '');
-};
+// Helper to generate IDs
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export function FormBuilder({ config, onChange }: FormBuilderProps) {
-    const [editingField, setEditingField] = useState<FormField | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editIndex, setEditIndex] = useState<number>(-1);
+    const [selectedFieldName, setSelectedFieldName] = useState<string | null>(null)
+    const [activeStepIndex, setActiveStepIndex] = useState(0)
+    const [activeTab, setActiveTab] = useState<'properties' | 'fields'>('fields')
 
-    const handleAddField = () => {
-        const newField: FormField = {
-            name: '',
-            label: '',
-            type: 'text',
-            validation: { required: false },
-            options: [],
-            description: '',
+    // --- Initialization & Validation ---
+    useEffect(() => {
+        if (!config) return;
+
+        // Deep clone safely
+        let changed = false;
+        let newConfig = { ...config };
+
+        // Ensure steps array exists
+        if (!newConfig.steps || !Array.isArray(newConfig.steps) || newConfig.steps.length === 0) {
+            newConfig.steps = [{
+                id: generateId(),
+                title: 'Step 1',
+                layout: { rows: [] }
+            }];
+            changed = true;
+        }
+
+        // Validate active step index
+        if (activeStepIndex >= newConfig.steps.length) {
+            setActiveStepIndex(0);
+            return; // Let next render handle it
+        }
+
+        const activeStep = newConfig.steps[activeStepIndex];
+
+        if (activeStep) {
+            // Ensure layout object exists
+            if (!activeStep.layout) {
+                activeStep.layout = { rows: [] };
+                changed = true;
+            }
+
+            // Ensure rows array exists
+            if (!activeStep.layout.rows) {
+                activeStep.layout.rows = [];
+                changed = true;
+            }
+
+            // Initialize default layout if rows empty
+            if (activeStep.layout.rows.length === 0) {
+                const defaultZoneId = generateId();
+                activeStep.layout.rows = [{
+                    id: generateId(),
+                    zones: [{
+                        id: defaultZoneId,
+                        title: 'Main Content',
+                        fieldRows: [{ id: generateId(), fields: [] }]
+                    }]
+                }];
+                changed = true;
+            } else {
+                // Self-healing: Ensure every zone has at least one FieldRow
+                activeStep.layout.rows.forEach(row => {
+                    if (row && row.zones) {
+                        row.zones.forEach(zone => {
+                            if (zone && (!zone.fieldRows || zone.fieldRows.length === 0)) {
+                                zone.fieldRows = [{ id: generateId(), fields: [] }];
+                                changed = true;
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        if (changed) {
+            onChange(newConfig);
+        }
+    }, [activeStepIndex, config.steps, config]);
+
+    const generateUniqueFieldName = useCallback((type: string) => {
+        const base = `field_${type}_${Date.now()}`
+        let name = base
+        let counter = 1
+        while (config.fields.some(f => f.name === name)) {
+            name = `${base}_${counter}`
+            counter++
+        }
+        return name
+    }, [config.fields])
+
+    // --- State Accessors ---
+    const steps = config.steps || [];
+    const currentStep = steps[activeStepIndex];
+    // Fail-safe for rendering if useEffect hasn't run yet
+    const layoutRows = currentStep ? (currentStep.layout ? currentStep.layout.rows : []) : [];
+
+    // --- Handlers ---
+
+    const updateStepLayout = (newRows: LayoutRow[]) => {
+        if (!currentStep) return;
+        const newSteps = [...steps];
+        newSteps[activeStepIndex] = {
+            ...currentStep,
+            layout: { ...currentStep.layout, rows: newRows }
         };
-        setEditingField(newField);
-        setEditIndex(-1);
-        setIsDialogOpen(true);
-    };
+        onChange({ ...config, steps: newSteps });
+    }
 
-    const handleEditField = (index: number) => {
-        // Deep copy to prevent mutating the original state directly
-        setEditingField(JSON.parse(JSON.stringify(config.fields[index])));
-        setEditIndex(index);
-        setIsDialogOpen(true);
-    };
+    const handleAddStep = () => {
+        const newStep: FormStep = {
+            id: generateId(),
+            title: `Step ${steps.length + 1}`,
+            layout: {
+                rows: [{
+                    id: generateId(),
+                    zones: [{
+                        id: generateId(),
+                        title: 'Main Content',
+                        fieldRows: [{ id: generateId(), fields: [] }]
+                    }]
+                }]
+            }
+        };
+        onChange({ ...config, steps: [...steps, newStep] });
+        setActiveStepIndex(steps.length);
+    }
 
-    const handleDeleteField = (index: number) => {
-        const newFields = [...config.fields];
-        newFields.splice(index, 1);
-        onChange({ ...config, fields: newFields });
-    };
-
-    const handleSaveField = () => {
-        if (!editingField) return;
-
-        // Validation
-        if (!editingField.label.trim()) {
-            toast.error('Label is required');
+    const handleRemoveStep = (index: number) => {
+        if (steps.length <= 1) {
+            toast.error("At least one step is required.");
             return;
         }
-
-        const finalName = editingField.name.trim() || slugify(editingField.label);
-        const fieldToSave = { ...editingField, name: finalName };
-
-        if (!fieldToSave.name) {
-            toast.error('Field name is required');
-            return;
+        const newSteps = steps.filter((_, i) => i !== index);
+        onChange({ ...config, steps: newSteps });
+        if (activeStepIndex >= newSteps.length) {
+            setActiveStepIndex(newSteps.length - 1);
         }
+    }
 
-        const newFields = [...config.fields];
-        if (editIndex >= 0) {
-            newFields[editIndex] = fieldToSave;
+    const handleAddLayoutRow = () => {
+        const newRow: LayoutRow = {
+            id: generateId(),
+            zones: [{
+                id: generateId(),
+                title: 'New Zone',
+                fieldRows: [{ id: generateId(), fields: [] }]
+            }]
+        };
+        updateStepLayout([...layoutRows, newRow]);
+        toast.success("Added new layout row");
+    }
+
+    const handleAddZoneToRow = (rowId: string) => {
+        const newRows = layoutRows.map(row => {
+            if (row.id === rowId) {
+                return {
+                    ...row,
+                    zones: [...row.zones, {
+                        id: generateId(),
+                        title: 'New Zone',
+                        fieldRows: [{ id: generateId(), fields: [] }]
+                    }]
+                };
+            }
+            return row;
+        });
+        updateStepLayout(newRows);
+    }
+
+    const handleRemoveZone = (rowId: string, zoneId: string) => {
+        const newRows = layoutRows.map(row => {
+            if (row.id !== rowId) return row;
+            return {
+                ...row,
+                zones: row.zones.filter(z => z.id !== zoneId)
+            };
+        }).filter(row => row.zones.length > 0); // Remove empty rows
+
+        updateStepLayout(newRows);
+    }
+
+    const handleCreateField = (type: FieldType, targetZoneId?: string) => {
+        const fieldName = generateUniqueFieldName(type);
+        const newField: FormField = {
+            name: fieldName,
+            label: `New ${type}`,
+            type: type,
+            validation: { required: false }
+        };
+
+        // Add to fields definition
+        const newFields = [...config.fields, newField];
+
+        // Add to layout (if targetZoneId provided, else find first available)
+        const newRows = [...layoutRows];
+        let placed = false;
+
+        // Helper to add field to a zone
+        const addFieldToZone = (zone: ZoneConfig) => {
+            // Find last row in zone, or create new one
+            if (zone.fieldRows.length === 0) {
+                zone.fieldRows.push({ id: generateId(), fields: [fieldName] });
+            } else {
+                const lastRow = zone.fieldRows[zone.fieldRows.length - 1];
+                // Simple logic: If last row has space (e.g. < 3 fields), append. Else new row.
+                // For now, always append to last row to let user split later?
+                // Or let's create a NEW row for every new field added via button to be safe.
+                zone.fieldRows.push({ id: generateId(), fields: [fieldName] });
+            }
+        };
+
+        if (targetZoneId) {
+            for (const row of newRows) {
+                const zone = row.zones.find(z => z.id === targetZoneId);
+                if (zone) {
+                    addFieldToZone(zone);
+                    placed = true;
+                    break;
+                }
+            }
         } else {
-            newFields.push(fieldToSave);
+            // Find first zone in first row
+            if (newRows.length > 0 && newRows[0].zones.length > 0) {
+                addFieldToZone(newRows[0].zones[0]);
+                placed = true;
+            }
         }
 
-        onChange({ ...config, fields: newFields });
-        setIsDialogOpen(false);
-        setEditingField(null);
-    };
+        if (!placed) {
+            // Should verify initialization logic handled this, but just in case
+            toast.error("No zones available to add field.");
+            return;
+        }
 
-    const moveField = (index: number, direction: 'up' | 'down') => {
-        if (direction === 'up' && index === 0) return;
-        if (direction === 'down' && index === config.fields.length - 1) return;
+        if (!currentStep) return;
 
-        const newFields = [...config.fields];
-        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        const newSteps = [...steps];
+        newSteps[activeStepIndex] = {
+            ...currentStep,
+            layout: { ...currentStep.layout, rows: newRows }
+        };
 
-        [newFields[index], newFields[targetIndex]] = [newFields[targetIndex], newFields[index]];
-        onChange({ ...config, fields: newFields });
-    };
+        onChange({ ...config, fields: newFields, steps: newSteps });
+        setSelectedFieldName(fieldName);
+        setActiveTab('properties');
+    }
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        toast.success(`Copied ${text} to clipboard`);
-    };
+    // --- Drag & Drop Logic ---
+    const handleDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+        const { source, destination, draggableId, type } = result;
+
+        // 1. Reordering Steps
+        if (source.droppableId === 'steps-list') {
+            const newSteps = [...steps];
+            const [moved] = newSteps.splice(source.index, 1);
+            newSteps.splice(destination.index, 0, moved);
+            onChange({ ...config, steps: newSteps });
+            setActiveStepIndex(destination.index);
+            return;
+        }
+
+        // 2. Dragging Zones (Reorder within/between rows)
+        if (type === 'ZONE') {
+            // source/dest IDs are Row IDs
+            const sourceRowIdx = layoutRows.findIndex(r => r.id === source.droppableId);
+            const destRowIdx = layoutRows.findIndex(r => r.id === destination.droppableId);
+
+            if (sourceRowIdx === -1 || destRowIdx === -1) return;
+
+            const newRows = [...layoutRows];
+            // Cloning zones array for safety
+            const sourceZones = [...newRows[sourceRowIdx].zones];
+            const [movedZone] = sourceZones.splice(source.index, 1);
+
+            newRows[sourceRowIdx] = { ...newRows[sourceRowIdx], zones: sourceZones };
+
+            if (sourceRowIdx === destRowIdx) {
+                sourceZones.splice(destination.index, 0, movedZone);
+                newRows[sourceRowIdx] = { ...newRows[sourceRowIdx], zones: sourceZones };
+            } else {
+                const destZones = [...newRows[destRowIdx].zones];
+                destZones.splice(destination.index, 0, movedZone);
+                newRows[destRowIdx] = { ...newRows[destRowIdx], zones: destZones };
+            }
+
+            // Clean up empty source row if it wasn't the dest row
+            if (sourceRowIdx !== destRowIdx && newRows[sourceRowIdx].zones.length === 0) {
+                newRows.splice(sourceRowIdx, 1);
+            }
+
+            updateStepLayout(newRows);
+            return;
+        }
+
+        // 3. Dragging Fields
+        if (type === 'FIELD') {
+            const fieldType = draggableId.startsWith('comp-') ? draggableId.replace('comp-', '') as FieldType : null;
+            const isSidebarDrop = source.droppableId === 'sidebar-fields';
+
+            // Identify Target Type: Zone or FieldRow
+            let targetType: 'ZONE' | 'ROW' | null = null;
+            let targetZone: ZoneConfig | null = null;
+            let targetRow: FieldRow | null = null;
+
+            // Search for target in config
+            for (const r of layoutRows) {
+                for (const z of r.zones) {
+                    if (z.id === destination.droppableId) {
+                        targetType = 'ZONE';
+                        targetZone = z;
+                        break;
+                    }
+                    const fRow = z.fieldRows.find(fr => fr.id === destination.droppableId);
+                    if (fRow) {
+                        targetType = 'ROW';
+                        targetRow = fRow;
+                        break;
+                    }
+                }
+                if (targetType) break;
+            }
+
+            if (!targetType) return;
+
+
+            // CASE A: NEW Field from Sidebar
+            if (isSidebarDrop && fieldType) {
+                const fieldName = generateUniqueFieldName(fieldType);
+                const newFieldBase: FormField = {
+                    name: fieldName,
+                    label: `New ${fieldType}`,
+                    type: fieldType,
+                    validation: { required: false }
+                };
+
+                const newRows = JSON.parse(JSON.stringify(layoutRows)) as LayoutRow[];
+                // Mutate newRows to insert the field
+                // Search again to get mutable reference
+                let inserted = false;
+                for (const r of newRows) {
+                    for (const z of r.zones) {
+                        if (targetType === 'ZONE' && z.id === targetZone?.id) {
+                            // Create new row in zone
+                            const newFieldRow: FieldRow = { id: generateId(), fields: [fieldName] };
+                            z.fieldRows.splice(destination.index, 0, newFieldRow);
+                            inserted = true;
+                            break;
+                        } else if (targetType === 'ROW' && z.fieldRows.some(fr => fr.id === targetRow?.id)) {
+                            // Find row and insert
+                            const fRow = z.fieldRows.find(fr => fr.id === targetRow?.id);
+                            if (fRow) {
+                                fRow.fields.splice(destination.index, 0, fieldName);
+                                inserted = true;
+                            }
+                            break;
+                        }
+                    }
+                    if (inserted) break;
+                }
+
+                if (inserted && currentStep) {
+                    const newSteps = [...steps];
+                    newSteps[activeStepIndex] = { ...currentStep, layout: { ...currentStep.layout, rows: newRows } };
+                    onChange({
+                        ...config,
+                        fields: [...config.fields, newFieldBase],
+                        steps: newSteps
+                    });
+                    setSelectedFieldName(newFieldBase.name);
+                    setActiveTab('properties');
+                }
+                return;
+            }
+
+            // CASE B: Reordering Existing Field
+            const sourceId = source.droppableId; // FieldRow ID
+            const destId = destination.droppableId; // FieldRow ID or Zone ID
+
+            const newRows = JSON.parse(JSON.stringify(layoutRows)) as LayoutRow[]; // Deep clone
+            let movedField: string | null = null;
+
+            // 1. Remove from Source
+            for (const r of newRows) {
+                for (const z of r.zones) {
+                    const sRow = z.fieldRows.find((fr: any) => fr.id === sourceId);
+                    if (sRow) {
+                        const [f] = sRow.fields.splice(source.index, 1);
+                        movedField = f;
+                        // Cleanup empty rows if it wasn't the last empty one? 
+                        // Actually, cleaning up empty rows automatically is good for UX.
+                        if (sRow.fields.length === 0) {
+                            z.fieldRows = z.fieldRows.filter((fr: any) => fr.id !== sourceId);
+                        }
+                    }
+                }
+            }
+
+            if (movedField) {
+                // 2. Insert into Destination
+                let inserted = false;
+                for (const r of newRows) {
+                    for (const z of r.zones) {
+                        if (targetType === 'ZONE' && z.id === destId) {
+                            // Insert as NEW Row
+                            const newFieldRow = { id: generateId(), fields: [movedField] };
+                            z.fieldRows.splice(destination.index, 0, newFieldRow);
+                            inserted = true;
+                            break;
+                        } else if (targetType === 'ROW') {
+                            const dRow = z.fieldRows.find((fr: any) => fr.id === destId);
+                            if (dRow) {
+                                dRow.fields.splice(destination.index, 0, movedField);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (inserted) break;
+                }
+
+                updateStepLayout(newRows);
+            }
+        }
+    }
+
+    // --- Render Helpers ---
+
+    if (!currentStep) return <div className="flex h-full items-center justify-center text-muted-foreground">Loading steps...</div>;
+    // Strict Layout check
+    if (!currentStep.layout || !currentStep.layout.rows) return <div className="flex h-full items-center justify-center text-muted-foreground">Initializing layout...</div>;
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Form Fields</h3>
-                <Button type="button" onClick={handleAddField} size="sm" variant="outline" className="gap-2">
-                    <Plus className="w-4 h-4" /> Add Field
-                </Button>
-            </div>
+        <div className="flex flex-col h-full overflow-hidden bg-background">
+            <div className="border-b px-6 py-3 bg-muted/30 flex items-center justify-between gap-4 shrink-0">
+                {/* Steps Toolbar */}
+                {/* Steps Stepper */}
+                <div className="flex items-center w-full max-w-5xl mx-auto px-4 py-6">
+                    {steps.map((step, idx) => {
+                        const isActive = activeStepIndex === idx;
+                        const isCompleted = activeStepIndex > idx;
+                        const isLast = idx === steps.length - 1;
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin">
-                {config.fields.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed rounded-lg bg-muted/20">
-                        <p className="text-sm text-muted-foreground">No fields configured yet.</p>
-                        <Button type="button" variant="link" onClick={handleAddField}>Add your first field</Button>
-                    </div>
-                ) : (
-                    config.fields.map((field, index) => (
-                        <Card key={index} className="relative group hover:border-primary/50 transition-colors">
-                            <CardContent className="p-3 flex items-center gap-3">
-                                <div className="flex flex-col gap-1 text-muted-foreground/50">
-                                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4" disabled={index === 0} onClick={() => moveField(index, 'up')}>
-                                        <ChevronUp className="w-3 h-3" />
-                                    </Button>
-                                    <GripVertical className="w-4 h-4 mx-auto" />
-                                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4" disabled={index === config.fields.length - 1} onClick={() => moveField(index, 'down')}>
-                                        <ChevronDown className="w-3 h-3" />
-                                    </Button>
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-medium truncate">{field.label}</span>
-                                        {field.validation?.required && <span className="text-destructive text-xs">*</span>}
-                                        <span className="text-xs text-muted-foreground px-2 py-0.5 rounded-full bg-secondary border">
-                                            {field.type}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <code className="text-[10px] text-primary font-mono bg-primary/5 px-1 rounded">
-                                            {`{{${field.name}}}`}
-                                        </code>
-                                        <button
-                                            type="button"
-                                            onClick={() => copyToClipboard(`{{${field.name}}}`)}
-                                            className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                                        >
-                                            Copy
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleEditField(index)}>
-                                        <Settings className="w-4 h-4" />
-                                    </Button>
-                                    <Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDeleteField(index)}>
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
-            </div>
-
-            <div className="space-y-2">
-                <Label>Submit Button Label</Label>
-                <Input
-                    value={config.submitLabel || ''}
-                    onChange={e => onChange({ ...config, submitLabel: e.target.value })}
-                    placeholder="e.g. Generate Now"
-                />
-            </div>
-
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>{editIndex >= 0 ? 'Edit Field' : 'Add New Field'}</DialogTitle>
-                    </DialogHeader>
-                    {editingField && (
-                        <div className="space-y-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Field Label *</Label>
-                                    <Input
-                                        value={editingField.label}
-                                        onChange={(e) => {
-                                            const label = e.target.value;
-                                            const isNameEmptyOrAuto = !editingField.name || editingField.name === slugify(editingField.label);
-
-                                            setEditingField(prev => {
-                                                if (!prev) return null;
-                                                return {
-                                                    ...prev,
-                                                    label,
-                                                    name: isNameEmptyOrAuto ? slugify(label) : prev.name
-                                                };
-                                            });
-                                        }}
-                                        placeholder="Display Label"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Field Name (Key) *</Label>
-                                    <Input
-                                        value={editingField.name}
-                                        onChange={(e) => setEditingField({
-                                            ...editingField,
-                                            name: e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
-                                        })}
-                                        placeholder="variable_name"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Field Type</Label>
-                                <Select
-                                    value={editingField.type}
-                                    onValueChange={(val: string) => setEditingField({ ...editingField, type: val as FieldType })}
+                        return (
+                            <React.Fragment key={step.id}>
+                                <div
+                                    className="relative z-10 flex flex-col items-center gap-2 group cursor-pointer"
+                                    onClick={() => setActiveStepIndex(idx)}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {FIELD_TYPES.map(t => (
-                                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                    {/* Circle Indicator */}
+                                    <div className={cn(
+                                        "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300",
+                                        isActive
+                                            ? "bg-primary border-primary text-primary-foreground scale-110 shadow-lg ring-4 ring-primary/10"
+                                            : isCompleted
+                                                ? "bg-primary border-primary text-primary-foreground"
+                                                : "bg-background border-muted text-muted-foreground hover:border-primary/50"
+                                    )}>
+                                        {isCompleted ? <Check className="w-4 h-4" /> : idx + 1}
+                                    </div>
 
-                            <div className="space-y-2">
-                                <Label>Description / Help Text</Label>
-                                <Input
-                                    value={editingField.description || ''}
-                                    onChange={(e) => setEditingField({ ...editingField, description: e.target.value })}
-                                    placeholder="Helper text for the user"
-                                />
-                            </div>
+                                    {/* Step Label */}
+                                    <div className="absolute top-11 whitespace-nowrap text-center">
+                                        <p className={cn(
+                                            "text-xs font-bold transition-colors",
+                                            isActive ? "text-primary" : "text-muted-foreground"
+                                        )}>
+                                            {step.title}
+                                        </p>
+                                    </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="req"
-                                    checked={editingField.validation?.required || false}
-                                    onCheckedChange={(checked) => setEditingField({
-                                        ...editingField,
-                                        validation: { ...editingField.validation, required: !!checked }
-                                    })}
-                                />
-                                <Label htmlFor="req">Required Field</Label>
-                            </div>
+                                    {/* Remove Step Button (Hover only) */}
+                                    {steps.length > 1 && (
+                                        <div
+                                            className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center cursor-pointer shadow-sm z-20"
+                                            onClick={(e) => { e.stopPropagation(); handleRemoveStep(idx); }}
+                                            title="Remove Step"
+                                        >
+                                            <X className="w-2.5 h-2.5" />
+                                        </div>
+                                    )}
+                                </div>
 
-                            {(editingField.type === 'select' || editingField.type === 'radio' || editingField.type === 'multi-select') && (
-                                <div className="space-y-3 pt-2">
-                                    <Label>Options</Label>
-                                    <div className="space-y-2">
-                                        {Array.isArray(editingField.options) && editingField.options.map((option, index) => (
-                                            <div key={index} className="flex items-center gap-2">
-                                                <Input
-                                                    value={option.label}
-                                                    onChange={(e) => {
-                                                        const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
-                                                        const newOptions = [...currentOptions];
-                                                        newOptions[index] = { label: e.target.value, value: e.target.value };
-                                                        setEditingField({ ...editingField, options: newOptions });
-                                                    }}
-                                                    placeholder={`Option ${index + 1}`}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                    onClick={() => {
-                                                        const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
-                                                        const newOptions = [...currentOptions];
-                                                        newOptions.splice(index, 1);
-                                                        setEditingField({ ...editingField, options: newOptions });
-                                                    }}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
+                                {!isLast && (
+                                    <div className="flex-1 h-[2px] mx-4 bg-muted relative overflow-hidden rounded-full min-w-[2rem]">
+                                        <div
+                                            className={cn(
+                                                "absolute inset-0 bg-primary transition-transform duration-700 ease-in-out origin-left",
+                                                isCompleted ? "scale-x-100" : "scale-x-0"
+                                            )}
+                                        />
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
+
+                    {/* Add Step Button */}
+                    <div className="flex-none ml-4 relative z-10">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors"
+                            onClick={handleAddStep}
+                            title="Add New Step"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleAddLayoutRow}>
+                        <LayoutGrid className="w-4 h-4 mr-2" /> Add Section Row
+                    </Button>
+                </div>
+            </div>
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <div className="flex-1 flex overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-8 bg-muted/10">
+                        <div className="h-full px-8 pb-20">
+                            <div className="max-w-[1600px] mx-auto space-y-6">
+                                {layoutRows.map((row, rowIdx) => (
+                                    <div key={row.id} className="group/row relative">
+                                        {/* Layout Row */}
+                                        <div className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                            <div className="flex flex-col gap-1">
+                                                <Button variant="ghost" size="icon" onClick={() => handleAddZoneToRow(row.id)} title="Add Column Here">
+                                                    <Plus className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                        ))}
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="w-full border-dashed"
-                                            onClick={() => {
-                                                const currentOptions = Array.isArray(editingField.options) ? editingField.options : [];
-                                                const newOptions = [...currentOptions];
-                                                newOptions.push({ label: '', value: '' });
-                                                setEditingField({ ...editingField, options: newOptions });
-                                            }}
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" /> Add Option
-                                        </Button>
+                                        </div>
+
+                                        <StrictModeDroppable droppableId={row.id} type="ZONE">
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                    className={cn(
+                                                        "flex flex-wrap gap-6 min-h-[100px]",
+                                                        snapshot.isDraggingOver && "bg-muted/50 rounded-lg p-2 transition-all"
+                                                    )}
+                                                >
+                                                    {row.zones.map((zone, zoneIdx) => (
+                                                        <Draggable key={zone.id} draggableId={zone.id} index={zoneIdx}>
+                                                            {(providedZone, snapshotZone) => (
+                                                                <div
+                                                                    ref={providedZone.innerRef}
+                                                                    {...providedZone.draggableProps}
+                                                                    className={cn(
+                                                                        "flex-1 min-w-[320px]", // Minimum width to prevent squishing
+                                                                        snapshotZone.isDragging && "z-50"
+                                                                    )}
+                                                                >
+                                                                    <FormBuilderZone
+                                                                        zone={zone}
+                                                                        configFields={config.fields}
+                                                                        dragHandleProps={providedZone.dragHandleProps}
+                                                                        onRemoveZone={() => handleRemoveZone(row.id, zone.id)}
+                                                                        onUpdateZone={(updates) => {
+                                                                            const newRows = JSON.parse(JSON.stringify(layoutRows)) as LayoutRow[];
+                                                                            newRows[rowIdx].zones[zoneIdx] = { ...zone, ...updates };
+                                                                            updateStepLayout(newRows);
+                                                                        }}
+                                                                        selectedFieldName={selectedFieldName}
+                                                                        onSelectField={setSelectedFieldName}
+                                                                        onDeleteField={(fieldRowId, fieldIdx) => {
+                                                                            const newRows = JSON.parse(JSON.stringify(layoutRows)) as LayoutRow[];
+                                                                            const fRow = newRows[rowIdx].zones[zoneIdx].fieldRows.find(fr => fr.id === fieldRowId);
+                                                                            if (fRow) {
+                                                                                fRow.fields.splice(fieldIdx, 1);
+                                                                                updateStepLayout(newRows);
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </StrictModeDroppable>
                                     </div>
+                                ))}
+                                {layoutRows.length === 0 && (
+                                    <div className="text-center py-20 border-2 border-dashed rounded-xl">
+                                        <p className="text-muted-foreground mb-4">No layout configured</p>
+                                        <Button onClick={handleAddLayoutRow}>Add First Section</Button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    {/* Sidebar */}
+                    <div className="w-80 border-l bg-background flex flex-col h-full">
+                        {/* Sidebar Tabs */}
+                        <div className="flex items-center border-b">
+                            <button
+                                className={cn(
+                                    "flex-1 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors",
+                                    activeTab === 'fields' ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:bg-muted"
+                                )}
+                                onClick={() => setActiveTab('fields')}
+                            >
+                                Components
+                            </button>
+                            <button
+                                className={cn(
+                                    "flex-1 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors",
+                                    activeTab === 'properties' ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:bg-muted"
+                                )}
+                                onClick={() => setActiveTab('properties')}
+                            >
+                                Properties
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4">
+                            {activeTab === 'fields' ? (
+                                <>
+                                    <h3 className="font-bold mb-4 text-sm uppercase text-muted-foreground">Form Elements</h3>
+                                    <StrictModeDroppable droppableId="sidebar-fields" type="FIELD" isDropDisabled={true}>
+                                        {(provided) => (
+                                            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                                                {FIELD_TYPES.map((type, index) => (
+                                                    <Draggable key={type.value} draggableId={`comp-${type.value}`} index={index}>
+                                                        {(providedDrag, snapshot) => (
+                                                            <div
+                                                                ref={providedDrag.innerRef}
+                                                                {...providedDrag.draggableProps}
+                                                                {...providedDrag.dragHandleProps}
+                                                                className="p-3 border rounded-lg bg-card hover:border-primary/50 cursor-move text-sm font-medium flex items-center gap-3 transition-colors shadow-sm"
+                                                            >
+                                                                <div className="p-1.5 bg-muted rounded">
+                                                                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                                                                </div>
+                                                                {type.label}
+                                                                {snapshot.isDragging && (
+                                                                    <div className="w-3 h-3 bg-primary rounded-full ml-auto animate-pulse" />
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </StrictModeDroppable>
+                                </>
+                            ) : (
+                                // PROPERTIES PANEL
+                                <div className="space-y-6">
+                                    {selectedFieldName ? (
+                                        (() => {
+                                            const field = config.fields.find(f => f.name === selectedFieldName);
+                                            if (!field) return <div className="text-muted-foreground text-sm">Field not found.</div>;
+
+                                            return (
+                                                <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-bold uppercase text-muted-foreground">Label</Label>
+                                                        <Input
+                                                            value={field.label}
+                                                            onChange={(e) => {
+                                                                const newFields = config.fields.map(f => f.name === selectedFieldName ? { ...f, label: e.target.value } : f);
+                                                                onChange({ ...config, fields: newFields });
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex justify-between items-baseline">
+                                                            <Label className="text-xs font-bold uppercase text-muted-foreground">Field Name (Key)</Label>
+                                                            <code className="text-[10px] bg-muted px-1.5 py-0.5 rounded font-mono text-primary">{'{{' + field.name + '}}'}</code>
+                                                        </div>
+                                                        <Input
+                                                            className="font-mono"
+                                                            value={field.name}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.replace(/[^a-zA-Z0-9_]/g, '');
+                                                                if (!val) return;
+
+                                                                const oldName = field.name;
+
+                                                                // 1. Update list of fields
+                                                                const newFields = config.fields.map(f => f.name === oldName ? { ...f, name: val } : f);
+
+                                                                // 2. Update Layouts in all steps
+                                                                const newSteps = config.steps.map(step => {
+                                                                    if (!step.layout?.rows) return step;
+                                                                    const newRows = step.layout.rows.map(row => ({
+                                                                        ...row,
+                                                                        zones: row.zones.map(zone => ({
+                                                                            ...zone,
+                                                                            fieldRows: zone.fieldRows.map(fr => ({
+                                                                                ...fr,
+                                                                                fields: fr.fields.map(n => n === oldName ? val : n)
+                                                                            }))
+                                                                        }))
+                                                                    }));
+                                                                    return { ...step, layout: { ...step.layout, rows: newRows } };
+                                                                });
+
+                                                                setSelectedFieldName(val);
+                                                                onChange({ ...config, fields: newFields, steps: newSteps });
+                                                            }}
+                                                            title="Unique identifier for this field (alphanumeric and underscores only)"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs font-bold uppercase text-muted-foreground">Placeholder</Label>
+                                                            <Input
+                                                                value={field.placeholder || ''}
+                                                                onChange={(e) => {
+                                                                    const newFields = config.fields.map(f => f.name === selectedFieldName ? { ...f, placeholder: e.target.value } : f);
+                                                                    onChange({ ...config, fields: newFields });
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs font-bold uppercase text-muted-foreground">Default Value</Label>
+                                                            <Input
+                                                                value={field.defaultValue || ''}
+                                                                onChange={(e) => {
+                                                                    const newFields = config.fields.map(f => f.name === selectedFieldName ? { ...f, defaultValue: e.target.value } : f);
+                                                                    onChange({ ...config, fields: newFields });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-bold uppercase text-muted-foreground">Description / Help Text</Label>
+                                                        <Textarea
+                                                            className="min-h-[60px]"
+                                                            value={field.description || ''}
+                                                            onChange={(e) => {
+                                                                const newFields = config.fields.map(f => f.name === selectedFieldName ? { ...f, description: e.target.value } : f);
+                                                                onChange({ ...config, fields: newFields });
+                                                            }}
+                                                        />
+                                                    </div>
+
+                                                    {(field.type === 'select' || field.type === 'radio' || field.type === 'multi-select') && (
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs font-bold uppercase text-muted-foreground">Options</Label>
+                                                            <p className="text-[10px] text-muted-foreground">Enter options separated by comma or valid JSON</p>
+                                                            <Textarea
+                                                                className="min-h-[80px]"
+                                                                value={typeof field.options === 'string' ? field.options : JSON.stringify(field.options || [], null, 2)}
+                                                                onChange={(e) => {
+                                                                    let val: any = e.target.value;
+                                                                    try {
+                                                                        val = JSON.parse(val);
+                                                                    } catch {
+                                                                        if (val.includes(',')) {
+                                                                            val = val.split(',').map((s: string) => s.trim());
+                                                                        }
+                                                                    }
+                                                                    const newFields = config.fields.map(f => f.name === selectedFieldName ? { ...f, options: val } : f);
+                                                                    onChange({ ...config, fields: newFields });
+                                                                }}
+                                                                placeholder='["Option 1", "Option 2"] or Option 1, Option 2'
+                                                            />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="p-4 rounded-lg border bg-muted/20 space-y-4">
+                                                        <h4 className="font-bold text-xs uppercase text-muted-foreground">Validation</h4>
+
+                                                        <div className="flex items-center gap-2">
+                                                            <Checkbox
+                                                                id="chk-required"
+                                                                checked={field.validation?.required || false}
+                                                                onCheckedChange={(checked) => {
+                                                                    const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                        ...f,
+                                                                        validation: { ...f.validation, required: !!checked }
+                                                                    } : f);
+                                                                    onChange({ ...config, fields: newFields });
+                                                                }}
+                                                            />
+                                                            <Label htmlFor="chk-required" className="cursor-pointer">Required Field</Label>
+                                                        </div>
+                                                        {['text', 'textarea', 'password'].includes(field.type) && (
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] uppercase text-muted-foreground">Min Length</Label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        className="h-8"
+                                                                        value={field.validation?.minLength || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                                                            const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                                ...f,
+                                                                                validation: { ...f.validation, minLength: val }
+                                                                            } : f);
+                                                                            onChange({ ...config, fields: newFields });
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] uppercase text-muted-foreground">Max Length</Label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        className="h-8"
+                                                                        value={field.validation?.maxLength || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                                                            const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                                ...f,
+                                                                                validation: { ...f.validation, maxLength: val }
+                                                                            } : f);
+                                                                            onChange({ ...config, fields: newFields });
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {['number', 'slider'].includes(field.type) && (
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] uppercase text-muted-foreground">Min Value</Label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        className="h-8"
+                                                                        value={field.validation?.min || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                                                                            const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                                ...f,
+                                                                                validation: { ...f.validation, min: val }
+                                                                            } : f);
+                                                                            onChange({ ...config, fields: newFields });
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] uppercase text-muted-foreground">Max Value</Label>
+                                                                    <Input
+                                                                        type="number"
+                                                                        className="h-8"
+                                                                        value={field.validation?.max || ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                                                                            const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                                ...f,
+                                                                                validation: { ...f.validation, max: val }
+                                                                            } : f);
+                                                                            onChange({ ...config, fields: newFields });
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] uppercase text-muted-foreground">Custom Invalid Message</Label>
+                                                            <Input
+                                                                className="h-8"
+                                                                value={field.validation?.customMessage || ''}
+                                                                placeholder="e.g. Please enter a valid email"
+                                                                onChange={(e) => {
+                                                                    const newFields = config.fields.map(f => f.name === selectedFieldName ? {
+                                                                        ...f,
+                                                                        validation: { ...f.validation, customMessage: e.target.value }
+                                                                    } : f);
+                                                                    onChange({ ...config, fields: newFields });
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-4 border-t">
+                                                        <Button
+                                                            variant="destructive"
+                                                            className="w-full"
+                                                            onClick={() => {
+                                                                setSelectedFieldName(null);
+                                                            }}
+                                                        >
+                                                            Close Properties
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()
+                                    ) : (
+                                        <div className="text-center py-10 text-muted-foreground">
+                                            <Settings className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                                            <p>Select a field to edit its properties.</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    )}
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button type="button" onClick={handleSaveField}>Save Field</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
-    );
+                    </div>
+                </div>
+            </DragDropContext >
+        </div >
+    )
 }

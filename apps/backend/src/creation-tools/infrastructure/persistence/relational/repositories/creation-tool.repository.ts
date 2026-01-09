@@ -15,12 +15,11 @@ import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 
 @Injectable()
 export class CreationToolsRelationalRepository
-  implements CreationToolRepository
-{
+  implements CreationToolRepository {
   constructor(
     @InjectRepository(CreationToolEntity)
     private readonly repository: Repository<CreationToolEntity>,
-  ) {}
+  ) { }
 
   async create(data: DeepPartial<CreationTool>): Promise<CreationTool> {
     const persistenceModel = CreationToolMapper.toPersistence(
@@ -109,8 +108,14 @@ export class CreationToolsRelationalRepository
     return entity ? CreationToolMapper.toDomain(entity) : null;
   }
 
-  async findBySlug(slug: string): Promise<NullableType<CreationTool>> {
-    const entity = await this.repository.findOne({ where: { slug } });
+  async findBySlug(
+    slug: string,
+    options?: { withDeleted?: boolean },
+  ): Promise<NullableType<CreationTool>> {
+    const entity = await this.repository.findOne({
+      where: { slug },
+      withDeleted: options?.withDeleted,
+    });
     return entity ? CreationToolMapper.toDomain(entity) : null;
   }
 

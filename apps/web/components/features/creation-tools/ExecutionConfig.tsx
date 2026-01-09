@@ -205,10 +205,10 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                     )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                    {fields.map(f => (
+                    {fields.map((f, idx) => (
                         <button
                             type="button"
-                            key={f.name}
+                            key={`${f.name}-${idx}`}
                             onClick={() => copyToClipboard(f.name)}
                             className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border hover:border-primary hover:text-primary transition-all group"
                             title={`Click to copy {{${f.name}}}`}

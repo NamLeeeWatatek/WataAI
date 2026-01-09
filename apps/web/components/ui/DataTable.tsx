@@ -7,6 +7,8 @@ import {
   SortAsc,
   SortDesc,
   ArrowUpDown,
+  LayoutGrid,
+  List,
 } from "lucide-react"
 import {
   useReactTable,
@@ -34,6 +36,14 @@ import {
   TableHeader,
   TableRow,
 } from "./Table"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./Card"
 
 export type SortDirection = 'asc' | 'desc' | null
 
@@ -73,6 +83,15 @@ export interface DataTableProps<TData, TValue = unknown> {
   compact?: boolean
   onRowExpand?: (row: TData) => Promise<void> | void
   getRowCanExpand?: (row: TData) => boolean
+  title?: React.ReactNode
+  description?: React.ReactNode
+  /** Left-aligned slot for Breadcrumbs or additional Context */
+  headerActions?: React.ReactNode
+  /** Left-aligned slot for Filters (Selects, Date ranges) */
+  filterActions?: React.ReactNode
+  noCard?: boolean
+  renderGridItem?: (item: TData) => React.ReactNode
+  gridClassName?: string
 }
 
 function DataTableInner<TData, TValue>({
@@ -109,11 +128,20 @@ function DataTableInner<TData, TValue>({
   getRowCanExpand,
   className,
   tableClassName,
-}: DataTableProps<TData, TValue>) {
+  fixed = true,
+  title,
+  description,
+  headerActions,
+  filterActions,
+  noCard,
+  renderGridItem,
+  gridClassName,
+}: DataTableProps<TData, TValue> & { fixed?: boolean }) {
   // --- TanStack Table State ---
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table')
 
   // Sync external sorting
   React.useEffect(() => {
@@ -122,6 +150,8 @@ function DataTableInner<TData, TValue>({
       : []
     setSorting(prev => JSON.stringify(prev) === JSON.stringify(nextSorting) ? prev : nextSorting)
   }, [sortColumn, sortDirection])
+
+  const pageSize = pagination?.limit || 10
 
   // Sync external selection
   React.useEffect(() => {
@@ -161,12 +191,29 @@ function DataTableInner<TData, TValue>({
   const [localSearchValue, setLocalSearchValue] = React.useState(searchValue)
   React.useEffect(() => setLocalSearchValue(searchValue), [searchValue])
 
-  return (
-    <div className={cn("space-y-4", className)}>
-      {(searchable || actions) && (
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  const headerContent = (title || description || headerActions || filterActions || searchable || actions || renderGridItem) && (
+    <CardHeader className={cn(
+      "px-6 py-4 border-b bg-card/50",
+      noCard && "px-0 border-0 bg-transparent pt-0 pb-4"
+    )}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left Side: Context, Filters, Search, Query */}
+        <div className="flex flex-1 flex-wrap items-center gap-4 min-w-0">
+          {(title || description) && (
+            <div className="space-y-1 pr-4 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0 flex-shrink-0">
+              {title && <CardTitle className="text-xl font-bold tracking-tight">{title}</CardTitle>}
+              {description && <CardDescription className="text-sm">{description}</CardDescription>}
+            </div>
+          )}
+
+          {(headerActions) && (
+            <div className="flex items-center gap-2">
+              {headerActions}
+            </div>
+          )}
+
           {searchable && (
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative w-full sm:w-[250px] lg:w-[300px]">
               <SearchInput
                 placeholder={searchPlaceholder}
                 value={localSearchValue}
@@ -181,96 +228,211 @@ function DataTableInner<TData, TValue>({
               />
             </div>
           )}
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+
+          {filterActions && (
+            <div className="flex flex-wrap items-center gap-3">
+              {filterActions}
+            </div>
+          )}
         </div>
-      )}
 
-      <div className={cn("rounded-xl border bg-card shadow-sm overflow-hidden", tableClassName)}>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b bg-muted/20">
-                {headerGroup.headers.map((header) => {
-                  const isSelection = header.column.id === 'selection'
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn(
-                        "h-11 px-4 py-2 text-left font-medium text-muted-foreground",
-                        isSelection && "w-12 p-0 text-center",
-                        header.column.getCanSort() && "cursor-pointer group",
-                        (header.column.columnDef.meta as any)?.className
-                      )}
-                      onClick={header.column.getToggleSortingHandler()}
-                      style={{ width: header.column.getSize() ? `${header.column.getSize()}px` : undefined }}
-                    >
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i} className="hover:bg-transparent border-b">
-                  {columns.map((_, idx) => (
-                    <TableCell key={idx} className="p-4"><Skeleton className="h-5 w-full rounded" /></TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : error ? (
-              <TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-destructive font-medium">{error}</TableCell></TableRow>
-            ) : table.getRowModel().rows.length === 0 ? (
-              <TableRow><TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground italic">{emptyMessage}</TableCell></TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    "transition-colors border-b",
-                    onRowClick && "cursor-pointer hover:bg-muted/30",
-                    row.getIsSelected() && "bg-primary/5 hover:bg-primary/10"
-                  )}
-                  onClick={() => onRowClick?.(row.original)}
-                  draggable={!!onRowDragStart}
-                  onDragStart={(e) => onRowDragStart?.(e, row.original)}
-                  onDragOver={(e) => onRowDragOver?.(e, row.original)}
-                  onDrop={(e) => onRowDrop?.(e, row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const isSelection = cell.column.id === 'selection'
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        className={cn(
-                          "h-12 px-4 py-2",
-                          isSelection && "w-12 p-0 text-center",
-                          (cell.column.columnDef.meta as any)?.className
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        {/* Right Side: Actions & View Switcher */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {actions && (
+            <div className="flex items-center gap-2">
+              {actions}
+            </div>
+          )}
+
+          {/* View Mode Switcher */}
+          {renderGridItem && (
+            <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={cn(
+                  "h-8 w-8 flex items-center justify-center rounded-md transition-all",
+                  viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={cn(
+                  "h-8 w-8 flex items-center justify-center rounded-md transition-all",
+                  viewMode === 'table' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+                title="Table View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+    </CardHeader>
+  )
 
-      {pagination && pagination.total > 0 && (
-        <Pagination
-          pagination={pagination}
-          pageSizeOptions={pageSizeOptions}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-          className="m-2"
-        />
+  const content = (
+    <>
+      {headerContent}
+      <CardContent className={cn("p-0 flex-1", noCard && "p-0")}>
+        {viewMode === 'table' ? (
+          <div className={cn("relative overflow-hidden", tableClassName)}>
+            <Table className={fixed ? "table-fixed w-full" : "w-full"}>
+              <TableHeader className="bg-muted/30">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="hover:bg-transparent border-b">
+                    {headerGroup.headers.map((header) => {
+                      const isSelection = header.id === 'selection'
+                      const isActions = header.id === 'actions'
+                      const size = header.column.getSize()
+
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "h-11 px-4 py-2 text-left font-medium text-muted-foreground transition-colors",
+                            isSelection && "w-10 p-0 text-center",
+                            isActions && "w-16 text-right",
+                            header.column.getCanSort() && "cursor-pointer group hover:text-foreground",
+                            (header.column.columnDef.meta as any)?.className
+                          )}
+                          style={{
+                            width: isSelection ? '40px' : isActions ? '64px' : size ? `${size}px` : undefined,
+                            minWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                            maxWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                          }}
+                        >
+                          {header.isPlaceholder ? null : (
+                            <div className={cn(
+                              "flex items-center gap-2",
+                              isActions && "justify-end",
+                              isSelection && "justify-center"
+                            )}>
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {header.column.getCanSort() && (
+                                <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </div>
+                          )}
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeleton columns={columns.length} rows={pageSize} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        "group transition-colors border-b last:border-0",
+                        onRowClick && "cursor-pointer hover:bg-muted/50"
+                      )}
+                      onClick={() => onRowClick?.(row.original)}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const isSelection = cell.column.id === 'selection'
+                        const isActions = cell.column.id === 'actions'
+
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              "h-12 px-4 py-2",
+                              isSelection && "w-10 p-0 text-center",
+                              isActions && "w-16 text-right",
+                              (cell.column.columnDef.meta as any)?.className
+                            )}
+                            style={{
+                              width: isSelection ? '40px' : isActions ? '64px' : undefined,
+                              minWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                              maxWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        )
+                      })}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      {emptyMessage}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className={cn("p-6 grid gap-6", gridClassName)}>
+            {data.length > 0 ? (
+              data.map((item, index) => (
+                <React.Fragment key={(item as any).id || index}>
+                  {renderGridItem?.(item)}
+                </React.Fragment>
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                <p>{emptyMessage}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+      {pagination && (
+        <CardFooter className={cn(
+          "px-6 py-3 border-t bg-muted/5",
+          noCard && "px-0 border-t bg-transparent mt-4"
+        )}>
+          <Pagination
+            pagination={pagination}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            pageSizeOptions={pageSizeOptions}
+            className="w-full pl-4 pr-2"
+          />
+        </CardFooter>
       )}
-    </div>
+    </>
+  )
+
+  if (noCard) {
+    return (
+      <div className={cn("flex flex-col", className)}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <Card className={cn("overflow-hidden flex flex-col", className)}>
+      {content}
+    </Card>
+  )
+}
+
+function TableSkeleton({ columns, rows }: { columns: number, rows: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <TableRow key={i} className="hover:bg-transparent border-b">
+          {Array.from({ length: columns }).map((_, idx) => (
+            <TableCell key={idx} className="p-4">
+              <Skeleton className="h-5 w-full rounded" />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
   )
 }
 

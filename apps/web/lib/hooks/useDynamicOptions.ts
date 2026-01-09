@@ -36,7 +36,9 @@ interface Channel {
 export function useDynamicOptions(field: FormField) {
     const optionsConfig = typeof field.options === 'string' && field.options.startsWith('dynamic:')
         ? field.options.replace('dynamic:', '')
-        : (field.type === 'channel-select' || field.type === 'channel-selector' ? 'channels' : null);
+        : (field.type === 'channel-select' || field.type === 'channel-selector' ? 'channels'
+            : field.type === 'template-selector' ? 'templates'
+                : null);
 
     const selectFn = useCallback((data: unknown[]) => {
         if (!optionsConfig) return [];
@@ -78,6 +80,17 @@ export function useDynamicOptions(field: FormField) {
             });
         }
 
+        if (optionsConfig === 'templates') {
+            // Return templates as DynamicOptions
+            const templates = data as { id: string, name: string, description?: string, thumbnailUrl?: string }[];
+            return templates.map(t => ({
+                label: t.name,
+                value: t.id,
+                description: t.description,
+                thumbnailUrl: t.thumbnailUrl
+            })) as DynamicOption[];
+        }
+
         // Default pass-through for other dynamic types (e.g. ai-models)
         return data as DynamicOption[];
     }, [optionsConfig]);
@@ -93,6 +106,11 @@ export function useDynamicOptions(field: FormField) {
                 return response.data;
             } else if (optionsConfig === 'channels') {
                 const response = await axiosClient.get<Channel[]>('/channels/');
+                return response as unknown as Channel[];
+            } else if (optionsConfig === 'templates') {
+                const response = await axiosClient.get<{ id: string, name: string }[]>('/templates');
+                // The API might return { data: [...] } or just [...] depending on implementation. 
+                // Usually it's response.data. Assuming standard axiosClient behavior.
                 return response.data;
             }
             return [];

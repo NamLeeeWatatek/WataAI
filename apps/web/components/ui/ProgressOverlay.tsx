@@ -1,7 +1,7 @@
 'use client'
 
 import { useProgressOverlay } from '@/lib/hooks/useProgressOverlay'
-import { Dialog, DialogContent } from '@/components/ui/Dialog'
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/Dialog'
 import { Progress } from '@/components/ui/Progress'
 import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { CheckCircle2, Circle } from 'lucide-react'
@@ -38,13 +38,13 @@ export function ProgressOverlay() {
                     <div className="absolute -inset-4 bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 rounded-2xl blur-2xl opacity-50" />
 
                     {/* Header */}
-                    <div className="text-center relative z-10">
+                    <DialogHeader className="text-center relative z-10">
                         <LoadingLogo size="lg" className="mb-4" showGlow />
-                        <h3 className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                        <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                             {title}
-                        </h3>
+                        </DialogTitle>
                         <p className="text-sm text-muted-foreground mt-2">{description}</p>
-                    </div>
+                    </DialogHeader>
 
                     {/* Progress Bar */}
                     <div className="space-y-3 relative z-10">

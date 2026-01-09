@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateCreationJobDto } from './dto/create-creation-jobs.dto';
@@ -8,6 +8,7 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreationJob, CreationJobStatus } from './domain/creation-jobs';
 import { NullableType } from '../utils/types/nullable.type';
 import { ExecutionQueueService } from '../execution/queue/execution-queue.service';
+import { CreationToolsService } from '../creation-tools/creation-tools.service';
 
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { AuditService } from '../audit/audit.service';
@@ -21,6 +22,7 @@ export class CreationJobsService {
     private readonly auditService: AuditService,
     private readonly i18n: I18nService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly creationToolsService: CreationToolsService,
   ) { }
 
   async create(
@@ -28,6 +30,38 @@ export class CreationJobsService {
     userId?: string,
     workspaceId?: string,
   ): Promise<CreationJob> {
+
+    // Validate Input against Tool Config
+    const tool = await this.creationToolsService.findById(createDto.creationToolId);
+    if (!tool) {
+      throw new NotFoundException(`Creation Tool with ID ${createDto.creationToolId} not found`);
+    }
+
+    if (tool.formConfig && Array.isArray(tool.formConfig.fields)) {
+      for (const field of tool.formConfig.fields) {
+        // Handle case where field might be polymorphically typed as any
+        const fieldName = (field as any).name || (field as any).key;
+        // Defensively check for required flags in all possible locations
+        const isRequired = !!(
+          (field as any).required === true ||
+          (field as any).required === 'true' ||
+          (field as any).isRequired === true ||
+          (field as any).isRequired === 'true' ||
+          (field as any).validation?.required === true ||
+          (field as any).validation?.required === 'true' ||
+          (field as any).is_required === true ||
+          (field as any).mandatory === true
+        );
+
+        if (isRequired) {
+          const val = createDto.inputData[fieldName];
+          if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
+            throw new BadRequestException(`Field '${(field as any).displayName || (field as any).label || fieldName}' is required`);
+          }
+        }
+      }
+    }
+
     const job = new CreationJob();
     job.status = CreationJobStatus.PENDING;
     job.creationToolId = createDto.creationToolId;

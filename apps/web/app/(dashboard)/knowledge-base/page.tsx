@@ -142,11 +142,11 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                className="group p-6 cursor-pointer border-border/40 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5"
+                                className="group p-6 cursor-pointer border-border/40 hover:border-border/80 transition-all hover:bg-card/60"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform group-hover:scale-110 shadow-inner" style={{ backgroundColor: kb.color || '#3B82F6' }}>
+                                    <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform" style={{ backgroundColor: kb.color || '#3B82F6' }}>
                                         <Database className="w-6 h-6 text-white drop-shadow-md" />
                                     </div>
                                     <DropdownMenu>

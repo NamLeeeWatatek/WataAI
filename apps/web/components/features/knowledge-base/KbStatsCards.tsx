@@ -52,7 +52,7 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                     className={cn(
                         "p-4 group relative overflow-hidden transition-all duration-300",
                         "bg-card/40 backdrop-blur-md border border-border/50",
-                        "hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 hover:border-border/80"
+                        "hover:bg-card/60"
                     )}
                 >
                     <div className="flex items-center gap-4 relative z-10">
@@ -73,11 +73,6 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                             </p>
                         </div>
                     </div>
-                    {/* Subtle decorative background element */}
-                    <div className={cn(
-                        "absolute -right-4 -bottom-4 w-24 h-24 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-700",
-                        card.bg
-                    )} />
                 </Card>
             ))}
         </div>

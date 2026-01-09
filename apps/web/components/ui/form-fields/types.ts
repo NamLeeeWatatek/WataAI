@@ -34,4 +34,5 @@ export interface DynamicFormFieldProps {
     onChange: (key: string, value: unknown) => void
     allValues?: Record<string, unknown>
     className?: string
+    error?: string // Validation error message
 }

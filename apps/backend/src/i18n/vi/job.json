@@ -1,0 +1,10 @@
+{
+    "startedTitle": "Tiến trình bắt đầu",
+    "startedMessage": "Yêu cầu của bạn đang được xử lý. Bạn có thể theo dõi tiến độ ở bảng Active Jobs.",
+    "updateTitle": "Cập nhật tiến độ",
+    "progressUpdate": "Đang xử lý... {progress}%",
+    "completedTitle": "Tiến trình hoàn tất",
+    "completedMessage": "Yêu cầu đã được thực hiện thành công.",
+    "failedTitle": "Lỗi tiến trình",
+    "failedMessage": "Đã xảy ra lỗi trong quá trình xử lý."
+}

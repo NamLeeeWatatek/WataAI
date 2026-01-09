@@ -3,7 +3,11 @@ import { Template } from '../types/template';
 
 export const templatesApi = {
     findAll: async (query?: any): Promise<{ data: Template[]; hasNextPage: boolean; total: number }> => {
-        const response = await axiosClient.get<{ data: Template[]; hasNextPage: boolean; total: number }>('/templates', { params: query });
+        const params = { ...query };
+        if (params.filters && typeof params.filters === 'object') {
+            params.filters = JSON.stringify(params.filters);
+        }
+        const response = await axiosClient.get<{ data: Template[]; hasNextPage: boolean; total: number }>('/templates', { params });
         return response as unknown as { data: Template[]; hasNextPage: boolean; total: number };
     },
 

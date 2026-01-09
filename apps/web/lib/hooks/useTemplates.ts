@@ -13,7 +13,7 @@ export const templateKeys = {
   workspace: (workspaceId: string) => [...templateKeys.all, 'workspace', workspaceId] as const,
 }
 
-export function useTemplates(params?: QueryTemplateDto) {
+export function useTemplates(params?: QueryTemplateDto, options?: { enabled?: boolean }) {
   const queryClient = useQueryClient()
 
   const {
@@ -27,6 +27,7 @@ export function useTemplates(params?: QueryTemplateDto) {
       return await templatesApi.findAll(params)
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: options?.enabled
   })
 
   // Mutations

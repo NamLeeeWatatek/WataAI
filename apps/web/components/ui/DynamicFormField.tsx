@@ -18,6 +18,7 @@ import { FieldMultiSelect } from './form-fields/FieldMultiSelect'
 import { FieldColor } from './form-fields/FieldColor'
 import { FieldSlider } from './form-fields/FieldSlider'
 import { FieldChannelSelector } from './form-fields/FieldChannelSelector'
+import { FieldTemplateSelector } from './form-fields/FieldTemplateSelector'
 import { JsonEditor } from './JsonEditor'
 
 interface OptionItem {
@@ -51,6 +52,7 @@ const fieldRegistry: Record<string, React.ComponentType<DynamicFormFieldProps>> 
     'select': FieldSelect,
     'channel-select': FieldSelect,
     'channel-selector': FieldChannelSelector,
+    'template-selector': FieldTemplateSelector,
     'checkbox': FieldCheckbox,
     'boolean': FieldCheckbox,
     'slider': FieldSlider,
@@ -90,6 +92,7 @@ function arePropsEqual(prev: DynamicFormFieldProps, next: DynamicFormFieldProps)
     if (prev.value !== next.value) return false
     if (prev.field.name !== next.field.name) return false
     if (prev.onChange !== next.onChange) return false
+    if (prev.error !== next.error) return false
 
     if (!prev.field.showWhen && !prev.field.showIf && !next.field.showWhen && !next.field.showIf) {
         return true;
@@ -149,7 +152,7 @@ export const DynamicFormField = memo(function DynamicFormField(props: DynamicFor
             <div className="flex items-center justify-between mb-1.5">
                 <Label htmlFor={fieldId} className="text-sm font-medium">
                     {field.displayName || field.label}
-                    {field.required && <span className="text-destructive ml-0.5">*</span>}
+                    {(field.required || field.validation?.required) && <span className="text-destructive ml-0.5">*</span>}
                 </Label>
                 {field.hint && (
                     <span className="text-[10px] text-muted-foreground/80 uppercase tracking-widest font-semibold bg-muted/50 px-1.5 py-0.5 rounded">
@@ -164,6 +167,12 @@ export const DynamicFormField = memo(function DynamicFormField(props: DynamicFor
                 <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
                     Unsupported field type: {field.type}
                 </div>
+            )}
+
+            {props.error && (
+                <p className="text-[0.8rem] font-medium text-destructive mt-1.5 animate-in slide-in-from-top-1">
+                    {props.error}
+                </p>
             )}
 
             {(field.helpText || field.description) && (

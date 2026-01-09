@@ -26,6 +26,7 @@ import toast from '@/lib/toast';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Label } from '@/components/ui/Label';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
 import {
     Dialog,
     DialogContent,
@@ -64,6 +65,16 @@ export default function RolesPermissionsPage() {
     const [permissionToEdit, setPermissionToEdit] = useState<{ resource: string, action: string, description: string }>({ resource: '', action: '', description: '' });
     const [permissionSearch, setPermissionSearch] = useState('');
     const debouncedPermissionSearch = useDebounce(permissionSearch, 500);
+
+    // Role Selection
+    const [selectedRoleIds, setSelectedRoleIds] = useState<Set<number>>(new Set());
+    const [isBulkDeletingRoles, setIsBulkDeletingRoles] = useState(false);
+    const [bulkDeleteRolesAlertOpen, setBulkDeleteRolesAlertOpen] = useState(false);
+
+    // Permission Selection
+    const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
+    const [isBulkDeletingPermissions, setIsBulkDeletingPermissions] = useState(false);
+    const [bulkDeletePermissionsAlertOpen, setBulkDeletePermissionsAlertOpen] = useState(false);
 
 
     const { data: rolesData, isLoading: loadingRoles } = useQuery({
@@ -209,6 +220,60 @@ export default function RolesPermissionsPage() {
         deletePermissionMutation.mutate(permissionToDeleteId);
     };
 
+    const toggleRoleSelection = (id: number) => {
+        const newSelected = new Set(selectedRoleIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedRoleIds(newSelected);
+    };
+
+    const togglePermissionSelection = (id: string) => {
+        const newSelected = new Set(selectedPermissionIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedPermissionIds(newSelected);
+    };
+
+    const handleBulkDeleteRoles = async () => {
+        setIsBulkDeletingRoles(true);
+        try {
+            for (const id of Array.from(selectedRoleIds)) {
+                await adminApi.deleteRole(id);
+            }
+            toast.success(`Deleted ${selectedRoleIds.size} roles successfully`);
+            setSelectedRoleIds(new Set());
+            queryClient.invalidateQueries({ queryKey: ['roles'] });
+        } catch (error) {
+            toast.error('Failed to delete some roles');
+        } finally {
+            setIsBulkDeletingRoles(false);
+            setBulkDeleteRolesAlertOpen(false);
+        }
+    };
+
+    const handleBulkDeletePermissions = async () => {
+        setIsBulkDeletingPermissions(true);
+        try {
+            for (const id of Array.from(selectedPermissionIds)) {
+                await adminApi.deletePermission(id);
+            }
+            toast.success(`Deleted ${selectedPermissionIds.size} permissions successfully`);
+            setSelectedPermissionIds(new Set());
+            queryClient.invalidateQueries({ queryKey: ['permissions'] });
+        } catch (error) {
+            toast.error('Failed to delete some permissions');
+        } finally {
+            setIsBulkDeletingPermissions(false);
+            setBulkDeletePermissionsAlertOpen(false);
+        }
+    };
+
     // Group permissions
     const groupedPermissions = permissions.reduce((acc, perm: PermissionEntity) => {
         if (!acc[perm.resource]) acc[perm.resource] = [];
@@ -281,17 +346,34 @@ export default function RolesPermissionsPage() {
                                                         <div
                                                             key={role.id}
                                                             className={cn(
-                                                                "group p-3 rounded-lg cursor-pointer transition-all relative",
-                                                                selectedRole?.id === role.id ? "bg-primary/10 border-primary/20 border" : "hover:bg-muted/50 border border-transparent"
+                                                                "group p-3 rounded-lg cursor-pointer transition-all relative flex flex-col gap-1",
+                                                                selectedRole?.id === role.id ? "bg-primary/10 border-primary/20 border" : "hover:bg-muted/50 border border-transparent",
+                                                                selectedRoleIds.has(role.id) && "ring-1 ring-primary border-primary bg-primary/5"
                                                             )}
                                                             onClick={() => setSelectedRole(role)}
                                                         >
-                                                            <div className="flex items-center justify-between gap-2 mb-1">
-                                                                <div className="flex items-center gap-2">
-                                                                    <ShieldCheck className={cn("w-4 h-4", selectedRole?.id === role.id ? "text-primary" : "text-muted-foreground")} />
-                                                                    <span className="font-bold text-sm">{role.name}</span>
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <div
+                                                                        className={cn(
+                                                                            "transition-opacity shrink-0",
+                                                                            selectedRoleIds.has(role.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+                                                                        )}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            toggleRoleSelection(role.id);
+                                                                        }}
+                                                                    >
+                                                                        <Checkbox
+                                                                            checked={selectedRoleIds.has(role.id)}
+                                                                            onCheckedChange={() => toggleRoleSelection(role.id)}
+                                                                            className="h-4 w-4"
+                                                                        />
+                                                                    </div>
+                                                                    <ShieldCheck className={cn("w-4 h-4 shrink-0", selectedRole?.id === role.id ? "text-primary" : "text-muted-foreground")} />
+                                                                    <span className="font-bold text-sm truncate">{role.name}</span>
                                                                 </div>
-                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
@@ -316,7 +398,7 @@ export default function RolesPermissionsPage() {
                                                                     )}
                                                                 </div>
                                                             </div>
-                                                            <p className="text-[10px] text-muted-foreground truncate pr-14">{role.description || 'No description'}</p>
+                                                            <p className="text-[10px] text-muted-foreground truncate pl-6">{role.description || 'No description'}</p>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -423,8 +505,26 @@ export default function RolesPermissionsPage() {
                                     <ScrollArea className="h-full">
                                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {permissions.map(perm => (
-                                                <div key={perm.id} className="group p-3 border rounded-lg flex flex-col gap-1 bg-card hover:bg-muted/30 transition-colors h-fit relative">
-                                                    <div className="flex items-center justify-between">
+                                                <div
+                                                    key={perm.id}
+                                                    className={cn(
+                                                        "group p-3 border rounded-lg flex flex-col gap-1 bg-card hover:bg-muted/30 transition-all h-fit relative",
+                                                        selectedPermissionIds.has(perm.id) && "ring-2 ring-primary border-primary bg-primary/5 shadow-md"
+                                                    )}
+                                                    onClick={() => togglePermissionSelection(perm.id)}
+                                                >
+                                                    <div className={cn(
+                                                        "absolute top-2 left-2 z-10 transition-opacity",
+                                                        selectedPermissionIds.has(perm.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                    )}>
+                                                        <Checkbox
+                                                            checked={selectedPermissionIds.has(perm.id)}
+                                                            onCheckedChange={() => togglePermissionSelection(perm.id)}
+                                                            className="h-3.5 w-3.5"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center justify-between pl-6">
                                                         <span className="font-mono text-xs font-bold text-primary flex items-center gap-2">
                                                             <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal text-muted-foreground">{perm.resource}</Badge>
                                                             {perm.action}
@@ -433,7 +533,8 @@ export default function RolesPermissionsPage() {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setPermissionToDeleteId(perm.id);
                                                                 setIsDeletePermissionOpen(true);
                                                             }}
@@ -441,7 +542,7 @@ export default function RolesPermissionsPage() {
                                                             <Trash2 className="w-3 w-3" />
                                                         </Button>
                                                     </div>
-                                                    <span className="text-xs text-muted-foreground line-clamp-2">{perm.description}</span>
+                                                    <span className="text-xs text-muted-foreground line-clamp-2 pl-6">{perm.description}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -588,6 +689,69 @@ export default function RolesPermissionsPage() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Bulk Delete Roles Confirmation */}
+                <AlertDialog open={bulkDeleteRolesAlertOpen} onOpenChange={setBulkDeleteRolesAlertOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete {selectedRoleIds.size} roles?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete the selected roles? This will remove them from all assigned users.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleBulkDeleteRoles}
+                                disabled={isBulkDeletingRoles}
+                                className="bg-destructive text-white hover:bg-destructive/90"
+                            >
+                                {isBulkDeletingRoles ? 'Deleting...' : 'Delete Roles'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Bulk Delete Permissions Confirmation */}
+                <AlertDialog open={bulkDeletePermissionsAlertOpen} onOpenChange={setBulkDeletePermissionsAlertOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete {selectedPermissionIds.size} permissions?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to delete the selected permissions? Any roles using them will lose access.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleBulkDeletePermissions}
+                                disabled={isBulkDeletingPermissions}
+                                className="bg-destructive text-white hover:bg-destructive/90"
+                            >
+                                {isBulkDeletingPermissions ? 'Deleting...' : 'Delete'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <BulkActionsToolbar
+                    selectedCount={activeTab === 'roles' ? selectedRoleIds.size : selectedPermissionIds.size}
+                    onClearSelection={() => {
+                        if (activeTab === 'roles') setSelectedRoleIds(new Set());
+                        else setSelectedPermissionIds(new Set());
+                    }}
+                    actions={[
+                        {
+                            label: 'Delete',
+                            icon: Trash2,
+                            onClick: () => {
+                                if (activeTab === 'roles') setBulkDeleteRolesAlertOpen(true);
+                                else setBulkDeletePermissionsAlertOpen(true);
+                            },
+                            variant: 'destructive'
+                        }
+                    ]}
+                />
             </div>
         </PageShell>
     );

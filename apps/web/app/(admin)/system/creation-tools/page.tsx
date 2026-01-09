@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
-import { ToolDialog } from '@/components/features/creation-tools/ToolDialog';
 import { PageLoading } from '@/components/ui/PageLoading';
-import toast from '@/lib/toast';
+import { toast } from 'sonner';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
 import { Pagination } from '@/components/ui/Pagination';
@@ -26,17 +25,23 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { cn } from '@/lib/utils';
 
 
 export default function CreationToolsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
-    const [toolDialogOpen, setToolDialogOpen] = useState(false);
-    const [editingTool, setEditingTool] = useState<CreationTool | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [toolToDelete, setToolToDelete] = useState<string | null>(null);
+
+    // Bulk Actions
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [bulkDeleteAlertOpen, setBulkDeleteAlertOpen] = useState(false);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -52,8 +57,6 @@ export default function CreationToolsPage() {
         data: response,
         isLoading: loading,
         refetch,
-        createTool,
-        updateTool,
         deleteTool
     } = useCreationTools({
         page: currentPage,
@@ -66,21 +69,6 @@ export default function CreationToolsPage() {
         : (Array.isArray(response) ? response : []);
 
     const totalItems = response && response.total ? response.total : (Array.isArray(response) ? response.length : 0);
-
-    const handleSaveTool = async (data: Partial<CreationTool>) => {
-        try {
-            if (data.id) {
-                await updateTool({ id: data.id, data });
-            } else {
-                await createTool(data);
-            }
-            await refetch();
-        } catch (error) {
-            const message = handleApiError(error);
-            toast.error(message);
-            throw error;
-        }
-    };
 
     const confirmDelete = (id: string) => {
         setToolToDelete(id);
@@ -104,6 +92,34 @@ export default function CreationToolsPage() {
         }
     };
 
+    const toggleSelection = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        setIsBulkDeleting(true);
+        try {
+            // Assuming there's a bulk delete in api or just loop
+            for (const id of Array.from(selectedIds)) {
+                await deleteTool(id);
+            }
+            toast.success(`Deleted ${selectedIds.size} tools successfully`);
+            setSelectedIds(new Set());
+            await refetch();
+        } catch (error) {
+            toast.error('Failed to delete some tools');
+        } finally {
+            setIsBulkDeleting(false);
+            setBulkDeleteAlertOpen(false);
+        }
+    };
+
 
 
     if (loading && tools.length === 0) return <PageLoading message="Loading tools..." />;
@@ -112,35 +128,49 @@ export default function CreationToolsPage() {
         <PageShell
             title="Creation Tools"
             description="Configure and manage your AI creation tools"
-            actions={
-                <Button
-                    onClick={() => {
-                        setEditingTool(null);
-                        setToolDialogOpen(true);
-                    }}
-                    className="shadow-sm"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Tool
-                </Button>
-            }
         >
             <div className="space-y-6">
-                {/* Search & Filters */}
-                <div className="flex flex-col sm:flex-row gap-4 p-1">
-                    <div className="relative flex-1 max-w-md">
-                        <Search
-                            placeholder="Search tools..."
-                            value={searchQuery}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                setSearchQuery(e.target.value);
-                            }}
-                            onClear={() => {
-                                setSearchQuery('')
-                            }}
-                        />
-                    </div>
-                </div>
+                {/* Unified Toolbar */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                    <CardHeader className="p-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <div className="relative flex-1 w-full max-w-md">
+                                <Search
+                                    placeholder="Search tools..."
+                                    value={searchQuery}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        setSearchQuery(e.target.value);
+                                    }}
+                                    onClear={() => {
+                                        setSearchQuery('')
+                                    }}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 ml-auto">
+                                <Button
+                                    onClick={() => router.push('/system/creation-tools/new')}
+                                    className="shadow-sm"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    New Tool
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                </Card>
+
+                <BulkActionsToolbar
+                    selectedCount={selectedIds.size}
+                    onClearSelection={() => setSelectedIds(new Set())}
+                    actions={[
+                        {
+                            label: 'Delete',
+                            icon: Trash2,
+                            onClick: () => setBulkDeleteAlertOpen(true),
+                            variant: 'destructive'
+                        }
+                    ]}
+                />
 
                 {/* Tools Grid */}
                 {tools.length === 0 && !loading ? (
@@ -158,10 +188,7 @@ export default function CreationToolsPage() {
                         </p>
                         {!searchQuery && (
                             <Button
-                                onClick={() => {
-                                    setEditingTool(null);
-                                    setToolDialogOpen(true);
-                                }}
+                                onClick={() => router.push('/system/creation-tools/new')}
                             >
                                 <Plus className="w-4 h-4 mr-2" />
                                 Create Tool
@@ -174,10 +201,30 @@ export default function CreationToolsPage() {
                             {tools.map((tool) => (
                                 <Card
                                     key={tool.id}
-                                    className="group hover:shadow-xl transition-all duration-300 border-border/60 hover:border-primary/20 hover:-translate-y-1 overflow-hidden flex flex-col h-full bg-card"
+                                    className={cn(
+                                        "group hover:bg-card/70 transition-all duration-300 border-border/60 hover:border-border/80",
+                                        "overflow-hidden flex flex-col h-full bg-card relative",
+                                        selectedIds.has(tool.id) ? "ring-2 ring-primary border-primary bg-primary/5" : ""
+                                    )}
+                                    onClick={(e) => {
+                                        const target = e.target as HTMLElement;
+                                        if (!target.closest('button') && !target.closest('.no-select')) {
+                                            toggleSelection(tool.id);
+                                        }
+                                    }}
                                 >
+                                    <div className={cn(
+                                        "absolute top-3 left-3 z-10 transition-opacity",
+                                        selectedIds.has(tool.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+                                    )}>
+                                        <Checkbox
+                                            checked={selectedIds.has(tool.id)}
+                                            onCheckedChange={() => toggleSelection(tool.id)}
+                                            className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-border bg-card/20 backdrop-blur-sm"
+                                        />
+                                    </div>
                                     <CardHeader className="pb-3">
-                                        <div className="flex items-start justify-between gap-4">
+                                        <div className="flex items-start justify-between gap-4 ml-7">
                                             <div className="p-2.5 rounded-lg bg-primary/5 ring-1 ring-primary/10 group-hover:bg-primary/10 transition-colors">
                                                 {tool.icon && (icons as Record<string, React.ElementType>)[tool.icon] ? (
                                                     (() => {
@@ -216,10 +263,7 @@ export default function CreationToolsPage() {
                                                 variant="secondary"
                                                 size="sm"
                                                 className="flex-1 h-8 text-xs font-medium bg-secondary/80 hover:bg-secondary"
-                                                onClick={() => {
-                                                    setEditingTool(tool);
-                                                    setToolDialogOpen(true);
-                                                }}
+                                                onClick={() => router.push(`/system/creation-tools/${tool.id}`)}
                                             >
                                                 <Edit2 className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                                                 Edit
@@ -278,21 +322,6 @@ export default function CreationToolsPage() {
                     </>
                 )}
 
-                <ToolDialog
-                    open={toolDialogOpen}
-                    onOpenChange={(open) => {
-                        setToolDialogOpen(open);
-                        if (!open) {
-                            setEditingTool(null);
-                        }
-                    }}
-                    tool={editingTool}
-                    onSave={async (data) => {
-                        await handleSaveTool(data);
-                        setToolDialogOpen(false);
-                        setEditingTool(null);
-                    }}
-                />
 
                 <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
                     <AlertDialogContent>
@@ -312,6 +341,29 @@ export default function CreationToolsPage() {
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                                 {deletingId ? 'Deleting...' : 'Delete'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={bulkDeleteAlertOpen} onOpenChange={setBulkDeleteAlertOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete {selectedIds.size} tools?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete the selected tools and all their templates. This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleBulkDelete();
+                                }}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                {isBulkDeleting ? 'Deleting...' : 'Delete All'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

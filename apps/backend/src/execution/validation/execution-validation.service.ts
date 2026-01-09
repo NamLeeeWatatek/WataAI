@@ -70,8 +70,26 @@ export class ExecutionValidationService {
           break;
       }
 
-      // 2. Optional vs Required
-      if (!field.validation?.required) {
+      // 2. Optional vs Required Logic (Consolidated with Frontend logic)
+      const isRequired = !!(
+        (field as any).required === true ||
+        (field as any).required === 'true' ||
+        (field as any).isRequired === true ||
+        (field as any).isRequired === 'true' ||
+        (field as any).validation?.required === true ||
+        (field as any).validation?.required === 'true' ||
+        (field as any).is_required === true ||
+        (field as any).mandatory === true
+      );
+
+      if (isRequired) {
+        // For strings, we MUST use .min(1) to block empty or whitespace-only strings
+        if (fieldSchema instanceof z.ZodString) {
+          fieldSchema = fieldSchema.trim().min(1, { message: `Field ${field.name} cannot be empty` });
+        } else if (fieldSchema instanceof z.ZodNumber) {
+          fieldSchema = fieldSchema.refine(val => val !== undefined && val !== null, { message: `Field ${field.name} is required` });
+        }
+      } else {
         fieldSchema = fieldSchema.optional().nullable();
       }
 

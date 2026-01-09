@@ -18,15 +18,14 @@ import {
 import { DataTable } from "@/components/ui/DataTable";
 import { ColumnDef } from '@tanstack/react-table';
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
-import { AlertDialogConfirm } from "@/components/ui/AlertDialogConfirm";
 import { formatDateTime } from "@/lib/utils/date";
 import { toast } from "sonner";
 import { Package } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PaginationInfo } from "@/components/ui/Pagination";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 import { creationJobsApi } from "@/lib/api/creation-jobs";
-import { BulkActionsToolbar } from "@/components/ui/BulkActionsToolbar";
 import { DataTableFacetedFilter } from "@/components/ui/data-table/DataTableFacetedFilter";
 import { Search } from "@/components/ui/Search";
 import { X } from "lucide-react";
@@ -46,6 +45,9 @@ interface ProductsTableProps {
     onStatusFilterChange?: (status: string[]) => void;
     searchFilter?: string;
     onSearchChange?: (search: string) => void;
+    headerActions?: React.ReactNode;
+    filterActions?: React.ReactNode;
+    actions?: React.ReactNode;
 }
 
 export function ProductsTable({
@@ -62,28 +64,12 @@ export function ProductsTable({
     statusFilter = [],
     onStatusFilterChange,
     searchFilter = "",
-    onSearchChange
+    onSearchChange,
+    headerActions,
+    filterActions,
+    actions,
 }: ProductsTableProps) {
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
-    const [isDeletingBulk, setIsDeletingBulk] = useState(false);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
-    const handleBulkDelete = async () => {
-        if (selectedIds.length === 0) return;
-
-        setIsDeletingBulk(true);
-        try {
-            await creationJobsApi.removeMany(selectedIds);
-            toast.success(`Successfully deleted ${selectedIds.length} items`);
-            onSelectionChange?.([]);
-            onRefresh?.();
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete items");
-        } finally {
-            setIsDeletingBulk(false);
-        }
-    };
 
     const getDisplayName = (job: CreationJob) => {
         const input = job.inputData as any;
@@ -99,7 +85,22 @@ export function ProductsTable({
     const columns = React.useMemo<ColumnDef<CreationJob>[]>(() => [
         {
             id: 'selection',
-            header: '',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+                    onCheckedChange={(value: boolean | "indeterminate") => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value: boolean | "indeterminate") => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
         },
         {
             id: 'name',
@@ -128,12 +129,14 @@ export function ProductsTable({
                         </span>
                     </div>
                 );
-            }
+            },
+            size: 300,
         },
         {
             id: 'creationToolId',
             header: 'Tool Name',
-            cell: ({ row, getValue }) => <span className="text-sm font-medium">{row.original.creationTool?.name || (getValue() as React.ReactNode)}</span>
+            cell: ({ row, getValue }) => <span className="text-sm font-medium">{row.original.creationTool?.name || (getValue() as React.ReactNode)}</span>,
+            size: 150,
         },
         {
             id: 'status',
@@ -141,7 +144,8 @@ export function ProductsTable({
             accessorKey: 'status',
             cell: ({ getValue }) => (
                 <StatusBadge status={getValue() as CreationJobStatus} />
-            )
+            ),
+            size: 120,
         },
         {
             id: 'progress',
@@ -150,7 +154,7 @@ export function ProductsTable({
             cell: ({ getValue }) => {
                 const value = getValue() as number;
                 return (
-                    <div className="flex flex-col gap-1.5 w-32">
+                    <div className="flex flex-col gap-1.5 w-full">
                         <div className="flex justify-between text-[9px] uppercase font-bold tracking-tighter text-muted-foreground">
                             <span>{value}%</span>
                         </div>
@@ -166,7 +170,8 @@ export function ProductsTable({
                         />
                     </div>
                 );
-            }
+            },
+            size: 150,
         },
         {
             id: 'createdAt',
@@ -176,7 +181,8 @@ export function ProductsTable({
                 <span className="text-muted-foreground text-sm">
                     {formatDateTime(getValue() as string | Date)}
                 </span>
-            )
+            ),
+            size: 180,
         },
         {
             id: 'actions',
@@ -242,49 +248,46 @@ export function ProductsTable({
 
     return (
         <>
-            <div className="flex items-center justify-between gap-4 mb-4">
-                <div className="flex flex-1 items-center space-x-2">
-                    <Search
-                        placeholder="Filter products..."
-                        value={searchFilter}
-                        onChange={(e) => onSearchChange?.(e.target.value)}
-                        onClear={() => onSearchChange?.("")}
-                        className="h-8 w-[150px] lg:w-[250px]"
-                    />
-                    {onStatusFilterChange && (
-                        <DataTableFacetedFilter
-                            title="Status"
-                            options={[
-                                { label: "Completed", value: CreationJobStatus.COMPLETED },
-                                { label: "Pending", value: CreationJobStatus.PENDING },
-                                { label: "Processing", value: CreationJobStatus.PROCESSING },
-                                { label: "Failed", value: CreationJobStatus.FAILED },
-                            ]}
-                            selectedValues={new Set(statusFilter)}
-                            onSelect={(values) => onStatusFilterChange(Array.from(values))}
-                        />
-                    )}
-                    {(statusFilter.length > 0 || searchFilter) && (
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                onStatusFilterChange?.([]);
-                                onSearchChange?.("");
-                            }}
-                            className="h-8 px-2 lg:px-3"
-                        >
-                            Reset
-                            <X className="ml-2 h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
-            </div>
-
             <DataTable
                 data={jobs}
                 columns={columns}
                 loading={isLoading}
-                searchable={false}
+                searchable={true}
+                searchValue={searchFilter}
+                onSearch={onSearchChange}
+                searchPlaceholder="Filter products..."
+                headerActions={headerActions}
+                filterActions={filterActions || (
+                    <div className="flex items-center gap-2">
+                        {onStatusFilterChange && (
+                            <DataTableFacetedFilter
+                                title="Status"
+                                options={[
+                                    { label: "Completed", value: CreationJobStatus.COMPLETED },
+                                    { label: "Pending", value: CreationJobStatus.PENDING },
+                                    { label: "Processing", value: CreationJobStatus.PROCESSING },
+                                    { label: "Failed", value: CreationJobStatus.FAILED },
+                                ]}
+                                selectedValues={new Set(statusFilter)}
+                                onSelect={(values) => onStatusFilterChange(Array.from(values))}
+                            />
+                        )}
+                        {(statusFilter.length > 0 || searchFilter) && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    onStatusFilterChange?.([]);
+                                    onSearchChange?.("");
+                                }}
+                                className="h-8 px-2 lg:px-3"
+                            >
+                                Reset
+                                <X className="ml-2 h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                )}
+                actions={actions}
                 pagination={pagination}
                 onPageChange={onPageChange}
                 pageSizeOptions={pageSizeOptions}
@@ -292,29 +295,8 @@ export function ProductsTable({
                 selectedIds={selectedIds}
                 onSelectionChange={onSelectionChange}
                 compact
-            />
-
-            <AlertDialogConfirm
-                open={isConfirmOpen}
-                onOpenChange={setIsConfirmOpen}
-                title="Are you sure?"
-                description={`This will permanently delete ${selectedIds.length} items. This action cannot be undone.`}
-                confirmText={isDeletingBulk ? "Deleting..." : "Delete"}
-                variant="destructive"
-                onConfirm={handleBulkDelete}
-            />
-
-            <BulkActionsToolbar
-                selectedCount={selectedIds.length}
-                onClearSelection={() => onSelectionChange?.([])}
-                actions={[
-                    {
-                        label: isDeletingBulk ? 'Deleting...' : 'Delete & Cancel',
-                        icon: Trash2,
-                        onClick: () => setIsConfirmOpen(true),
-                        variant: 'destructive'
-                    }
-                ]}
+                noCard
+                className="w-full"
             />
 
             <ProductDetailsDialog

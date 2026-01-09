@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
-import { Sheet, SheetContent } from '@/components/ui/Sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
 import { ProgressOverlay } from '@/components/ui/ProgressOverlay'
 import toast from '@/lib/toast'
 
@@ -92,6 +92,9 @@ export default function DashboardLayout({
                 {/* Mobile Sheet Navigation */}
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                     <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
+                        <SheetHeader className="sr-only">
+                            <SheetTitle>Navigation Menu</SheetTitle>
+                        </SheetHeader>
                         <DashboardSidebar
                             expandedSections={expandedSections}
                             onToggleSection={toggleSection}

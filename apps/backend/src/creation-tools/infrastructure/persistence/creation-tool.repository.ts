@@ -29,7 +29,7 @@ export abstract class CreationToolRepository {
     id: CreationTool['id'],
   ): Promise<NullableType<CreationTool>>;
 
-  abstract findBySlug(slug: string): Promise<NullableType<CreationTool>>;
+  abstract findBySlug(slug: string, options?: { withDeleted?: boolean }): Promise<NullableType<CreationTool>>;
 
   abstract findByWorkspace(workspaceId: string): Promise<CreationTool[]>;
 

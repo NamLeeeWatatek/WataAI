@@ -1,4 +1,9 @@
 {
   "confirmEmail": "Confirm email",
-  "resetPassword": "Reset password"
+  "resetPassword": "Reset password",
+  "error": "Error",
+  "success": "Success",
+  "notFound": "Not found",
+  "unauthorized": "Unauthorized",
+  "alreadyExists": "{resource} with value '{value}' already exists"
 }

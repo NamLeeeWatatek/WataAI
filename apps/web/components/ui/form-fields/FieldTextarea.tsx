@@ -9,7 +9,6 @@ export function FieldTextarea({ field, value, onChange }: DynamicFormFieldProps)
             className="resize-none bg-card/50"
             rows={field.rows || (field.type === 'textarea' ? 6 : 4)}
             placeholder={field.placeholder}
-            required={field.required}
         />
     )
 }

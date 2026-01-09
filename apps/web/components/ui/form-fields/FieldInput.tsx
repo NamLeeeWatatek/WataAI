@@ -11,7 +11,6 @@ export function FieldInput({ field, value, onChange }: DynamicFormFieldProps) {
                 onChange(field.name, field.type === 'number' ? (val ? Number(val) : null) : val)
             }}
             placeholder={field.placeholder}
-            required={field.required}
             maxLength={field.maxLength}
             pattern={field.pattern}
             min={field.min}

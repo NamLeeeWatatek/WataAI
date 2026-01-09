@@ -4,13 +4,6 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Package } from 'lucide-react';
 
-import { useState } from 'react';
-import { creationJobsApi } from '@/lib/api/creation-jobs';
-import { Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
-
 interface ProductsGridProps {
     jobs: CreationJob[];
     isLoading: boolean;
@@ -28,9 +21,6 @@ export function ProductsGrid({
     selectedIds = [],
     onSelectionChange
 }: ProductsGridProps) {
-    const [isDeletingBulk, setIsDeletingBulk] = useState(false);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
     const handleSelectRow = (id: string, isSelected: boolean) => {
         if (!onSelectionChange) return;
         if (isSelected) {
@@ -40,22 +30,6 @@ export function ProductsGrid({
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (selectedIds.length === 0) return;
-
-        setIsDeletingBulk(true);
-        try {
-            await creationJobsApi.removeMany(selectedIds);
-            toast.success(`Successfully deleted ${selectedIds.length} items`);
-            onSelectionChange?.([]);
-            onRefresh?.();
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete items");
-        } finally {
-            setIsDeletingBulk(false);
-        }
-    };
     if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -88,41 +62,16 @@ export function ProductsGrid({
     }
 
     return (
-        <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {jobs.map((job) => (
-                    <ProductCard
-                        key={job.id}
-                        job={job}
-                        onDelete={onDelete}
-                        isSelected={selectedIds.includes(job.id)}
-                        onSelect={(isSelected) => handleSelectRow(job.id, isSelected)}
-                    />
-                ))}
-            </div>
-
-            <AlertDialogConfirm
-                open={isConfirmOpen}
-                onOpenChange={setIsConfirmOpen}
-                title="Are you sure?"
-                description={`This will permanently delete ${selectedIds.length} items. This action cannot be undone.`}
-                confirmText={isDeletingBulk ? "Deleting..." : "Delete"}
-                variant="destructive"
-                onConfirm={handleBulkDelete}
-            />
-
-            <BulkActionsToolbar
-                selectedCount={selectedIds.length}
-                onClearSelection={() => onSelectionChange?.([])}
-                actions={[
-                    {
-                        label: isDeletingBulk ? 'Deleting...' : 'Delete & Cancel',
-                        icon: Trash2,
-                        onClick: () => setIsConfirmOpen(true),
-                        variant: 'destructive'
-                    }
-                ]}
-            />
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {jobs.map((job) => (
+                <ProductCard
+                    key={job.id}
+                    job={job}
+                    onDelete={onDelete}
+                    isSelected={selectedIds.includes(job.id)}
+                    onSelect={(isSelected) => handleSelectRow(job.id, isSelected)}
+                />
+            ))}
+        </div>
     );
 }

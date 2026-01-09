@@ -55,12 +55,12 @@ export default function CreationToolsPage() {
                 {items.map((tool) => (
                     <Card
                         key={tool.id}
-                        className="cursor-pointer group hover:shadow-xl transition-all duration-300 border-border/40 bg-card/50 backdrop-blur-sm"
+                        className="cursor-pointer group hover:bg-card/70 transition-all duration-300 border-border/40 bg-card/50 backdrop-blur-sm"
                         onClick={() => router.push(`/creation-tools/${tool.slug}`)}
                     >
                         <CardHeader>
                             <div className="flex items-start justify-between">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 mb-4 shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 mb-4 transition-transform">
                                     <Sparkles className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="flex gap-2 flex-wrap justify-end max-w-[60%]">

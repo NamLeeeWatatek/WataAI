@@ -222,55 +222,59 @@ export default function TemplatesPage() {
         <PageShell
             title="Template Library"
             description="Manage reusable templates for your creation tools"
-            actions={
-                <Button
-                    onClick={() => {
-                        setEditingTemplate(null);
-                        setTemplateDialogOpen(true);
-                    }}
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Template
-                </Button>
-            }
         >
             <div className="space-y-6">
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row gap-4 p-1">
-                    <div className="relative flex-1 max-md">
-                        <Search
-                            placeholder="Search templates..."
-                            value={searchQuery}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                setSearchQuery(e.target.value);
-                            }}
-                            onClear={() => {
-                                setSearchQuery('')
-                            }}
-                        />
-                    </div>
-                    <div className="w-full sm:w-[200px]">
-                        <Select value={selectedToolFilter} onValueChange={(val) => {
-                            setSelectedToolFilter(val);
-                            setCurrentPage(1);
-                        }}>
-                            <SelectTrigger className="w-[180px] bg-card/50">
-                                <div className="flex items-center text-muted-foreground">
-                                    <Filter className="w-3.5 h-3.5 mr-2" />
-                                    <SelectValue placeholder="All Tools" />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Tools</SelectItem>
-                                {tools.map((tool) => (
-                                    <SelectItem key={tool.id} value={tool.id}>
-                                        {tool.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                {/* Unified Toolbar */}
+                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                    <CardHeader className="p-4">
+                        <div className="flex flex-col md:flex-row items-center gap-4">
+                            <div className="relative flex-1 w-full max-w-md">
+                                <Search
+                                    placeholder="Search templates..."
+                                    value={searchQuery}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        setSearchQuery(e.target.value);
+                                    }}
+                                    onClear={() => {
+                                        setSearchQuery('')
+                                    }}
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 w-full md:w-auto ml-auto">
+                                <Select value={selectedToolFilter} onValueChange={(val) => {
+                                    setSelectedToolFilter(val);
+                                    setCurrentPage(1);
+                                }}>
+                                    <SelectTrigger className="w-[180px] bg-background">
+                                        <div className="flex items-center text-muted-foreground whitespace-nowrap">
+                                            <Filter className="w-3.5 h-3.5 mr-2" />
+                                            <SelectValue placeholder="All Tools" />
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Tools</SelectItem>
+                                        {tools.map((tool) => (
+                                            <SelectItem key={tool.id} value={tool.id}>
+                                                {tool.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Button
+                                    onClick={() => {
+                                        setEditingTemplate(null);
+                                        setTemplateDialogOpen(true);
+                                    }}
+                                    className="shadow-sm whitespace-nowrap"
+                                >
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    New Template
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                </Card>
 
                 <BulkActionsToolbar
                     selectedCount={selectedIds.size}
@@ -343,9 +347,9 @@ export default function TemplatesPage() {
                                 <Card
                                     key={template.id}
                                     className={cn(
-                                        "group transition-all duration-300 border-border/60 hover:border-primary/20 overflow-hidden",
+                                        "group transition-all duration-300 border-border/60 hover:border-border/80 overflow-hidden",
                                         "flex flex-col h-full bg-card relative",
-                                        selectedIds.has(template.id) ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:shadow-xl hover:-translate-y-1"
+                                        selectedIds.has(template.id) ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:bg-card/60"
                                     )}
                                     onClick={(e) => {
                                         const target = e.target as HTMLElement;

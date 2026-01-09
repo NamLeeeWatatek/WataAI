@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
-import { Sheet, SheetContent } from '@/components/ui/Sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
 import { ProgressOverlay } from '@/components/ui/ProgressOverlay'
 import toast from '@/lib/toast'
 
@@ -107,6 +107,9 @@ export default function AdminLayout({
                 {/* Mobile Sheet Navigation */}
                 <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                     <SheetContent side="left" className="p-0 w-72 border-r border-border/40 bg-background/95 backdrop-blur-xl">
+                        <SheetHeader className="sr-only">
+                            <SheetTitle>Admin Navigation</SheetTitle>
+                        </SheetHeader>
                         <AdminSidebar
                             expandedSections={expandedSections}
                             onToggleSection={toggleSection}
