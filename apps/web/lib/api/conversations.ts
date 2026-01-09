@@ -29,6 +29,7 @@ export interface GetConversationsParams {
   limit?: number
   source?: 'all' | 'channel' | 'widget',
   channelId?: string
+  search?: string
 }
 
 /**

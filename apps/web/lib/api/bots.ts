@@ -21,9 +21,10 @@ export interface PaginatedBots {
 }
 
 export const botsApi = {
-  async getAll(workspaceId: string, options?: { page?: number; limit?: number; status?: string }): Promise<PaginatedBots> {
+  async getAll(workspaceId: string, options?: { page?: number; limit?: number; status?: string; search?: string }): Promise<PaginatedBots> {
     const filters: Record<string, string | number | boolean> = { workspaceId };
     if (options?.status) filters.status = options.status;
+    if (options?.search) filters.search = options.search;
 
     const response = await axiosClient.get<PaginatedBots>('/bots', {
       params: {

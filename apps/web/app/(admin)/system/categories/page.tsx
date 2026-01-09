@@ -200,7 +200,9 @@ export default function CategoriesPage() {
                     setLimit(newLimit)
                     setPage(1)
                 }}
-                gridClassName="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                gridClassName="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                 renderGridItem={(category) => (
                     <Card className="flex flex-col h-full hover:shadow-md transition-all">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

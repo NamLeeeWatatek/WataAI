@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { KBCollectionDialog } from '@/components/features/knowledge-base';
 import {
@@ -29,11 +29,13 @@ import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
 export default function KnowledgeBasePage() {
     const router = useRouter();
     const { workspaceId } = useWorkspace();
     const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 500);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -51,8 +53,13 @@ export default function KnowledgeBasePage() {
     } = useKnowledgeBases(workspaceId || undefined, {
         page: currentPage,
         limit: pageSize,
-        filters: JSON.stringify({ search: searchQuery })
+        filters: JSON.stringify({ search: debouncedSearch })
     });
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
     const formatSize = (bytes: string | number) => {
         const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -112,11 +119,9 @@ export default function KnowledgeBasePage() {
                     value={searchQuery}
                     onChange={(e: any) => {
                         setSearchQuery(e.target.value);
-                        setCurrentPage(1);
                     }}
                     onClear={() => {
                         setSearchQuery("");
-                        setCurrentPage(1);
                     }}
                     className="max-w-sm"
                 />

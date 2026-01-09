@@ -9,11 +9,16 @@ export enum RoleEnum {
 
 export interface User {
     id: string;
-    email: string;
+    email: string | null;
+    name: string | null;
     firstName?: string;
     lastName?: string;
     role: RoleEntity | null;
     roleId?: number;
+    isActive: boolean;
+    provider: string;
+    providerId?: string | null;
+    emailVerifiedAt?: string | null;
     status: {
         id: number;
         name: string;
@@ -24,6 +29,7 @@ export interface User {
     };
     avatarUrl?: string | null;
     workspaceId?: string;
+    lastLogin?: string | null;
     createdAt: string;
     updatedAt: string;
     permissions?: Record<string, any>;
@@ -39,7 +45,8 @@ export interface User {
 }
 
 export interface CreateUserDto {
-    email: string;
+    email: string | null;
+    name?: string | null;
     password?: string;
     firstName?: string;
     lastName?: string;
@@ -49,6 +56,7 @@ export interface CreateUserDto {
     };
     roleId?: number;
     avatarUrl?: string | null;
+    isActive?: boolean;
 }
 
 export interface UpdateUserDto extends Partial<CreateUserDto> {

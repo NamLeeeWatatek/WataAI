@@ -30,6 +30,11 @@ export function useCreationJobs(initialParams: {
 
     const debouncedSearch = useDebounce(searchFilter, 500);
 
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch]);
+
     const queryParams = {
         page,
         limit: pageSize,

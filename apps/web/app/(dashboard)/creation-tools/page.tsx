@@ -1,31 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Search as SearchIcon } from 'lucide-react';
 import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
+import { Search } from '@/components/ui/Search';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 
 export default function CreationToolsPage() {
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
+    const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearch = useDebounce(searchQuery, 500);
 
     const { data: toolsData, isLoading, refetch, isFetching } = useQuery({
-        queryKey: ['creation-tools', currentPage, pageSize],
+        queryKey: ['creation-tools', currentPage, pageSize, debouncedSearch],
         queryFn: () => creationToolsApi.getAll({
             page: currentPage,
             limit: pageSize,
-            filters: { isActive: true }
+            filters: {
+                isActive: true,
+                ...(debouncedSearch ? { name: debouncedSearch } : {})
+            }
         }),
         placeholderData: keepPreviousData,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
+
+    // Reset page on search change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
     const items = toolsData?.data || [];
     const totalItems = toolsData?.total || 0;
@@ -50,6 +62,15 @@ export default function CreationToolsPage() {
                 onRefresh={handleRefresh}
                 refreshing={isLoading || isFetching}
             />
+
+            <div className="max-w-md">
+                <Search
+                    placeholder="Search tools..."
+                    value={searchQuery}
+                    onChange={(e: any) => setSearchQuery(e.target.value)}
+                    onClear={() => setSearchQuery('')}
+                />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((tool) => (
