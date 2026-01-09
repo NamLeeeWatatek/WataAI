@@ -1,3 +1,12 @@
+/**
+ * Execution Type Definitions
+ * Strongly typed interfaces for flow executions
+ */
+
+/** Generic data payload for execution I/O */
+export interface ExecutionData {
+  [key: string]: unknown
+}
 
 export interface Execution {
   id: string | number
@@ -12,8 +21,8 @@ export interface Execution {
   duration_ms?: number
   error?: string
   error_message?: string
-  input?: any
-  output?: any
+  input?: ExecutionData
+  output?: ExecutionData
   nodeExecutions?: NodeExecution[]
   total_nodes?: number
   completed_nodes?: number
@@ -29,8 +38,8 @@ export interface NodeExecution {
   startedAt?: string
   completedAt?: string
   duration?: number
-  input?: any
-  output?: any
+  input?: ExecutionData
+  output?: ExecutionData
   error?: string
 }
 
@@ -40,7 +49,7 @@ export interface ExecutionUpdate {
   status: 'running' | 'completed' | 'failed'
   nodeId?: string
   nodeStatus?: 'running' | 'success' | 'failed'
-  output?: any
+  output?: ExecutionData
   error?: string
 }
 
@@ -66,9 +75,8 @@ export interface NodeExecutionCardProps {
     nodeName: string
     status: 'success' | 'failed' | 'running'
     duration: number
-    input?: any
-    output?: any
+    input?: ExecutionData
+    output?: ExecutionData
     error?: string
   }
 }
-

@@ -140,14 +140,17 @@ export class NotificationsService {
       throw new NotFoundException('Notification not found');
     }
 
-    await this.notificationRepo.remove(notification);
+    // FIX: Use soft delete for audit trail
+    await this.notificationRepo.softDelete(id);
   }
 
   async deleteAll(userId: string, workspaceId?: string) {
+    // ✅ FIX: Use soft delete for audit compliance
     const query = this.notificationRepo
       .createQueryBuilder()
-      .delete()
-      .where('userId = :userId', { userId });
+      .softDelete()
+      .where('userId = :userId', { userId })
+      .andWhere('deletedAt IS NULL');
 
     if (workspaceId) {
       query.andWhere('workspaceId = :workspaceId', { workspaceId });

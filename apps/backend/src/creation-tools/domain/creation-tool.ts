@@ -7,23 +7,24 @@ import { Category } from '../../categories/domain/category';
 export interface FormField {
   name: string;
   type:
-    | 'text'
-    | 'textarea'
-    | 'string'
-    | 'select'
-    | 'radio'
-    | 'checkbox'
-    | 'boolean'
-    | 'number'
-    | 'file'
-    | 'files'
-    | 'slider'
-    | 'color'
-    | 'json'
-    | 'key-value'
-    | 'channel-select'
-    | 'channel-selector'
-    | 'multi-select';
+  | 'text'
+  | 'textarea'
+  | 'string'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'boolean'
+  | 'number'
+  | 'file'
+  | 'files'
+  | 'slider'
+  | 'color'
+  | 'json'
+  | 'key-value'
+  | 'channel-select'
+  | 'channel-selector'
+  | 'multi-select'
+  | 'template-selector';
   label: string;
   placeholder?: string;
   description?: string;
@@ -58,9 +59,33 @@ export interface FormField {
 /**
  * Form configuration interface
  */
+export interface FormStep {
+  id: string;
+  title: string;
+  description?: string;
+  layout: {
+    rows: Array<{
+      id: string;
+      zones: Array<{
+        id: string;
+        title: string;
+        width?: string;
+        fieldRows: Array<{
+          id: string;
+          fields: string[];
+        }>;
+      }>;
+    }>;
+  };
+}
+
+/**
+ * Form configuration interface
+ */
 export interface FormConfig {
   fields: FormField[];
-  layout?: 'single-column' | 'two-column' | 'wizard';
+  steps: FormStep[];
+  layout?: string; // e.g. 'wizard'
   submitLabel?: string;
 }
 

@@ -39,9 +39,6 @@ export function useChannels(workspaceId?: string) {
             queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
             toast.success('Channel disconnected successfully');
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to disconnect channel');
-        }
     });
 
     const deleteIntegrationMutation = useMutation({
@@ -50,9 +47,6 @@ export function useChannels(workspaceId?: string) {
             queryClient.invalidateQueries({ queryKey: channelKeys.integrations(workspaceId) });
             toast.success('Configuration deleted successfully');
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to delete configuration');
-        }
     });
 
     const saveIntegrationMutation = useMutation({
@@ -64,9 +58,6 @@ export function useChannels(workspaceId?: string) {
             queryClient.invalidateQueries({ queryKey: channelKeys.integrations(workspaceId) });
             toast.success('Configuration saved successfully');
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to save configuration');
-        }
     });
 
     const connectFacebookMutation = useMutation({
@@ -74,9 +65,6 @@ export function useChannels(workspaceId?: string) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
         },
-        onError: (error: any) => {
-            toast.error(error.message || 'Failed to connect Facebook page');
-        }
     });
 
     return {

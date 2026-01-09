@@ -19,9 +19,40 @@ export interface CreationTool {
     updatedAt: string;
 }
 
+// --- New Nested Layout Types ---
+
+export interface FieldRow {
+    id: string;
+    fields: string[];
+}
+
+export interface ZoneConfig {
+    id: string;
+    title: string;
+    width?: string;
+    fieldRows: FieldRow[];
+}
+
+export interface LayoutRow {
+    id: string;
+    zones: ZoneConfig[];
+}
+
+export interface StepLayout {
+    rows: LayoutRow[];
+}
+
+export interface FormStep {
+    id: string;
+    title: string;
+    description?: string;
+    layout: StepLayout;
+}
+
 export interface FormConfig {
     fields: FormField[];
-    layout?: 'single-column' | 'two-column' | 'wizard';
+    steps: FormStep[];
+    layout?: string;
     submitLabel?: string;
 }
 
@@ -44,6 +75,7 @@ export interface FormField {
     | 'key-value'
     | 'channel-select'
     | 'channel-selector'
+    | 'template-selector'
     | 'multi-select';
     label: string;
     placeholder?: string;

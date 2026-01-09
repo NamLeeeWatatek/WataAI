@@ -21,8 +21,8 @@ export class CreationToolEntity extends EntityRelationalHelper {
   @Index()
   name: string;
 
-  @Column({ type: String, unique: true })
-  @Index()
+  @Column({ type: String })
+  @Index({ unique: true, where: '"deleted_at" IS NULL' })
   slug: string;
 
   @Column({ type: 'text', nullable: true })

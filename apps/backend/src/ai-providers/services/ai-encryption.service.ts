@@ -1,11 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EncryptionService } from '../../shared/services/encryption.service';
 
+interface EncryptableConfig {
+  config?: EncryptableConfig | Record<string, unknown>;
+  apiKey?: string;
+  baseUrl?: string;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class AiEncryptionService {
   private readonly logger = new Logger(AiEncryptionService.name);
 
-  constructor(private readonly encryptionService: EncryptionService) {}
+  constructor(private readonly encryptionService: EncryptionService) { }
+
+  /**
+   * Helper interface for type safety inside encryption methods
+   */
+  private asEncryptable(obj: unknown): EncryptableConfig {
+    return obj as EncryptableConfig;
+  }
 
   /**
    * Encrypt an API key
@@ -25,28 +39,30 @@ export class AiEncryptionService {
    * Encrypts sensitive configuration fields like API keys and URLs.
    * Handles nested config objects and recursively encrypts sensitive fields.
    */
-  encryptConfig(config: any): any {
+  encryptConfig<T>(config: T): T {
     if (!config) return config;
     const encrypted = { ...config };
 
+    const encryptedObject = this.asEncryptable(encrypted);
+
     // Handle domain object structure (e.g., WorkspaceAiProviderConfig)
-    if (encrypted.config && typeof encrypted.config === 'object') {
-      encrypted.config = this.encryptConfig(encrypted.config);
-      return encrypted;
+    if (encryptedObject.config && typeof encryptedObject.config === 'object') {
+      encryptedObject.config = this.encryptConfig(encryptedObject.config);
+      return encryptedObject as T;
     }
 
     // Encrypt API keys
-    if (encrypted.apiKey && typeof encrypted.apiKey === 'string') {
-      encrypted.apiKey = this.encryptionService.encrypt(encrypted.apiKey);
+    if (encryptedObject.apiKey && typeof encryptedObject.apiKey === 'string') {
+      encryptedObject.apiKey = this.encryptionService.encrypt(encryptedObject.apiKey);
     }
 
     // For custom providers, encrypt URL as well to prevent visibility
     if (
-      encrypted.baseUrl &&
-      typeof encrypted.baseUrl === 'string' &&
-      encrypted.baseUrl.includes('//')
+      encryptedObject.baseUrl &&
+      typeof encryptedObject.baseUrl === 'string' &&
+      encryptedObject.baseUrl.includes('//')
     ) {
-      encrypted.baseUrl = this.encryptionService.encrypt(encrypted.baseUrl);
+      encryptedObject.baseUrl = this.encryptionService.encrypt(encryptedObject.baseUrl);
     }
 
     return encrypted;
@@ -56,20 +72,22 @@ export class AiEncryptionService {
    * Decrypts sensitive configuration fields like API keys and URLs.
    * Handles nested config objects and recursively decrypts sensitive fields.
    */
-  decryptConfig(config: any): any {
+  decryptConfig<T>(config: T): T {
     if (!config) return config;
     const decrypted = { ...config };
 
+    const decryptedObject = this.asEncryptable(decrypted);
+
     // Handle domain object structure (e.g., WorkspaceAiProviderConfig)
-    if (decrypted.config && typeof decrypted.config === 'object') {
-      decrypted.config = this.decryptConfig(decrypted.config);
-      return decrypted;
+    if (decryptedObject.config && typeof decryptedObject.config === 'object') {
+      decryptedObject.config = this.decryptConfig(decryptedObject.config);
+      return decryptedObject as T;
     }
 
     // Decrypt API keys
-    if (decrypted.apiKey && typeof decrypted.apiKey === 'string') {
+    if (decryptedObject.apiKey && typeof decryptedObject.apiKey === 'string') {
       try {
-        decrypted.apiKey = this.encryptionService.decrypt(decrypted.apiKey);
+        decryptedObject.apiKey = this.encryptionService.decrypt(decryptedObject.apiKey);
       } catch (error) {
         this.logger.warn(`Decryption of API key failed: ${error.message}`);
       }
@@ -77,15 +95,15 @@ export class AiEncryptionService {
 
     // Decrypt URLs for custom providers
     if (
-      decrypted.baseUrl &&
-      typeof decrypted.baseUrl === 'string' &&
-      decrypted.baseUrl.includes(':') &&
-      !decrypted.baseUrl.startsWith('http')
+      decryptedObject.baseUrl &&
+      typeof decryptedObject.baseUrl === 'string' &&
+      decryptedObject.baseUrl.includes(':') &&
+      !decryptedObject.baseUrl.startsWith('http')
     ) {
       try {
         // Only try to decrypt if it looks like encrypted format (has :)
-        if (decrypted.baseUrl.split(':').length === 3) {
-          decrypted.baseUrl = this.encryptionService.decrypt(decrypted.baseUrl);
+        if (decryptedObject.baseUrl.split(':').length === 3) {
+          decryptedObject.baseUrl = this.encryptionService.decrypt(decryptedObject.baseUrl);
         }
       } catch (error) {
         // Not encrypted or wrong format
@@ -98,7 +116,7 @@ export class AiEncryptionService {
   /**
    * Masks sensitive configuration fields for frontend display.
    */
-  maskConfig(config: any): any {
+  maskConfig(config: Record<string, unknown>): Record<string, unknown> {
     if (!config) return config;
     const masked = { ...config };
 

@@ -65,33 +65,44 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
     const renderOutputPreview = () => {
         if (job.status !== CreationJobStatus.COMPLETED || !job.outputData) return null;
 
-        // Check if output is an image URL (simple heuristic)
-        const isImage = typeof job.outputData === 'string' && (job.outputData.match(/\.(jpeg|jpg|gif|png|webp)$/) != null || job.outputData.startsWith('http'));
+        // Get the result string from outputData
+        const outputResult = job.outputData.result;
+        const outputStr = typeof outputResult === 'string' ? outputResult : null;
 
-        if (isImage) {
+        // Check if output is an image URL (simple heuristic)
+        const isImage = outputStr && (outputStr.match(/\.(jpeg|jpg|gif|png|webp)$/) != null || outputStr.startsWith('http'));
+
+        if (isImage && outputStr) {
             return (
-                <div className="relative aspect-video w-full overflow-hidden rounded-md bg-muted mt-2 group cursor-pointer" onClick={() => setDetailsOpen(true)}>
+                <button
+                    type="button"
+                    className="relative aspect-video w-full overflow-hidden rounded-md bg-muted mt-2 group cursor-pointer block"
+                    onClick={() => setDetailsOpen(true)}
+                    aria-label="View product result"
+                >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <Image
-                        src={job.outputData}
+                        src={outputStr}
                         alt="Product result"
                         width={400}
                         height={225}
                         unoptimized
                         className="object-cover w-full h-full transition-transform group-hover:scale-105"
                     />
-                </div>
+                </button>
             );
         }
 
         // Default text preview
         return (
-            <div
-                className="mt-2 p-3 bg-muted/50 rounded-md text-xs font-mono text-muted-foreground line-clamp-3 cursor-pointer hover:bg-muted"
+            <button
+                type="button"
+                className="mt-2 p-3 bg-muted/50 rounded-md text-xs font-mono text-muted-foreground line-clamp-3 cursor-pointer hover:bg-muted w-full text-left"
                 onClick={() => setDetailsOpen(true)}
+                aria-label="View product details"
             >
-                {typeof job.outputData === 'string' ? job.outputData : JSON.stringify(job.outputData, null, 2)}
-            </div>
+                {outputStr || JSON.stringify(job.outputData, null, 2)}
+            </button>
         );
     };
 

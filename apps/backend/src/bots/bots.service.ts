@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,6 +26,8 @@ import { FilterBotDto, SortBotDto } from './dto/query-bot.dto';
 
 @Injectable()
 export class BotsService {
+  private readonly logger = new Logger(BotsService.name);
+
   constructor(
     @InjectRepository(BotEntity)
     private botRepository: Repository<BotEntity>,
@@ -99,7 +102,12 @@ export class BotsService {
               showPoweredBy: true,
             },
             security: {
-              allowedOrigins: createDto.allowedOrigins || ['*'],
+              // FIX: Don't allow wildcard in production
+              allowedOrigins: createDto.allowedOrigins?.length 
+                ? createDto.allowedOrigins 
+                : process.env.NODE_ENV === 'production' 
+                  ? [] 
+                  : ['http://localhost:3000'],
             },
           },
           changelog: 'Initial version',
@@ -112,7 +120,11 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-    } catch (error) { }
+    } catch (error) {
+      this.logger.error(
+        `Failed to create default widget version for bot ${savedBot.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
 
     return savedBot;
   }

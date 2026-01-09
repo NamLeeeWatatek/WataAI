@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsOptional,
@@ -6,7 +7,9 @@ import {
   IsObject,
   IsBoolean,
   IsNumber,
+  ValidateNested,
 } from 'class-validator';
+import { FormConfigDto } from './form-config.dto';
 
 export class CreateCreationToolDto {
   @ApiProperty({ example: 'Create Image', type: String })
@@ -42,7 +45,7 @@ export class CreateCreationToolDto {
   categoryIds?: string[];
 
   @ApiProperty({
-    type: Object,
+    type: FormConfigDto,
     example: {
       fields: [
         {
@@ -57,8 +60,9 @@ export class CreateCreationToolDto {
     },
   })
   @IsNotEmpty()
-  @IsObject()
-  formConfig: any;
+  @ValidateNested()
+  @Type(() => FormConfigDto)
+  formConfig: FormConfigDto;
 
   @ApiProperty({
     type: Object,

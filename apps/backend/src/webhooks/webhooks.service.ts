@@ -1,16 +1,27 @@
-﻿import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { WebhookEventEntity } from './infrastructure/persistence/relational/entities/webhook.entity';
 
 @Injectable()
 export class WebhooksService {
+  private readonly logger = new Logger(WebhooksService.name);
+  private readonly MAX_PAYLOAD_SIZE = 10 * 1024 * 1024; // 10MB
+  private readonly MAX_RETRY_COUNT = 3;
+
   constructor(
     @InjectRepository(WebhookEventEntity)
     private webhookEventRepo: Repository<WebhookEventEntity>,
   ) {}
 
   async createEvent(channelId: string, rawPayload: Record<string, any>) {
+    const payloadSize = JSON.stringify(rawPayload).length;
+    if (payloadSize > this.MAX_PAYLOAD_SIZE) {
+      throw new BadRequestException(
+        `Webhook payload exceeds maximum size of ${this.MAX_PAYLOAD_SIZE / 1024 / 1024}MB`,
+      );
+    }
+
     const event = this.webhookEventRepo.create({
       channelId,
       rawPayload,
@@ -95,10 +106,37 @@ export class WebhooksService {
   }
 
   async retryFailed(id: string) {
+    // ✅ FIX: Check retry count before allowing retry
+    const event = await this.webhookEventRepo.findOne({ where: { id } });
+    if (!event) {
+      throw new NotFoundException('Webhook event not found');
+    }
+
+    // Check if already retried too many times (using errorMessage as indicator)
+    if (event.errorMessage?.includes('[RETRY_COUNT:')) {
+      const match = event.errorMessage.match(/\[RETRY_COUNT:(\d+)\]/);
+      const retryCount = match ? parseInt(match[1], 10) : 0;
+      if (retryCount >= this.MAX_RETRY_COUNT) {
+        throw new BadRequestException(
+          `Webhook event has exceeded maximum retry count of ${this.MAX_RETRY_COUNT}`,
+        );
+      }
+    }
+
     await this.webhookEventRepo.update(id, {
       status: 'pending',
       errorMessage: null,
       processedAt: null,
+    });
+    return this.getEvent(id);
+  }
+
+  async markAsFailedWithRetry(id: string, errorMessage: string, retryCount: number = 0) {
+    // Helper to mark as failed with retry count tracking
+    await this.webhookEventRepo.update(id, {
+      status: 'failed',
+      errorMessage: `${errorMessage} [RETRY_COUNT:${retryCount}]`,
+      processedAt: new Date(),
     });
     return this.getEvent(id);
   }

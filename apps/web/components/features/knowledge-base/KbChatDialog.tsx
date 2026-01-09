@@ -8,6 +8,7 @@ import { MessageSquare, Trash2, Send } from 'lucide-react'
 import { createAIConversation, getAIConversation, addAIConversationMessage } from '@/lib/api/conversations'
 import toast from '@/lib/toast'
 import { MessageRole } from '@/lib/types/conversations'
+import { handleApiError } from '@/lib/utils/api-error'
 
 interface KBChatDialogProps {
     open: boolean
@@ -54,9 +55,8 @@ export function KBChatDialog({ open, onOpenChange, knowledgeBaseId, knowledgeBas
                 content: m.content,
                 createdAt: m.createdAt,
             })))
-        } catch {
-
-            toast.error('Failed to start conversation')
+        } catch (error) {
+            toast.error(handleApiError(error))
         } finally {
             setLoadingMessages(false)
         }
@@ -121,9 +121,8 @@ export function KBChatDialog({ open, onOpenChange, knowledgeBaseId, knowledgeBas
                 content: m.content,
                 createdAt: m.createdAt || m.timestamp,
             })))
-        } catch {
-
-            toast.error('Failed to send message')
+        } catch (error) {
+            toast.error(handleApiError(error))
             setMessages(prev => prev.filter(m => m.id !== tempUserMsg.id))
         } finally {
             setLoading(false)

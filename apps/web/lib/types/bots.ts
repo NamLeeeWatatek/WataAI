@@ -1,60 +1,115 @@
+/**
+ * Bot Type Definitions
+ * Strongly typed interfaces for bot management
+ */
 
 export type BotStatus = 'draft' | 'active' | 'paused' | 'archived'
 export type BotWidgetPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 export type BotWidgetButtonSize = 'small' | 'medium' | 'large'
 
+/** Configuration for bot functions */
+export interface BotFunctionConfig {
+  enabled?: boolean
+  timeout?: number
+  retryCount?: number
+  parameters?: Record<string, string | number | boolean>
+  [key: string]: unknown
+}
+
+/** Configuration for bot functions */
+export interface BotFunction {
+  id: string
+  botId: string
+  name: string
+  description?: string | null
+  functionType: 'document_access' | 'auto_fill' | 'ai_suggest' | 'custom'
+  isEnabled: boolean
+  config?: Record<string, any> | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface BotFunctionCardProps {
+  botFunction: BotFunction
+  onEdit: () => void
+  onDelete: () => void
+}
+
+/** 
+ * Strongly typed Bot interface 
+ * Aligned with backend Bot domain entity
+ */
 export interface Bot {
   id: string
   workspaceId: string
   name: string
   description?: string | null
+  avatarUrl?: string | null
+  defaultLanguage: string
+  timezone: string
   status: BotStatus
-  icon?: string
-  isActive: boolean
-  flowId?: string | null
+  createdBy: string | null
+
+  // AI Settings
+  aiProviderId?: string | null
+  aiModelName?: string | null
+  aiParameters?: Record<string, any> | null
   systemPrompt?: string | null
-  functions?: string[]
-  functionConfig?: Record<string, any>
-  aiModel?: string | null
-  aiConfig?: Record<string, any>
-  knowledgeBaseIds?: string[]
+
+  // Knowledge Base
+  knowledgeBaseIds?: string[] | null
   enableAutoLearn?: boolean
-  widgetPosition: BotWidgetPosition
-  widgetButtonSize: BotWidgetButtonSize
+
+  // Widget Config (Flat structure as per backend)
+  widgetEnabled?: boolean
+  welcomeMessage?: string | null
+  placeholderText?: string | null
+  primaryColor?: string | null
+  widgetPosition?: BotWidgetPosition
+  widgetButtonSize?: BotWidgetButtonSize
+  showAvatar?: boolean
+  showTimestamp?: boolean
+
+  // Origins
+  allowedOrigins?: string[] | null
+
+  // Functions
+  functions?: string[] | null
+  functionConfig?: Record<string, any> | null
+
+  // Legacy/UI helper fields
+  icon?: string // deprecated in backend but might be used in UI
+  isActive?: boolean // deprecated in backend (mapped to status)
+
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateBotDto {
-  workspaceId?: string
   name: string
+  workspaceId?: string
   description?: string
-  icon?: string
-  isActive?: boolean
-  flowId?: string
+  avatarUrl?: string
+  defaultLanguage?: string
+  status?: BotStatus
+
+  aiProviderId?: string
+  aiModelName?: string
+  aiParameters?: Record<string, any>
   systemPrompt?: string
-  functions?: string[]
-  functionConfig?: Record<string, any>
-  aiModel?: string
-  aiConfig?: Record<string, any>
+
   knowledgeBaseIds?: string[]
-  enableAutoLearn?: boolean
+
+  widgetEnabled?: boolean
+  welcomeMessage?: string
+  placeholderText?: string
+  primaryColor?: string
+  widgetPosition?: BotWidgetPosition
+  widgetButtonSize?: BotWidgetButtonSize
 }
 
-export interface UpdateBotDto {
-  workspaceId?: string
-  name?: string
-  description?: string
-  icon?: string
-  isActive?: boolean
-  flowId?: string
-  systemPrompt?: string
-  functions?: string[]
-  functionConfig?: Record<string, any>
-  aiModel?: string
-  aiConfig?: Record<string, any>
-  knowledgeBaseIds?: string[]
-  enableAutoLearn?: boolean
+export interface UpdateBotDto extends Partial<CreateBotDto> {
+  // same fields but all optional
 }
 
 export interface GetBotsResponse {
@@ -67,161 +122,48 @@ export interface GetBotResponse {
   success: boolean
 }
 
-export interface CreateBotResponse {
-  data: Bot
-  success: boolean
+// ... Flow Related ...
+
+/** Flow node data structure */
+export interface FlowNode {
+  id: string
+  type: string
+  position: { x: number; y: number }
+  data: Record<string, unknown>
 }
 
-export interface UpdateBotResponse {
-  data: Bot
-  success: boolean
+/** Flow edge data structure */
+export interface FlowEdge {
+  id: string
+  source: string
+  target: string
+  sourceHandle?: string
+  targetHandle?: string
 }
 
-export interface DeleteBotResponse {
-  success: boolean
+/** Flow definition structure */
+export interface FlowDefinition {
+  nodes: FlowNode[]
+  edges: FlowEdge[]
+  viewport?: { x: number; y: number; zoom: number }
 }
 
 export interface FlowVersion {
   id: string
   botId: string
   version: number
-  flow: Record<string, any>
-  isPublished: boolean
+  flow: FlowDefinition
+  status: 'draft' | 'published' | 'archived'
+  publishedAt?: string | null
+  createdBy: string
   createdAt: string
   updatedAt: string
 }
 
-export interface CreateFlowVersionDto {
-  flow: Record<string, any>
-}
-
-export interface CreateFlowVersionResponse {
-  data: FlowVersion
-  success: boolean
-}
-
-export interface PublishFlowVersionResponse {
-  data: FlowVersion
-  success: boolean
-}
-
-export interface GetFlowVersionsResponse {
-  data: FlowVersion[]
-  success: boolean
-}
-
-export enum BotFunctionType {
-  DOCUMENT_ACCESS = 'document_access',
-  AUTO_FILL = 'auto_fill',
-  AI_SUGGEST = 'ai_suggest',
-  CUSTOM = 'custom',
-}
-
-export interface BotFunction {
-  id: string
-  botId: string
-  functionType: BotFunctionType
-  name: string
-  description?: string
-  isEnabled: boolean
-  config?: Record<string, any>
-  inputSchema?: Record<string, any>
-  outputSchema?: Record<string, any>
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CreateBotFunctionDto {
-  botId: string
-  functionType: BotFunctionType
-  name: string
-  description?: string
-  isEnabled?: boolean
-  config?: Record<string, any>
-  inputSchema?: Record<string, any>
-  outputSchema?: Record<string, any>
-}
-
-export interface UpdateBotFunctionDto {
-  botId?: string
-  functionType?: BotFunctionType
-  name?: string
-  description?: string
-  isEnabled?: boolean
-  config?: Record<string, any>
-  inputSchema?: Record<string, any>
-  outputSchema?: Record<string, any>
-}
-
-export interface ExecuteBotFunctionDto {
-  functionId: string
-  input: Record<string, any>
-  context?: Record<string, any>
-}
-
-export interface GetBotFunctionsResponse {
-  data: BotFunction[]
-  success: boolean
-}
-
-export interface GetBotFunctionResponse {
-  data: BotFunction
-  success: boolean
-}
-
-export interface CreateBotFunctionResponse {
-  data: BotFunction
-  success: boolean
-}
-
-export interface UpdateBotFunctionResponse {
-  data: BotFunction
-  success: boolean
-}
-
-export interface DeleteBotFunctionResponse {
-  success: boolean
-}
-
-export interface ExecuteBotFunctionResponse {
-  success: boolean
-  result: any
-  executionTime?: number
-}
-
-export interface BotFunctionModalProps {
-  open: boolean
-  onClose: () => void
-  botId: string
-  botFunction?: BotFunction | null
-  onSuccess: () => void
-}
-
-export interface BotFunctionCardProps {
-  botFunction: BotFunction
-  onEdit: () => void
-  onDelete: () => void
-}
-
-export interface AutoFillInputProps {
-  functionId: string
-  field: string
-  context: string
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  className?: string
-}
-
-export interface AiSuggestWidgetProps {
-  functionId: string
-  task: string
-  context: Record<string, any>
-  onApply?: (suggestion: string) => void
-  className?: string
-}
-
-
+/** 
+ * BotWidgetConfig (UI specific - used by the widget bundle)
+ * This structure is used for the public config API response
+ */
 export interface BotWidgetTheme {
   primaryColor: string
   backgroundColor?: string
@@ -230,8 +172,8 @@ export interface BotWidgetTheme {
   userMessageTextColor?: string
   inputBackgroundColor?: string
   inputTextColor?: string
-  position: string
-  buttonSize: string
+  position: BotWidgetPosition
+  buttonSize: BotWidgetButtonSize
   showAvatar: boolean
   showTimestamp: boolean
 }
@@ -244,9 +186,4 @@ export interface BotWidgetConfig {
   welcomeMessage: string
   placeholderText: string
   theme: BotWidgetTheme
-}
-
-export interface LinkMetadata {
-  url: string
-  referrer: string
 }

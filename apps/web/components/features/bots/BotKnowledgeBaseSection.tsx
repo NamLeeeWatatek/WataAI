@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -13,15 +13,15 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/Dialog';
-import { Database, Plus, Trash2, BookOpen, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Database, Plus, Trash2, BookOpen, Link as LinkIcon } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { toast } from 'sonner';
 import axiosClient from '@/lib/axios-client';
 import { cn } from '@/lib/utils';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
-import { DataTable, Column } from '@/components/ui/DataTable';
-import { Input } from '@/components/ui/Input';
+import { DataTable } from '@/components/ui/DataTable';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface Props {
     botId: string;
@@ -131,81 +131,104 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     const availableToLink = availableKnowledgeBases.filter(kb => !linkedIds.has(kb.id));
 
     // Linked Table Columns
-    const linkedColumns: Column<BotKnowledgeBase>[] = [
+    const linkedColumns = React.useMemo<ColumnDef<BotKnowledgeBase>[]>(() => [
         {
-            key: 'name',
-            label: 'Knowledge Base',
-            sortable: true,
-            render: (_, row) => (
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-                        <BookOpen className="w-4 h-4" />
+            id: 'name',
+            header: 'Knowledge Source',
+            accessorKey: 'knowledgeBase.name',
+            cell: ({ row }) => (
+                <div className="flex items-center gap-4 py-1">
+                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+                        <BookOpen className="w-5 h-5" />
                     </div>
                     <div>
-                        <div className="font-medium">{row.knowledgeBase?.name}</div>
-                        <div className="text-xs text-muted-foreground line-clamp-1">{row.knowledgeBase?.description}</div>
+                        <div className="font-bold text-sm tracking-tight text-foreground">{row.original.knowledgeBase?.name}</div>
+                        <div className="text-[10px] font-medium text-muted-foreground line-clamp-1 max-w-[300px]">{row.original.knowledgeBase?.description || "No description provided"}</div>
                     </div>
                 </div>
             )
         },
         {
-            key: 'stats',
-            label: 'Documents',
-            render: (_, row) => (
-                <Badge variant="outline" className="font-mono">
-                    {row.knowledgeBase?.totalDocuments || 0} docs
+            id: 'stats',
+            header: 'Volume',
+            cell: ({ row }) => (
+                <Badge variant="secondary" className="font-mono font-bold text-[10px] px-2.5 py-0.5">
+                    {row.original.knowledgeBase?.totalDocuments || 0} items
                 </Badge>
             )
         },
         {
-            key: 'status',
-            label: 'Status',
-            render: (_, row) => (
-                <div className="flex items-center gap-2">
-                    <Switch
-                        checked={row.isActive}
-                        onCheckedChange={() => handleToggleActive(row, row.isActive)}
-                    />
-                    <span className="text-sm text-muted-foreground">{row.isActive ? 'Active' : 'Inactive'}</span>
-                </div>
-            )
+            id: 'status',
+            header: 'Intelligence',
+            accessorKey: 'isActive',
+            cell: ({ row, getValue }) => {
+                const isActive = getValue() as boolean;
+                return (
+                    <div className="flex items-center gap-3">
+                        <Switch
+                            checked={isActive}
+                            onCheckedChange={() => handleToggleActive(row.original, isActive)}
+                            className="scale-90 data-[state=checked]:bg-blue-500"
+                        />
+                        <span className={cn(
+                            "text-[10px] font-black uppercase tracking-widest transition-colors",
+                            isActive ? "text-blue-500" : "text-muted-foreground"
+                        )}>
+                            {isActive ? 'Active' : 'Offline'}
+                        </span>
+                    </div>
+                );
+            }
         },
         {
-            key: 'actions',
-            label: 'Actions',
-            className: 'text-right',
-            render: (_, row) => (
-                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleUnlink(row)}>
-                    <Trash2 className="w-4 h-4" />
-                </Button>
+            id: 'actions',
+            header: '',
+            cell: ({ row }) => (
+                <div className="flex justify-end">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
+                        onClick={() => handleUnlink(row.original)}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                </div>
             )
         }
-    ];
+    ], [linkedKnowledgeBases]);
 
     // Available Table Columns (for Dialog)
-    const availableColumns: Column<KnowledgeBase>[] = [
+    const availableColumns = React.useMemo<ColumnDef<KnowledgeBase>[]>(() => [
         {
-            key: 'name',
-            label: 'Name',
-            render: (_, row) => (
-                <div>
-                    <div className="font-medium">{row.name}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-1">{row.description}</div>
+            id: 'name',
+            header: 'Name',
+            accessorKey: 'name',
+            cell: ({ row, getValue }) => (
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                        <BookOpen className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-sm tracking-tight">{getValue() as string}</div>
+                        <div className="text-[10px] font-medium text-muted-foreground line-clamp-1">{row.original.description}</div>
+                    </div>
                 </div>
             )
         },
         {
-            key: 'action',
-            label: '',
-            className: 'text-right',
-            render: (_, row) => (
-                <Button size="sm" onClick={() => handleLink(row)}>
-                    <LinkIcon className="w-3 h-3 mr-2" />
-                    Link
-                </Button>
+            id: 'action',
+            header: '',
+            cell: ({ row }) => (
+                <div className="flex justify-end">
+                    <Button size="sm" onClick={() => handleLink(row.original)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
+                        <LinkIcon className="w-3.5 h-3.5 mr-2" />
+                        Link
+                    </Button>
+                </div>
             )
         }
-    ];
+    ], [availableKnowledgeBases, availableSearch]);
 
     return (
         <Card>
@@ -239,7 +262,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                 <Search
                                     placeholder="Search available knowledge bases..."
                                     value={availableSearch}
-                                    onChange={(e: any) => setAvailableSearch(e.target.value)}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvailableSearch(e.target.value)}
                                     onClear={() => setAvailableSearch("")}
                                 />
                                 <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -248,34 +271,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                             kb.name.toLowerCase().includes(availableSearch.toLowerCase()) ||
                                             kb.description?.toLowerCase().includes(availableSearch.toLowerCase())
                                         )}
-                                        columns={[
-                                            {
-                                                key: 'name',
-                                                label: 'Name',
-                                                render: (_, row) => (
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                                            <BookOpen className="w-4 h-4" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold text-sm tracking-tight">{row.name}</div>
-                                                            <div className="text-[10px] font-medium text-muted-foreground line-clamp-1">{row.description}</div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            },
-                                            {
-                                                key: 'action',
-                                                label: '',
-                                                className: 'text-right',
-                                                render: (_, row) => (
-                                                    <Button size="sm" onClick={() => handleLink(row)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
-                                                        <LinkIcon className="w-3.5 h-3.5 mr-2" />
-                                                        Link
-                                                    </Button>
-                                                )
-                                            }
-                                        ]}
+                                        columns={availableColumns}
                                         searchable={false}
                                         className="border-none"
                                         tableClassName="bg-transparent"
@@ -290,67 +286,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
             <CardContent className="pt-6">
                 <DataTable
                     data={linkedKnowledgeBases}
-                    columns={[
-                        {
-                            key: 'name',
-                            label: 'Knowledge Source',
-                            sortable: true,
-                            render: (_, row) => (
-                                <div className="flex items-center gap-4 py-1">
-                                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
-                                        <BookOpen className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <div className="font-bold text-sm tracking-tight text-foreground">{row.knowledgeBase?.name}</div>
-                                        <div className="text-[10px] font-medium text-muted-foreground line-clamp-1 max-w-[300px]">{row.knowledgeBase?.description || "No description provided"}</div>
-                                    </div>
-                                </div>
-                            )
-                        },
-                        {
-                            key: 'stats',
-                            label: 'Volume',
-                            render: (_, row) => (
-                                <Badge variant="secondary" className="font-mono font-bold text-[10px] px-2.5 py-0.5">
-                                    {row.knowledgeBase?.totalDocuments || 0} items
-                                </Badge>
-                            )
-                        },
-                        {
-                            key: 'status',
-                            label: 'Intelligence',
-                            render: (_, row) => (
-                                <div className="flex items-center gap-3">
-                                    <Switch
-                                        checked={row.isActive}
-                                        onCheckedChange={() => handleToggleActive(row, row.isActive)}
-                                        className="scale-90 data-[state=checked]:bg-blue-500"
-                                    />
-                                    <span className={cn(
-                                        "text-[10px] font-black uppercase tracking-widest transition-colors",
-                                        row.isActive ? "text-blue-500" : "text-muted-foreground"
-                                    )}>
-                                        {row.isActive ? 'Active' : 'Offline'}
-                                    </span>
-                                </div>
-                            )
-                        },
-                        {
-                            key: 'actions',
-                            label: '',
-                            className: 'text-right',
-                            render: (_, row) => (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300"
-                                    onClick={() => handleUnlink(row)}
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            )
-                        }
-                    ]}
+                    columns={linkedColumns}
                     tableClassName="border-none shadow-none bg-transparent"
                     loading={loading}
                     emptyMessage="Link sources to enhance your bot's intelligence."

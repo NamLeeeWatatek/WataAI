@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/DropdownMenu';
 import { Badge } from '@/components/ui/Badge';
-import { MessageRole, ConversationStatus } from '@/lib/types/conversations';
+import { MessageRole, ConversationStatus, BotConversation } from '@/lib/types/conversations';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { useBotConversation } from '@/lib/hooks/features/useBotConversations';
 
@@ -22,7 +22,7 @@ export default function ConversationPage() {
     const conversationId = params.id as string;
 
     const {
-        conversation,
+        conversation: rawConversation,
         isLoading: loading,
         archiveConversation,
         deleteConversation,
@@ -30,6 +30,8 @@ export default function ConversationPage() {
         isArchiving,
         isDeleting
     } = useBotConversation(conversationId);
+
+    const conversation = rawConversation as BotConversation | undefined;
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -98,7 +100,7 @@ export default function ConversationPage() {
 
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-9 w-9 shrink-0 border border-border/50 shadow-sm">
-                            <AvatarImage src={conversation.contactAvatar} />
+                            <AvatarImage src={conversation?.contactAvatar ?? undefined} />
                             <AvatarFallback className="bg-primary/5 text-primary">
                                 <User className="w-5 h-5" />
                             </AvatarFallback>
@@ -154,8 +156,8 @@ export default function ConversationPage() {
                 {conversationId && (
                     <ChatInterface
                         conversationId={conversationId}
-                        customerName={conversation.contactName}
-                        isChannelConversation={!!conversation.channelType}
+                        customerName={conversation?.contactName ?? undefined}
+                        isChannelConversation={!!conversation?.channelType}
                         onSendMessage={handleSendMessage}
                         senderRole={MessageRole.ASSISTANT}
                         className="h-full"

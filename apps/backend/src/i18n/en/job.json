@@ -1,0 +1,10 @@
+{
+    "startedTitle": "Job Started",
+    "startedMessage": "Your request is being processed. You can check the progress in the Active Jobs panel.",
+    "updateTitle": "Job Progress",
+    "progressUpdate": "Processing... {progress}%",
+    "completedTitle": "Job Completed",
+    "completedMessage": "The execution finished successfully.",
+    "failedTitle": "Job Failed",
+    "failedMessage": "An error occurred during execution."
+}

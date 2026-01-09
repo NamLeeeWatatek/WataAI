@@ -198,7 +198,7 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, onSave }: 
                                             <SelectContent>
                                                 <SelectItem value="system_default">None (Use default)</SelectItem>
                                                 {aiProviders.map((provider) => (
-                                                    <SelectItem key={provider.id} value={provider.id}>
+                                                    <SelectItem key={`${provider.id}-${(provider as any).scope}`} value={provider.id}>
                                                         <div className="flex items-center gap-2">
                                                             <span>{provider.displayName}</span>
                                                             <span className="text-xs text-muted-foreground">

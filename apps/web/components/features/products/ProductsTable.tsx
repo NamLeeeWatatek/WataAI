@@ -15,17 +15,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { DataTable, Column } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
+import { ColumnDef } from '@tanstack/react-table';
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
-import { AlertDialogConfirm } from "@/components/ui/AlertDialogConfirm";
 import { formatDateTime } from "@/lib/utils/date";
 import { toast } from "sonner";
 import { Package } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PaginationInfo } from "@/components/ui/Pagination";
+import { Checkbox } from "@/components/ui/Checkbox";
 
 import { creationJobsApi } from "@/lib/api/creation-jobs";
-import { BulkActionsToolbar } from "@/components/ui/BulkActionsToolbar";
 import { DataTableFacetedFilter } from "@/components/ui/data-table/DataTableFacetedFilter";
 import { Search } from "@/components/ui/Search";
 import { X } from "lucide-react";
@@ -45,6 +45,9 @@ interface ProductsTableProps {
     onStatusFilterChange?: (status: string[]) => void;
     searchFilter?: string;
     onSearchChange?: (search: string) => void;
+    headerActions?: React.ReactNode;
+    filterActions?: React.ReactNode;
+    actions?: React.ReactNode;
 }
 
 export function ProductsTable({
@@ -61,28 +64,12 @@ export function ProductsTable({
     statusFilter = [],
     onStatusFilterChange,
     searchFilter = "",
-    onSearchChange
+    onSearchChange,
+    headerActions,
+    filterActions,
+    actions,
 }: ProductsTableProps) {
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
-    const [isDeletingBulk, setIsDeletingBulk] = useState(false);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
-    const handleBulkDelete = async () => {
-        if (selectedIds.length === 0) return;
-
-        setIsDeletingBulk(true);
-        try {
-            await creationJobsApi.removeMany(selectedIds);
-            toast.success(`Successfully deleted ${selectedIds.length} items`);
-            onSelectionChange?.([]);
-            onRefresh?.();
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to delete items");
-        } finally {
-            setIsDeletingBulk(false);
-        }
-    };
 
     const getDisplayName = (job: CreationJob) => {
         const input = job.inputData as any;
@@ -95,23 +82,39 @@ export function ProductsTable({
         return job.creationTool?.name || 'Untitled Product';
     };
 
-    const columns = React.useMemo<Column<CreationJob>[]>(() => [
+    const columns = React.useMemo<ColumnDef<CreationJob>[]>(() => [
         {
-            key: 'selection',
-            label: '',
+            id: 'selection',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+                    onCheckedChange={(value: boolean | "indeterminate") => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value: boolean | "indeterminate") => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
         },
         {
-            key: 'name',
-            label: 'Product',
-            render: (_, row) => {
-                if (row.status === CreationJobStatus.FAILED) {
+            id: 'name',
+            header: 'Product',
+            cell: ({ row }) => {
+                const job = row.original;
+                if (job.status === CreationJobStatus.FAILED) {
                     return (
                         <div className="flex flex-col">
-                            <span className="font-medium text-sm text-destructive line-clamp-2 max-w-[300px]" title={row.error || "Unknown error"}>
-                                {row.error ? `Error: ${row.error}` : "Job Failed"}
+                            <span className="font-medium text-sm text-destructive line-clamp-2 max-w-[300px]" title={job.error || "Unknown error"}>
+                                {job.error ? `Error: ${job.error}` : "Job Failed"}
                             </span>
                             <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                                ID: {row.id.substring(0, 8)}
+                                ID: {job.id.substring(0, 8)}
                             </span>
                         </div>
                     );
@@ -119,99 +122,112 @@ export function ProductsTable({
                 return (
                     <div className="flex flex-col">
                         <span className="font-medium text-sm line-clamp-1 max-w-[300px]">
-                            {getDisplayName(row)}
+                            {getDisplayName(job)}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-mono uppercase">
-                            ID: {row.id.substring(0, 8)}
+                            ID: {job.id.substring(0, 8)}
                         </span>
                     </div>
                 );
-            }
+            },
+            size: 300,
         },
         {
-            key: 'creationToolId',
-            label: 'Tool Name',
-            render: (value, row) => <span className="text-sm font-medium">{row.creationTool?.name || value}</span>
+            id: 'creationToolId',
+            header: 'Tool Name',
+            cell: ({ row, getValue }) => <span className="text-sm font-medium">{row.original.creationTool?.name || (getValue() as React.ReactNode)}</span>,
+            size: 150,
         },
         {
-            key: 'status',
-            label: 'Status',
-            render: (value, row) => (
-                <StatusBadge status={row.status} />
-            )
+            id: 'status',
+            header: 'Status',
+            accessorKey: 'status',
+            cell: ({ getValue }) => (
+                <StatusBadge status={getValue() as CreationJobStatus} />
+            ),
+            size: 120,
         },
         {
-            key: 'progress',
-            label: 'Progress',
-            render: (value) => (
-                <div className="flex flex-col gap-1.5 w-32">
-                    <div className="flex justify-between text-[9px] uppercase font-bold tracking-tighter text-muted-foreground">
-                        <span>{value}%</span>
-                    </div>
-                    <Progress
-                        value={value}
-                        className="h-1.5 bg-secondary border border-border/50 shadow-inner"
-                        indicatorClassName={cn(
-                            "transition-all duration-500",
-                            value === 100
-                                ? "bg-green-500"
-                                : "bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
-                        )}
-                    />
-                </div>
-            )
-        },
-        {
-            key: 'createdAt',
-            label: 'Created At',
-            render: (value) => (
-                <span className="text-muted-foreground text-sm">
-                    {formatDateTime(value)}
-                </span>
-            )
-        },
-        {
-            key: 'actions',
-            label: 'Actions',
-            className: 'text-right',
-            render: (_, row) => (
-                <div className="flex justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => {
-                                    navigator.clipboard.writeText(row.id);
-                                    toast.success("Job ID copied");
-                                }}
-                            >
-                                <Copy className="mr-2 h-4 w-4" />
-                                Copy Job ID
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {row.status === CreationJobStatus.COMPLETED && (
-                                <DropdownMenuItem onClick={() => setSelectedJob(row)}>
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    View Details
-                                </DropdownMenuItem>
+            id: 'progress',
+            header: 'Progress',
+            accessorKey: 'progress',
+            cell: ({ getValue }) => {
+                const value = getValue() as number;
+                return (
+                    <div className="flex flex-col gap-1.5 w-full">
+                        <div className="flex justify-between text-[9px] uppercase font-bold tracking-tighter text-muted-foreground">
+                            <span>{value}%</span>
+                        </div>
+                        <Progress
+                            value={value}
+                            className="h-1.5 bg-secondary border border-border/50 shadow-inner"
+                            indicatorClassName={cn(
+                                "transition-all duration-500",
+                                value === 100
+                                    ? "bg-green-500"
+                                    : "bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
                             )}
-                            <DropdownMenuItem
-                                onClick={() => onDelete?.(row.id)}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )
+                        />
+                    </div>
+                );
+            },
+            size: 150,
+        },
+        {
+            id: 'createdAt',
+            header: 'Created At',
+            accessorKey: 'createdAt',
+            cell: ({ getValue }) => (
+                <span className="text-muted-foreground text-sm">
+                    {formatDateTime(getValue() as string | Date)}
+                </span>
+            ),
+            size: 180,
+        },
+        {
+            id: 'actions',
+            header: 'Actions',
+            cell: ({ row }) => {
+                const job = row.original;
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(job.id);
+                                        toast.success("Job ID copied");
+                                    }}
+                                >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    Copy Job ID
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {job.status === CreationJobStatus.COMPLETED && (
+                                    <DropdownMenuItem onClick={() => setSelectedJob(job)}>
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        View Details
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                    onClick={() => onDelete?.(job.id)}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            }
         }
     ], [onDelete]);
 
@@ -232,49 +248,46 @@ export function ProductsTable({
 
     return (
         <>
-            <div className="flex items-center justify-between gap-4 mb-4">
-                <div className="flex flex-1 items-center space-x-2">
-                    <Search
-                        placeholder="Filter products..."
-                        value={searchFilter}
-                        onChange={(e) => onSearchChange?.(e.target.value)}
-                        onClear={() => onSearchChange?.("")}
-                        className="h-8 w-[150px] lg:w-[250px]"
-                    />
-                    {onStatusFilterChange && (
-                        <DataTableFacetedFilter
-                            title="Status"
-                            options={[
-                                { label: "Completed", value: CreationJobStatus.COMPLETED },
-                                { label: "Pending", value: CreationJobStatus.PENDING },
-                                { label: "Processing", value: CreationJobStatus.PROCESSING },
-                                { label: "Failed", value: CreationJobStatus.FAILED },
-                            ]}
-                            selectedValues={new Set(statusFilter)}
-                            onSelect={(values) => onStatusFilterChange(Array.from(values))}
-                        />
-                    )}
-                    {(statusFilter.length > 0 || searchFilter) && (
-                        <Button
-                            variant="ghost"
-                            onClick={() => {
-                                onStatusFilterChange?.([]);
-                                onSearchChange?.("");
-                            }}
-                            className="h-8 px-2 lg:px-3"
-                        >
-                            Reset
-                            <X className="ml-2 h-4 w-4" />
-                        </Button>
-                    )}
-                </div>
-            </div>
-
             <DataTable
                 data={jobs}
                 columns={columns}
                 loading={isLoading}
-                searchable={false}
+                searchable={true}
+                searchValue={searchFilter}
+                onSearch={onSearchChange}
+                searchPlaceholder="Filter products..."
+                headerActions={headerActions}
+                filterActions={filterActions || (
+                    <div className="flex items-center gap-2">
+                        {onStatusFilterChange && (
+                            <DataTableFacetedFilter
+                                title="Status"
+                                options={[
+                                    { label: "Completed", value: CreationJobStatus.COMPLETED },
+                                    { label: "Pending", value: CreationJobStatus.PENDING },
+                                    { label: "Processing", value: CreationJobStatus.PROCESSING },
+                                    { label: "Failed", value: CreationJobStatus.FAILED },
+                                ]}
+                                selectedValues={new Set(statusFilter)}
+                                onSelect={(values) => onStatusFilterChange(Array.from(values))}
+                            />
+                        )}
+                        {(statusFilter.length > 0 || searchFilter) && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    onStatusFilterChange?.([]);
+                                    onSearchChange?.("");
+                                }}
+                                className="h-8 px-2 lg:px-3"
+                            >
+                                Reset
+                                <X className="ml-2 h-4 w-4" />
+                            </Button>
+                        )}
+                    </div>
+                )}
+                actions={actions}
                 pagination={pagination}
                 onPageChange={onPageChange}
                 pageSizeOptions={pageSizeOptions}
@@ -282,29 +295,8 @@ export function ProductsTable({
                 selectedIds={selectedIds}
                 onSelectionChange={onSelectionChange}
                 compact
-            />
-
-            <AlertDialogConfirm
-                open={isConfirmOpen}
-                onOpenChange={setIsConfirmOpen}
-                title="Are you sure?"
-                description={`This will permanently delete ${selectedIds.length} items. This action cannot be undone.`}
-                confirmText={isDeletingBulk ? "Deleting..." : "Delete"}
-                variant="destructive"
-                onConfirm={handleBulkDelete}
-            />
-
-            <BulkActionsToolbar
-                selectedCount={selectedIds.length}
-                onClearSelection={() => onSelectionChange?.([])}
-                actions={[
-                    {
-                        label: isDeletingBulk ? 'Deleting...' : 'Delete & Cancel',
-                        icon: Trash2,
-                        onClick: () => setIsConfirmOpen(true),
-                        variant: 'destructive'
-                    }
-                ]}
+                noCard
+                className="w-full"
             />
 
             <ProductDetailsDialog

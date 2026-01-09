@@ -10,6 +10,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
 import { RecursiveCharacterTextSplitter } from '../utils/recursive-text-splitter';
+import { isUUID } from '../../utils/is-uuid';
 
 export interface TextChunk {
   content: string;
@@ -30,7 +31,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   async chunkText(
     text: string,
@@ -111,7 +112,7 @@ export class KBEmbeddingsService {
 
     if (requiresApiKey) {
       // Try to get API key from workspace scope first
-      if (workspaceId) {
+      if (workspaceId && isUUID(workspaceId)) {
         const workspaceConfigs =
           await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
         const config = workspaceConfigs.find(
@@ -122,7 +123,7 @@ export class KBEmbeddingsService {
         }
       }
       // Fall back to user scope
-      if (!apiKey && userId) {
+      if (!apiKey && userId && isUUID(userId)) {
         const userConfigs =
           await this.aiProvidersService.getUserConfigs(userId);
         const config = userConfigs.find((c) => c.providerId === kbAiProviderId);
@@ -351,19 +352,23 @@ export class KBEmbeddingsService {
     if (requiresApiKey) {
       try {
         // Try to get API key from workspace scope first
-        if (workspaceId) {
+        if (workspaceId && isUUID(workspaceId)) {
           const workspaceConfigs =
             await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
-          const config = workspaceConfigs.find((c) => c.providerId === kbId);
+          const config = workspaceConfigs.find(
+            (c) => c.providerId === kbAiProviderId,
+          );
           if (config?.config?.apiKey) {
             apiKey = config.config.apiKey;
           }
         }
         // Fall back to user scope
-        if (!apiKey && userId) {
+        if (!apiKey && userId && isUUID(userId)) {
           const userConfigs =
             await this.aiProvidersService.getUserConfigs(userId);
-          const config = userConfigs.find((c) => c.providerId === kbId);
+          const config = userConfigs.find(
+            (c) => c.providerId === kbAiProviderId,
+          );
           if (config?.config?.apiKey) {
             apiKey = config.config.apiKey;
           }
@@ -477,7 +482,7 @@ export class KBEmbeddingsService {
       ].filter(Boolean);
 
       for (const scope of scopes) {
-        if (!scope) continue;
+        if (!scope || !isUUID(scope.id)) continue;
 
         try {
           const configs =
@@ -534,7 +539,7 @@ export class KBEmbeddingsService {
     ].filter(Boolean);
 
     for (const scope of scopes) {
-      if (!scope) continue;
+      if (!scope || !isUUID(scope.id)) continue;
 
       try {
         const configs =

@@ -13,7 +13,7 @@ export const templateKeys = {
   workspace: (workspaceId: string) => [...templateKeys.all, 'workspace', workspaceId] as const,
 }
 
-export function useTemplates(params?: QueryTemplateDto) {
+export function useTemplates(params?: QueryTemplateDto, options?: { enabled?: boolean }) {
   const queryClient = useQueryClient()
 
   const {
@@ -27,6 +27,7 @@ export function useTemplates(params?: QueryTemplateDto) {
       return await templatesApi.findAll(params)
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: options?.enabled
   })
 
   // Mutations
@@ -70,7 +71,7 @@ export function useTemplates(params?: QueryTemplateDto) {
   })
 
   const bulkUpdateMutation = useMutation({
-    mutationFn: ({ ids, data }: { ids: string[]; data: any }) => templatesApi.bulkUpdate(ids, data),
+    mutationFn: ({ ids, data }: { ids: string[]; data: Omit<UpdateTemplateDto, 'id'> }) => templatesApi.bulkUpdate(ids, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
     },

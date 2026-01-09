@@ -4,5 +4,6 @@
     "error": "Lỗi",
     "success": "Thành công",
     "notFound": "Không tìm thấy",
-    "unauthorized": "Không có quyền truy cập"
+    "unauthorized": "Không có quyền truy cập",
+    "alreadyExists": "{resource} với giá trị '{value}' đã tồn tại"
 }

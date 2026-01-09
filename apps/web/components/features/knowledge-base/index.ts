@@ -1,5 +1,4 @@
 export { KBStatsCards } from './KbStatsCards'
-export { KBBreadcrumbs } from './KbBreadcrumbs'
 export { KBFolderItem } from './KbFolderItem'
 export { KBFolderTree } from './KbFolderTree'
 export { KBDocumentItem } from './KbDocumentItem'

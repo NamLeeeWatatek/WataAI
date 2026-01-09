@@ -6,6 +6,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProviderKey } from '../enums';
 import { IAiProvider, ConfigField } from '../interfaces';
+import { ProviderConfig } from '../ai-provider';
 
 // Export CreateProviderRequest from here
 export interface CreateProviderRequest {
@@ -13,7 +14,7 @@ export interface CreateProviderRequest {
   label: string;
   description?: string;
   requiredFields: ConfigField[];
-  defaultValues: Record<string, any>;
+  defaultValues: ProviderConfig;
   isActive?: boolean;
 }
 
@@ -41,7 +42,7 @@ export class AiProvider implements IAiProvider {
 
   // Add missing properties that the service expects
   requiredFields: ConfigField[];
-  defaultValues: Record<string, any>;
+  defaultValues: ProviderConfig;
 
   // Business logic methods - Clean encapsulation
   getRequiredConfigFields(): ConfigField[] {
@@ -99,8 +100,8 @@ export class AiProvider implements IAiProvider {
     }
   }
 
-  getDefaultValues(): Record<string, any> {
-    const defaults: Record<string, any> = {
+  getDefaultValues(): ProviderConfig {
+    const defaults: ProviderConfig = {
       useStream: true,
       timeout: 60000, // 60 seconds
       retryAttempts: 3,
@@ -190,8 +191,8 @@ export class AiProvider implements IAiProvider {
       case ProviderKey.OPENAI:
         return model
           ? ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-3.5-turbo'].some((m) =>
-              model.includes(m),
-            )
+            model.includes(m),
+          )
           : true;
 
       case ProviderKey.ANTHROPIC:

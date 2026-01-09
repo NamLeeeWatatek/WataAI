@@ -55,7 +55,7 @@ export function useMessages(conversationId: string): UseMessagesReturn {
       const response = await getBotConversationMessages(conversationId);
 
       // Assume messages come in descending order (newest first) from API
-      const mappedMessages = response.map(mapApiMessageToMessage);
+      const mappedMessages = response.messages.map(mapApiMessageToMessage);
       dispatch(setMessages({ conversationId, messages: mappedMessages.reverse() })); // Reverse to oldest first
 
       // Set pagination state

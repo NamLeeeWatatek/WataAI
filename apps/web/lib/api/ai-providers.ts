@@ -1,29 +1,38 @@
 import { axiosClient } from '../axios-client';
+import type { AiProviderConfig, UserAiProviderConfig } from '../types/ai-provider';
 
-export interface UserAiProvider {
+/** AI Model information */
+export interface AiModelInfo {
   id: string;
-  provider: 'openai' | 'anthropic' | 'google' | 'azure' | 'custom';
-  displayName: string;
-  apiKeyMasked?: string;  // ✅ Masked API key for display (e.g., "sk-...xyz123")
-  modelList?: string[];
-  isActive: boolean;
-  isVerified: boolean;
-  verifiedAt?: string;
-  quotaUsed: number;
-  lastUsedAt?: string;
-  createdAt: string;
+  name: string;
+  providerId: string;
+  maxTokens?: number;
+  contextWindow?: number;
+  isAvailable: boolean;
 }
 
+/** AI Model Provider with available models (for execution config) */
+export interface AiModelProvider {
+  providerId: string;
+  providerKey: string;
+  providerName: string;
+  configId?: string;
+  models: string[];
+}
+
+// Re-export or alias for compatibility if needed, but prefer UserAiProviderConfig
+export type UserAiProvider = UserAiProviderConfig;
+
 export interface CreateUserAiProviderDto {
-  provider: 'openai' | 'anthropic' | 'google' | 'azure' | 'custom';
+  providerId: string;
   displayName: string;
-  apiKey: string;
+  config: AiProviderConfig;
   modelList?: string[];
 }
 
 export interface UpdateUserAiProviderDto {
   displayName?: string;
-  apiKey?: string;
+  config?: AiProviderConfig;
   modelList?: string[];
   isActive?: boolean;
 }
@@ -36,7 +45,7 @@ export interface AiProviderMetadata {
   description?: string;
   requiredFields: string[];
   optionalFields: string[];
-  defaultValues: Record<string, any>;
+  defaultValues: AiProviderConfig;
   isActive: boolean;
 }
 
@@ -47,22 +56,22 @@ export const aiProvidersApi = {
 
   // User provider configs
   getUserConfigs: () =>
-    axiosClient.get<UserAiProvider[]>('/ai-providers/user/configs') as unknown as UserAiProvider[],
+    axiosClient.get<UserAiProviderConfig[]>('/ai-providers/user/configs') as unknown as UserAiProviderConfig[],
 
   getUserConfig: (id: string) =>
-    axiosClient.get<UserAiProvider>(`/ai-providers/user/configs/${id}`) as unknown as UserAiProvider,
+    axiosClient.get<UserAiProviderConfig>(`/ai-providers/user/configs/${id}`) as unknown as UserAiProviderConfig,
 
   createUserConfig: (data: CreateUserAiProviderDto) =>
-    axiosClient.post<UserAiProvider>('/ai-providers/user/configs', data) as unknown as UserAiProvider,
+    axiosClient.post<UserAiProviderConfig>('/ai-providers/user/configs', data) as unknown as UserAiProviderConfig,
 
   updateUserConfig: (id: string, data: UpdateUserAiProviderDto) =>
-    axiosClient.patch<UserAiProvider>(`/ai-providers/user/configs/${id}`, data) as unknown as UserAiProvider,
+    axiosClient.patch<UserAiProviderConfig>(`/ai-providers/user/configs/${id}`, data) as unknown as UserAiProviderConfig,
 
   deleteUserConfig: (id: string) =>
     axiosClient.delete(`/ai-providers/user/configs/${id}`) as unknown as void,
 
   verifyUserConfig: (id: string) =>
-    axiosClient.post<UserAiProvider>(`/ai-providers/user/configs/${id}/verify`) as unknown as UserAiProvider,
+    axiosClient.post<UserAiProviderConfig>(`/ai-providers/user/configs/${id}/verify`) as unknown as UserAiProviderConfig,
 
   // Legacy methods (for backward compatibility)
   getUserProviders: () =>
@@ -85,12 +94,12 @@ export const aiProvidersApi = {
 
   // Models
   getAvailableModels: () =>
-    axiosClient.get('/ai-providers/user/models') as unknown as Promise<any[]>,
+    axiosClient.get('/ai-providers/user/models') as unknown as Promise<AiModelProvider[]>,
 
   getWorkspaceModels: (workspaceId: string) =>
-    axiosClient.get(`/ai-providers/workspace/${workspaceId}/models`) as unknown as Promise<any[]>,
+    axiosClient.get(`/ai-providers/workspace/${workspaceId}/models`) as unknown as Promise<AiModelProvider[]>,
 
-  verifyModels: (providerId: string, config: Record<string, any>) =>
+  verifyModels: (providerId: string, config: AiProviderConfig) =>
     axiosClient.post<string[]>('/ai-providers/verify-models', { providerId, config }) as unknown as Promise<string[]>,
 
   syncModels: (id: string) =>

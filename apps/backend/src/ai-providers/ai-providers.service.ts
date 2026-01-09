@@ -4,6 +4,7 @@
   BadRequestException,
   Logger,
   InternalServerErrorException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { NullableType } from '../utils/types/nullable.type';
 import { SystemAiSettingsRepository } from './infrastructure/system/system-ai-settings.repository';
@@ -12,13 +13,16 @@ import {
   UpdateUserAiProviderConfigDto,
   CreateWorkspaceAiProviderConfigDto,
   UpdateWorkspaceAiProviderConfigDto,
+  UpdateSystemAiSettingsDto,
 } from './dto/ai-provider.dto';
 import {
   AiProvider,
   UserAiProviderConfig,
   WorkspaceAiProviderConfig,
   AiUsageLog,
+  AiUsageStats,
   ChatMessage,
+  SystemAiSettings,
 } from './domain/ai-provider';
 
 export type { ChatMessage };
@@ -56,7 +60,7 @@ export class AiProvidersService {
   /**
    * Mask sensitive fields in config
    */
-  maskConfig(config: Record<string, any>): Record<string, any> {
+  maskConfig(config: Record<string, unknown>): Record<string, unknown> {
     return this.aiEncryptionService.maskConfig(config);
   }
 
@@ -207,7 +211,7 @@ export class AiProvidersService {
   async getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<Record<string, unknown>> {
+  ): Promise<AiUsageStats> {
     return this.aiConfigService.getUsageStats(workspaceId, period);
   }
 
@@ -429,7 +433,7 @@ export class AiProvidersService {
 
   async fetchModelsFromDirectConfig(
     providerId: string,
-    config: Record<string, any>,
+    config: Record<string, unknown>,
   ): Promise<string[]> {
     const provider = await this.getProviderById(providerId);
     if (!provider) throw new NotFoundException('Provider not found');
@@ -443,7 +447,7 @@ export class AiProvidersService {
     providerConfigId?: string;
     tone?: string;
     style?: string;
-    additionalContext?: Record<string, any>;
+    additionalContext?: Record<string, unknown>;
   }) {
     return this.aiModelService.generateSystemPrompt(params);
   }
@@ -455,7 +459,7 @@ export class AiProvidersService {
     return this.systemAiSettingsRepository.findSystemSettings();
   }
 
-  async updateSystemAiSettings(dto: Record<string, any>) {
+  async updateSystemAiSettings(dto: UpdateSystemAiSettingsDto) {
     return this.systemAiSettingsRepository.updateSystemSettings(dto);
   }
 
@@ -490,7 +494,7 @@ export class AiProvidersService {
     */
 
     this.logger.error(`Missing API Key for provider: ${providerKey} (Env fallback disabled for security)`);
-    throw new InternalServerErrorException(
+    throw new UnprocessableEntityException(
       `Missing API configuration for ${providerKey}. Please configure your own API key in Settings.`,
     );
   }

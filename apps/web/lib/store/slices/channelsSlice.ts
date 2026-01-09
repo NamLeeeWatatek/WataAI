@@ -141,6 +141,15 @@ export const connectFacebookPage = createAsyncThunk(
   }
 );
 
+export interface FacebookPage {
+  id: string;
+  name: string;
+  category?: string;
+  [key: string]: unknown;
+}
+
+import type { Bot } from '@/lib/types';
+
 interface ChannelsState {
   channels: Channel[];
   configs: IntegrationConfig[];
@@ -148,11 +157,11 @@ interface ChannelsState {
   isConnecting: string | null;
   error: string | null;
   // Facebook specific state
-  facebookPages: any[];
+  facebookPages: FacebookPage[];
   facebookTempToken: string;
   connectingPage: string | null;
   // Bot selection for Facebook
-  bots: any[];
+  bots: Bot[];
   selectedBotId: string;
   loadingBots: boolean;
   // UI state
@@ -160,7 +169,7 @@ interface ChannelsState {
   disconnectId: string | null;
   deleteConfigId: string | null;
   assignBotDialogOpen: boolean;
-  selectedChannel: any;
+  selectedChannel: Channel | null;
 }
 
 const initialState: ChannelsState = {

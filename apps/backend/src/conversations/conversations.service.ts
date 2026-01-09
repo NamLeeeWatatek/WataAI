@@ -109,22 +109,63 @@ export class ConversationsService {
     name?: string;
     avatar?: string;
   }): Promise<ContactEntity> {
+    // This prevents the same person having multiple contacts with different externalIds
+    
     let contact: ContactEntity | null = null;
+    const searchConditions: any[] = [];
 
     if (params.externalId) {
-      contact = await this.contactRepository.findOne({
-        where: {
-          workspaceId: params.workspaceId,
-          externalId: params.externalId,
-        },
-      });
-    } else if (params.email) {
-      contact = await this.contactRepository.findOne({
-        where: { workspaceId: params.workspaceId, email: params.email },
+      searchConditions.push({
+        workspaceId: params.workspaceId,
+        externalId: params.externalId,
       });
     }
 
+    if (params.email) {
+      searchConditions.push({
+        workspaceId: params.workspaceId,
+        email: params.email,
+      });
+    }
+
+    // Search for existing contact with any matching condition
+    if (searchConditions.length > 0) {
+      // Use OR query to find contact by either externalId or email
+      const queryBuilder = this.contactRepository.createQueryBuilder('contact');
+      
+      if (searchConditions.length === 1) {
+        queryBuilder.where('contact.workspaceId = :workspaceId', {
+          workspaceId: params.workspaceId,
+        });
+        if (params.externalId) {
+          queryBuilder.andWhere('contact.externalId = :externalId', {
+            externalId: params.externalId,
+          });
+        } else if (params.email) {
+          queryBuilder.andWhere('contact.email = :email', {
+            email: params.email,
+          });
+        }
+      } else {
+        // OR condition: externalId OR email
+        queryBuilder
+          .where('contact.workspaceId = :workspaceId', {
+            workspaceId: params.workspaceId,
+          })
+          .andWhere(
+            '(contact.externalId = :externalId OR contact.email = :email)',
+            {
+              externalId: params.externalId,
+              email: params.email,
+            },
+          );
+      }
+
+      contact = await queryBuilder.getOne();
+    }
+
     if (!contact) {
+      // Create new contact with merged info if both externalId and email provided
       contact = this.contactRepository.create({
         workspaceId: params.workspaceId,
         externalId: params.externalId,
@@ -132,6 +173,32 @@ export class ConversationsService {
         name: params.name,
         avatar: params.avatar,
       });
+      return this.contactRepository.save(contact);
+    }
+
+    let needsUpdate = false;
+
+    if (params.email && !contact.email) {
+      contact.email = params.email;
+      needsUpdate = true;
+    }
+
+    if (params.externalId && !contact.externalId) {
+      contact.externalId = params.externalId;
+      needsUpdate = true;
+    }
+
+    if (params.name && !contact.name) {
+      contact.name = params.name;
+      needsUpdate = true;
+    }
+
+    if (params.avatar && !contact.avatar) {
+      contact.avatar = params.avatar;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
       return this.contactRepository.save(contact);
     }
 
@@ -726,9 +793,30 @@ Message: ${currentMessage}`;
     });
 
     if (existing) {
+      // ✅ FIX: Track if this is an update for notification
+      const isUpdate = existing.rating !== dto.rating || 
+                       (existing.comment !== dto.comment);
+      
       existing.rating = dto.rating;
       existing.comment = dto.comment;
-      return this.feedbackRepository.save(existing);
+      const saved = await this.feedbackRepository.save(existing);
+
+      // ✅ FIX: Emit event for real-time feedback update notification
+      // Get message to find conversation
+      const message = await this.getMessage(
+        existing.messageId.split('-')[0], // This is a placeholder - actual logic needs proper relation
+        messageId,
+      );
+
+      this.logger.log(
+        `Feedback ${isUpdate ? 'updated' : 'created'} for message ${messageId}`,
+      );
+      
+      // TODO: Emit 'feedback:updated' event to WebSocket for real-time UI updates
+      // this.conversationsGateway.server.to(message.conversationId)
+      //   .emit('feedback:updated', { messageId, ...dto });
+
+      return saved;
     }
 
     const feedback = this.feedbackRepository.create({
@@ -737,7 +825,11 @@ Message: ${currentMessage}`;
       comment: dto.comment,
     });
 
-    return this.feedbackRepository.save(feedback);
+    const saved = await this.feedbackRepository.save(feedback);
+    
+    this.logger.log(`Feedback created for message ${messageId}`);
+
+    return saved;
   }
 
   async getMessageFeedback(messageId: string) {

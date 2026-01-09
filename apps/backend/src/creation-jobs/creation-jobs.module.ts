@@ -9,6 +9,7 @@ import { ExecutionQueueModule } from '../execution/queue/execution-queue.module'
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { forwardRef } from '@nestjs/common';
+import { CreationToolsModule } from '../creation-tools/creation-tools.module';
 
 @Module({
   imports: [
@@ -18,9 +19,10 @@ import { forwardRef } from '@nestjs/common';
     ExecutionQueueModule,
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    CreationToolsModule,
   ],
   controllers: [CreationJobsController, JobCallbacksController],
   providers: [CreationJobsService],
   exports: [CreationJobsService, RelationalCreationJobsPersistenceModule],
 })
-export class CreationJobsModule {}
+export class CreationJobsModule { }

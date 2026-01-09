@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Switch } from '@/components/ui/Switch'
 import { Label } from '@/components/ui/Label'
-import type { Template } from '@/lib/types/template'
+import type { Template, StyleConfig } from '@/lib/types/template'
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools'
 import { toast } from 'sonner'
 
@@ -45,7 +45,7 @@ export function TemplateDialog({
         category: '',
         creationToolId: '',
         isActive: true,
-        styleConfig: {} as Record<string, string>,
+        styleConfig: {} as StyleConfig,
         mediaFiles: [] as string[],
     })
     const [loading, setLoading] = useState(false)

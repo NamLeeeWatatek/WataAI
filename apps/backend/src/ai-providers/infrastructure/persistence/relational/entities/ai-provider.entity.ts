@@ -40,7 +40,7 @@ export class AiProviderEntity extends EntityRelationalHelper {
   optionalFields: string[];
 
   @Column({ name: 'default_values', type: 'jsonb', default: {} })
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, unknown>;
 
   @Column({ name: 'is_active', type: Boolean, default: true })
   isActive: boolean;
@@ -138,7 +138,7 @@ export class UserAiProviderConfigEntity extends EntityRelationalHelper {
   displayName: string;
 
   @Column({ name: 'config', type: 'jsonb' })
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 
   @Column({ name: 'model_list', type: 'jsonb', default: [] })
   modelList: string[];
@@ -179,7 +179,7 @@ export class WorkspaceAiProviderConfigEntity extends WorkspaceOwnedEntity {
   displayName: string;
 
   @Column({ name: 'config', type: 'jsonb' })
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 
   @Column({ name: 'model_list', type: 'jsonb', default: [] })
   modelList: string[];

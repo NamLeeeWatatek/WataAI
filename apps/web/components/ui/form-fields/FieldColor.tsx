@@ -2,7 +2,7 @@ import { Input } from "../Input"
 import { DynamicFormFieldProps } from "./types"
 
 export function FieldColor({ field, value, onChange }: DynamicFormFieldProps) {
-    const colorValue = value || '#000000'
+    const colorValue = (value as string) || '#000000'
 
     return (
         <div className="flex items-center gap-3">
@@ -13,7 +13,7 @@ export function FieldColor({ field, value, onChange }: DynamicFormFieldProps) {
             <div className="flex-1 relative">
                 <Input
                     type="text"
-                    value={value || ''}
+                    value={(value as string) || ''}
                     onChange={(e) => onChange(field.name, e.target.value)}
                     placeholder="#000000"
                     className="font-mono bg-card/50 pl-10 uppercase"

@@ -2,11 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/Button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/Sheet';
-import { Menu, X, Moon, Sun, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/Sheet';
+import { Menu, Sparkles } from 'lucide-react';
 
 const navLinks = [
     { href: '#features', label: 'Tính năng' },
@@ -16,7 +14,6 @@ const navLinks = [
 
 export function MarketingHeader() {
     const [isOpen, setIsOpen] = useState(false);
-    const { theme, setTheme } = useTheme();
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 supports-[backdrop-filter]:bg-background/60">
@@ -64,6 +61,9 @@ export function MarketingHeader() {
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="right" className="w-80 glass-card">
+                                <SheetHeader className="sr-only">
+                                    <SheetTitle>Menu</SheetTitle>
+                                </SheetHeader>
                                 <nav className="flex flex-col gap-4 mt-8">
                                     {navLinks.map((link) => (
                                         <a

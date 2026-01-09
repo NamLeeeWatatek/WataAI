@@ -1,45 +1,43 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
-import { MessageSquare, Palette, Settings2, Save, Send, X, Monitor, Smartphone, Moon, Sun } from 'lucide-react';
-import { toast } from 'sonner';
+import { MessageSquare, Palette, Settings2, Save, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/ScrollArea';
+import { BotWidgetPosition, BotWidgetButtonSize } from '@/lib/types/bots';
 
-interface WidgetAppearanceSettings {
-    primaryColor?: string;
+interface WidgetAppearanceSettingsData {
+    primaryColor?: string | null;
+    welcomeMessage?: string | null;
+    placeholderText?: string | null;
+    widgetPosition?: BotWidgetPosition;
+    widgetButtonSize?: BotWidgetButtonSize;
+    showAvatar?: boolean;
+    showTimestamp?: boolean;
+    widgetEnabled?: boolean;
+    // UI specific only (from metadata or extended config)
     backgroundColor?: string;
     botMessageColor?: string;
     botMessageTextColor?: string;
     fontFamily?: string;
-    widgetPosition?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-    widgetButtonSize?: 'small' | 'medium' | 'large';
-    welcomeMessage?: string;
-    placeholderText?: string;
-
-    showAvatar?: boolean;
-    showTimestamp?: boolean;
-    userMessageTextColor?: string;
-    inputBackgroundColor?: string;
-    inputTextColor?: string;
 }
 
 interface Props {
     botId: string;
-    currentSettings?: WidgetAppearanceSettings;
-    onSave: (settings: WidgetAppearanceSettings) => Promise<void>;
+    currentSettings?: Partial<WidgetAppearanceSettingsData>;
+    onSave: (settings: Partial<WidgetAppearanceSettingsData>) => void;
 }
 
 export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Props) {
     // Default State
-    const [settings, setSettings] = useState<WidgetAppearanceSettings>({
+    const [settings, setSettings] = useState<WidgetAppearanceSettingsData>({
         primaryColor: '#667eea',
         backgroundColor: '#ffffff',
         botMessageColor: '#f3f4f6',
@@ -49,48 +47,49 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
         widgetButtonSize: 'medium',
         welcomeMessage: 'Hello! How can I help you today?',
         placeholderText: 'Type your message...',
-
         showAvatar: true,
         showTimestamp: true,
-        userMessageTextColor: '#ffffff',
-        inputBackgroundColor: '#ffffff',
-        inputTextColor: '#000000',
+        widgetEnabled: true,
     });
 
     const [activeTab, setActiveTab] = useState('design');
     const [saving, setSaving] = useState(false);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(true); // Toggle chat window in preview
+    const [isPreviewOpen, setIsPreviewOpen] = useState(true);
     const [hasChanges, setHasChanges] = useState(false);
 
     // Sync with props
     useEffect(() => {
         if (currentSettings) {
-            setSettings(prev => ({ ...prev, ...currentSettings }));
+            setSettings(prev => ({
+                ...prev,
+                ...currentSettings,
+                // Ensure we handle nulls from backend
+                primaryColor: currentSettings.primaryColor || prev.primaryColor,
+                welcomeMessage: currentSettings.welcomeMessage || prev.welcomeMessage,
+                placeholderText: currentSettings.placeholderText || prev.placeholderText,
+            }));
         }
     }, [currentSettings]);
 
     // Detect Changes
     useEffect(() => {
         if (!currentSettings) return;
-        const keys = Object.keys(settings) as (keyof WidgetAppearanceSettings)[];
-        const changed = keys.some(key => settings[key] !== currentSettings[key as keyof WidgetAppearanceSettings] && settings[key] !== undefined);
+        const keys = Object.keys(settings) as (keyof WidgetAppearanceSettingsData)[];
+        const changed = keys.some(key => settings[key] !== (currentSettings as any)[key] && settings[key] !== undefined);
         setHasChanges(changed);
     }, [settings, currentSettings]);
 
-    const handleSave = async () => {
+    const handleSaveLocal = async () => {
         setSaving(true);
         try {
-            await onSave(settings);
-            // toast handled by parent usually, but redundant safety
+            onSave(settings);
             setHasChanges(false);
-        } catch {
-            // error handled by parent
         } finally {
             setSaving(false);
         }
     };
 
-    const updateSetting = (key: keyof WidgetAppearanceSettings, value: any) => {
+    const updateSetting = (key: keyof WidgetAppearanceSettingsData, value: any) => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
 
@@ -123,10 +122,10 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                         </TabsTrigger>
                     </TabsList>
 
-                    <Card className="flex flex-col shadow-none">
-                        <div className="h-1.5 w-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 group-hover:via-primary/70 transition-all duration-500 shrink-0" />
+                    <Card className="flex flex-col shadow-none border-none bg-background/50 backdrop-blur-sm rounded-3xl overflow-hidden">
+                        <div className="h-1.5 w-full bg-gradient-to-r from-primary/40 via-primary to-primary/40 shrink-0" />
                         <ScrollArea className="h-[500px] 2xl:h-[600px]">
-                            <div className="p-6 space-y-8">
+                            <div className="p-8 space-y-8">
                                 <TabsContent value="design" className="mt-0 space-y-8">
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-2">
@@ -142,20 +141,18 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <div className="relative group/color">
                                                     <Input
                                                         type="color"
-
-                                                        className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform"
-                                                        value={settings.primaryColor}
+                                                        className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform bg-transparent"
+                                                        value={settings.primaryColor || '#667eea'}
                                                         onChange={(e) => updateSetting('primaryColor', e.target.value)}
                                                     />
                                                 </div>
                                                 <Input
-
-                                                    value={settings.primaryColor}
+                                                    value={settings.primaryColor || '#667eea'}
                                                     onChange={(e) => updateSetting('primaryColor', e.target.value)}
-                                                    className="uppercase font-mono text-sm tracking-widest h-12 focus:bg-background"
+                                                    className="uppercase font-mono text-sm tracking-widest h-12 bg-background/50"
                                                 />
                                             </div>
-                                            <p className="text-[10px] font-medium text-muted-foreground/60 px-1">Applied to triggers, buttons, and user message bubbles.</p>
+                                            <p className="text-[10px] font-medium text-muted-foreground/60 px-1 uppercase tracking-tight">Applied to triggers, buttons, and user message bubbles.</p>
                                         </div>
 
                                         <div className="space-y-4 pt-4">
@@ -163,22 +160,20 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             <div className="flex gap-3">
                                                 <Input
                                                     type="color"
-
-                                                    className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform"
+                                                    className="w-14 p-1 h-12 cursor-pointer bg-transparent"
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
                                                 />
                                                 <Input
-
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
-                                                    className="uppercase font-mono text-sm tracking-widest h-12 focus:bg-background"
+                                                    className="uppercase font-mono text-sm tracking-widest h-12 bg-background/50"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6 pt-6 border-t border-border/40">
+                                    <div className="space-y-6 pt-6 border-t border-border/10">
                                         <div className="flex items-center gap-2">
                                             <div className="p-1.5 bg-primary/10 rounded-lg">
                                                 <MessageSquare className="w-4 h-4 text-primary" />
@@ -190,8 +185,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Bot Bubble</Label>
                                                 <Input
                                                     type="color"
-
-                                                    className="w-full h-10 p-1 cursor-pointer"
+                                                    className="w-full h-10 p-1 cursor-pointer bg-transparent"
                                                     value={settings.botMessageColor}
                                                     onChange={(e) => updateSetting('botMessageColor', e.target.value)}
                                                 />
@@ -200,64 +194,11 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Bot Text</Label>
                                                 <Input
                                                     type="color"
-
-                                                    className="w-full h-10 p-1 cursor-pointer"
+                                                    className="w-full h-10 p-1 cursor-pointer bg-transparent"
                                                     value={settings.botMessageTextColor}
                                                     onChange={(e) => updateSetting('botMessageTextColor', e.target.value)}
                                                 />
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-6 pt-6 border-t border-border/40">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-primary/10 rounded-lg">
-                                                <Settings2 className="w-4 h-4 text-primary" />
-                                            </div>
-                                            <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Input Styling</h3>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Background</Label>
-                                                <Input
-                                                    type="color"
-                                                    className="w-full h-10 p-1 cursor-pointer"
-                                                    value={settings.inputBackgroundColor || '#ffffff'}
-                                                    onChange={(e) => updateSetting('inputBackgroundColor', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-3">
-                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Text</Label>
-                                                <Input
-                                                    type="color"
-                                                    className="w-full h-10 p-1 cursor-pointer"
-                                                    value={settings.inputTextColor || '#000000'}
-                                                    onChange={(e) => updateSetting('inputTextColor', e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-6 pt-6 border-t border-border/40">
-                                        <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-primary/10 rounded-lg">
-                                                <Palette className="w-4 h-4 text-primary" />
-                                            </div>
-                                            <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Typography</h3>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Font Atmosphere</Label>
-                                            <Select value={settings.fontFamily} onValueChange={(val) => updateSetting('fontFamily', val)}>
-                                                <SelectTrigger >
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-xl shadow-2xl p-1">
-                                                    <SelectItem value="Inter" className="rounded-lg py-3 font-bold">Inter (Modern & Clean)</SelectItem>
-                                                    <SelectItem value="Arial" className="rounded-lg py-3 font-medium">Arial (Classic Efficiency)</SelectItem>
-                                                    <SelectItem value="'Courier New'" className="rounded-lg py-3 font-mono">Monospace (Technical)</SelectItem>
-                                                    <SelectItem value="Georgia" className="rounded-lg py-3">Georgia (Academic Serif)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
                                         </div>
                                     </div>
                                 </TabsContent>
@@ -274,11 +215,10 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-4">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Onboarding Greeting</Label>
                                             <Input
-
-                                                value={settings.welcomeMessage}
+                                                value={settings.welcomeMessage || ''}
                                                 onChange={(e) => updateSetting('welcomeMessage', e.target.value)}
                                                 placeholder="e.g. Protocol initialized. How can I assist?"
-                                                className="h-11 font-medium"
+                                                className="h-11 font-medium bg-background/50"
                                             />
                                             <p className="text-[10px] font-medium text-muted-foreground/60 px-1">First impression content shown when users open the widget.</p>
                                         </div>
@@ -286,36 +226,33 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className="space-y-4">
                                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Input Placeholder</Label>
                                             <Input
-
-                                                value={settings.placeholderText}
+                                                value={settings.placeholderText || ''}
                                                 onChange={(e) => updateSetting('placeholderText', e.target.value)}
                                                 placeholder="e.g. Transmit your query..."
-                                                className="h-11"
+                                                className="h-11 bg-background/50"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="pt-8 border-t border-border/40 space-y-6">
-                                        <div className="flex items-center justify-between p-4 border border-border/30 rounded-2xl bg-muted/10 hover:bg-muted/20 transition-all">
+                                    <div className="pt-8 border-t border-border/10 space-y-6">
+                                        <div className="flex items-center justify-between p-5 border border-border/30 rounded-2xl bg-muted/10">
                                             <div className="space-y-1">
-                                                <Label className="text-sm font-bold tracking-tight">Identity Visualization</Label>
-                                                <p className="text-[11px] font-medium text-muted-foreground">Display bot avatar next to responses</p>
+                                                <Label className="text-sm font-bold tracking-tight uppercase">Identity Visualization</Label>
+                                                <p className="text-[10px] font-medium text-muted-foreground/70">Display bot avatar next to responses</p>
                                             </div>
                                             <Switch
                                                 checked={settings.showAvatar}
                                                 onCheckedChange={(checked) => updateSetting('showAvatar', checked)}
-                                                className="data-[state=checked]:bg-primary"
                                             />
                                         </div>
-                                        <div className="flex items-center justify-between p-4 border border-border/30 rounded-2xl bg-muted/10 hover:bg-muted/20 transition-all">
+                                        <div className="flex items-center justify-between p-5 border border-border/30 rounded-2xl bg-muted/10">
                                             <div className="space-y-1">
-                                                <Label className="text-sm font-bold tracking-tight">Temporal Awareness</Label>
-                                                <p className="text-[11px] font-medium text-muted-foreground">Show precise timestamps for audit</p>
+                                                <Label className="text-sm font-bold tracking-tight uppercase">Temporal Awareness</Label>
+                                                <p className="text-[10px] font-medium text-muted-foreground/70">Show precise timestamps for audit</p>
                                             </div>
                                             <Switch
                                                 checked={settings.showTimestamp}
                                                 onCheckedChange={(checked) => updateSetting('showTimestamp', checked)}
-                                                className="data-[state=checked]:bg-primary"
                                             />
                                         </div>
                                     </div>
@@ -329,25 +266,24 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             </div>
                                             <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Spatial Positioning</h3>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-6">
+                                        <div className="grid grid-cols-2 gap-4">
                                             {['bottom-right', 'bottom-left', 'top-right', 'top-left'].map((pos) => (
                                                 <button
                                                     key={pos}
                                                     onClick={() => updateSetting('widgetPosition', pos)}
                                                     className={cn(
-                                                        "group/pos cursor-pointer border-2 rounded-2xl p-4 transition-all flex flex-col items-center gap-3 overflow-hidden",
+                                                        "group/pos cursor-pointer border border-border/20 rounded-2xl p-4 transition-all flex flex-col items-center gap-3",
                                                         settings.widgetPosition === pos
-                                                            ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
-                                                            : "border-border/40 bg-muted/5 hover:border-border/80"
+                                                            ? "bg-primary/10 border-primary shadow-lg shadow-primary/5"
+                                                            : "bg-muted/5 hover:bg-muted/10 border-transparent"
                                                     )}
                                                 >
-                                                    <div className="w-full h-16 bg-muted/40 rounded-xl relative border border-border/20 overflow-hidden">
+                                                    <div className="w-full h-16 bg-background/40 rounded-xl relative border border-border/10">
                                                         <div className={cn(
-                                                            "w-4 h-4 bg-primary rounded-full absolute transition-all group-hover/pos:scale-125",
+                                                            "w-4 h-4 bg-primary rounded-full absolute transition-all group-hover/pos:scale-125 shadow-lg",
                                                             pos.includes('bottom') ? 'bottom-2' : 'top-2',
                                                             pos.includes('right') ? 'right-2' : 'left-2'
                                                         )} />
-                                                        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#000_1px,transparent_1px)] bg-[size:10px_10px]" />
                                                     </div>
                                                     <span className={cn(
                                                         "text-[10px] uppercase font-black tracking-widest transition-colors",
@@ -360,7 +296,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         </div>
                                     </div>
 
-                                    <div className="space-y-6 pt-8 border-t border-border/40">
+                                    <div className="space-y-6 pt-8 border-t border-border/10">
                                         <div className="flex items-center gap-2">
                                             <div className="p-1.5 bg-primary/10 rounded-lg">
                                                 <Palette className="w-4 h-4 text-primary" />
@@ -368,13 +304,13 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Trigger Scale</h3>
                                         </div>
                                         <Select value={settings.widgetButtonSize} onValueChange={(val) => updateSetting('widgetButtonSize', val)}>
-                                            <SelectTrigger className="h-12">
+                                            <SelectTrigger className="h-12 bg-background/50 rounded-2xl">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent className="rounded-xl p-1">
-                                                <SelectItem value="small" className="rounded-lg py-3 font-bold">Compact (48px)</SelectItem>
-                                                <SelectItem value="medium" className="rounded-lg py-3 font-bold">Standard (56px)</SelectItem>
-                                                <SelectItem value="large" className="rounded-lg py-3 font-bold">Prominent (64px)</SelectItem>
+                                            <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                <SelectItem value="small" className="font-bold">Compact (48px)</SelectItem>
+                                                <SelectItem value="medium" className="font-bold">Standard (56px)</SelectItem>
+                                                <SelectItem value="large" className="font-bold">Prominent (64px)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -382,23 +318,14 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                             </div>
                         </ScrollArea>
 
-                        <div className="p-6 border-t border-border/40 bg-card/80 backdrop-blur-xl">
+                        <div className="p-6 border-t border-border/10 bg-background/80 backdrop-blur-xl">
                             <Button
                                 className="w-full h-12 rounded-2xl font-black shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
-                                onClick={handleSave}
-                                disabled={!hasChanges || saving}
+                                onClick={handleSaveLocal}
+                                disabled={!hasChanges}
                             >
-                                {saving ? (
-                                    <span className="flex items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-                                        Deploying...
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center gap-2">
-                                        <Save className="w-4 h-4" />
-                                        Save & Sync Deployment
-                                    </span>
-                                )}
+                                <Save className="w-4 h-4 mr-2" />
+                                Sync Visual Updates
                             </Button>
                         </div>
                     </Card>
@@ -407,181 +334,95 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
 
             {/* Right Column: Preview */}
             <div className="flex-1 w-full xl:sticky xl:top-8 space-y-8">
-                <Card className="p-8 lg:p-12 relative overflow-hidden flex items-center justify-center group/preview border-border/40 min-h-[600px] 2xl:min-h-[750px] bg-muted/5">
-                    {/* Visual Enhancers */}
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -mr-64 -mt-64 transition-all duration-1000 group-hover/preview:bg-primary/10" />
-                    <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] -ml-64 -mb-64 transition-all duration-1000 group-hover/preview:bg-primary/10" />
-                    <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-
-                    {/* Status Bar */}
+                <Card className="p-12 relative overflow-hidden flex items-center justify-center group/preview border-none shadow-2xl min-h-[600px] 2xl:min-h-[750px] bg-muted/5 rounded-[3rem]">
+                    {/* Simulator UI logic same as before but using fixed variables */}
                     <div className="absolute top-6 left-6 flex items-center gap-3">
                         <div className="flex gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-red-400/40" />
-                            <div className="w-2 h-2 rounded-full bg-yellow-400/40" />
-                            <div className="w-2 h-2 rounded-full bg-green-400/40" />
+                            <div className="w-2 h-2 rounded-full bg-red-400" />
+                            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                            <div className="w-2 h-2 rounded-full bg-green-400" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Production Simulator</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">Universal Emulator</span>
                     </div>
 
                     {/* Device Frame */}
-                    <div className="relative w-full h-full max-w-[380px] max-h-[680px] border-[12px] border-slate-950 rounded-[3rem] bg-white shadow-[0_0_100px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col scale-90 lg:scale-100 transition-all duration-500 group-hover/preview:shadow-[0_0_120px_rgba(var(--primary-rgb),0.05)]">
-                        {/* Device Header/Notch */}
-                        <div className="h-4 bg-slate-950 w-full flex justify-center items-start shrink-0">
-                            <div className="w-24 h-4 bg-slate-950 rounded-b-2xl relative">
-                                <div className="absolute bottom-1 left-1.5 w-1 h-1 rounded-full bg-white/10" />
-                                <div className="absolute bottom-1 right-1.5 w-3 h-1 rounded-full bg-white/10" />
-                            </div>
-                        </div>
-
+                    <div className="relative w-full h-full max-w-[380px] border-[12px] border-slate-950 rounded-[3rem] bg-slate-50 shadow-2xl overflow-hidden flex flex-col scale-90 lg:scale-100 transition-all duration-700 aspect-[9/16]">
                         {/* Screen Content */}
                         <div className="flex-1 relative bg-[#F8FAFC] flex flex-col overflow-hidden">
                             {/* Fake Website Mock */}
-                            <div className="p-8 space-y-6 opacity-5 animate-pulse">
+                            <div className="p-8 space-y-6 opacity-[0.05]">
                                 <div className="h-6 bg-slate-900 w-1/3 rounded-full" />
                                 <div className="space-y-4">
                                     <div className="h-10 bg-slate-900 w-full rounded-2xl" />
                                     <div className="h-4 bg-slate-900 w-full rounded-full" />
-                                    <div className="h-4 bg-slate-900 w-5/6 rounded-full" />
                                     <div className="h-4 bg-slate-900 w-4/6 rounded-full" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="h-32 bg-slate-900 w-full rounded-3xl" />
                                     <div className="h-32 bg-slate-900 w-full rounded-3xl" />
                                 </div>
-                                <div className="h-12 bg-slate-900 w-2/3 rounded-2xl" />
                             </div>
 
-                            {/* Widget: Chat Window Overflow Container */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                                {/* Widget: Chat Window */}
-                                <div
-                                    className={cn(
-                                        "absolute flex flex-col shadow-2xl overflow-hidden transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) pointer-events-auto",
-                                        "font-[family-name:var(--widget-font)] bg-[var(--widget-bg)]",
-                                        isPreviewOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-8"
-                                    )}
-                                    style={{
-                                        bottom: settings.widgetPosition?.includes('top') ? 'auto' : '88px',
-                                        top: settings.widgetPosition?.includes('top') ? '88px' : 'auto',
-                                        right: settings.widgetPosition?.includes('left') ? 'auto' : '20px',
-                                        left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
-                                        width: '310px',
-                                        height: '420px',
-                                        borderRadius: '24px',
-                                        border: '1px solid rgba(0,0,0,0.05)',
-                                        // Dynamic Theme Variables
-                                        '--widget-primary': settings.primaryColor,
-                                        '--widget-bg': settings.backgroundColor,
-                                        '--widget-bot-bg': settings.botMessageColor,
-                                        '--widget-bot-text': settings.botMessageTextColor,
-                                        '--widget-font': settings.fontFamily,
-                                    } as React.CSSProperties}
-                                >
-                                    {/* Header */}
-                                    <div className="px-5 py-4 flex items-center justify-between text-white shrink-0 shadow-lg relative z-20 bg-[var(--widget-primary)]">
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative">
-                                                {settings.showAvatar && (
-                                                    <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-sm font-black border border-white/20">
-                                                        AI
-                                                    </div>
-                                                )}
-                                                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-primary ring-2 ring-black/5" />
-                                            </div>
-                                            <div>
-                                                <div className="font-black text-sm tracking-tight leading-none mb-1">AI Assistant</div>
-                                                <div className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Always Active</div>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => setIsPreviewOpen(false)} className="w-8 h-8 rounded-xl bg-black/10 hover:bg-black/20 flex items-center justify-center transition-colors">
-                                            <X className="w-4 h-4" />
-                                        </button>
+                            {/* Widget: Chat window (UI only) */}
+                            <div
+                                className={cn(
+                                    "absolute flex flex-col shadow-2xl overflow-hidden transition-all duration-500",
+                                    isPreviewOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 translate-y-4 shadow-none pointer-events-none"
+                                )}
+                                style={{
+                                    bottom: settings.widgetPosition?.includes('top') ? 'auto' : '88px',
+                                    top: settings.widgetPosition?.includes('top') ? '88px' : 'auto',
+                                    right: settings.widgetPosition?.includes('left') ? 'auto' : '20px',
+                                    left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
+                                    width: '310px',
+                                    height: '420px',
+                                    borderRadius: '24px',
+                                    backgroundColor: settings.backgroundColor,
+                                    border: '1px solid rgba(0,0,0,0.05)',
+                                    zIndex: 100
+                                }}
+                            >
+                                <div className="px-5 py-4 flex items-center justify-between text-white shadow-xl" style={{ backgroundColor: settings.primaryColor || '#667eea' }}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center text-[10px] font-black uppercase">AI</div>
+                                        <div className="text-sm font-black tracking-tight">AI Protocol</div>
                                     </div>
-
-                                    {/* Messages View */}
-                                    <div className="flex-1 p-5 space-y-5 overflow-y-auto scrollbar-hide relative bg-[radial-gradient(circle_at_top_right,rgba(0,0,0,0.02),transparent)]">
-                                        {/* Bot Message */}
-                                        <div className="flex gap-3 animate-in slide-in-from-left duration-300">
-                                            {settings.showAvatar && (
-                                                <div
-                                                    className="w-8 h-8 rounded-xl shrink-0 flex items-center justify-center text-[10px] font-black text-white shadow-lg bg-[var(--widget-primary)]"
-                                                >
-                                                    AI
-                                                </div>
-                                            )}
-                                            <div className="space-y-1.5 max-w-[85%]">
-                                                <div
-                                                    className="p-3.5 rounded-2xl rounded-tl-none text-sm font-medium shadow-sm border border-black/[0.03] bg-[var(--widget-bot-bg)] text-[var(--widget-bot-text)]"
-                                                >
-                                                    {settings.welcomeMessage}
-                                                </div>
-                                                {settings.showTimestamp && (
-                                                    <div className="text-[10px] font-bold text-muted-foreground/50 ml-1.5 uppercase tracking-wider">Just Now</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* User Message Mock */}
-                                        <div className="flex gap-3 flex-row-reverse animate-in slide-in-from-right duration-300 delay-150">
-                                            <div className="space-y-1.5 max-w-[85%]">
-                                                <div
-                                                    className="p-3.5 rounded-2xl rounded-tr-none text-sm font-bold text-white shadow-xl shadow-primary/20 bg-[var(--widget-primary)]"
-                                                >
-                                                    How can you help my business?
-                                                </div>
-                                            </div>
+                                    <div className="w-8 h-8 rounded-xl bg-black/10 flex items-center justify-center" onClick={() => setIsPreviewOpen(false)}>
+                                        <X className="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <div className="flex-1 p-5 space-y-4">
+                                    <div className="flex gap-3">
+                                        {settings.showAvatar && <div className="w-8 h-8 rounded-xl bg-slate-100 border flex items-center justify-center text-[8px] font-black uppercase">AI</div>}
+                                        <div className="p-3.5 rounded-2xl rounded-tl-none text-[13px] font-medium leading-relaxed max-w-[85%]" style={{ backgroundColor: settings.botMessageColor, color: settings.botMessageTextColor }}>
+                                            {settings.welcomeMessage}
                                         </div>
                                     </div>
-
-                                    {/* Input Composer */}
-                                    <div className="p-4 border-t border-black/[0.05] bg-white/80 backdrop-blur-md shrink-0 relative z-20">
-                                        <div className="relative group/input">
-                                            <input
-                                                placeholder={settings.placeholderText}
-                                                className="w-full pl-5 pr-12 py-3.5 rounded-2xl border border-black/[0.05] bg-[#F1F5F9] text-sm font-medium focus:outline-none focus:ring-2 ring-primary/10 transition-all focus:bg-white focus:border-primary/20"
-                                                readOnly
-                                            />
-                                            <div
-                                                className="absolute right-1.5 top-1.5 bottom-1.5 w-10 flex items-center justify-center transition-all opacity-80 group-focus-within/input:opacity-100 rounded-xl bg-[var(--widget-primary)]/10"
-                                            >
-                                                <Send className="w-4 h-4 text-[var(--widget-primary)]" />
-                                            </div>
-                                        </div>
-                                        <div className="mt-3 flex items-center justify-center gap-1.5 opacity-30 group-hover:opacity-60 transition-opacity">
-                                            <div className="flex gap-0.5">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-950" />
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                            </div>
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Verified by OmniAI Protocol</span>
-                                        </div>
+                                </div>
+                                <div className="p-4 border-t bg-white">
+                                    <div className="h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center px-4">
+                                        <span className="text-[11px] font-medium text-slate-400">{settings.placeholderText}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Widget: Trigger Button */}
+                            {/* Trigger */}
                             <button
                                 onClick={() => setIsPreviewOpen(!isPreviewOpen)}
-                                className="absolute shadow-2xl transition-all duration-500 hover:scale-110 active:scale-95 flex items-center justify-center group/btn shadow-primary/20"
+                                className="absolute shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 z-[101]"
                                 style={{
                                     bottom: settings.widgetPosition?.includes('top') ? 'auto' : '20px',
                                     top: settings.widgetPosition?.includes('top') ? '20px' : 'auto',
                                     right: settings.widgetPosition?.includes('left') ? 'auto' : '20px',
                                     left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
-                                    width: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '52px' : '60px',
-                                    height: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '52px' : '60px',
-                                    backgroundColor: settings.primaryColor, // Keep for now as it's separate from container scope
+                                    width: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '50px' : '60px',
+                                    height: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '50px' : '60px',
+                                    backgroundColor: settings.primaryColor || '#667eea',
                                     borderRadius: '24px',
                                     color: '#ffffff'
                                 }}
                             >
-                                <div className="relative">
-                                    {isPreviewOpen ? (
-                                        <X className="w-7 h-7 animate-in fade-in zoom-in duration-300" />
-                                    ) : (
-                                        <MessageSquare className="w-7 h-7 animate-in fade-in zoom-in duration-300" />
-                                    )}
-                                </div>
-                                <div className="absolute inset-0 rounded-[24px] ring-4 ring-white/20 scale-0 group-hover/btn:scale-100 transition-transform duration-500" />
+                                {isPreviewOpen ? <X className="w-7 h-7" /> : <MessageSquare className="w-7 h-7" />}
                             </button>
                         </div>
                     </div>

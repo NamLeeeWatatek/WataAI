@@ -4,6 +4,8 @@ import {
   UserAiProviderConfig,
   WorkspaceAiProviderConfig,
   AiProvider,
+  AiUsageLog,
+  AiUsageStats,
 } from '../../domain/ai-provider';
 
 export abstract class AiProviderConfigRepository {
@@ -17,7 +19,7 @@ export abstract class AiProviderConfigRepository {
     data: {
       providerId: string;
       displayName: string;
-      config: Record<string, any>;
+      config: Record<string, unknown>;
       modelList: string[];
     },
   ): Promise<UserAiProviderConfig>;
@@ -43,7 +45,7 @@ export abstract class AiProviderConfigRepository {
     data: {
       providerId: string;
       displayName: string;
-      config: Record<string, any>;
+      config: Record<string, unknown>;
       modelList: string[];
     },
   ): Promise<WorkspaceAiProviderConfig>;
@@ -76,24 +78,24 @@ export abstract class AiProviderConfigRepository {
       provider?: string;
       limit?: number;
     },
-  ): Promise<any[]>;
+  ): Promise<AiUsageLog[]>;
 
   abstract getUsageStats(
     workspaceId: string,
     period: 'day' | 'week' | 'month' | 'year',
-  ): Promise<any>;
+  ): Promise<AiUsageStats>;
 
   abstract getApiKeyByProviderId(
     providerId: string,
     scope?: 'user' | 'workspace' | 'system',
-  ): Promise<any>;
+  ): Promise<NullableType<string>>;
   abstract getWorkspaceProviders(workspaceId: string): Promise<AiProvider[]>;
   abstract getUserProviders(userId: string): Promise<AiProvider[]>;
   abstract getConfigByProviderId(
     providerId: string,
     scope: 'user' | 'workspace',
     scopeId: string,
-  ): Promise<any>;
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>>;
 
   // Usage logs
   abstract logUsage(data: {
@@ -104,5 +106,5 @@ export abstract class AiProviderConfigRepository {
     inputTokens: number;
     outputTokens: number;
     cost?: number;
-  }): Promise<any>;
+  }): Promise<AiUsageLog>;
 }

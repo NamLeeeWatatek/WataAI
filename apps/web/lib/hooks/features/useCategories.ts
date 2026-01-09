@@ -24,7 +24,6 @@ export function useCategories(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
             toast.success('Category created successfully');
         },
-        onError: () => toast.error('Failed to create category'),
     });
 
     const updateMutation = useMutation({
@@ -33,7 +32,6 @@ export function useCategories(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
             toast.success('Category updated successfully');
         },
-        onError: () => toast.error('Failed to update category'),
     });
 
     const deleteMutation = useMutation({
@@ -42,7 +40,6 @@ export function useCategories(params: any = {}) {
             queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
             toast.success('Category deleted successfully');
         },
-        onError: () => toast.error('Failed to delete category'),
     });
 
     return {

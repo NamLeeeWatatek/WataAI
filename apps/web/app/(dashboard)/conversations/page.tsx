@@ -50,6 +50,7 @@ import { useBotConversations, useBotConversation, botConversationKeys } from '@/
 import { useChannels } from '@/lib/hooks/features/useChannels';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { MessageRole } from '@/lib/types/conversations';
+import type { SocketConversation, SocketMessage } from '@/lib/types/socket';
 
 
 type Conversation = ChannelConversation;
@@ -90,26 +91,28 @@ const formatRelativeTime = (dateString: string): string => {
   }
 };
 
-const mapConversation = (conv: any): Conversation => {
+const mapConversation = (conv: Record<string, unknown>): Conversation => {
   // ✅ Try multiple sources for last message
   let lastMessage = 'No messages yet';
 
-  if (conv.lastMessage) {
+  if (typeof conv.lastMessage === 'string') {
     lastMessage = conv.lastMessage;
-  } else if (conv.last_message) {
+  } else if (typeof conv.last_message === 'string') {
     lastMessage = conv.last_message;
-  } else if (conv.metadata?.lastMessage) {
+  } else if (isRecord(conv.metadata) && typeof conv.metadata.lastMessage === 'string') {
     lastMessage = conv.metadata.lastMessage;
-  } else if (conv.messages && conv.messages.length > 0) {
+  } else if (Array.isArray(conv.messages) && conv.messages.length > 0) {
     const lastMsg = conv.messages[conv.messages.length - 1];
-    lastMessage = lastMsg.content || lastMsg.text || 'No messages yet';
+    if (isRecord(lastMsg)) {
+      lastMessage = String(lastMsg.content || lastMsg.text || 'No messages yet');
+    }
   }
 
 
   // ✅ FIX: Ensure valid date
   let lastMessageAt = new Date().toISOString();
   const rawDate = conv.lastMessageAt || conv.last_message_at || conv.updatedAt || conv.updated_at || conv.createdAt || conv.created_at;
-  if (rawDate) {
+  if (typeof rawDate === 'string' || typeof rawDate === 'number') {
     try {
       const parsedDate = new Date(rawDate);
       if (!isNaN(parsedDate.getTime())) {
@@ -120,22 +123,29 @@ const mapConversation = (conv: any): Conversation => {
     }
   }
 
+  const getString = (val: unknown): string => typeof val === 'string' ? val : '';
+  const getNumber = (val: unknown): number => typeof val === 'number' ? val : 0;
+
   return {
-    id: conv.id,
-    externalId: conv.externalId || conv.external_id || '',
-    channelId: conv.channelId || conv.channel_id || '',
-    channelType: conv.channelType || conv.channel_type || 'web',
-    channelName: conv.channelName || conv.channel_name || conv.channelType || 'Unknown',
-    customerName: conv.customerName || conv.contactName || conv.contact_name || 'Unknown',
-    customerAvatar: conv.customerAvatar || conv.contactAvatar || conv.contact_avatar,
+    id: getString(conv.id),
+    externalId: getString(conv.externalId || conv.external_id),
+    channelId: getString(conv.channelId || conv.channel_id),
+    channelType: getString(conv.channelType || conv.channel_type || 'web'),
+    channelName: getString(conv.channelName || conv.channel_name || conv.channelType || 'Unknown'),
+    customerName: getString(conv.customerName || conv.contactName || conv.contact_name || 'Unknown'),
+    customerAvatar: getString(conv.customerAvatar || conv.contactAvatar || conv.contact_avatar),
     lastMessage,
     lastMessageAt,
-    unreadCount: conv.unreadCount || conv.unread_count || 0,
-    status: conv.status === 'active' ? 'open' : conv.status || 'open',
-    assignedTo: conv.assignedTo || conv.assigned_to,
-    metadata: conv.metadata || {},
+    unreadCount: getNumber(conv.unreadCount || conv.unread_count),
+    status: (['open', 'closed', 'pending'] as const).includes(conv.status as any) ? (conv.status as 'open' | 'closed' | 'pending') : 'open',
+    assignedTo: getString(conv.assignedTo || conv.assigned_to),
+    metadata: isRecord(conv.metadata) ? conv.metadata : {},
   };
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 const getChannelIcon = (type: string) => {
   const icons: Record<string, JSX.Element> = {
@@ -216,12 +226,12 @@ function ConversationsPageContent() {
   const { channels: rawChannels, isLoading: channelsLoading } = useChannels(currentWorkspace?.id);
 
   const channels = useMemo(() => {
-    return (rawChannels || []).map((channel: any) => ({
+    return (rawChannels || []).map((channel) => ({
       id: channel.id,
-      name: channel.name || channel.channelName || 'Unknown',
-      type: channel.type || channel.channelType || 'unknown',
-      icon: getChannelIcon(channel.type || channel.channelType || 'unknown'),
-      color: getChannelColor(channel.type || channel.channelType || 'unknown'),
+      name: channel.name || (channel as any).channelName || 'Unknown',
+      type: channel.type || (channel as any).channelType || 'unknown',
+      icon: getChannelIcon(channel.type || (channel as any).channelType || 'unknown'),
+      color: getChannelColor(channel.type || (channel as any).channelType || 'unknown'),
       unreadCount: 0,
     }));
   }, [rawChannels]);
@@ -248,19 +258,19 @@ function ConversationsPageContent() {
   }, [conversationsResponse]);
 
   // Real-time updates handlers
-  const handleConversationUpdate = useCallback((updatedConversation: any) => {
+  const handleConversationUpdate = useCallback((updatedConversation: SocketConversation) => {
     queryClient.setQueryData<{ items: Conversation[]; total: number }>(conversationsQueryKey, (oldData: any) => {
       const prev = oldData?.items || [];
       const exists = prev.find((c: Conversation) => c.id === updatedConversation.id);
 
       // Update data
-      const mappedUpdated = mapConversation(updatedConversation);
+      const mappedUpdated = mapConversation(updatedConversation as unknown as Record<string, unknown>);
       let newData: Conversation[];
 
       if (exists) {
         newData = prev.map((c: Conversation) =>
           c.id === updatedConversation.id
-            ? { ...c, ...mappedUpdated, lastMessageAt: updatedConversation.lastMessageAt || c.lastMessageAt }
+            ? { ...c, ...mappedUpdated, lastMessageAt: updatedConversation.updatedAt || c.lastMessageAt }
             : c
         );
       } else {
@@ -284,7 +294,7 @@ function ConversationsPageContent() {
     if (notificationPrefs.onlyWhenInactive && isWindowFocused) return;
 
     if (!isCurrentlyViewing) {
-      const newMessage = mapConversation(updatedConversation);
+      const newMessage = mapConversation(updatedConversation as unknown as Record<string, unknown>);
       // Only notify for new messages from customers
       if (newMessage.lastMessage && newMessage.lastMessage !== 'No messages yet') {
         const customerName = newMessage.customerName || 'Customer';
@@ -314,7 +324,7 @@ function ConversationsPageContent() {
     }
   }, [selectedId, notificationPrefs, permission, showNotification, playSound, queryClient, conversationsQueryKey]);
 
-  const handleNewMessage = useCallback((message: any) => {
+  const handleNewMessage = useCallback((message: SocketMessage) => {
     queryClient.setQueryData<{ items: Conversation[]; total: number }>(conversationsQueryKey, (oldData: any) => {
       const prev = oldData?.items || [];
       const conversationId = message.conversationId;
@@ -325,8 +335,8 @@ function ConversationsPageContent() {
         const updated = [
           {
             ...conversation,
-            lastMessage: message.content,
-            lastMessageAt: message.sentAt || message.createdAt || new Date().toISOString(),
+            lastMessage: String(message.content || ''),
+            lastMessageAt: String(message.sentAt || message.createdAt || new Date().toISOString()),
             unreadCount: (conversation.unreadCount || 0) + 1,
           },
           ...prev.filter((c: Conversation) => c.id !== conversationId),
@@ -600,10 +610,10 @@ function ConversationsPageContent() {
           </div>
 
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto">
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="closed">Closed</TabsTrigger>
-              <TabsTrigger value="all">All</TabsTrigger>
+            <TabsList variant="pills" className="w-full justify-between">
+              <TabsTrigger value="active" variant="pills" className="flex-1">Active</TabsTrigger>
+              <TabsTrigger value="closed" variant="pills" className="flex-1">Closed</TabsTrigger>
+              <TabsTrigger value="all" variant="pills" className="flex-1">All</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

@@ -283,6 +283,8 @@ export default function BotsPage() {
                             hasNextPage: currentPage < Math.ceil(totalItems / pageSize)
                         }}
                         onPageChange={setCurrentPage}
+                        onPageSizeChange={setPageSize}
+                        pageSizeOptions={[12, 24, 36, 48]}
                     />
                 </div>
             )}

@@ -7,7 +7,7 @@ interface OptionItem {
     label: string
     value: string | number
     icon?: string
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export function FieldMultiSelect({ field, value, onChange }: DynamicFormFieldProps) {

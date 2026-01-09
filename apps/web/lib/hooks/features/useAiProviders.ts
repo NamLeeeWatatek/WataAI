@@ -1,7 +1,13 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { aiProvidersApi, type AiProviderMetadata } from '@/lib/api/ai-providers';
+import {
+    aiProvidersApi,
+    type AiProviderMetadata,
+    type CreateUserAiProviderDto,
+    type UpdateUserAiProviderDto
+} from '@/lib/api/ai-providers';
+import type { AiProviderConfig, UserAiProviderConfig } from '@/lib/types/ai-provider';
 import toast from '@/lib/toast';
 import axiosClient from '@/lib/axios-client';
 
@@ -26,6 +32,13 @@ export interface SystemSettings {
     isActive: boolean;
 }
 
+export interface EnhancedUserConfig extends UserAiProviderConfig {
+    providerMetadata?: AiProviderMetadata;
+}
+
+// standard AxiosError is imported if needed, but we use global handling
+
+
 export function useAiProviders() {
     const queryClient = useQueryClient();
 
@@ -45,26 +58,20 @@ export function useAiProviders() {
     });
 
     const createConfigMutation = useMutation({
-        mutationFn: (data: any) => Promise.resolve(aiProvidersApi.createUserConfig(data)),
+        mutationFn: (data: CreateUserAiProviderDto) => Promise.resolve(aiProvidersApi.createUserConfig(data)),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('Neural gateway initialized');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Failed to initialize gateway');
-        }
     });
 
     const updateConfigMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => Promise.resolve(aiProvidersApi.updateUserConfig(id, data)),
+        mutationFn: ({ id, data }: { id: string; data: UpdateUserAiProviderDto }) => Promise.resolve(aiProvidersApi.updateUserConfig(id, data)),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfig(variables.id) });
             toast.success('Neural configuration synchronized');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Failed to synchronize configuration');
-        }
     });
 
     const deleteConfigMutation = useMutation({
@@ -73,9 +80,6 @@ export function useAiProviders() {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('Neural link purged');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Failed to purge link');
-        }
     });
 
     const verifyConfigMutation = useMutation({
@@ -84,9 +88,6 @@ export function useAiProviders() {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('API Signature verified');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Verification protocol failed');
-        }
     });
 
     const syncModelsMutation = useMutation({
@@ -98,13 +99,10 @@ export function useAiProviders() {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('Entity models synchronized');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Model synchronization failed');
-        }
     });
 
     const verifyModelsMutation = useMutation({
-        mutationFn: ({ providerId, config }: { providerId: string; config: any }) =>
+        mutationFn: ({ providerId, config }: { providerId: string; config: AiProviderConfig }) =>
             aiProvidersApi.verifyModels(providerId, config),
     });
 
@@ -114,14 +112,11 @@ export function useAiProviders() {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.systemSettings() });
             toast.success('Matrix parameters updated');
         },
-        onError: (err: any) => {
-            toast.error(err.response?.data?.message || 'Failed to update matrix');
-        }
     });
 
-    const enhancedUserConfigs = (userConfigsQuery.data || []).map((config: any) => ({
+    const enhancedUserConfigs: EnhancedUserConfig[] = (userConfigsQuery.data || []).map((config) => ({
         ...config,
-        provider: (availableQuery.data || []).find((p: any) => p.id === config.providerId),
+        providerMetadata: (availableQuery.data || []).find((p) => p.id === config.providerId),
     }));
 
     return {

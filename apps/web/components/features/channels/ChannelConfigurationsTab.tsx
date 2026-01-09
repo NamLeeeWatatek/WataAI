@@ -46,22 +46,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import type { IntegrationConfig, CreateIntegrationDto, UpdateIntegrationDto } from '@/lib/types/channel';
 
-interface IntegrationConfig {
-  id?: string;
-  provider: string;
-  name: string;
-  client_id: string;
-  client_secret: string;
-  scopes?: string;
-  verify_token?: string;
-  is_active: boolean;
-}
 
 interface ChannelConfigurationsTabProps {
   configs: IntegrationConfig[];
   isLoading: boolean;
-  onSaveConfig: (config: any) => Promise<any>;
+  onSaveConfig: (config: CreateIntegrationDto | UpdateIntegrationDto) => Promise<void>;
   onDeleteConfig: (id: string) => void;
   onConnect: (provider: string, configId?: string) => void;
 }
@@ -195,13 +186,11 @@ export function ChannelConfigurationsTab({
     }
 
     // Prepare data by mapping snake_case to camelCase for the backend
-    const payload: any = {
-      id: configForm.id,
+    const payload: CreateIntegrationDto | (UpdateIntegrationDto & { id?: string }) = {
       provider: configForm.provider,
       name: configForm.name,
       clientId: configForm.client_id,
       scopes: configForm.scopes,
-      verifyToken: configForm.verify_token,
       isActive: true // Default to active
     };
 

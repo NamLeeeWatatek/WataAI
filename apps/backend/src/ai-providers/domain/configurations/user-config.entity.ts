@@ -11,6 +11,7 @@ import {
   ConnectionConfig,
   ModelSettings,
 } from '../interfaces';
+import { ProviderConfig } from '../ai-provider';
 
 export class UserProviderConfig implements IUserProviderConfig {
   @ApiProperty({ type: String })
@@ -33,7 +34,7 @@ export class UserProviderConfig implements IUserProviderConfig {
     description: 'Provider-specific configuration',
     additionalProperties: true,
   })
-  config: Record<string, any>;
+  config: ProviderConfig;
 
   @ApiProperty({
     type: [String],
@@ -94,7 +95,7 @@ export class UserProviderConfig implements IUserProviderConfig {
     return true; // In reality would check SecureApiKey existence
   }
 
-  updateConfig(updates: Partial<Record<string, any>>): void {
+  updateConfig(updates: Partial<ProviderConfig>): void {
     this.config = { ...this.config, ...updates };
     this.updatedAt = new Date();
   }
@@ -138,7 +139,7 @@ export class UserProviderConfig implements IUserProviderConfig {
     userId: string,
     providerId: string,
     displayName: string,
-    config: Record<string, any>,
+    config: ProviderConfig,
     modelList: string[],
   ): UserProviderConfig {
     const userConfig = new UserProviderConfig();

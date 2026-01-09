@@ -7,7 +7,7 @@ import {
 import { GoogleGenerativeAI, Tool } from '@google/generative-ai';
 import { OpenAI, ClientOptions } from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { ChatMessage } from '../domain/ai-provider';
+import { ChatMessage, ProviderConfig } from '../domain/ai-provider';
 
 @Injectable()
 export class AiModelService {
@@ -206,13 +206,14 @@ export class AiModelService {
 
   async verifyConnection(
     providerKey: string,
-    config: Record<string, any>,
+    untypedConfig: Record<string, unknown>,
   ): Promise<void> {
+    const config = untypedConfig as ProviderConfig;
     try {
       const key = providerKey.toLowerCase();
 
       if (key === 'anthropic') {
-        const anthropic = new Anthropic({ apiKey: config.apiKey });
+        const anthropic = new Anthropic({ apiKey: config.apiKey || '' });
         await anthropic.messages.create({
           model: 'claude-3-haiku-20240307',
           max_tokens: 1,
@@ -222,7 +223,7 @@ export class AiModelService {
       }
 
       if (key === 'google') {
-        const genAI = new GoogleGenerativeAI(config.apiKey);
+        const genAI = new GoogleGenerativeAI(config.apiKey || '');
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         await model.generateContent('Hi');
         return;
@@ -314,8 +315,8 @@ export class AiModelService {
         baseURL = baseURL.replace('localhost', '127.0.0.1');
       }
 
-      const clientConfig: ClientOptions = { apiKey };
-      if (baseURL) clientConfig.baseURL = baseURL;
+      const clientConfig: ClientOptions = { apiKey: apiKey || '' };
+      if (baseURL) clientConfig.baseURL = baseURL as string;
 
       const client = new OpenAI(clientConfig);
       await client.models.list();
@@ -330,15 +331,16 @@ export class AiModelService {
 
   async fetchRemoteModels(
     providerKey: string,
-    config: Record<string, any>,
+    untypedConfig: Record<string, unknown>,
   ): Promise<string[]> {
+    const config = untypedConfig as ProviderConfig;
     try {
       const key = providerKey.toLowerCase();
 
       if (key === 'openai') {
         const client = new OpenAI({
-          apiKey: config.apiKey,
-          baseURL: config.baseUrl,
+          apiKey: config.apiKey || '',
+          baseURL: config.baseUrl as string,
         });
         const list = await client.models.list();
         return list.data.map((m) => m.id);
@@ -494,7 +496,7 @@ export class AiModelService {
     providerConfigId?: string;
     tone?: string;
     style?: string;
-    additionalContext?: Record<string, any>;
+    additionalContext?: Record<string, unknown>;
   }): Promise<{
     prompt: string;
     improvements: string[];

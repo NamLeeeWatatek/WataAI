@@ -33,7 +33,7 @@ import { templatesApi } from '@/lib/api/templates';
 import { Template } from '@/lib/types/template';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
-import { aiProvidersApi } from '@/lib/api/ai-providers';
+import { aiProvidersApi, type AiModelProvider } from '@/lib/api/ai-providers';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/Checkbox';
 
@@ -41,15 +41,6 @@ interface ExecutionConfigProps {
     config: ExecutionFlow;
     onChange: (config: ExecutionFlow) => void;
     availableFields?: FormField[];
-}
-
-interface AiModelProvider {
-    providerId: string;
-    providerKey: string;
-    providerName: string;
-    displayName: string;
-    configId?: string;
-    models: string[];
 }
 
 export function ExecutionConfig({ config, onChange, availableFields = [] }: ExecutionConfigProps) {
@@ -214,10 +205,10 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
                     )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                    {fields.map(f => (
+                    {fields.map((f, idx) => (
                         <button
                             type="button"
-                            key={f.name}
+                            key={`${f.name}-${idx}`}
                             onClick={() => copyToClipboard(f.name)}
                             className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border hover:border-primary hover:text-primary transition-all group"
                             title={`Click to copy {{${f.name}}}`}
@@ -274,7 +265,7 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
                             <SelectContent>
                                 {providers.map((p) => (
                                     <SelectItem key={p.providerId + (p.configId || '')} value={p.providerKey}>
-                                        {p.providerName} {p.displayName ? `(${p.displayName})` : ''}
+                                        {p.providerName}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

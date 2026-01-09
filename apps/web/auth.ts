@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import Facebook from "next-auth/providers/facebook"
 import { authConfig } from "@/auth.config"
+import { logger } from "@/lib/logger"
 
 import { UserRole } from "./types/next-auth"
 
@@ -40,7 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!response.ok) {
             const error = await response.text()
-            console.error('[NextAuth] Login failed:', error)
+            logger.error('[NextAuth] Login failed:', error)
             return null
           }
 
@@ -72,7 +73,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             workspaces: [],
           }
         } catch (error) {
-          console.error('[NextAuth] Authorize error:', error)
+          logger.error('[NextAuth] Authorize error:', error)
           return null
         }
       },

@@ -35,9 +35,11 @@ export function ActiveJobsWidget() {
                     )}
                 >
                     {isMinimized ? (
-                        <div
+                        <button
+                            type="button"
                             onClick={() => setIsMinimized(false)}
                             className="w-full h-full bg-primary flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors relative"
+                            aria-label="Expand activity panel"
                         >
                             {pendingCount > 0 ? (
                                 <Loader2 className="w-5 h-5 text-primary-foreground" />
@@ -49,12 +51,17 @@ export function ActiveJobsWidget() {
                                     {pendingCount}
                                 </span>
                             )}
-                        </div>
+                        </button>
                     ) : (
                         <Card className="w-full overflow-hidden flex flex-col">
                             {/* Header */}
-                            <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30 cursor-pointer" onClick={() => setIsMinimized(true)}>
-                                <div className="flex items-center gap-2">
+                            <div className="p-4 border-b border-border/50 flex items-center justify-between bg-muted/30">
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-2 cursor-pointer"
+                                    onClick={() => setIsMinimized(true)}
+                                    aria-label="Minimize activity panel"
+                                >
                                     <div className="bg-primary/10 p-1.5 rounded-lg">
                                         <History className="w-4 h-4 text-primary" />
                                     </div>
@@ -62,7 +69,7 @@ export function ActiveJobsWidget() {
                                     <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 flex items-center justify-center rounded-full text-[10px]">
                                         {activeJobs.length}
                                     </Badge>
-                                </div>
+                                </button>
                                 <div className="flex items-center gap-1">
                                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}>
                                         <Minimize2 className="w-3.5 h-3.5" />

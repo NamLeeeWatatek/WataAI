@@ -1,6 +1,7 @@
 import type { NextAuthConfig, Session, User, Account } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { UserRole, WorkspaceEntity } from "./types/next-auth"
+import { logger } from "@/lib/logger"
 
 /**
  * Extended User for Authentication internal usage
@@ -26,7 +27,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
     // 1. If a refresh is already in progress for this token, reuse that promise
     if (refreshLocks.has(key)) {
-        console.log("[Auth] Refresh already in progress for this token, joining...");
+        logger.debug("[Auth] Refresh already in progress for this token, joining...");
         return refreshLocks.get(key)!;
     }
 
@@ -46,7 +47,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error("[Auth] Token refresh failed with status:", response.status, errorData);
+                logger.error("[Auth] Token refresh failed with status:", response.status, errorData);
                 throw new Error("RefreshAccessTokenError");
             }
 
@@ -61,7 +62,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 error: undefined
             }
         } catch (error) {
-            console.error("[Auth] Token refresh failure:", error instanceof Error ? error.message : "Unknown error")
+            logger.error("[Auth] Token refresh failure:", error instanceof Error ? error.message : "Unknown error")
             return {
                 ...token,
                 error: "RefreshAccessTokenError",
@@ -153,7 +154,7 @@ export const authConfig = {
                             workspaces: data.workspaces || [],
                         }
                     } catch (error) {
-                        console.error("[Auth] Social login exchange failed", error)
+                        logger.error("[Auth] Social login exchange failed", error)
                         return { ...token, error: "SocialLoginError" }
                     }
                 }
@@ -180,12 +181,13 @@ export const authConfig = {
             }
 
             // 3. Access token has expired or is about to expire, try to update it
-            console.log("[Auth] Token expiring soon, triggering refresh...");
+            logger.debug("[Auth] Token expiring soon, triggering refresh...");
             return refreshAccessToken(token)
         },
         async session({ session, token }: { session: Session; token: JWT }) {
             if (token.error) {
-                return null as any // Forces logout on client if refresh failed
+                // Return session with error flag, client should handle logout
+                return { ...session, error: token.error }
             }
 
             if (session.user) {
