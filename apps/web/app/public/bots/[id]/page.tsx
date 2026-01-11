@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
+import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
 
 export default function PublicBotPage() {
     const params = useParams()
@@ -222,7 +223,7 @@ export default function PublicBotPage() {
                                     color: msg.role === 'user' ? 'white' : '#1f2937',
                                     border: msg.role === 'user' ? 'none' : '1px solid #e5e7eb',
                                 }}>
-                                    {msg.content}
+                                    <MarkdownRenderer content={msg.content} />
                                 </div>
                             </div>
                         ))}

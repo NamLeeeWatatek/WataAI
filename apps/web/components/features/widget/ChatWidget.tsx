@@ -5,7 +5,7 @@ import { MessageCircle, X, SendHorizontal, Sparkles, AlertCircle } from 'lucide-
 import { MessageRole } from '@/lib/types/conversations'
 import { Media } from '@/components/ui/Media'
 import { cn } from '@/lib/utils'
-import ReactMarkdown from 'react-markdown'
+import { MarkdownRenderer } from './MarkdownRenderer'
 import { usePublicChat } from '@/lib/hooks/features/usePublicChat'
 
 interface ChatWidgetProps {
@@ -180,9 +180,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                                 : (config.theme?.botMessageTextColor || undefined)
                                         }}
                                     >
-                                        <div className="prose prose-sm dark:prose-invert max-w-none break-words leading-relaxed">
-                                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                        </div>
+                                        <MarkdownRenderer content={msg.content} />
 
                                         {config.theme?.showTimestamp && (
                                             <p className={cn(
