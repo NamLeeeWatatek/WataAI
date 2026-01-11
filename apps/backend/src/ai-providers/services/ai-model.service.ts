@@ -204,6 +204,251 @@ export class AiModelService {
     }
   }
 
+  async chatWithGoogleStream(
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+    useTools?: boolean,
+  ): Promise<AsyncGenerator<string>> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const chat = genAI.getGenerativeModel({ model });
+
+    const systemMessage = messages.find((m) => m.role === 'system');
+    const relevantMessages = messages.filter((m) => m.role !== 'system');
+    if (relevantMessages.length === 0) {
+      // eslint-disable-next-line require-yield
+      async function* empty() { return; }
+      return empty();
+    }
+
+    const lastMessage = relevantMessages[relevantMessages.length - 1];
+    const historyMessages = relevantMessages.slice(0, -1);
+
+    const history = historyMessages.map((m) => ({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }],
+    }));
+
+    const tools: Tool[] | undefined = useTools
+      ? ([{ googleSearch: {} }] as unknown as Tool[])
+      : undefined;
+
+    const chatSession = chat.startChat({
+      history,
+      systemInstruction: systemMessage?.content,
+      tools: tools,
+    });
+
+    const result = await chatSession.sendMessageStream(lastMessage.content);
+
+    async function* streamGenerator() {
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) yield text;
+      }
+    }
+    return streamGenerator();
+  }
+
+  async chatWithOpenAIStream(
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+    baseURL?: string,
+  ): Promise<AsyncGenerator<string>> {
+    const clientConfig: ClientOptions = { apiKey };
+    if (baseURL) {
+      clientConfig.baseURL = baseURL.endsWith('/v1')
+        ? baseURL
+        : `${baseURL.replace(/\/$/, '')}/v1`;
+    }
+    const openai = new OpenAI(clientConfig);
+
+    try {
+      const sanitizedMessages = messages.map((m) => ({
+        role: m.role,
+        content: m.content || '',
+      }));
+
+      const stream = await openai.chat.completions.create({
+        model,
+        messages: sanitizedMessages,
+        stream: true,
+      });
+
+      async function* streamGenerator() {
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) yield content;
+        }
+      }
+      return streamGenerator();
+    } catch (error) {
+      this.logger.error(`OpenAI Stream Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(`OpenAI Error: ${error.message}`);
+    }
+  }
+
+  async chatWithAnthropicStream(
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+  ): Promise<AsyncGenerator<string>> {
+    const anthropic = new Anthropic({ apiKey });
+
+    const systemMessage = messages.find((m) => m.role === 'system');
+    const chatMessages = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content || ' ',
+      }));
+
+    // Anthropic requires strictly alternating roles
+    const sanitizedMessages: { role: 'user' | 'assistant'; content: string }[] =
+      [];
+    if (chatMessages.length > 0) {
+      sanitizedMessages.push(chatMessages[0]);
+      for (let i = 1; i < chatMessages.length; i++) {
+        const prev = sanitizedMessages[sanitizedMessages.length - 1];
+        const curr = chatMessages[i];
+        if (prev.role === curr.role) {
+          prev.content += `\n\n${curr.content}`;
+        } else {
+          sanitizedMessages.push(curr);
+        }
+      }
+    }
+
+    if (sanitizedMessages.length > 0 && sanitizedMessages[0].role !== 'user') {
+      sanitizedMessages.unshift({ role: 'user', content: 'Context:' });
+    }
+
+    try {
+      const stream = await anthropic.messages.create({
+        model,
+        max_tokens: 4096,
+        system: systemMessage?.content,
+        messages: sanitizedMessages,
+        stream: true,
+      });
+
+      async function* streamGenerator() {
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+            yield chunk.delta.text;
+          }
+        }
+      }
+      return streamGenerator();
+    } catch (error) {
+      this.logger.error(`Anthropic Stream Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        `Anthropic Error: ${error.message}`,
+      );
+    }
+  }
+
+  async chatWithOllamaStream(
+    messages: ChatMessage[],
+    model: string,
+    baseURL?: string,
+    apiKey?: string,
+  ): Promise<AsyncGenerator<string>> {
+    const url = baseURL || 'http://localhost:11434';
+
+    if (url.endsWith('/v1') || url.endsWith('/v1/')) {
+      return this.chatWithOpenAIStream(
+        messages,
+        model,
+        apiKey || 'no-key-required',
+        url,
+      );
+    }
+
+    const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+    const hasProtocol =
+      nativeBaseUrl.startsWith('http://') ||
+      nativeBaseUrl.startsWith('https://');
+    const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
+    const endpoint = `${validUrl}/api/chat`;
+
+    try {
+      const parsedUrl = new URL(endpoint);
+      const hostHeader = parsedUrl.host;
+
+      const sanitizedMessages = messages.map((m) => ({
+        role: m.role,
+        content: m.content || '',
+      }));
+
+      const body = {
+        model,
+        messages: sanitizedMessages,
+        stream: true,
+        options: { num_ctx: 4096 },
+      };
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Host: hostHeader,
+      };
+
+      if (apiKey && apiKey !== 'no-key-required') {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Ollama API Error ${response.status}: ${errorText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Ollama response body is empty');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      async function* streamGenerator() {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const json = JSON.parse(line);
+              if (json.done) return;
+              if (json.message?.content) {
+                yield json.message.content;
+              }
+            } catch (e) {
+              // Ignore parse errors for partial chunks
+            }
+          }
+        }
+      }
+      return streamGenerator();
+
+    } catch (error) {
+      if (error.message?.includes('not found')) {
+        throw new BadRequestException(
+          `Model '${model}' not found on Ollama server.`,
+        );
+      }
+      throw new InternalServerErrorException(`Ollama Error: ${error.message}`);
+    }
+  }
+
   async verifyConnection(
     providerKey: string,
     untypedConfig: Record<string, unknown>,

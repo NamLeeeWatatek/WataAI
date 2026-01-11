@@ -12,6 +12,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/components/ui/Breadcrumb'
+import { useTranslation } from 'react-i18next'
 import {
     Layout,
     GitMerge,
@@ -36,34 +37,35 @@ interface NavigationItem {
     }>
 }
 
-const navigation: NavigationItem[] = [
-    { name: 'Dashboard', href: '/dashboard', icon: Layout },
-    { name: 'UGC Factory', href: '/ugc-factory', icon: Grid },
-    { name: 'Conversations', href: '/conversations', icon: Grid },
-    {
-        name: 'Workflows',
-        icon: GitMerge,
-        children: [
-            { name: 'All Workflows', href: '/flows' },
-            { name: 'Create New', href: '/flows/new?mode=edit' }
-        ]
-    },
-    { name: 'Channels', href: '/channels', icon: Radio },
-    { name: 'Knowledge Base', href: '/knowledge-base/collections', icon: Database },
-    { name: 'Bots', href: '/bots', icon: Bot },
-    { name: 'Chat AI', href: '/chat', icon: MessageSquare },
-    { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'System Administration', href: '/system', icon: ShieldCheck },
-    { name: 'Users', href: '/system/users' },
-    { name: 'Roles & Permissions', href: '/system/roles-permissions' },
-    { name: 'Creation Tools', href: '/system/creation-tools' },
-    { name: 'Templates', href: '/system/templates' },
-]
-
 export const DashboardBreadcrumb = React.memo(() => {
     const pathname = usePathname()
+    const { t } = useTranslation() // Hook added
 
     const breadcrumbNames = useBreadcrumbStore((state) => state.names)
+
+    const navigation = useMemo<NavigationItem[]>(() => [
+        { name: t('dashboard.title'), href: '/dashboard', icon: Layout },
+        { name: t('dashboard.ugcFactory'), href: '/ugc-factory', icon: Grid },
+        { name: t('dashboard.conversations'), href: '/conversations', icon: Grid },
+        {
+            name: t('dashboard.workflows'),
+            icon: GitMerge,
+            children: [
+                { name: t('dashboard.allWorkflows'), href: '/flows' },
+                { name: t('dashboard.createNew'), href: '/flows/new?mode=edit' }
+            ]
+        },
+        { name: t('dashboard.channels'), href: '/channels', icon: Radio },
+        { name: t('dashboard.knowledgeBase'), href: '/knowledge-base/collections', icon: Database },
+        { name: t('dashboard.bots'), href: '/bots', icon: Bot },
+        { name: t('dashboard.chatAI'), href: '/chat', icon: MessageSquare },
+        { name: t('settings'), href: '/settings', icon: Settings },
+        { name: t('navigation.adminSystem'), href: '/system', icon: ShieldCheck },
+        { name: t('navigation.users'), href: '/system/users' },
+        { name: t('navigation.rolesPermissions'), href: '/system/roles-permissions' },
+        { name: t('navigation.creationTools'), href: '/system/creation-tools' },
+        { name: t('navigation.templates'), href: '/system/templates' },
+    ], [t])
 
     const breadcrumbItems = useMemo(() => {
         if (pathname === '/dashboard') return null
@@ -118,7 +120,7 @@ export const DashboardBreadcrumb = React.memo(() => {
         })
 
         return items
-    }, [pathname, breadcrumbNames])
+    }, [pathname, breadcrumbNames, navigation])
 
     return (
         <Breadcrumb>
@@ -127,7 +129,7 @@ export const DashboardBreadcrumb = React.memo(() => {
                     <BreadcrumbLink asChild>
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <Home className="w-4 h-4" />
-                            <span>Home</span>
+                            <span>{t('common.home', { defaultValue: 'Home' })}</span>
                         </Link>
                     </BreadcrumbLink>
                 </BreadcrumbItem>

@@ -9,5 +9,6 @@
     "defaultPlaceholder": "Nhập tin nhắn...",
     "ragNoInfo": "Tôi không có đủ thông tin để trả lời câu hỏi đó.",
     "ragPromptPrefix": "Dựa trên ngữ cảnh sau đây, hãy trả lời câu hỏi. Nếu ngữ cảnh không chứa thông tin liên quan, hãy nói như vậy.",
+    "ragPromptFlexible": "Dựa trên ngữ cảnh sau đây, hãy trả lời câu hỏi. Nếu câu trả lời không có trong ngữ cảnh, hãy sử dụng kiến thức chung của bạn để trả lời.",
     "ragContextPrefix": "Bạn có quyền truy cập vào các thông tin sau từ cơ sở kiến thức:"
 }

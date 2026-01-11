@@ -9,5 +9,6 @@
     "defaultPlaceholder": "Type a message...",
     "ragNoInfo": "I don't have enough information to answer that question.",
     "ragPromptPrefix": "Based on the following context, answer the question. If the context doesn't contain relevant information, say so.",
+    "ragPromptFlexible": "Based on the following context, answer the question. If the answer is not in the context, use your general knowledge to answer.",
     "ragContextPrefix": "You have access to the following information from the knowledge base:"
 }

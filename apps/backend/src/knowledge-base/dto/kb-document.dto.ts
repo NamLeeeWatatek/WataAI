@@ -129,6 +129,13 @@ export class GenerateAnswerDto {
   })
   @IsOptional()
   similarityThreshold?: number;
+
+  @ApiPropertyOptional({
+    description: 'If true, uses general knowledge when context is missing',
+    default: false,
+  })
+  @IsOptional()
+  fallbackToGeneralKnowledge?: boolean;
 }
 
 export class CrawlWebsiteDto {

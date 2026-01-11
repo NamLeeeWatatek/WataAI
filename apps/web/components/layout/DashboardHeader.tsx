@@ -11,6 +11,7 @@ import { Sun, Moon, Menu, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { GrSystem } from "react-icons/gr";
+import { useTranslation } from 'react-i18next'
 
 import { usePathname } from 'next/navigation'
 import { paths } from '@/lib/routes'
@@ -18,6 +19,7 @@ import { paths } from '@/lib/routes'
 const AdminLink = () => {
     const { isSuperAdmin } = usePermissions()
     const pathname = usePathname()
+    const { t } = useTranslation()
 
     if (pathname?.startsWith(paths.system.root)) return null
 
@@ -34,7 +36,7 @@ const AdminLink = () => {
         >
             <Link href={paths.system.root as any}>
                 <GrSystem className="w-3.5 h-3.5" />
-                <span>System Admin</span>
+                <span>{t('navigation.adminSystem')}</span>
             </Link>
         </Button>
     )

@@ -32,7 +32,7 @@ export class WidgetVersionService {
     private readonly botRepo: Repository<BotEntity>,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
-  ) {}
+  ) { }
 
   async getActiveVersion(botId: string): Promise<WidgetVersionEntity | null> {
     const cacheKey = `widget:active:${botId}`;
@@ -268,6 +268,9 @@ export class WidgetVersionService {
     version.publishedBy = userId;
 
     await this.versionRepo.save(version);
+
+    // Sync with BotEntity
+    await this.botRepo.update(botId, { activeVersionId: version.id });
 
     await this.deploymentRepo.save({
       botId,

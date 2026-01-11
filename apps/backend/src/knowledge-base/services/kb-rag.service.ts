@@ -212,6 +212,89 @@ export class KBRagService {
     }
   }
 
+  async *generateAnswerStream(
+    question: string,
+    knowledgeBaseId?: string,
+    model?: string,
+    options?: {
+      limit?: number;
+      similarityThreshold?: number;
+      fallbackToGeneralKnowledge?: boolean;
+    },
+  ): AsyncGenerator<{ type: 'source' | 'token' | 'error'; data: any }> {
+    try {
+      const limit = options?.limit || 5;
+      const threshold = options?.similarityThreshold || 0.5;
+      const fallback = options?.fallbackToGeneralKnowledge || false;
+
+
+      // 1. Initial Retrieval (Fetch more candidates for re-ranking)
+      const candidateLimit = limit * 3;
+      let relevantChunks = await this.query(
+        question,
+        'default',
+        knowledgeBaseId,
+        candidateLimit,
+        threshold,
+      );
+
+      if (relevantChunks.length === 0) {
+        if (!fallback) {
+          const lang = I18nContext.current()?.lang;
+          yield { type: 'token', data: this.i18n.t('ai.ragNoInfo', { lang }) };
+          return;
+        }
+        this.logger.log(`No chunks found, falling back to general knowledge for: "${question}"`);
+      } else {
+        // 2. LLM Re-ranking
+        relevantChunks = await this.reRankChunks(question, relevantChunks, limit);
+
+        // 3. Context Expansion
+        relevantChunks = await this.expandContext(relevantChunks);
+      }
+
+      // Yield sources immediately
+      yield { type: 'source', data: relevantChunks };
+
+      const context = relevantChunks
+        .map((chunk, index) => `[${index + 1}] ${chunk.content}`)
+        .join('\n\n');
+
+      const lang = I18nContext.current()?.lang;
+      let prompt: string;
+
+      if (relevantChunks.length > 0) {
+        const key = fallback ? 'ai.ragPromptFlexible' : 'ai.ragPromptPrefix';
+        prompt = `${this.i18n.t(key, { lang })}\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
+      } else {
+        prompt = `Question: ${question}\n\nAnswer:`;
+      }
+
+      let stream: AsyncGenerator<string>;
+
+      if (knowledgeBaseId) {
+        stream = await this.generateAnswerFromKbStream(
+          prompt,
+          knowledgeBaseId,
+          model,
+        );
+      } else {
+        stream = await this.aiProvidersService.chatStream(
+          prompt,
+          model || KbAiConfig.defaults.model,
+        );
+      }
+
+      for await (const token of stream) {
+        yield { type: 'token', data: token };
+      }
+
+    } catch (error) {
+      this.logger.error(`Error generating answer stream: ${error.message}`);
+      yield { type: 'error', data: error.message };
+    }
+  }
+
   async generateAnswer(
     question: string,
     knowledgeBaseId?: string,
@@ -219,33 +302,46 @@ export class KBRagService {
     options?: {
       limit?: number;
       similarityThreshold?: number;
+      fallbackToGeneralKnowledge?: boolean;
     },
   ): Promise<RAGResult> {
     try {
       const limit = options?.limit || 5;
       const threshold = options?.similarityThreshold || 0.5;
+      const fallback = options?.fallbackToGeneralKnowledge || false;
 
-      const relevantChunks = await this.query(
+      // 1. Initial Retrieval
+      const candidateLimit = limit * 3;
+      let relevantChunks = await this.query(
         question,
-        'default', // Use 'default' or some valid string for Qdrant, but handle it in query
+        'default',
         knowledgeBaseId,
-        limit,
+        candidateLimit,
         threshold,
       );
 
       if (relevantChunks.length === 0) {
-        this.logger.warn(
-          `⚠️ No relevant chunks found for question: "${question}"`,
-        );
-        const lang = I18nContext.current()?.lang;
-        return {
-          answer: this.i18n.t('ai.ragNoInfo', { lang }),
-          sources: [],
-        };
+        if (!fallback) {
+          this.logger.warn(
+            `No relevant chunks found for question: "${question}"`,
+          );
+          const lang = I18nContext.current()?.lang;
+          return {
+            answer: this.i18n.t('ai.ragNoInfo', { lang }),
+            sources: [],
+          };
+        }
+        this.logger.log(`No chunks found, falling back to general knowledge for: "${question}"`);
+      } else {
+        // 2. LLM Re-ranking
+        relevantChunks = await this.reRankChunks(question, relevantChunks, limit);
+
+        // 3. Context Expansion
+        relevantChunks = await this.expandContext(relevantChunks);
       }
 
       this.logger.log(
-        `✅ Using ${relevantChunks.length} chunks for answer generation`,
+        `Using ${relevantChunks.length} chunks for answer generation`,
       );
 
       const context = relevantChunks
@@ -253,7 +349,15 @@ export class KBRagService {
         .join('\n\n');
 
       const lang = I18nContext.current()?.lang;
-      const prompt = `${this.i18n.t('ai.ragPromptPrefix', { lang })}\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
+      let prompt: string;
+
+      if (relevantChunks.length > 0) {
+        const key = fallback ? 'ai.ragPromptFlexible' : 'ai.ragPromptPrefix';
+        prompt = `${this.i18n.t(key, { lang })}\n\nContext:\n${context}\n\nQuestion: ${question}\n\nAnswer:`;
+      } else {
+        // General knowledge fallback
+        prompt = `Question: ${question}\n\nAnswer:`;
+      }
 
       let answer: string;
       if (knowledgeBaseId) {
@@ -340,6 +444,67 @@ export class KBRagService {
         `Failed to use KB AI provider, falling back to default: ${error.message}`,
       );
       return await this.aiProvidersService.chat(
+        prompt,
+        model || KbAiConfig.defaults.model,
+      );
+    }
+  }
+
+  private async generateAnswerFromKbStream(
+    prompt: string,
+    knowledgeBaseId: string,
+    model?: string,
+  ): Promise<AsyncGenerator<string>> {
+    try {
+      const kb = await this.kbRepository.findOne({
+        where: { id: knowledgeBaseId },
+      });
+
+      const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
+
+      if (kb && kb.aiProviderId) {
+        const userId = kb.createdBy;
+
+        if (
+          kb.workspaceId &&
+          isUUID(kb.workspaceId) &&
+          (await this.aiProvidersService.configExists(
+            kb.aiProviderId,
+            'workspace',
+            kb.workspaceId,
+          ))
+        ) {
+          return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
+            [{ role: 'user', content: prompt }],
+            finalModel,
+            kb.aiProviderId,
+            'workspace',
+            kb.workspaceId,
+          );
+        } else if (
+          userId &&
+          isUUID(userId) &&
+          (await this.aiProvidersService.configExists(
+            kb.aiProviderId,
+            'user',
+            userId,
+          ))
+        ) {
+          return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
+            [{ role: 'user', content: prompt }],
+            finalModel,
+            kb.aiProviderId,
+            'user',
+            userId,
+          );
+        }
+      }
+      return await this.aiProvidersService.chatStream(prompt, finalModel);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to use KB AI provider for stream, falling back to default: ${error.message}`,
+      );
+      return await this.aiProvidersService.chatStream(
         prompt,
         model || KbAiConfig.defaults.model,
       );
@@ -763,5 +928,124 @@ export class KBRagService {
     }
 
     return null;
+  }
+
+  // --- Expert RAG Enhancements ---
+
+  /**
+   * Expands context by fetching neighboring chunks (prev/next) for each retrieved chunk.
+   * This helps simulate "Parent Document" retrieval and provides better flow.
+   */
+  private async expandContext(chunks: ChunkSource[]): Promise<ChunkSource[]> {
+    if (chunks.length === 0) return [];
+    this.logger.log(`Expanding context for ${chunks.length} chunks...`);
+
+    const expandedChunks: ChunkSource[] = [];
+    const seenChunkIds = new Set<string>(); // composite key: docId_chunkIndex
+
+    for (const chunk of chunks) {
+      const docId = chunk.documentId;
+      const index = chunk.chunkIndex;
+
+      // Add original chunk first
+      const originalKey = `${docId}_${index}`;
+      if (!seenChunkIds.has(originalKey)) {
+        expandedChunks.push(chunk);
+        seenChunkIds.add(originalKey);
+      }
+
+      // Try to fetch neighbor chunks (index - 1, index + 1)
+      const neighbors = await this.chunkRepository.find({
+        where: [
+          { documentId: docId as any, chunkIndex: index - 1 },
+          { documentId: docId as any, chunkIndex: index + 1 },
+        ],
+        order: { chunkIndex: 'ASC' },
+      });
+
+      for (const neighbor of neighbors) {
+        const key = `${docId}_${neighbor.chunkIndex}`;
+        if (!seenChunkIds.has(key)) {
+          // Merge neighbor into result
+          // Note: Neighbors don't have a semantic score relative to the query, 
+          // but we can inherit or assign a slightly lower score.
+          expandedChunks.push({
+            content: neighbor.content,
+            score: chunk.score * 0.9, // Decay score slightly
+            documentId: neighbor.documentId,
+            chunkIndex: neighbor.chunkIndex,
+            metadata: neighbor.metadata || undefined,
+          });
+          seenChunkIds.add(key);
+        }
+      }
+    }
+
+    // Sort again by docId then index to keep flow, OR by score. 
+    // RAG usually benefits from score sorting, but "Context Window" means we might want coherent blocks.
+    // Here we'll stick to score primary, but maybe we should group by document?
+    // For simplicity: Return by score descending (high relevance first).
+    return expandedChunks.sort((a, b) => b.score - a.score);
+  }
+
+  /**
+   * Uses an LLM to re-rank the retrieved chunks based on strict relevance.
+   * Helps filter out "keyword match but context mismatch" results.
+   */
+  private async reRankChunks(question: string, chunks: ChunkSource[], topK: number): Promise<ChunkSource[]> {
+    if (chunks.length <= topK) return chunks;
+    this.logger.log(`Re-ranking ${chunks.length} candidates to top ${topK}...`);
+
+    try {
+      // Create a simplified list for the LLM
+      const candidates = chunks.map((c, i) => ({
+        id: i,
+        content: c.content.substring(0, 300), // Truncate for speed/tokens
+      }));
+
+      const prompt = `
+You are a relevance ranking expert.
+Question: "${question}"
+
+Rank the following text chunks by their relevance to the question.
+Format your response as a JSON array of the indices of the top ${topK} most relevant chunks.
+Example: [1, 5, 0]
+
+Chunks:
+${candidates.map(c => `[${c.id}] ${c.content}`).join('\n')}
+
+Response (JSON array only):
+      `.trim();
+
+      // Use a fast model if possible, defaulting to the general chat simple
+      const result = await this.aiProvidersService.chat(prompt, KbAiConfig.defaults.model);
+
+      // Parse JSON
+      const match = result.match(/\[.*\]/s);
+      if (!match) {
+        this.logger.warn('Re-ranking failed to parse JSON, returning original top K');
+        return chunks.slice(0, topK);
+      }
+
+      const indices: number[] = JSON.parse(match[0]);
+
+      // Map back to original chunks
+      const reRanked = indices
+        .map(i => chunks[i])
+        .filter(Boolean); // Filter undefined if LLM hallucinated an index
+
+      // Fill with original top chunks if LLM returned too few
+      if (reRanked.length < topK) {
+        const remaining = chunks.filter(c => !reRanked.includes(c));
+        reRanked.push(...remaining.slice(0, topK - reRanked.length));
+      }
+
+      // Preserve full content (LLM saw truncated)
+      return reRanked;
+
+    } catch (error) {
+      this.logger.error(`Re-ranking failed: ${error.message}`);
+      return chunks.slice(0, topK); // Fallback
+    }
   }
 }

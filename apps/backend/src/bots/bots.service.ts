@@ -68,13 +68,21 @@ export class BotsService {
     const savedBot = await this.botRepository.save(bot);
 
     try {
+      this.logger.log(`Creating default widget version for bot ${savedBot.id}...`);
+
+      const primaryColor = (createDto.primaryColor || '#667eea').trim();
+      const safeAllowedOrigins = createDto.allowedOrigins?.length
+        ? createDto.allowedOrigins
+        : [];
+
+      // Create version 1.0.0
       const defaultVersion = await this.widgetVersionService.createVersion(
         savedBot.id,
         {
           version: '1.0.0',
           config: {
             theme: {
-              primaryColor: createDto.primaryColor || '#667eea',
+              primaryColor: /^#[0-9A-F]{6}$/i.test(primaryColor) ? primaryColor : '#667eea',
               position: createDto.widgetPosition || 'bottom-right',
               buttonSize: createDto.widgetButtonSize || 'medium',
               showAvatar: createDto.showAvatar ?? true,
@@ -102,12 +110,7 @@ export class BotsService {
               showPoweredBy: true,
             },
             security: {
-              // FIX: Don't allow wildcard in production
-              allowedOrigins: createDto.allowedOrigins?.length 
-                ? createDto.allowedOrigins 
-                : process.env.NODE_ENV === 'production' 
-                  ? [] 
-                  : ['http://localhost:3000'],
+              allowedOrigins: safeAllowedOrigins,
             },
           },
           changelog: 'Initial version',
@@ -120,14 +123,20 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
+      this.logger.log(`✅ Default widget version created and published for bot ${savedBot.id}`);
     } catch (error) {
       this.logger.error(
         `Failed to create default widget version for bot ${savedBot.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error.stack,
       );
+      // We don't rethrow to avoid failing the bot creation, but this leaves the bot without a version.
     }
 
-    return savedBot;
+    // Return the bot with the active version loaded so frontend sees it immediately
+    return this.findOne(savedBot.id);
   }
+
+
 
   async findAll(workspaceId: string, options?: { status?: string }) {
     const query = this.botRepository
@@ -205,32 +214,117 @@ export class BotsService {
   async findOne(id: string) {
     const bot = await this.botRepository.findOne({
       where: { id },
-      relations: ['workspace', 'knowledgeBases'],
+      relations: ['workspace', 'knowledgeBases', 'activeVersion'],
     });
 
     if (!bot) {
       throw new NotFoundException('Bot not found');
     }
 
+    // --- Frontend Compatibility Layer ---
+    // Flatten active version config into bot object for frontend consumption
+    if (bot.activeVersion?.config) {
+      const config = bot.activeVersion.config;
+
+      // Theme
+      if (config.theme) {
+        (bot as any).primaryColor = config.theme.primaryColor;
+        (bot as any).widgetPosition = config.theme.position;
+        (bot as any).widgetButtonSize = config.theme.buttonSize;
+        (bot as any).showAvatar = config.theme.showAvatar;
+        (bot as any).showTimestamp = config.theme.showTimestamp;
+      }
+
+      // Messages
+      if (config.messages) {
+        (bot as any).welcomeMessage = config.messages.welcome;
+        (bot as any).placeholderText = config.messages.placeholder;
+      }
+
+      // Security
+      if (config.security) {
+        (bot as any).allowedOrigins = config.security.allowedOrigins;
+      }
+
+      // Backward compatibility flags
+      (bot as any).widgetEnabled = bot.isActive; // Assumption
+    } else {
+      // Default fallback if no active version (shouldn't happen with self-healing)
+      (bot as any).primaryColor = '#667eea';
+      (bot as any).widgetPosition = 'bottom-right';
+      (bot as any).widgetButtonSize = 'medium';
+    }
+
     return bot;
   }
 
   async update(id: string, updateDto: UpdateBotDto) {
+    // 1. Separate generic bot fields from visual/widget fields
+    const {
+      primaryColor,
+      widgetPosition,
+      widgetButtonSize,
+      showAvatar,
+      showTimestamp,
+      welcomeMessage,
+      placeholderText,
+      allowedOrigins,
+      ...botUpdate
+    } = updateDto;
+
+    // 2. Update generic bot entity fields
     const bot = await this.findOne(id);
 
-    // Clean up invalid UUID strings
-    if (updateDto.flowId === 'undefined' || updateDto.flowId === 'null') {
-      updateDto.flowId = null;
-    }
-    if (
-      updateDto.aiProviderId === 'undefined' ||
-      updateDto.aiProviderId === 'null'
-    ) {
-      updateDto.aiProviderId = null;
+    // Clean up invalid UUIDs
+    if (botUpdate.flowId === 'undefined' || botUpdate.flowId === 'null') botUpdate.flowId = null;
+    if (botUpdate.aiProviderId === 'undefined' || botUpdate.aiProviderId === 'null') botUpdate.aiProviderId = null;
+
+    Object.assign(bot, botUpdate);
+    const savedBot = await this.botRepository.save(bot);
+
+    // 3. Update active widget version if visual fields are present
+    const hasVisualUpdates = [
+      primaryColor, widgetPosition, widgetButtonSize, showAvatar, showTimestamp,
+      welcomeMessage, placeholderText, allowedOrigins
+    ].some(v => v !== undefined);
+
+    if (hasVisualUpdates && bot.createdBy) {
+      try {
+        const configUpdates: any = {};
+
+        if (primaryColor || widgetPosition || widgetButtonSize || showAvatar !== undefined || showTimestamp !== undefined) {
+          configUpdates.theme = {};
+          if (primaryColor) configUpdates.theme.primaryColor = primaryColor;
+          if (widgetPosition) configUpdates.theme.position = widgetPosition;
+          if (widgetButtonSize) configUpdates.theme.buttonSize = widgetButtonSize;
+          if (showAvatar !== undefined) configUpdates.theme.showAvatar = showAvatar;
+          if (showTimestamp !== undefined) configUpdates.theme.showTimestamp = showTimestamp;
+        }
+
+        if (welcomeMessage || placeholderText) {
+          configUpdates.messages = {};
+          if (welcomeMessage) configUpdates.messages.welcome = welcomeMessage;
+          if (placeholderText) configUpdates.messages.placeholder = placeholderText;
+        }
+
+        if (allowedOrigins) {
+          configUpdates.security = { allowedOrigins };
+        }
+
+        this.logger.log(`Visual updates detected for bot ${id}, updating active version...`);
+        await this.widgetVersionService.updateActiveVersionConfig(
+          id,
+          configUpdates,
+          bot.createdBy, // Use creator as updater if not explicitly passed (context limitation)
+          'Updated via Bot Settings'
+        );
+      } catch (error) {
+        this.logger.error(`Failed to update widget visual config: ${error.message}`);
+        // Don't fail the request, just log
+      }
     }
 
-    Object.assign(bot, updateDto);
-    return this.botRepository.save(bot);
+    return this.findOne(id); // Return fresh with flattened config
   }
 
   async remove(id: string) {

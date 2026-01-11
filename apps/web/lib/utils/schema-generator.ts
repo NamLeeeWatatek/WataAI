@@ -37,7 +37,10 @@ export const generateZodSchema = (fields: FormField[]) => {
             schema = z.boolean();
         } else if (isArrayType) {
             schema = z.array(z.any());
+        } else if (type === 'file' || type === 'json' || type === 'key-value') {
+            schema = z.any();
         } else {
+            // Default to string for text, textarea, select, etc.
             schema = z.string();
         }
 
@@ -49,6 +52,10 @@ export const generateZodSchema = (fields: FormField[]) => {
                 schema = (schema as z.ZodNumber).refine(val => val !== undefined && val !== null && !isNaN(val), { message: 'Number is required' });
             } else if (isArrayType) {
                 schema = (schema as z.ZodArray<any>).min(1, { message: 'Please select at least one' });
+            } else if (type === 'file') {
+                schema = schema.refine(val => !!val, { message: 'File is required' });
+            } else if (type === 'json' || type === 'key-value') {
+                schema = schema.refine(val => val !== null && val !== undefined && (typeof val === 'object' || Array.isArray(val)), { message: 'Content is required' });
             } else {
                 schema = z.string({ message: 'This field is required' })
                     .trim()
@@ -62,6 +69,8 @@ export const generateZodSchema = (fields: FormField[]) => {
                 schema = schema.optional();
             } else if (isArrayType) {
                 schema = schema.optional().default([]);
+            } else if (type === 'file' || type === 'json' || type === 'key-value') {
+                schema = schema.optional().or(z.null());
             } else {
                 schema = schema.optional().or(z.literal(''));
             }
