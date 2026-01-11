@@ -24,7 +24,7 @@ import {
 import { PageHeader } from '@/components/ui/PageHeader';
 // import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
-import { AssignBotDialog } from '@/components/features/channels/AssignBotDialog';
+import { ManagePagesDialog } from '@/components/features/channels/ManagePagesDialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import { ConnectedChannelsTab, ChannelConfigurationsTab } from '@/components/features/channels';
 import { Card } from '@/components/ui/Card';
@@ -74,7 +74,7 @@ export default function ChannelsPage() {
     const [pageSize, setPageSize] = useState(12);
     const [disconnectId, setDisconnectId] = useState<string | null>(null);
     const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
-    const [assignBotDialogOpen, setAssignBotDialogOpen] = useState(false);
+    const [managePagesDialogOpen, setManagePagesDialogOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
 
     const handleConnect = async (provider: string, configId?: string) => {
@@ -237,10 +237,10 @@ export default function ChannelsPage() {
                             onClearSelection={() => { }}
                             isLoading={isLoading}
                             onDisconnect={(id: string) => setDisconnectId(id)}
-                            onAssignBot={(channel: Channel) => {
+                            onManagePages={(channel: Channel) => {
                                 setSelectedChannel(channel);
                                 dispatch(setSelectedBotId(channel.botId || ''));
-                                setAssignBotDialogOpen(true);
+                                setManagePagesDialogOpen(true);
                             }}
                             onLoadData={refetch}
                         />
@@ -344,14 +344,14 @@ export default function ChannelsPage() {
                 variant="destructive"
             />
 
-            <AssignBotDialog
-                open={assignBotDialogOpen}
-                onOpenChange={setAssignBotDialogOpen}
+            <ManagePagesDialog
+                open={managePagesDialogOpen}
+                onOpenChange={setManagePagesDialogOpen}
                 channel={selectedChannel}
                 workspaceId={workspaceId!}
                 onSuccess={() => {
                     dispatch(setSelectedBotId(''));
-                    setAssignBotDialogOpen(false);
+                    setManagePagesDialogOpen(false);
                     refetch();
                 }}
             />

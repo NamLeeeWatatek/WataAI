@@ -53,7 +53,7 @@ interface ConnectedChannelsTabProps {
   onPageSizeChange: (size: number) => void;
   onToggleSelection: (id: string) => void;
   onClearSelection: () => void;
-  onAssignBot: (channel: Channel) => void;
+  onManagePages: (channel: Channel) => void;
   onDisconnect: (id: string) => void;
   onLoadData: () => void;
   isLoading?: boolean;
@@ -70,7 +70,7 @@ export function ConnectedChannelsTab({
   onViewModeChange,
   onPageChange,
   onPageSizeChange,
-  onAssignBot,
+  onManagePages,
   onDisconnect,
   onLoadData,
   isLoading = false
@@ -198,12 +198,13 @@ export function ConnectedChannelsTab({
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onAssignBot(row.original)}
-            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            variant="outline"
+            size="sm"
+            onClick={() => onManagePages(row.original)}
+            className="text-[10px] font-black uppercase tracking-widest"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5 mr-2" />
+            Manage Pages
           </Button>
           <Button
             variant="ghost"
@@ -216,7 +217,7 @@ export function ConnectedChannelsTab({
         </div>
       )
     }
-  ], [onAssignBot, onDisconnect]);
+  ], [onManagePages, onDisconnect]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -313,7 +314,7 @@ export function ConnectedChannelsTab({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onAssignBot(channel)}
+                        onClick={() => onManagePages(channel)}
                         className="text-[10px] font-black uppercase tracking-widest"
                       >
                         <Settings className="w-3.5 h-3.5 mr-2" />
