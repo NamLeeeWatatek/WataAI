@@ -85,9 +85,14 @@ export class ExecutionValidationService {
       if (isRequired) {
         // For strings, we MUST use .min(1) to block empty or whitespace-only strings
         if (fieldSchema instanceof z.ZodString) {
-          fieldSchema = fieldSchema.trim().min(1, { message: `Field ${field.name} cannot be empty` });
+          fieldSchema = fieldSchema
+            .trim()
+            .min(1, { message: `Field ${field.name} cannot be empty` });
         } else if (fieldSchema instanceof z.ZodNumber) {
-          fieldSchema = fieldSchema.refine(val => val !== undefined && val !== null, { message: `Field ${field.name} is required` });
+          fieldSchema = fieldSchema.refine(
+            (val) => val !== undefined && val !== null,
+            { message: `Field ${field.name} is required` },
+          );
         }
       } else {
         fieldSchema = fieldSchema.optional().nullable();

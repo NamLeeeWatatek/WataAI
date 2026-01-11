@@ -39,7 +39,7 @@ export class AiProvidersService {
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
-  ) { }
+  ) {}
 
   /**
    * Encrypt an API key
@@ -400,6 +400,23 @@ export class AiProvidersService {
         apiKey,
       );
     }
+    if (providerKey === 'azure') {
+      return this.aiModelService.chatWithAzureHistory(
+        messages,
+        model,
+        apiKey,
+        baseUrl, // maps to endpoint
+      );
+    }
+    if (providerKey === 'custom') {
+      // Re-use OpenAI logic for generic OpenAI-compatible providers (vLLM, etc)
+      return this.aiModelService.chatWithOpenAIHistory(
+        messages,
+        model,
+        apiKey,
+        baseUrl,
+      );
+    }
 
     throw new BadRequestException(`Unsupported provider: ${providerKey}`);
   }
@@ -520,6 +537,22 @@ export class AiProvidersService {
         apiKey,
       );
     }
+    if (providerKey === 'azure') {
+      return this.aiModelService.chatWithAzureStream(
+        messages,
+        model,
+        apiKey,
+        baseUrl,
+      );
+    }
+    if (providerKey === 'custom') {
+      return this.aiModelService.chatWithOpenAIStream(
+        messages,
+        model,
+        apiKey,
+        baseUrl,
+      );
+    }
 
     throw new BadRequestException(`Unsupported provider: ${providerKey}`);
   }
@@ -597,8 +630,8 @@ export class AiProvidersService {
     // 1. Check System Settings (DB)
     const settings = await this.systemAiSettingsRepository.findSystemSettings();
     // const config = settings?.encryptedConfig || {};
-    // Assuming keys might be stored in 'apiKeys' object in config or similar, 
-    // but typically we'd decrypt them. 
+    // Assuming keys might be stored in 'apiKeys' object in config or similar,
+    // but typically we'd decrypt them.
     // For now, since we don't have a standardized System Key storage structure defined in this file,
     // we will strictly DISABLE the env var fallback to prevent unauthorized usage of system level keys.
 
@@ -613,7 +646,9 @@ export class AiProvidersService {
     if (key === 'ANTHROPIC') return process.env.ANTHROPIC_API_KEY || '';
     */
 
-    this.logger.error(`Missing API Key for provider: ${providerKey} (Env fallback disabled for security)`);
+    this.logger.error(
+      `Missing API Key for provider: ${providerKey} (Env fallback disabled for security)`,
+    );
     throw new UnprocessableEntityException(
       `Missing API configuration for ${providerKey}. Please configure your own API key in Settings.`,
     );

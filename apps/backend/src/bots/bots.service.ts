@@ -19,7 +19,10 @@ import { WorkspaceMemberEntity } from '../workspaces/infrastructure/persistence/
 import { WorkspaceHelperService } from '../workspaces/workspace-helper.service';
 import { WidgetVersionService } from './services/widget-version.service';
 import { CreateBotDto } from './dto/create-bot.dto';
-import { CreateBotChannelDto, UpdateBotChannelDto } from './dto/bot-channel.dto';
+import {
+  CreateBotChannelDto,
+  UpdateBotChannelDto,
+} from './dto/bot-channel.dto';
 import { UpdateBotDto, LinkKnowledgeBaseDto } from './dto/update-bot.dto';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
 import { FilterBotDto, SortBotDto } from './dto/query-bot.dto';
@@ -40,7 +43,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -68,7 +71,9 @@ export class BotsService {
     const savedBot = await this.botRepository.save(bot);
 
     try {
-      this.logger.log(`Creating default widget version for bot ${savedBot.id}...`);
+      this.logger.log(
+        `Creating default widget version for bot ${savedBot.id}...`,
+      );
 
       const primaryColor = (createDto.primaryColor || '#667eea').trim();
       const safeAllowedOrigins = createDto.allowedOrigins?.length
@@ -82,7 +87,9 @@ export class BotsService {
           version: '1.0.0',
           config: {
             theme: {
-              primaryColor: /^#[0-9A-F]{6}$/i.test(primaryColor) ? primaryColor : '#667eea',
+              primaryColor: /^#[0-9A-F]{6}$/i.test(primaryColor)
+                ? primaryColor
+                : '#667eea',
               position: createDto.widgetPosition || 'bottom-right',
               buttonSize: createDto.widgetButtonSize || 'medium',
               showAvatar: createDto.showAvatar ?? true,
@@ -123,7 +130,9 @@ export class BotsService {
         defaultVersion.id,
         userId,
       );
-      this.logger.log(`✅ Default widget version created and published for bot ${savedBot.id}`);
+      this.logger.log(
+        `✅ Default widget version created and published for bot ${savedBot.id}`,
+      );
     } catch (error) {
       this.logger.error(
         `Failed to create default widget version for bot ${savedBot.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -135,8 +144,6 @@ export class BotsService {
     // Return the bot with the active version loaded so frontend sees it immediately
     return this.findOne(savedBot.id);
   }
-
-
 
   async findAll(workspaceId: string, options?: { status?: string }) {
     const query = this.botRepository
@@ -212,7 +219,8 @@ export class BotsService {
   }
 
   async findOne(id: string, workspaceId?: string) {
-    const query = this.botRepository.createQueryBuilder('bot')
+    const query = this.botRepository
+      .createQueryBuilder('bot')
       .leftJoinAndSelect('bot.workspace', 'workspace')
       .leftJoinAndSelect('bot.knowledgeBases', 'knowledgeBases')
       .leftJoinAndSelect('bot.activeVersion', 'activeVersion')
@@ -283,50 +291,75 @@ export class BotsService {
     const bot = await this.findOne(id, workspaceId);
 
     // Clean up invalid UUIDs
-    if (botUpdate.flowId === 'undefined' || botUpdate.flowId === 'null') botUpdate.flowId = null;
-    if (botUpdate.aiProviderId === 'undefined' || botUpdate.aiProviderId === 'null') botUpdate.aiProviderId = null;
+    if (botUpdate.flowId === 'undefined' || botUpdate.flowId === 'null')
+      botUpdate.flowId = null;
+    if (
+      botUpdate.aiProviderId === 'undefined' ||
+      botUpdate.aiProviderId === 'null'
+    )
+      botUpdate.aiProviderId = null;
 
     Object.assign(bot, botUpdate);
     const savedBot = await this.botRepository.save(bot);
 
     // 3. Update active widget version if visual fields are present
     const hasVisualUpdates = [
-      primaryColor, widgetPosition, widgetButtonSize, showAvatar, showTimestamp,
-      welcomeMessage, placeholderText, allowedOrigins
-    ].some(v => v !== undefined);
+      primaryColor,
+      widgetPosition,
+      widgetButtonSize,
+      showAvatar,
+      showTimestamp,
+      welcomeMessage,
+      placeholderText,
+      allowedOrigins,
+    ].some((v) => v !== undefined);
 
     if (hasVisualUpdates && bot.createdBy) {
       try {
         const configUpdates: any = {};
 
-        if (primaryColor || widgetPosition || widgetButtonSize || showAvatar !== undefined || showTimestamp !== undefined) {
+        if (
+          primaryColor ||
+          widgetPosition ||
+          widgetButtonSize ||
+          showAvatar !== undefined ||
+          showTimestamp !== undefined
+        ) {
           configUpdates.theme = {};
           if (primaryColor) configUpdates.theme.primaryColor = primaryColor;
           if (widgetPosition) configUpdates.theme.position = widgetPosition;
-          if (widgetButtonSize) configUpdates.theme.buttonSize = widgetButtonSize;
-          if (showAvatar !== undefined) configUpdates.theme.showAvatar = showAvatar;
-          if (showTimestamp !== undefined) configUpdates.theme.showTimestamp = showTimestamp;
+          if (widgetButtonSize)
+            configUpdates.theme.buttonSize = widgetButtonSize;
+          if (showAvatar !== undefined)
+            configUpdates.theme.showAvatar = showAvatar;
+          if (showTimestamp !== undefined)
+            configUpdates.theme.showTimestamp = showTimestamp;
         }
 
         if (welcomeMessage || placeholderText) {
           configUpdates.messages = {};
           if (welcomeMessage) configUpdates.messages.welcome = welcomeMessage;
-          if (placeholderText) configUpdates.messages.placeholder = placeholderText;
+          if (placeholderText)
+            configUpdates.messages.placeholder = placeholderText;
         }
 
         if (allowedOrigins) {
           configUpdates.security = { allowedOrigins };
         }
 
-        this.logger.log(`Visual updates detected for bot ${id}, updating active version...`);
+        this.logger.log(
+          `Visual updates detected for bot ${id}, updating active version...`,
+        );
         await this.widgetVersionService.updateActiveVersionConfig(
           id,
           configUpdates,
           bot.createdBy, // Use creator as updater if not explicitly passed (context limitation)
-          'Updated via Bot Settings'
+          'Updated via Bot Settings',
         );
       } catch (error) {
-        this.logger.error(`Failed to update widget visual config: ${error.message}`);
+        this.logger.error(
+          `Failed to update widget visual config: ${error.message}`,
+        );
         // Don't fail the request, just log
       }
     }
@@ -351,7 +384,11 @@ export class BotsService {
     return this.update(id, workspaceId, { status: BotStatus.ARCHIVED });
   }
 
-  async linkKnowledgeBase(botId: string, workspaceId: string, dto: LinkKnowledgeBaseDto) {
+  async linkKnowledgeBase(
+    botId: string,
+    workspaceId: string,
+    dto: LinkKnowledgeBaseDto,
+  ) {
     const bot = await this.findOne(botId, workspaceId);
 
     const existing = await this.botKbRepository.findOne({
@@ -377,7 +414,11 @@ export class BotsService {
     return this.botKbRepository.save(link);
   }
 
-  async unlinkKnowledgeBase(botId: string, workspaceId: string, knowledgeBaseId: string) {
+  async unlinkKnowledgeBase(
+    botId: string,
+    workspaceId: string,
+    knowledgeBaseId: string,
+  ) {
     // Verify ownership
     await this.findOne(botId, workspaceId);
     await this.botKbRepository.delete({ botId, knowledgeBaseId });
@@ -487,7 +528,12 @@ export class BotsService {
     return this.botKbRepository.save(link);
   }
 
-  async duplicate(id: string, workspaceId: string, userId: string, newName?: string) {
+  async duplicate(
+    id: string,
+    workspaceId: string,
+    userId: string,
+    newName?: string,
+  ) {
     const bot = await this.findOne(id, workspaceId);
 
     const newBot = this.botRepository.create({
@@ -504,7 +550,11 @@ export class BotsService {
     return this.botRepository.save(newBot);
   }
 
-  async getBotChannels(botId: string, workspaceId: string, options?: { validated?: boolean }) {
+  async getBotChannels(
+    botId: string,
+    workspaceId: string,
+    options?: { validated?: boolean },
+  ) {
     await this.findOne(botId, workspaceId);
 
     const query = this.channelRepository
@@ -566,7 +616,11 @@ export class BotsService {
     return this.channelRepository.save(channel);
   }
 
-  async deleteBotChannel(botId: string, workspaceId: string, channelId: string) {
+  async deleteBotChannel(
+    botId: string,
+    workspaceId: string,
+    channelId: string,
+  ) {
     await this.findOne(botId, workspaceId);
 
     const channel = await this.channelRepository.findOne({
@@ -587,7 +641,13 @@ export class BotsService {
     isActive: boolean,
     userId: string,
   ) {
-    return this.updateBotChannel(botId, workspaceId, channelId, { isActive }, userId);
+    return this.updateBotChannel(
+      botId,
+      workspaceId,
+      channelId,
+      { isActive },
+      userId,
+    );
   }
 
   // Appearance logic moved to BotAppearanceService

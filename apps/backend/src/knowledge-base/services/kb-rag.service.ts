@@ -56,7 +56,7 @@ export class KBRagService {
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -227,7 +227,6 @@ export class KBRagService {
       const threshold = options?.similarityThreshold || 0.5;
       const fallback = options?.fallbackToGeneralKnowledge || false;
 
-
       // 1. Initial Retrieval (Fetch more candidates for re-ranking)
       const candidateLimit = limit * 3;
       let relevantChunks = await this.query(
@@ -244,10 +243,16 @@ export class KBRagService {
           yield { type: 'token', data: this.i18n.t('ai.ragNoInfo', { lang }) };
           return;
         }
-        this.logger.log(`No chunks found, falling back to general knowledge for: "${question}"`);
+        this.logger.log(
+          `No chunks found, falling back to general knowledge for: "${question}"`,
+        );
       } else {
         // 2. LLM Re-ranking
-        relevantChunks = await this.reRankChunks(question, relevantChunks, limit);
+        relevantChunks = await this.reRankChunks(
+          question,
+          relevantChunks,
+          limit,
+        );
 
         // 3. Context Expansion
         relevantChunks = await this.expandContext(relevantChunks);
@@ -288,7 +293,6 @@ export class KBRagService {
       for await (const token of stream) {
         yield { type: 'token', data: token };
       }
-
     } catch (error) {
       this.logger.error(`Error generating answer stream: ${error.message}`);
       yield { type: 'error', data: error.message };
@@ -331,10 +335,16 @@ export class KBRagService {
             sources: [],
           };
         }
-        this.logger.log(`No chunks found, falling back to general knowledge for: "${question}"`);
+        this.logger.log(
+          `No chunks found, falling back to general knowledge for: "${question}"`,
+        );
       } else {
         // 2. LLM Re-ranking
-        relevantChunks = await this.reRankChunks(question, relevantChunks, limit);
+        relevantChunks = await this.reRankChunks(
+          question,
+          relevantChunks,
+          limit,
+        );
 
         // 3. Context Expansion
         relevantChunks = await this.expandContext(relevantChunks);
@@ -602,12 +612,12 @@ export class KBRagService {
 
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiProviderId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiProviderId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -667,17 +677,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiProviderId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiProviderId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {
@@ -967,7 +977,7 @@ export class KBRagService {
         const key = `${docId}_${neighbor.chunkIndex}`;
         if (!seenChunkIds.has(key)) {
           // Merge neighbor into result
-          // Note: Neighbors don't have a semantic score relative to the query, 
+          // Note: Neighbors don't have a semantic score relative to the query,
           // but we can inherit or assign a slightly lower score.
           expandedChunks.push({
             content: neighbor.content,
@@ -981,7 +991,7 @@ export class KBRagService {
       }
     }
 
-    // Sort again by docId then index to keep flow, OR by score. 
+    // Sort again by docId then index to keep flow, OR by score.
     // RAG usually benefits from score sorting, but "Context Window" means we might want coherent blocks.
     // Here we'll stick to score primary, but maybe we should group by document?
     // For simplicity: Return by score descending (high relevance first).
@@ -992,7 +1002,11 @@ export class KBRagService {
    * Uses an LLM to re-rank the retrieved chunks based on strict relevance.
    * Helps filter out "keyword match but context mismatch" results.
    */
-  private async reRankChunks(question: string, chunks: ChunkSource[], topK: number): Promise<ChunkSource[]> {
+  private async reRankChunks(
+    question: string,
+    chunks: ChunkSource[],
+    topK: number,
+  ): Promise<ChunkSource[]> {
     if (chunks.length <= topK) return chunks;
     this.logger.log(`Re-ranking ${chunks.length} candidates to top ${topK}...`);
 
@@ -1012,37 +1026,39 @@ Format your response as a JSON array of the indices of the top ${topK} most rele
 Example: [1, 5, 0]
 
 Chunks:
-${candidates.map(c => `[${c.id}] ${c.content}`).join('\n')}
+${candidates.map((c) => `[${c.id}] ${c.content}`).join('\n')}
 
 Response (JSON array only):
       `.trim();
 
       // Use a fast model if possible, defaulting to the general chat simple
-      const result = await this.aiProvidersService.chat(prompt, KbAiConfig.defaults.model);
+      const result = await this.aiProvidersService.chat(
+        prompt,
+        KbAiConfig.defaults.model,
+      );
 
       // Parse JSON
       const match = result.match(/\[.*\]/s);
       if (!match) {
-        this.logger.warn('Re-ranking failed to parse JSON, returning original top K');
+        this.logger.warn(
+          'Re-ranking failed to parse JSON, returning original top K',
+        );
         return chunks.slice(0, topK);
       }
 
       const indices: number[] = JSON.parse(match[0]);
 
       // Map back to original chunks
-      const reRanked = indices
-        .map(i => chunks[i])
-        .filter(Boolean); // Filter undefined if LLM hallucinated an index
+      const reRanked = indices.map((i) => chunks[i]).filter(Boolean); // Filter undefined if LLM hallucinated an index
 
       // Fill with original top chunks if LLM returned too few
       if (reRanked.length < topK) {
-        const remaining = chunks.filter(c => !reRanked.includes(c));
+        const remaining = chunks.filter((c) => !reRanked.includes(c));
         reRanked.push(...remaining.slice(0, topK - reRanked.length));
       }
 
       // Preserve full content (LLM saw truncated)
       return reRanked;
-
     } catch (error) {
       this.logger.error(`Re-ranking failed: ${error.message}`);
       return chunks.slice(0, topK); // Fallback

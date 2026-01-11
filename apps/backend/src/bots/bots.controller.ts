@@ -49,7 +49,7 @@ export class BotsController {
   constructor(
     private readonly botsService: BotsService,
     private readonly botInteractionService: BotInteractionService,
-  ) { }
+  ) {}
 
   @Post()
   @Permissions('bot:Create')
@@ -107,10 +107,7 @@ export class BotsController {
   @ApiOperation({ summary: 'Get bot by ID' })
   @ApiOkResponse({ type: Bot })
   @ApiParam({ name: 'id', type: String })
-  findOne(
-    @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
-  ) {
+  findOne(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.botsService.findOne(id, workspaceId);
   }
 
@@ -122,7 +119,7 @@ export class BotsController {
   update(
     @Param('id') id: string,
     @Body() updateDto: UpdateBotDto,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.update(id, workspaceId, updateDto);
   }
@@ -132,10 +129,7 @@ export class BotsController {
   @ApiOperation({ summary: 'Delete bot (soft delete)' })
   @ApiParam({ name: 'id', type: String })
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(
-    @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
-  ) {
+  remove(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.botsService.remove(id, workspaceId);
   }
 
@@ -144,10 +138,7 @@ export class BotsController {
   @ApiOperation({ summary: 'Activate bot' })
   @ApiOkResponse({ type: Bot })
   @ApiParam({ name: 'id', type: String })
-  activate(
-    @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
-  ) {
+  activate(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.botsService.activate(id, workspaceId);
   }
 
@@ -156,10 +147,7 @@ export class BotsController {
   @ApiOperation({ summary: 'Pause bot' })
   @ApiOkResponse({ type: Bot })
   @ApiParam({ name: 'id', type: String })
-  pause(
-    @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
-  ) {
+  pause(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.botsService.pause(id, workspaceId);
   }
 
@@ -168,10 +156,7 @@ export class BotsController {
   @ApiOperation({ summary: 'Archive bot' })
   @ApiOkResponse({ type: Bot })
   @ApiParam({ name: 'id', type: String })
-  archive(
-    @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
-  ) {
+  archive(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.botsService.archive(id, workspaceId);
   }
 
@@ -185,7 +170,7 @@ export class BotsController {
     @Param('id') id: string,
     @Body() body: { name?: string },
     @Request() req,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.duplicate(id, workspaceId, req.user.id, body.name);
   }

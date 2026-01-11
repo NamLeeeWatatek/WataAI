@@ -31,7 +31,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async chunkText(
     text: string,

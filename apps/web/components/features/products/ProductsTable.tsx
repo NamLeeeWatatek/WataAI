@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { MoreHorizontal, Trash2, ExternalLink, Copy } from "lucide-react";
+import { MoreHorizontal, Trash2, ExternalLink, Copy, Share2 } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
 import { DataTable } from "@/components/ui/DataTable";
 import { ColumnDef } from '@tanstack/react-table';
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
+import { PostToChannelsDialog } from "./PostToChannelsDialog";
 import { formatDateTime } from "@/lib/utils/date";
 import { toast } from "sonner";
 import { Package } from "lucide-react";
@@ -70,6 +71,8 @@ export function ProductsTable({
     actions,
 }: ProductsTableProps) {
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
+    const [postDialogOpen, setPostDialogOpen] = useState(false);
+    const [selectedJobForPost, setSelectedJobForPost] = useState<CreationJob | null>(null);
 
     const getDisplayName = (job: CreationJob) => {
         const input = job.inputData as any;
@@ -211,10 +214,19 @@ export function ProductsTable({
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {job.status === CreationJobStatus.COMPLETED && (
-                                    <DropdownMenuItem onClick={() => setSelectedJob(job)}>
-                                        <ExternalLink className="mr-2 h-4 w-4" />
-                                        View Details
-                                    </DropdownMenuItem>
+                                    <>
+                                        <DropdownMenuItem onClick={() => setSelectedJob(job)}>
+                                            <ExternalLink className="mr-2 h-4 w-4" />
+                                            View Details
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => {
+                                            setSelectedJobForPost(job);
+                                            setPostDialogOpen(true);
+                                        }}>
+                                            <Share2 className="mr-2 h-4 w-4" />
+                                            Post to Channels
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
                                 <DropdownMenuItem
                                     onClick={() => onDelete?.(job.id)}
@@ -303,6 +315,16 @@ export function ProductsTable({
                 job={selectedJob}
                 open={!!selectedJob}
                 onOpenChange={(open: boolean) => !open && setSelectedJob(null)}
+            />
+
+            <PostToChannelsDialog
+                open={postDialogOpen}
+                onOpenChange={(open) => {
+                    setPostDialogOpen(open);
+                    if (!open) setSelectedJobForPost(null);
+                }}
+                jobId={selectedJobForPost?.id || null}
+                productName={selectedJobForPost ? getDisplayName(selectedJobForPost) : undefined}
             />
         </>
     );

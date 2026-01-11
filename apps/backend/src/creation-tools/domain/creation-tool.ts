@@ -7,24 +7,24 @@ import { Category } from '../../categories/domain/category';
 export interface FormField {
   name: string;
   type:
-  | 'text'
-  | 'textarea'
-  | 'string'
-  | 'select'
-  | 'radio'
-  | 'checkbox'
-  | 'boolean'
-  | 'number'
-  | 'file'
-  | 'files'
-  | 'slider'
-  | 'color'
-  | 'json'
-  | 'key-value'
-  | 'channel-select'
-  | 'channel-selector'
-  | 'multi-select'
-  | 'template-selector';
+    | 'text'
+    | 'textarea'
+    | 'string'
+    | 'select'
+    | 'radio'
+    | 'checkbox'
+    | 'boolean'
+    | 'number'
+    | 'file'
+    | 'files'
+    | 'slider'
+    | 'color'
+    | 'json'
+    | 'key-value'
+    | 'channel-select'
+    | 'channel-selector'
+    | 'multi-select'
+    | 'template-selector';
   label: string;
   placeholder?: string;
   description?: string;

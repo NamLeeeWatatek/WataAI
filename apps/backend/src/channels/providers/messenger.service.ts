@@ -26,7 +26,7 @@ export class MessengerService {
     private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+  ) { }
 
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
     try {
@@ -83,6 +83,12 @@ export class MessengerService {
       };
     } catch (error) {
       this.logger.error(`Error sending Facebook message: ${error.message}`);
+      // Log full error object if available for debugging
+      if (error.response?.data) {
+        this.logger.error(
+          `Facebook API detailed error: ${JSON.stringify(error.response.data)}`,
+        );
+      }
       return {
         success: false,
         error: error.message,

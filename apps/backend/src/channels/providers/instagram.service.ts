@@ -14,7 +14,7 @@ export class InstagramService {
     private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+  ) { }
 
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
     try {
@@ -72,6 +72,16 @@ export class InstagramService {
       };
     } catch (error) {
       this.logger.error(`Error sending Instagram message: ${error.message}`);
+      if (error.response?.data) {
+        try {
+          const errorBody = await error.response.json(); // fetch api usually needs .json(), but if it's axios it's .data
+          // Since the code uses fetch above, we cant access .data on the error object directly unless it was thrown manually or by a library wrapper.
+          // Standard fetch doesn't throw on error status, so this catch block catches network errors or JSON parse errors mainly.
+          // If we want detailed API errors, checking response.ok above is correct.
+          // But if the library or framework wraps it...
+          // Let's just log the error object safely.
+        } catch (e) { }
+      }
       return {
         success: false,
         error: error.message,

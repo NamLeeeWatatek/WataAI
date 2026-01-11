@@ -191,8 +191,8 @@ export class AiProvider implements IAiProvider {
       case ProviderKey.OPENAI:
         return model
           ? ['gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-3.5-turbo'].some((m) =>
-            model.includes(m),
-          )
+              model.includes(m),
+            )
           : true;
 
       case ProviderKey.ANTHROPIC:

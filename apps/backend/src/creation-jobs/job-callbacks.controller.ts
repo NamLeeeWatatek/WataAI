@@ -20,7 +20,7 @@ import { CompleteJobDto } from './dto/complete-job.dto';
   version: '1',
 })
 export class JobCallbacksController {
-  constructor(private readonly service: CreationJobsService) { }
+  constructor(private readonly service: CreationJobsService) {}
 
   @Post(':id/complete')
   @ApiOperation({
@@ -30,10 +30,7 @@ export class JobCallbacksController {
   })
   @ApiParam({ name: 'id', description: 'The Creation Job ID' })
   @HttpCode(HttpStatus.OK)
-  async complete(
-    @Param('id') id: string,
-    @Body() body: CompleteJobDto,
-  ) {
+  async complete(@Param('id') id: string, @Body() body: CompleteJobDto) {
     const status = body.status || CreationJobStatus.COMPLETED;
 
     await this.service.completeJob(id, body.outputData, status, body.error);

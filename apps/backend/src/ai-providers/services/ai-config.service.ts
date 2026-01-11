@@ -26,7 +26,7 @@ export class AiConfigService {
   constructor(
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
-  ) { }
+  ) {}
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {

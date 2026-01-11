@@ -181,7 +181,7 @@ export class UsersService {
 
     if (updatedUser) {
       const newAvatarUrl = updatedUser.avatarUrl;
-      
+
       // ✅ FIX: Only delete old avatar after confirming new avatar works
       if (currentUser?.avatarUrl && newAvatarUrl !== currentUser.avatarUrl) {
         // Confirm new avatar first, then delete old

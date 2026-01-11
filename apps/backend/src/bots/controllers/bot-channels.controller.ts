@@ -22,7 +22,10 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { BotsService } from '../bots.service';
 import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.guard';
-import { CreateBotChannelDto, UpdateBotChannelDto } from '../dto/bot-channel.dto';
+import {
+  CreateBotChannelDto,
+  UpdateBotChannelDto,
+} from '../dto/bot-channel.dto';
 import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.decorator';
 
 @ApiTags('Bot Channels')
@@ -30,7 +33,7 @@ import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/channels', version: '1' })
 export class BotChannelsController {
-  constructor(private readonly botsService: BotsService) { }
+  constructor(private readonly botsService: BotsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get bot channels' })
@@ -39,9 +42,10 @@ export class BotChannelsController {
   getBotChannels(
     @Param('id') id: string,
     @Query('validated') validated?: boolean,
-    @CurrentWorkspace() workspaceId: string = "default" // Workaround if decorator fails or mock
+    @CurrentWorkspace() workspaceId: string = 'default', // Workaround if decorator fails or mock
   ) {
-    if (typeof workspaceId !== 'string') throw new Error('Workspace Context Missing');
+    if (typeof workspaceId !== 'string')
+      throw new Error('Workspace Context Missing');
     return this.botsService.getBotChannels(id, workspaceId, { validated });
   }
 
@@ -53,7 +57,7 @@ export class BotChannelsController {
     @Param('id') id: string,
     @Body() dto: CreateBotChannelDto,
     @Request() req,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.createBotChannel(id, workspaceId, dto, req.user.id);
   }
@@ -67,9 +71,15 @@ export class BotChannelsController {
     @Param('channelId') channelId: string,
     @Body() dto: UpdateBotChannelDto,
     @Request() req,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.botsService.updateBotChannel(id, workspaceId, channelId, dto, req.user.id);
+    return this.botsService.updateBotChannel(
+      id,
+      workspaceId,
+      channelId,
+      dto,
+      req.user.id,
+    );
   }
 
   @Delete(':channelId')
@@ -80,7 +90,7 @@ export class BotChannelsController {
   deleteBotChannel(
     @Param('id') id: string,
     @Param('channelId') channelId: string,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.deleteBotChannel(id, workspaceId, channelId);
   }
@@ -94,7 +104,7 @@ export class BotChannelsController {
     @Param('channelId') channelId: string,
     @Body() body: { isActive: boolean },
     @Request() req,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.toggleBotChannel(
       id,

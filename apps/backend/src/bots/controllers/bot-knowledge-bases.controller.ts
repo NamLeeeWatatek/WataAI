@@ -31,7 +31,7 @@ import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'bots/:id/knowledge-bases', version: '1' })
 export class BotKnowledgeBasesController {
-  constructor(private readonly botsService: BotsService) { }
+  constructor(private readonly botsService: BotsService) {}
 
   @Post()
   @ApiOperation({ summary: 'Link knowledge base to bot' })
@@ -41,7 +41,7 @@ export class BotKnowledgeBasesController {
   linkKnowledgeBase(
     @Param('id') id: string,
     @Body() dto: LinkKnowledgeBaseDto,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.linkKnowledgeBase(id, workspaceId, dto);
   }
@@ -52,7 +52,7 @@ export class BotKnowledgeBasesController {
   @ApiParam({ name: 'id', type: String, description: 'Bot ID' })
   getKnowledgeBases(
     @Param('id') id: string,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.getLinkedKnowledgeBases(id, workspaceId);
   }
@@ -65,7 +65,7 @@ export class BotKnowledgeBasesController {
   unlinkKnowledgeBase(
     @Param('id') id: string,
     @Param('kbId') kbId: string,
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
     return this.botsService.unlinkKnowledgeBase(id, workspaceId, kbId);
   }
@@ -79,8 +79,13 @@ export class BotKnowledgeBasesController {
     @Param('id') id: string,
     @Param('kbId') kbId: string,
     @Body() body: { isActive: boolean },
-    @CurrentWorkspace() workspaceId: string
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.botsService.toggleKnowledgeBase(id, workspaceId, kbId, body.isActive);
+    return this.botsService.toggleKnowledgeBase(
+      id,
+      workspaceId,
+      kbId,
+      body.isActive,
+    );
   }
 }

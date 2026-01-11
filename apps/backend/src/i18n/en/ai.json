@@ -9,7 +9,7 @@
     "defaultPlaceholder": "Type a message...",
     "ragNoInfo": "I don't have enough information to answer that question.",
     "ragPromptStrict": "You are a specialized AI assistant. Answer the user's question strictly based ONLY on the provided context. If the answer is not in the context, politely state that you do not have that information in your knowledge base. Do NOT use outside knowledge.",
-    "ragPromptPrefix": "You are a professional and knowledgeable AI assistant. Based on the provided context, please answer the user's question accurately, concisely, and politely. If the answer is not in the context, you may use your general knowledge to assist, but kindly mention that the information is outside the reference scope. Always maintain a professional tone and answer in the same language as the user's question.",
+    "ragPromptPrefix": "You are a professional and knowledgeable AI assistant. Based on the provided context, please answer the user's question accurately. If the answer is found in the context, use it. If NOT found, use your general knowledge to answer naturally and helpfully. Do NOT mention that the information is missing from the documents unless explicitly asked about the source.",
     "ragPromptFlexible": "You are a professional AI assistant. Based on the provided context, answer the question. If the answer is not in the context, use your general knowledge to provide a helpful and comprehensive response. Always maintain a professional tone and answer in the same language as the user's question.",
     "ragContextPrefix": "You have access to the following information from the knowledge base:"
 }

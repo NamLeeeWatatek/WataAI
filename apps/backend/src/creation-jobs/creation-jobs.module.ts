@@ -25,4 +25,4 @@ import { CreationToolsModule } from '../creation-tools/creation-tools.module';
   providers: [CreationJobsService],
   exports: [CreationJobsService, RelationalCreationJobsPersistenceModule],
 })
-export class CreationJobsModule { }
+export class CreationJobsModule {}

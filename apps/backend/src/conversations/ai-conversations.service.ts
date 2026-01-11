@@ -13,7 +13,7 @@ export class AiConversationsService {
   constructor(
     @InjectRepository(AiConversationEntity)
     private readonly conversationRepository: Repository<AiConversationEntity>,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateAiConversationDto) {
     const conversation = this.conversationRepository.create({
@@ -78,11 +78,7 @@ export class AiConversationsService {
     return { success: true };
   }
 
-  async addMessage(
-    id: string,
-    userId: string,
-    message: AddAiMessageDto,
-  ) {
+  async addMessage(id: string, userId: string, message: AddAiMessageDto) {
     const conversation = await this.findOne(id, userId);
     conversation.messages.push(message);
     return this.conversationRepository.save(conversation);

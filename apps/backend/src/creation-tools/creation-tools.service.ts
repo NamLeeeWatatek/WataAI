@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { CreateCreationToolDto } from './dto/create-creation-tool.dto';
 import { UpdateCreationToolDto } from './dto/update-creation-tool.dto';
@@ -18,7 +22,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async create(createDto: CreateCreationToolDto): Promise<CreationTool> {
     const existing = await this.repository.findBySlug(createDto.slug);

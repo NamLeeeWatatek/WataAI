@@ -4,7 +4,10 @@ import { Logger } from '@nestjs/common';
 import { JOB_QUEUE } from './execution-queue.constants';
 import { CreationToolsService } from '../../creation-tools/creation-tools.service';
 import { ExecutionStrategyResolver } from '../execution-strategy.resolver';
-import { ExecutionFlow, ExecutionType } from '../../creation-tools/domain/creation-tool';
+import {
+  ExecutionFlow,
+  ExecutionType,
+} from '../../creation-tools/domain/creation-tool';
 import { GenerationJob } from '../../generation-jobs/domain/generation-job';
 import {
   CreationJob,
@@ -93,9 +96,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
 
       const config = tool.executionFlow as ExecutionFlow;
       const startTime = Date.now();
-      const apiUrl =
-        process.env.BACKEND_DOMAIN ||
-        process.env.API_URL;
+      const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
       const systemInputs = {
         ...executionInputs,
         _jobId: jobEntity.id,
@@ -130,9 +131,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
           `Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`,
         );
 
-        const apiUrl =
-          process.env.BACKEND_DOMAIN ||
-          process.env.API_URL
+        const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
         this.logger.warn(
           `Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/v1/callbacks/jobs/${jobEntity.id}/complete`,
         );

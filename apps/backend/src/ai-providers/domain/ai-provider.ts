@@ -144,18 +144,24 @@ export interface AiUsageStats {
   totalOutputTokens: number;
   totalCost: number;
   totalRequests: number;
-  byProvider: Record<string, {
-    inputTokens: number;
-    outputTokens: number;
-    cost: number;
-    requests: number;
-  }>;
-  byModel: Record<string, {
-    inputTokens: number;
-    outputTokens: number;
-    cost: number;
-    requests: number;
-  }>;
+  byProvider: Record<
+    string,
+    {
+      inputTokens: number;
+      outputTokens: number;
+      cost: number;
+      requests: number;
+    }
+  >;
+  byModel: Record<
+    string,
+    {
+      inputTokens: number;
+      outputTokens: number;
+      cost: number;
+      requests: number;
+    }
+  >;
 }
 
 /**

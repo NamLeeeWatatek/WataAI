@@ -53,9 +53,12 @@ export class FacebookProvider implements ChannelProvider {
         messageId: response.data.message_id,
       };
     } catch (error) {
+      console.error(
+        `Facebook API Error: ${error.response?.data?.error?.message || error.message}`,
+      );
       return {
         success: false,
-        error: error.message,
+        error: error.response?.data?.error?.message || error.message,
       };
     }
   }

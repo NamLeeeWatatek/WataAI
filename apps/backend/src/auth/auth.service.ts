@@ -112,7 +112,7 @@ export class AuthService {
         await this.workspaceInvitationsService.getPendingInvitationsByEmail(
           user.email,
         );
-      
+
       if (invitations && invitations.length > 0) {
         hasPendingInvitation = true;
         await this.workspaceInvitationsService.acceptPendingInvitations(
@@ -130,8 +130,7 @@ export class AuthService {
       );
     } else {
       // Get the workspace from accepted invitations
-      const workspaces =
-        await this.workspaceHelper.getUserWorkspaces(user.id);
+      const workspaces = await this.workspaceHelper.getUserWorkspaces(user.id);
       workspace = workspaces.length > 0 ? workspaces[0] : null;
     }
 
@@ -609,9 +608,10 @@ export class AuthService {
     const existingWorkspaces = await this.workspaceHelper.getUserWorkspaces(
       user.id,
     );
-    
+
     // Use first workspace user belongs to (preserve context)
-    const workspaceId = existingWorkspaces.length > 0 ? existingWorkspaces[0].id : undefined;
+    const workspaceId =
+      existingWorkspaces.length > 0 ? existingWorkspaces[0].id : undefined;
 
     const { token, refreshToken, tokenExpires } = await this.getTokensData({
       id: session.user.id,

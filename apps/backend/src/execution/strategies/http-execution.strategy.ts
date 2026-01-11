@@ -54,9 +54,11 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
     // Auto-inject system metadata (Business Rule: Always provide context)
     // This ensures that even if the bodyTemplate didn't include _callbackUrl, we force it in.
     if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
-      if (!body._callbackUrl && inputs._callbackUrl) body._callbackUrl = inputs._callbackUrl;
+      if (!body._callbackUrl && inputs._callbackUrl)
+        body._callbackUrl = inputs._callbackUrl;
       if (!body._jobId && inputs._jobId) body._jobId = inputs._jobId;
-      if (!body._workspaceId && inputs._workspaceId) body._workspaceId = inputs._workspaceId;
+      if (!body._workspaceId && inputs._workspaceId)
+        body._workspaceId = inputs._workspaceId;
     }
 
     // 2. SSRF Protection: Block private IP ranges and localhost
@@ -109,8 +111,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         if (error.response.status === 504) {
           this.logger.warn(
             'Gateway Timeout (504) detected. The external tool took too long to respond to the initial webhook. ' +
-            'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
-            'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
+              'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
+              'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
           );
         }
       } else if (error.code === 'ECONNABORTED') {
@@ -119,8 +121,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         this.logger.warn(
           'Request Timeout detected. The external tool took too long to respond. ' +
-          '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
-          '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
+            '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
+            '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
         );
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);

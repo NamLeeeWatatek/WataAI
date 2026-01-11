@@ -20,7 +20,7 @@ export class FacebookConversationSyncService {
     private readonly channelsService: ChannelsService,
     @Inject(forwardRef(() => ConversationsService))
     private readonly conversationsService: ConversationsService,
-  ) { }
+  ) {}
 
   /**
    * Sync conversations from Facebook for a specific channel
@@ -62,7 +62,6 @@ export class FacebookConversationSyncService {
     }
 
     const botId = channel.metadata?.botId as string;
-
 
     this.logger.log(
       `Syncing conversations for channel ${channel.name} (${channelId})`,

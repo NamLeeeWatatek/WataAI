@@ -23,7 +23,7 @@ export interface CreationJobFailedEvent {
 export class NotificationEventListener {
   private readonly logger = new Logger(NotificationEventListener.name);
 
-  constructor(private readonly notificationsService: NotificationsService) { }
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   @OnEvent('creation-job.completed')
   async handleCreationJobCompleted(payload: CreationJobCompletedEvent) {
@@ -31,7 +31,8 @@ export class NotificationEventListener {
       `Handling creation-job.completed event for job ${payload.id}`,
     );
     const prompt = payload.inputData?.prompt || 'Generation';
-    const displayPrompt = prompt.length > 50 ? prompt.substring(0, 47) + '...' : prompt;
+    const displayPrompt =
+      prompt.length > 50 ? prompt.substring(0, 47) + '...' : prompt;
 
     try {
       await this.notificationsService.create({
@@ -70,7 +71,9 @@ export class NotificationEventListener {
         },
       });
     } catch (error) {
-      this.logger.error(`Error handling creation-job.failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Error handling creation-job.failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 }

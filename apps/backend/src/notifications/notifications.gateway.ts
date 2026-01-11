@@ -40,7 +40,10 @@ export interface JobCreatedPayload {
   };
 }
 
-export type GatewayNotificationPayload = Notification | JobProgressPayload | JobCreatedPayload;
+export type GatewayNotificationPayload =
+  | Notification
+  | JobProgressPayload
+  | JobCreatedPayload;
 
 @WebSocketGateway({
   cors: {
@@ -52,7 +55,8 @@ export type GatewayNotificationPayload = Notification | JobProgressPayload | Job
 })
 @UseGuards(AuthGuard('jwt'))
 export class NotificationsGateway
-  implements OnGatewayConnection, OnGatewayDisconnect {
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -62,7 +66,7 @@ export class NotificationsGateway
   constructor(
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;

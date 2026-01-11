@@ -13,7 +13,7 @@ export class TelegramService {
     private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+  ) { }
 
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
     try {
@@ -69,6 +69,13 @@ export class TelegramService {
       };
     } catch (error) {
       this.logger.error(`Error sending Telegram message: ${error.message}`);
+      // Log extra details if available (e.g. from fetch response if error object has it)
+      if (error.response) {
+        try {
+          const errorBody = await error.response.json();
+          this.logger.error(`Telegram API detailed error: ${JSON.stringify(errorBody)}`);
+        } catch (e) { /* ignore json parse error */ }
+      }
       return {
         success: false,
         error: error.message,

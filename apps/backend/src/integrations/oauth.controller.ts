@@ -19,7 +19,7 @@ export class OAuthController {
     private readonly oauthService: OAuthService,
     private readonly channelsService: ChannelsService,
     private readonly integrationsService: IntegrationsService,
-  ) { }
+  ) {}
 
   @Get('login/:provider')
   @ApiOperation({ summary: 'Start OAuth flow' })

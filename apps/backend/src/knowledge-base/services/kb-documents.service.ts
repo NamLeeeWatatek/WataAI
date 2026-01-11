@@ -46,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) { }
+  ) {}
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);
@@ -143,12 +143,11 @@ export class KBDocumentsService {
 
     const sanitizedName = sanitizeText(createDto.name);
 
-    // Only extract/sanitize content if provided (e.g. pasted text), 
+    // Only extract/sanitize content if provided (e.g. pasted text),
     // otherwise it will be handled by background worker for files
-    const sanitizedContent = createDto.content ? extractCleanText(
-      createDto.content,
-      createDto.mimeType,
-    ) : '';
+    const sanitizedContent = createDto.content
+      ? extractCleanText(createDto.content, createDto.mimeType)
+      : '';
 
     const sanitizedMetadata = sanitizeMetadata(createDto.metadata);
 

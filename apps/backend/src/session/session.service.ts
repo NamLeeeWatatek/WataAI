@@ -14,19 +14,19 @@ export class SessionService {
 
   async findById(id: Session['id']): Promise<NullableType<Session>> {
     const session = await this.sessionRepository.findById(id);
-    
+
     if (session) {
       // ✅ FIX: Check session expiry
       const expiryDate = new Date(session.createdAt);
       expiryDate.setDate(expiryDate.getDate() + this.SESSION_EXPIRY_DAYS);
-      
+
       if (new Date() > expiryDate) {
         this.logger.log(`Session ${id} has expired, deleting...`);
         await this.deleteById(id);
         return null;
       }
     }
-    
+
     return session;
   }
 

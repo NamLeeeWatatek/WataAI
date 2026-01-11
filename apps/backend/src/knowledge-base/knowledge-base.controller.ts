@@ -63,7 +63,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) { }
+  ) {}
 
   @Permissions('kb:List')
   @Get()

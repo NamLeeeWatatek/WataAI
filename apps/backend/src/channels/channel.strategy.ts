@@ -11,7 +11,7 @@ import { ChannelsService } from './channels.service';
 export class ChannelStrategy {
   private providers = new Map<string, ChannelProvider>();
 
-  constructor(private channelsService: ChannelsService) {}
+  constructor(private channelsService: ChannelsService) { }
 
   register(channelType: string, provider: ChannelProvider): void {
     this.providers.set(channelType, provider);
@@ -58,7 +58,15 @@ export class ChannelStrategy {
       );
     }
 
-    return provider.sendMessage(message);
+    try {
+      return await provider.sendMessage(message);
+    } catch (error) {
+      console.error(`Error sending message via provider ${channelType}:`, error);
+      return {
+        success: false,
+        error: error.message || 'Unknown provider error',
+      };
+    }
   }
 
   verifyWebhook(channelType: string, payload: any, signature: string): boolean {

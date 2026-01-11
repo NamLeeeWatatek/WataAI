@@ -15,11 +15,12 @@ import { DeepPartial } from '../../../../../utils/types/deep-partial.type';
 
 @Injectable()
 export class CreationToolsRelationalRepository
-  implements CreationToolRepository {
+  implements CreationToolRepository
+{
   constructor(
     @InjectRepository(CreationToolEntity)
     private readonly repository: Repository<CreationToolEntity>,
-  ) { }
+  ) {}
 
   async create(data: DeepPartial<CreationTool>): Promise<CreationTool> {
     const persistenceModel = CreationToolMapper.toPersistence(

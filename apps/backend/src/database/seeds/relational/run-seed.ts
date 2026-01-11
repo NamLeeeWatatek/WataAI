@@ -12,6 +12,7 @@ import { ConversationSeedService } from './conversation/conversation-seed.servic
 import { TemplatesSeedService } from './templates/templates-seed.service';
 import { CreationToolsSeederService } from './creation-tools/creation-tools-seed.service';
 import { CategoriesSeedService } from './categories/categories-seed.service';
+import { PlanSeedService } from './plan/plan-seed.service';
 import { SeedModule } from './seed.module';
 
 const runSeed = async () => {
@@ -41,6 +42,8 @@ const runSeed = async () => {
   await app.get(CreationToolsSeederService).run();
 
   await app.get(TemplatesSeedService).run();
+
+  await app.get(PlanSeedService).run();
 
   await app.close();
 };

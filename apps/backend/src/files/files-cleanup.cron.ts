@@ -10,7 +10,7 @@ export class FilesCronService {
   constructor(
     private readonly filesService: FilesService,
     private readonly fileRepository: FileRepository,
-  ) { }
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleCron() {

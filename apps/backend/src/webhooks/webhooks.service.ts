@@ -1,4 +1,9 @@
-﻿import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+﻿import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import { WebhookEventEntity } from './infrastructure/persistence/relational/entities/webhook.entity';
@@ -131,7 +136,11 @@ export class WebhooksService {
     return this.getEvent(id);
   }
 
-  async markAsFailedWithRetry(id: string, errorMessage: string, retryCount: number = 0) {
+  async markAsFailedWithRetry(
+    id: string,
+    errorMessage: string,
+    retryCount: number = 0,
+  ) {
     // Helper to mark as failed with retry count tracking
     await this.webhookEventRepo.update(id, {
       status: 'failed',
