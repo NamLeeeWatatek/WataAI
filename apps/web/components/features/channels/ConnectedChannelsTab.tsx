@@ -141,32 +141,7 @@ export function ConnectedChannelsTab({
     return colors[type] || 'text-muted-foreground bg-muted/50 border-border/40';
   };
 
-  // Expand channels to include sub-pages (e.g. Facebook Pages)
-  const allDisplayChannels = React.useMemo(() => {
-    return channels.flatMap(channel => {
-      if (channel.type === 'facebook' && channel.metadata?.pages && Array.isArray(channel.metadata.pages)) {
-        const pages = channel.metadata.pages.map((page: any) => ({
-          ...channel,
-          id: `${channel.id}:${page.id}`,
-          name: page.name,
-          // Keep original type but mark as page in metadata
-          metadata: {
-            ...channel.metadata,
-            ...page,
-            isPage: true,
-            parentId: channel.id,
-            botId: page.botId // Use page-specific botId if available
-          }
-        }));
-        // If there are pages, show them. If you also want to show the main account, include `channel`.
-        // Usually for FB, we interact with pages.
-        return pages.length > 0 ? pages : [channel];
-      }
-      return [channel];
-    });
-  }, [channels]);
-
-  const filteredChannels = allDisplayChannels.filter(channel =>
+  const filteredChannels = channels.filter(channel =>
     channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     channel.type.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -187,7 +162,7 @@ export function ConnectedChannelsTab({
             {getIcon(row.original.type)}
           </div>
           <div>
-            <div className="font-semibold text-sm">{getValue() as React.ReactNode}</div>
+            <div className="font-semibold text-sm">{row.original.metadata?.pageName || (getValue() as React.ReactNode)}</div>
             <div className="text-xs text-muted-foreground capitalize">{row.original.type}</div>
           </div>
         </div>
@@ -320,13 +295,17 @@ export function ConnectedChannelsTab({
                       </div>
                     </CardHeader>
                     <CardContent className="flex-1 pb-6">
-                      <CardTitle className="text-xl font-black mb-1 line-clamp-1 group-hover:text-primary transition-colors">{channel.name}</CardTitle>
+                      <CardTitle className="text-xl font-black mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                        {channel.metadata?.pageName || channel.name}
+                      </CardTitle>
                       <CardDescription className="capitalize font-bold text-xs tracking-widest opacity-70">
-                        {channel.type} Proxy
+                        {channel.metadata?.pageId ? 'Facebook Page' : `${channel.type} Channel`}
                       </CardDescription>
                       {sameTypeCount > 1 && (
                         <p className="text-[10px] font-black text-muted-foreground uppercase mt-3 tracking-wider opacity-60">
-                          Account {channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1} of {sameTypeCount}
+                          {channel.metadata?.accountName
+                            ? `${channel.metadata.accountName}`
+                            : `Account ${channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1}`}
                         </p>
                       )}
                     </CardContent>

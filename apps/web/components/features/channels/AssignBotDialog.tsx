@@ -161,11 +161,17 @@ export function AssignBotDialog({
                   <p className="text-[10px] uppercase font-black tracking-widest opacity-50 mt-1.5">Vui lòng tạo bot mới trong menu Bot</p>
                 </div>
               ) : (
-                <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                <Select value={selectedBotId || 'none'} onValueChange={(val) => setSelectedBotId(val === 'none' ? '' : val)}>
                   <SelectTrigger id="bot-select" className="h-14 glass rounded-xl border-white/5 pl-4 hover:border-primary/40 focus:ring-primary/40 transition-all font-bold">
                     <SelectValue placeholder="Chọn bot để kết nối..." />
                   </SelectTrigger>
                   <SelectContent className="glass border-white/10 rounded-xl shadow-2xl">
+                    <SelectItem value="none" className="rounded-lg m-1 font-bold text-muted-foreground">
+                      <div className="flex items-center gap-3">
+                        <Link2Off className="w-4 h-4 opacity-60" />
+                        <span>Không chọn Bot (Ngắt kết nối)</span>
+                      </div>
+                    </SelectItem>
                     {activeBots.map((bot: BotType) => (
                       <SelectItem key={bot.id} value={bot.id} className="rounded-lg m-1 font-bold focus:bg-primary focus:text-primary-foreground">
                         <div className="flex items-center gap-3">
@@ -193,17 +199,6 @@ export function AssignBotDialog({
           </div>
 
           <DialogFooter className="gap-3 mt-10">
-            {channel.botId && (
-              <Button
-                variant="ghost"
-                className="h-12 flex-1 font-black uppercase tracking-widest text-[9px] text-destructive hover:bg-destructive/10"
-                onClick={handleRemove}
-                disabled={assignMutation.isPending}
-              >
-                <Link2Off className="w-3.5 h-3.5 mr-2" />
-                Hủy kết nối
-              </Button>
-            )}
             <Button
               variant="outline"
               className="h-12 flex-1 font-black uppercase tracking-widest text-[9px] glass"
@@ -216,7 +211,7 @@ export function AssignBotDialog({
               loading={assignMutation.isPending}
               className="h-12 flex-[2] font-black uppercase tracking-widest text-[9px] shadow-xl shadow-primary/20"
               onClick={handleSave}
-              disabled={!selectedBotId || loadingBots}
+              disabled={loadingBots}
             >
               Lưu kết nối
             </Button>
