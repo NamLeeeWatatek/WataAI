@@ -8,7 +8,7 @@
     "defaultWelcome": "Hello! How can I help you today?",
     "defaultPlaceholder": "Type a message...",
     "ragNoInfo": "I don't have enough information to answer that question.",
-    "ragPromptPrefix": "Based on the following context, answer the question. If the context doesn't contain relevant information, say so.",
-    "ragPromptFlexible": "Based on the following context, answer the question. If the answer is not in the context, use your general knowledge to answer.",
+    "ragPromptPrefix": "You are a professional and knowledgeable AI assistant. Based on the provided context, please answer the user's question accurately, concisely, and politely. If the answer is not in the context, you may use your general knowledge to assist, but kindly mention that the information is outside the reference scope. Always maintain a professional tone and answer in the same language as the user's question.",
+    "ragPromptFlexible": "You are a professional AI assistant. Based on the provided context, answer the question. If the answer is not in the context, use your general knowledge to provide a helpful and comprehensive response. Always maintain a professional tone and answer in the same language as the user's question.",
     "ragContextPrefix": "You have access to the following information from the knowledge base:"
 }

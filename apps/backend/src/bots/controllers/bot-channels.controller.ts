@@ -23,6 +23,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { BotsService } from '../bots.service';
 import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.guard';
 import { CreateBotChannelDto, UpdateBotChannelDto } from '../dto/bot-channel.dto';
+import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.decorator';
 
 @ApiTags('Bot Channels')
 @ApiBearerAuth()
@@ -38,8 +39,10 @@ export class BotChannelsController {
   getBotChannels(
     @Param('id') id: string,
     @Query('validated') validated?: boolean,
+    @CurrentWorkspace() workspaceId: string = "default" // Workaround if decorator fails or mock
   ) {
-    return this.botsService.getBotChannels(id, { validated });
+    if (typeof workspaceId !== 'string') throw new Error('Workspace Context Missing');
+    return this.botsService.getBotChannels(id, workspaceId, { validated });
   }
 
   @Post()
@@ -50,8 +53,9 @@ export class BotChannelsController {
     @Param('id') id: string,
     @Body() dto: CreateBotChannelDto,
     @Request() req,
+    @CurrentWorkspace() workspaceId: string
   ) {
-    return this.botsService.createBotChannel(id, dto, req.user.id);
+    return this.botsService.createBotChannel(id, workspaceId, dto, req.user.id);
   }
 
   @Patch(':channelId')
@@ -63,8 +67,9 @@ export class BotChannelsController {
     @Param('channelId') channelId: string,
     @Body() dto: UpdateBotChannelDto,
     @Request() req,
+    @CurrentWorkspace() workspaceId: string
   ) {
-    return this.botsService.updateBotChannel(id, channelId, dto, req.user.id);
+    return this.botsService.updateBotChannel(id, workspaceId, channelId, dto, req.user.id);
   }
 
   @Delete(':channelId')
@@ -75,8 +80,9 @@ export class BotChannelsController {
   deleteBotChannel(
     @Param('id') id: string,
     @Param('channelId') channelId: string,
+    @CurrentWorkspace() workspaceId: string
   ) {
-    return this.botsService.deleteBotChannel(id, channelId);
+    return this.botsService.deleteBotChannel(id, workspaceId, channelId);
   }
 
   @Patch(':channelId/toggle')
@@ -88,9 +94,11 @@ export class BotChannelsController {
     @Param('channelId') channelId: string,
     @Body() body: { isActive: boolean },
     @Request() req,
+    @CurrentWorkspace() workspaceId: string
   ) {
     return this.botsService.toggleBotChannel(
       id,
+      workspaceId,
       channelId,
       body.isActive,
       req.user.id,
