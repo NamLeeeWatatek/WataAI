@@ -72,6 +72,8 @@
       "botsMostConversations": "Bot có nhiều cuộc hội thoại nhất",
       "mostUsedFlows": "Workflow được sử dụng nhiều nhất",
       "flowsMostExecutions": "Workflow có nhiều lần thực thi nhất",
+      "overviewDescription": "Chỉ số không gian làm việc toàn cầu",
+      "totalConversations": "Tổng cuộc hội thoại",
       "noDataAvailable": "Không có dữ liệu",
       "active": "đang hoạt động",
       "new": "mới",
@@ -143,6 +145,7 @@
     "success": "Thành công",
     "recommended": "Khuyến nghị",
     "notAvailable": "Không khả dụng",
+    "home": "Trang chủ",
     "loadingText": "Đang tải"
   },
   "validation": {

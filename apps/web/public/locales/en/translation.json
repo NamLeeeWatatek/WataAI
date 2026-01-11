@@ -72,6 +72,8 @@
       "botsMostConversations": "Bots with most conversations",
       "mostUsedFlows": "Most Used Flows",
       "flowsMostExecutions": "Flows with most executions",
+      "overviewDescription": "Global workspace metrics",
+      "totalConversations": "Total Conversations",
       "noDataAvailable": "No data available",
       "active": "active",
       "new": "new",
@@ -143,6 +145,7 @@
     "success": "Success",
     "recommended": "Recommended",
     "notAvailable": "Not Available",
+    "home": "Home",
     "loadingText": "Loading"
   },
   "validation": {

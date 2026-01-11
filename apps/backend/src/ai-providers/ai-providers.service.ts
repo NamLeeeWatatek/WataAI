@@ -404,6 +404,126 @@ export class AiProvidersService {
     throw new BadRequestException(`Unsupported provider: ${providerKey}`);
   }
 
+  async chatStream(
+    prompt: string,
+    model: string,
+    provider?: string,
+    apiKey?: string,
+    workspaceId?: string,
+    baseUrl?: string,
+    useTools?: boolean,
+  ): Promise<AsyncGenerator<string>> {
+    const providerKey = this.resolveProviderKey(model, provider);
+    const key = apiKey || (await this.getApiKey(providerKey));
+    const messages = [{ role: 'user', content: prompt } as ChatMessage];
+
+    return this.dispatchChatStream(
+      providerKey,
+      messages,
+      model,
+      key,
+      baseUrl,
+      useTools,
+    );
+  }
+
+  async chatWithHistoryStream(
+    messages: ChatMessage[],
+    model: string,
+    apiKey?: string,
+    baseUrl?: string,
+  ): Promise<AsyncGenerator<string>> {
+    const providerKey = this.resolveProviderKey(model);
+    const key = apiKey || (await this.getApiKey(providerKey));
+
+    return this.dispatchChatStream(providerKey, messages, model, key, baseUrl);
+  }
+
+  async chatWithHistoryUsingProviderStream(
+    messages: ChatMessage[],
+    model: string,
+    providerConfigId: string,
+    scope: 'user' | 'workspace',
+    scopeId: string,
+  ): Promise<AsyncGenerator<string>> {
+    let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
+
+    if (scope === 'user') {
+      const c = await this.aiConfigService.getUserConfig(
+        scopeId,
+        providerConfigId,
+      );
+      if (!c) throw new NotFoundException('Config not found');
+      config = c;
+    } else {
+      const c = await this.aiConfigService.getWorkspaceConfig(
+        scopeId,
+        providerConfigId,
+      );
+      if (!c) throw new NotFoundException('Config not found');
+      config = c;
+    }
+
+    if (!config.provider) throw new BadRequestException('Provider not loaded');
+
+    const providerKey = config.provider.key.toLowerCase();
+    const apiKey = config.config.apiKey as string;
+    const baseUrl = (config.config.baseUrl || config.config.baseURL) as
+      | string
+      | undefined;
+
+    return this.dispatchChatStream(
+      providerKey,
+      messages,
+      model,
+      apiKey,
+      baseUrl,
+    );
+  }
+
+  private async dispatchChatStream(
+    providerKey: string,
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+    baseUrl?: string,
+    useTools?: boolean,
+  ): Promise<AsyncGenerator<string>> {
+    if (providerKey === 'google') {
+      return this.aiModelService.chatWithGoogleStream(
+        messages,
+        model,
+        apiKey,
+        useTools,
+      );
+    }
+    if (providerKey === 'openai') {
+      return this.aiModelService.chatWithOpenAIStream(
+        messages,
+        model,
+        apiKey,
+        baseUrl,
+      );
+    }
+    if (providerKey === 'anthropic') {
+      return this.aiModelService.chatWithAnthropicStream(
+        messages,
+        model,
+        apiKey,
+      );
+    }
+    if (providerKey === 'ollama') {
+      return this.aiModelService.chatWithOllamaStream(
+        messages,
+        model,
+        baseUrl,
+        apiKey,
+      );
+    }
+
+    throw new BadRequestException(`Unsupported provider: ${providerKey}`);
+  }
+
   async fetchProviderModels(
     configId: string,
     context: 'user' | 'workspace',

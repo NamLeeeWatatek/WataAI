@@ -1,4 +1,5 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { KBRagService } from './services/kb-rag.service';
@@ -14,7 +15,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseQueryController {
-  constructor(private readonly ragService: KBRagService) {}
+  constructor(private readonly ragService: KBRagService) { }
 
   @Post('query')
   @ApiOperation({ summary: 'Query knowledge base (vector search)' })
@@ -49,6 +50,7 @@ export class KnowledgeBaseQueryController {
       {
         limit: answerDto.limit || 5,
         similarityThreshold: answerDto.similarityThreshold || 0.5,
+        fallbackToGeneralKnowledge: answerDto.fallbackToGeneralKnowledge || false,
       },
     );
 
@@ -57,6 +59,51 @@ export class KnowledgeBaseQueryController {
       question: answerDto.question,
       ...result,
     };
+  }
+
+  @Post('stream/answer')
+  @ApiOperation({
+    summary: 'Generate answer using RAG with Streaming (SSE)',
+    description: 'Returns a stream of events: "source" (JSON) and "token" (string).',
+  })
+  async generateAnswerStream(
+    @Body() answerDto: GenerateAnswerDto,
+    @Res() res: Response,
+  ) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+      const stream = this.ragService.generateAnswerStream(
+        answerDto.question,
+        answerDto.knowledgeBaseId,
+        answerDto.model,
+        {
+          limit: answerDto.limit || 5,
+          similarityThreshold: answerDto.similarityThreshold || 0.5,
+          fallbackToGeneralKnowledge: answerDto.fallbackToGeneralKnowledge || false,
+        },
+      );
+
+      for await (const event of stream) {
+        if (event.type === 'source') {
+          res.write(`event: source\ndata: ${JSON.stringify(event.data)}\n\n`);
+        } else if (event.type === 'token') {
+          // Sanitize newlines for SSE data format if necessary, or just send raw data payload
+          // Usually data: <json> is safer, but for tokens we might want simpler
+          res.write(`event: token\ndata: ${JSON.stringify({ token: event.data })}\n\n`);
+        } else if (event.type === 'error') {
+          res.write(`event: error\ndata: ${JSON.stringify({ message: event.data })}\n\n`);
+        }
+      }
+
+      res.write('event: done\ndata: [DONE]\n\n');
+      res.end();
+    } catch (error) {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: error.message })}\n\n`);
+      res.end();
+    }
   }
 
   @Post('chat')
