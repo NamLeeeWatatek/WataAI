@@ -257,13 +257,18 @@ export default function PublicBotPage() {
                         gap: '8px',
                         flexShrink: 0,
                     }}>
-                        <input
-                            type="text"
+                        <textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
                             placeholder={bot.placeholderText || 'Nhập tin nhắn...'}
                             disabled={loading}
+                            rows={1}
                             style={{
                                 flex: 1,
                                 padding: '10px 14px',
@@ -272,6 +277,10 @@ export default function PublicBotPage() {
                                 fontSize: '14px',
                                 outline: 'none',
                                 transition: 'border-color 0.2s',
+                                resize: 'none',
+                                minHeight: '44px',
+                                maxHeight: '120px',
+                                fontFamily: 'inherit'
                             }}
                             onFocus={(e) => e.currentTarget.style.borderColor = primaryColor}
                             onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
