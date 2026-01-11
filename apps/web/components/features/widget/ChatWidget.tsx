@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, X, Send, Sparkles, AlertCircle } from 'lucide-react'
+import { MessageCircle, X, SendHorizontal, Sparkles, AlertCircle } from 'lucide-react'
 import { MessageRole } from '@/lib/types/conversations'
 import { Media } from '@/components/ui/Media'
 import { cn } from '@/lib/utils'
@@ -253,7 +253,7 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                 style={{ backgroundColor: primaryColor }}
                                 aria-label="Send message"
                             >
-                                <Send className="w-4 h-4" />
+                                <SendHorizontal className="w-4 h-4" />
                             </button>
                         </div>
                         <div className="text-center mt-2">

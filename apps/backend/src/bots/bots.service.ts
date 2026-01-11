@@ -211,11 +211,18 @@ export class BotsService {
     return { data, total };
   }
 
-  async findOne(id: string) {
-    const bot = await this.botRepository.findOne({
-      where: { id },
-      relations: ['workspace', 'knowledgeBases', 'activeVersion'],
-    });
+  async findOne(id: string, workspaceId?: string) {
+    const query = this.botRepository.createQueryBuilder('bot')
+      .leftJoinAndSelect('bot.workspace', 'workspace')
+      .leftJoinAndSelect('bot.knowledgeBases', 'knowledgeBases')
+      .leftJoinAndSelect('bot.activeVersion', 'activeVersion')
+      .where('bot.id = :id', { id });
+
+    if (workspaceId) {
+      query.andWhere('bot.workspaceId = :workspaceId', { workspaceId });
+    }
+
+    const bot = await query.getOne();
 
     if (!bot) {
       throw new NotFoundException('Bot not found');
@@ -258,7 +265,7 @@ export class BotsService {
     return bot;
   }
 
-  async update(id: string, updateDto: UpdateBotDto) {
+  async update(id: string, workspaceId: string, updateDto: UpdateBotDto) {
     // 1. Separate generic bot fields from visual/widget fields
     const {
       primaryColor,
@@ -273,7 +280,7 @@ export class BotsService {
     } = updateDto;
 
     // 2. Update generic bot entity fields
-    const bot = await this.findOne(id);
+    const bot = await this.findOne(id, workspaceId);
 
     // Clean up invalid UUIDs
     if (botUpdate.flowId === 'undefined' || botUpdate.flowId === 'null') botUpdate.flowId = null;
@@ -324,28 +331,28 @@ export class BotsService {
       }
     }
 
-    return this.findOne(id); // Return fresh with flattened config
+    return this.findOne(id, workspaceId); // Return fresh with flattened config
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, workspaceId: string) {
+    await this.findOne(id, workspaceId);
     await this.botRepository.softDelete(id);
   }
 
-  async activate(id: string) {
-    return this.update(id, { status: BotStatus.ACTIVE });
+  async activate(id: string, workspaceId: string) {
+    return this.update(id, workspaceId, { status: BotStatus.ACTIVE });
   }
 
-  async pause(id: string) {
-    return this.update(id, { status: BotStatus.PAUSED });
+  async pause(id: string, workspaceId: string) {
+    return this.update(id, workspaceId, { status: BotStatus.PAUSED });
   }
 
-  async archive(id: string) {
-    return this.update(id, { status: BotStatus.ARCHIVED });
+  async archive(id: string, workspaceId: string) {
+    return this.update(id, workspaceId, { status: BotStatus.ARCHIVED });
   }
 
-  async linkKnowledgeBase(botId: string, dto: LinkKnowledgeBaseDto) {
-    const bot = await this.findOne(botId);
+  async linkKnowledgeBase(botId: string, workspaceId: string, dto: LinkKnowledgeBaseDto) {
+    const bot = await this.findOne(botId, workspaceId);
 
     const existing = await this.botKbRepository.findOne({
       where: { botId, knowledgeBaseId: dto.knowledgeBaseId },
@@ -370,11 +377,18 @@ export class BotsService {
     return this.botKbRepository.save(link);
   }
 
-  async unlinkKnowledgeBase(botId: string, knowledgeBaseId: string) {
+  async unlinkKnowledgeBase(botId: string, workspaceId: string, knowledgeBaseId: string) {
+    // Verify ownership
+    await this.findOne(botId, workspaceId);
     await this.botKbRepository.delete({ botId, knowledgeBaseId });
   }
 
-  async getLinkedKnowledgeBases(botId: string) {
+  async getLinkedKnowledgeBases(botId: string, workspaceId?: string) {
+    // Optionally verify ownership if workspaceId is provided
+    if (workspaceId) {
+      await this.findOne(botId, workspaceId);
+    }
+
     // First get the linking records
     const linkedRecords = await this.botKbRepository.find({
       where: { botId },
@@ -454,9 +468,13 @@ export class BotsService {
 
   async toggleKnowledgeBase(
     botId: string,
+    workspaceId: string,
     knowledgeBaseId: string,
     isActive: boolean,
   ) {
+    // Verify ownership
+    await this.findOne(botId, workspaceId);
+
     const link = await this.botKbRepository.findOne({
       where: { botId, knowledgeBaseId },
     });
@@ -469,8 +487,8 @@ export class BotsService {
     return this.botKbRepository.save(link);
   }
 
-  async duplicate(id: string, userId: string, newName?: string) {
-    const bot = await this.findOne(id);
+  async duplicate(id: string, workspaceId: string, userId: string, newName?: string) {
+    const bot = await this.findOne(id, workspaceId);
 
     const newBot = this.botRepository.create({
       ...bot,
@@ -486,8 +504,8 @@ export class BotsService {
     return this.botRepository.save(newBot);
   }
 
-  async getBotChannels(botId: string, options?: { validated?: boolean }) {
-    await this.findOne(botId);
+  async getBotChannels(botId: string, workspaceId: string, options?: { validated?: boolean }) {
+    await this.findOne(botId, workspaceId);
 
     const query = this.channelRepository
       .createQueryBuilder('channel')
@@ -504,10 +522,11 @@ export class BotsService {
 
   async createBotChannel(
     botId: string,
+    workspaceId: string,
     dto: CreateBotChannelDto,
     userId: string,
   ) {
-    const bot = await this.findOne(botId);
+    const bot = await this.findOne(botId, workspaceId);
 
     const channel = this.channelRepository.create({
       botId,
@@ -525,10 +544,15 @@ export class BotsService {
 
   async updateBotChannel(
     botId: string,
+    workspaceId: string,
     channelId: string,
     dto: UpdateBotChannelDto,
     userId: string,
   ) {
+    // Verify bot ownership implicitly by fetching channel which needs botId
+    // But to be safe and consistent with other methods:
+    await this.findOne(botId, workspaceId);
+
     const channel = await this.channelRepository.findOne({
       where: { id: channelId, botId },
     });
@@ -542,7 +566,9 @@ export class BotsService {
     return this.channelRepository.save(channel);
   }
 
-  async deleteBotChannel(botId: string, channelId: string) {
+  async deleteBotChannel(botId: string, workspaceId: string, channelId: string) {
+    await this.findOne(botId, workspaceId);
+
     const channel = await this.channelRepository.findOne({
       where: { id: channelId, botId },
     });
@@ -556,11 +582,12 @@ export class BotsService {
 
   async toggleBotChannel(
     botId: string,
+    workspaceId: string,
     channelId: string,
     isActive: boolean,
     userId: string,
   ) {
-    return this.updateBotChannel(botId, channelId, { isActive }, userId);
+    return this.updateBotChannel(botId, workspaceId, channelId, { isActive }, userId);
   }
 
   // Appearance logic moved to BotAppearanceService

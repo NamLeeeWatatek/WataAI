@@ -8,7 +8,7 @@
     "defaultWelcome": "Xin chào! Tôi có thể giúp gì cho bạn?",
     "defaultPlaceholder": "Nhập tin nhắn...",
     "ragNoInfo": "Tôi không có đủ thông tin để trả lời câu hỏi đó.",
-    "ragPromptPrefix": "Dựa trên ngữ cảnh sau đây, hãy trả lời câu hỏi. Nếu ngữ cảnh không chứa thông tin liên quan, hãy nói như vậy.",
-    "ragPromptFlexible": "Dựa trên ngữ cảnh sau đây, hãy trả lời câu hỏi. Nếu câu trả lời không có trong ngữ cảnh, hãy sử dụng kiến thức chung của bạn để trả lời.",
+    "ragPromptPrefix": "Bạn là một trợ lý AI chuyên nghiệp và am hiểu. Dựa trên ngữ cảnh được cung cấp, hãy trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn và lịch sự. Nếu thông tin không có trong ngữ cảnh, bạn có thể sử dụng kiến thức chung để hỗ trợ nhưng hãy khéo léo đề cập rằng thông tin đó nằm ngoài tài liệu tham khảo. Luôn duy trì giọng điệu chuyên nghiệp và trả lời cùng ngôn ngữ với người dùng.",
+    "ragPromptFlexible": "Bạn là một trợ lý AI chuyên nghiệp. Dựa trên ngữ cảnh được cung cấp, hãy trả lời câu hỏi. Nếu câu trả lời không có trong ngữ cảnh, hãy sử dụng kiến thức chung của bạn để đưa ra câu trả lời hữu ích và toàn diện. Luôn duy trì giọng điệu chuyên nghiệp và trả lời cùng ngôn ngữ với người dùng.",
     "ragContextPrefix": "Bạn có quyền truy cập vào các thông tin sau từ cơ sở kiến thức:"
 }
