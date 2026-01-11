@@ -16,7 +16,7 @@ export class ChannelsService {
   constructor(
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) { }
+  ) {}
 
   async findAll(workspaceId?: string): Promise<ChannelConnectionEntity[]> {
     const where: FindOptionsWhere<ChannelConnectionEntity> = {};

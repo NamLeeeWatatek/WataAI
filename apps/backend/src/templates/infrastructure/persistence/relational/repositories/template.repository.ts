@@ -19,7 +19,7 @@ export class TemplatesRelationalRepository implements TemplateRepository {
   constructor(
     @InjectRepository(TemplateEntity)
     private readonly templatesRepository: Repository<TemplateEntity>,
-  ) { }
+  ) {}
 
   async create(data: DeepPartial<Template>): Promise<Template> {
     const persistenceModel = TemplateMapper.toPersistence(data as Template);

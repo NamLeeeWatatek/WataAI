@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateCreationJobDto } from './dto/create-creation-jobs.dto';
@@ -23,18 +27,21 @@ export class CreationJobsService {
     private readonly i18n: I18nService,
     private readonly eventEmitter: EventEmitter2,
     private readonly creationToolsService: CreationToolsService,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateCreationJobDto,
     userId?: string,
     workspaceId?: string,
   ): Promise<CreationJob> {
-
     // Validate Input against Tool Config
-    const tool = await this.creationToolsService.findById(createDto.creationToolId);
+    const tool = await this.creationToolsService.findById(
+      createDto.creationToolId,
+    );
     if (!tool) {
-      throw new NotFoundException(`Creation Tool with ID ${createDto.creationToolId} not found`);
+      throw new NotFoundException(
+        `Creation Tool with ID ${createDto.creationToolId} not found`,
+      );
     }
 
     if (tool.formConfig && Array.isArray(tool.formConfig.fields)) {
@@ -55,8 +62,14 @@ export class CreationJobsService {
 
         if (isRequired) {
           const val = createDto.inputData[fieldName];
-          if (val === undefined || val === null || (typeof val === 'string' && val.trim() === '')) {
-            throw new BadRequestException(`Field '${(field as any).displayName || (field as any).label || fieldName}' is required`);
+          if (
+            val === undefined ||
+            val === null ||
+            (typeof val === 'string' && val.trim() === '')
+          ) {
+            throw new BadRequestException(
+              `Field '${(field as any).displayName || (field as any).label || fieldName}' is required`,
+            );
           }
         }
       }
@@ -160,7 +173,10 @@ export class CreationJobsService {
       // Emit socket event for real-time progress
       // Only emit if NOT completed/failed, because those are handled by the 'success/error' persistence listener
       // This prevents "Double Notification" spam for completion.
-      const isFinalStatus = [CreationJobStatus.COMPLETED, CreationJobStatus.FAILED].includes(updatedJob.status);
+      const isFinalStatus = [
+        CreationJobStatus.COMPLETED,
+        CreationJobStatus.FAILED,
+      ].includes(updatedJob.status);
 
       if (!isFinalStatus) {
         this.notificationsGateway.emitNewNotification({

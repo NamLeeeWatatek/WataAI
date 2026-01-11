@@ -58,12 +58,18 @@ export class CreateConversationDto {
   @IsUUID()
   workspaceId?: string;
 
-  @ApiPropertyOptional({ enum: ConversationSource, description: 'Source channel/platform' })
+  @ApiPropertyOptional({
+    enum: ConversationSource,
+    description: 'Source channel/platform',
+  })
   @IsOptional()
   @IsEnum(ConversationSource)
   source?: ConversationSource;
 
-  @ApiPropertyOptional({ enum: ConversationType, description: 'Conversation type' })
+  @ApiPropertyOptional({
+    enum: ConversationType,
+    description: 'Conversation type',
+  })
   @IsOptional()
   @IsEnum(ConversationType)
   type?: ConversationType;

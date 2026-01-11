@@ -217,7 +217,11 @@ export class FilesMinioService implements FileDriver {
     const baseUrl = this.minioEndpoint.endsWith('/')
       ? this.minioEndpoint.slice(0, -1)
       : this.minioEndpoint;
-    const uploadSignedUrl = await this.minioClient.presignedPutObject(bucket, key, 3600); // 1 hour expiry for upload
+    const uploadSignedUrl = await this.minioClient.presignedPutObject(
+      bucket,
+      key,
+      3600,
+    ); // 1 hour expiry for upload
     const downloadSignedUrl = `${baseUrl}/${bucket}/${key}`;
 
     this.logger.log(`✅ Generated direct URLs:`);

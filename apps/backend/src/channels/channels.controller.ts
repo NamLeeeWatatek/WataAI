@@ -30,7 +30,7 @@ export class ChannelsController {
   constructor(
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })
@@ -38,35 +38,41 @@ export class ChannelsController {
     const connections = await this.channelsService.findAll(workspaceId);
 
     // Enrich connections with dynamic data (e.g. pages for Facebook)
-    const enrichedConnections = await Promise.all(connections.map(async (conn) => {
-      // Clone metadata to avoid mutating the original entity if it's cached/tracked
-      const metadata = { ...conn.metadata };
+    const enrichedConnections = await Promise.all(
+      connections.map(async (conn) => {
+        // Clone metadata to avoid mutating the original entity if it's cached/tracked
+        const metadata = { ...conn.metadata };
 
-      if (conn.type === 'facebook' && metadata.userAccessToken) {
-        try {
-          const pages = await this.facebookOAuthService.getUserPages(metadata.userAccessToken);
-          metadata.pages = pages.map(p => ({
-            id: p.id,
-            name: p.name,
-            category: p.category,
-            tasks: p.tasks
-          }));
-        } catch (error) {
-          this.logger.warn(`Failed to fetch pages for connection ${conn.id}: ${error.message}`);
-          // Keep existing metadata, maybe add an error flag if needed
-          metadata.pagesError = 'Failed to fetch pages';
+        if (conn.type === 'facebook' && metadata.userAccessToken) {
+          try {
+            const pages = await this.facebookOAuthService.getUserPages(
+              metadata.userAccessToken,
+            );
+            metadata.pages = pages.map((p) => ({
+              id: p.id,
+              name: p.name,
+              category: p.category,
+              tasks: p.tasks,
+            }));
+          } catch (error) {
+            this.logger.warn(
+              `Failed to fetch pages for connection ${conn.id}: ${error.message}`,
+            );
+            // Keep existing metadata, maybe add an error flag if needed
+            metadata.pagesError = 'Failed to fetch pages';
+          }
         }
-      }
 
-      return {
-        id: conn.id,
-        name: conn.name,
-        type: conn.type,
-        status: conn.status,
-        connected_at: conn.connectedAt,
-        metadata: metadata,
-      };
-    }));
+        return {
+          id: conn.id,
+          name: conn.name,
+          type: conn.type,
+          status: conn.status,
+          connected_at: conn.connectedAt,
+          metadata: metadata,
+        };
+      }),
+    );
 
     return enrichedConnections;
   }

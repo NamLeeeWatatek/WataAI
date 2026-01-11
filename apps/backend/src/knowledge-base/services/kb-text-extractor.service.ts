@@ -130,7 +130,9 @@ export class KBTextExtractorService {
           // Final processing using standard pipeline
           const processed = this.processText(text);
 
-          this.logger.log(`PDF extraction completed: ${processed.length} chars`);
+          this.logger.log(
+            `PDF extraction completed: ${processed.length} chars`,
+          );
           resolve(processed);
         } catch (error) {
           clearTimeout(timeoutId);
@@ -327,7 +329,9 @@ export class KBTextExtractorService {
         }
 
         if (result.messages.length > 0) {
-          this.logger.warn(`DOCX extraction warnings: ${result.messages.length}`);
+          this.logger.warn(
+            `DOCX extraction warnings: ${result.messages.length}`,
+          );
         }
 
         const processed = this.processText(content);

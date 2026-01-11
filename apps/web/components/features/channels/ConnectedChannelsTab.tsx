@@ -141,7 +141,32 @@ export function ConnectedChannelsTab({
     return colors[type] || 'text-muted-foreground bg-muted/50 border-border/40';
   };
 
-  const filteredChannels = channels.filter(channel =>
+  // Expand channels to include sub-pages (e.g. Facebook Pages)
+  const allDisplayChannels = React.useMemo(() => {
+    return channels.flatMap(channel => {
+      if (channel.type === 'facebook' && channel.metadata?.pages && Array.isArray(channel.metadata.pages)) {
+        const pages = channel.metadata.pages.map((page: any) => ({
+          ...channel,
+          id: `${channel.id}:${page.id}`,
+          name: page.name,
+          // Keep original type but mark as page in metadata
+          metadata: {
+            ...channel.metadata,
+            ...page,
+            isPage: true,
+            parentId: channel.id,
+            botId: page.botId // Use page-specific botId if available
+          }
+        }));
+        // If there are pages, show them. If you also want to show the main account, include `channel`.
+        // Usually for FB, we interact with pages.
+        return pages.length > 0 ? pages : [channel];
+      }
+      return [channel];
+    });
+  }, [channels]);
+
+  const filteredChannels = allDisplayChannels.filter(channel =>
     channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     channel.type.toLowerCase().includes(searchQuery.toLowerCase())
   );

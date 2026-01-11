@@ -36,6 +36,7 @@ interface AssignBotDialogProps {
     name: string;
     type: string;
     botId?: string | null;
+    metadata?: any;
   } | null;
   workspaceId: string;
   onSuccess?: () => void;
@@ -64,27 +65,48 @@ export function AssignBotDialog({
   const activeBots = (botsData || []).filter((b: any) => b.isActive || b.status === 'active');
 
   const assignMutation = useMutation({
-    mutationFn: ({ botId }: { botId: string | null }) =>
-      axiosClient.patch(`/channels/${channel?.id}`, { botId }),
+    mutationFn: ({ botId, pageId, parentId }: { botId: string | null, pageId?: string, parentId?: string }) => {
+      if (parentId && pageId) {
+        return axiosClient.patch(`/channels/${parentId}`, { botId, pageId });
+      }
+      return axiosClient.patch(`/channels/${channel?.id}`, { botId });
+    },
     onSuccess: () => {
-      toast.success(selectedBotId ? 'Gateway synchronized' : 'Protocol disconnected');
+      toast.success(selectedBotId ? 'Đã kết nối bot thành công' : 'Đã hủy kết nối bot');
       queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
       onSuccess?.();
       onOpenChange(false);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to sync gateway');
+      toast.error(err.response?.data?.message || 'Lỗi khi lưu cấu hình');
     }
   });
 
   const handleSave = () => {
-    if (!channel || !selectedBotId) return;
-    assignMutation.mutate({ botId: selectedBotId });
+    if (!channel || (!selectedBotId && selectedBotId !== null)) return;
+
+    if (channel.metadata?.isPage && channel.metadata?.parentId) {
+      assignMutation.mutate({
+        botId: selectedBotId,
+        pageId: channel.metadata.id,
+        parentId: channel.metadata.parentId
+      });
+    } else {
+      assignMutation.mutate({ botId: selectedBotId });
+    }
   };
 
   const handleRemove = () => {
     if (!channel) return;
-    assignMutation.mutate({ botId: null });
+    if (channel.metadata?.isPage && channel.metadata?.parentId) {
+      assignMutation.mutate({
+        botId: null,
+        pageId: channel.metadata.id,
+        parentId: channel.metadata.parentId
+      });
+    } else {
+      assignMutation.mutate({ botId: null });
+    }
   };
 
   if (!channel) return null;
@@ -99,9 +121,9 @@ export function AssignBotDialog({
                 <Bot className="w-8 h-8" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-black tracking-tight uppercase">Neural Binding</DialogTitle>
+                <DialogTitle className="text-2xl font-black tracking-tight uppercase">Kết Nối AI Bot</DialogTitle>
                 <DialogDescription className="text-sm font-medium opacity-70">
-                  Select an AI agent to orchestrate <strong>{channel.name}</strong>
+                  Chọn AI Bot để tự động phản hồi trên kênh <strong>{channel.name}</strong>
                 </DialogDescription>
               </div>
             </div>
@@ -115,33 +137,33 @@ export function AssignBotDialog({
               <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-lg font-black tracking-tight">{channel.name}</p>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">{channel.type} Terminal</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-60">{channel.type} Channel</p>
                 </div>
                 {channel.botId && (
                   <Badge variant="outline" className="gap-1.5 text-primary border-primary/30 bg-primary/10 font-black py-1 tracking-widest text-[9px]">
                     <CheckCircle2 className="w-3 h-3" />
-                    LINKED
+                    ĐÃ KẾT NỐI
                   </Badge>
                 )}
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="bot-select" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1">Target Core Signature</Label>
+              <Label htmlFor="bot-select" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1">Chọn Bot</Label>
               {loadingBots ? (
                 <div className="flex flex-col items-center justify-center py-10 glass rounded-2xl border border-white/5">
-                  <LoadingLogo size="sm" text="Scanning signature bank..." />
+                  <LoadingLogo size="sm" text="Đang tải danh sách bot..." />
                 </div>
               ) : activeBots.length === 0 ? (
                 <div className="text-center py-10 glass rounded-2xl border border-white/5 shadow-inner">
                   <Bot className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p className="font-bold text-muted-foreground">No active cores recovered</p>
-                  <p className="text-[10px] uppercase font-black tracking-widest opacity-50 mt-1.5">Initialize a signature in the fleet hub</p>
+                  <p className="font-bold text-muted-foreground">Không tìm thấy bot nào đang hoạt động</p>
+                  <p className="text-[10px] uppercase font-black tracking-widest opacity-50 mt-1.5">Vui lòng tạo bot mới trong menu Bot</p>
                 </div>
               ) : (
                 <Select value={selectedBotId} onValueChange={setSelectedBotId}>
                   <SelectTrigger id="bot-select" className="h-14 glass rounded-xl border-white/5 pl-4 hover:border-primary/40 focus:ring-primary/40 transition-all font-bold">
-                    <SelectValue placeholder="Select signature..." />
+                    <SelectValue placeholder="Chọn bot để kết nối..." />
                   </SelectTrigger>
                   <SelectContent className="glass border-white/10 rounded-xl shadow-2xl">
                     {activeBots.map((bot: BotType) => (
@@ -165,7 +187,7 @@ export function AssignBotDialog({
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex gap-3">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1 animate-pulse flex-shrink-0" />
               <p className="text-xs font-bold leading-relaxed text-foreground/70">
-                Protocol Override: the chosen signature will immediately assume control of all communications routed through this connection.
+                Lưu ý: Bot được chọn sẽ tự động xử lý tất cả tin nhắn và tương tác trên kênh này ngay lập tức.
               </p>
             </div>
           </div>
@@ -179,7 +201,7 @@ export function AssignBotDialog({
                 disabled={assignMutation.isPending}
               >
                 <Link2Off className="w-3.5 h-3.5 mr-2" />
-                Sever Link
+                Hủy kết nối
               </Button>
             )}
             <Button
@@ -188,7 +210,7 @@ export function AssignBotDialog({
               onClick={() => onOpenChange(false)}
               disabled={assignMutation.isPending}
             >
-              Abort
+              Đóng
             </Button>
             <Button
               loading={assignMutation.isPending}
@@ -196,7 +218,7 @@ export function AssignBotDialog({
               onClick={handleSave}
               disabled={!selectedBotId || loadingBots}
             >
-              Sync Gateway
+              Lưu kết nối
             </Button>
           </DialogFooter>
         </div>

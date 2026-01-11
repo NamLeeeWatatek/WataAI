@@ -105,10 +105,7 @@ export class FacebookOAuthService extends BaseOAuthService {
         );
       }
 
-      throw new HttpException(
-        errorMessage,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(errorMessage, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -137,7 +134,8 @@ export class FacebookOAuthService extends BaseOAuthService {
           error.response?.data || error.message,
         );
         throw new HttpException(
-          error.response?.data?.error?.message || 'Failed to get Facebook pages',
+          error.response?.data?.error?.message ||
+            'Failed to get Facebook pages',
           HttpStatus.BAD_REQUEST,
         );
       }

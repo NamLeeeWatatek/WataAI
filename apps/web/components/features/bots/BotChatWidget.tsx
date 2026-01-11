@@ -58,7 +58,7 @@ export function BotChatWidget({
       const botMessage: Message = {
         id: `msg-${Date.now()}-bot`,
         role: MessageRole.ASSISTANT,
-        content: 'This feature needs to be updated to use the new API',
+        content: 'Tính năng chatbot đang được bảo trì để nâng cấp. Vui lòng quay lại sau!',
         timestamp: new Date(),
       }
 
@@ -86,7 +86,7 @@ export function BotChatWidget({
 
   return (
     <div className={cn('flex flex-col h-[600px] border rounded-lg bg-background', className)}>
-      { }
+      {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b">
         <Avatar className="size-10">
           <AvatarFallback className="bg-primary text-primary-foreground">
@@ -94,8 +94,8 @@ export function BotChatWidget({
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="font-semibold">AI Assistant</h3>
-          <p className="text-xs text-muted-foreground">Luôn sẵn sàng hỗ trợ bạn</p>
+          <h3 className="font-semibold">Trợ lý ảo</h3>
+          <p className="text-xs text-muted-foreground">Sẵn sàng hỗ trợ</p>
         </div>
       </div>
 

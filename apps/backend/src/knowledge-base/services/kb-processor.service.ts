@@ -72,7 +72,9 @@ export class KBProcessor extends WorkerHost {
 
       // If document has no content but has a file URL, we need to extract it now
       if ((!content || content.length === 0) && document.fileUrl) {
-        this.logger.log(`📥 Downloading file for extraction: ${document.fileUrl}`);
+        this.logger.log(
+          `📥 Downloading file for extraction: ${document.fileUrl}`,
+        );
 
         try {
           // 1. Get download URL (could be S3 signed URL or local)
@@ -82,32 +84,48 @@ export class KBProcessor extends WorkerHost {
           let buffer: Buffer;
 
           if (document.fileUrl.startsWith('http')) {
-            const response = await (await import('axios')).default.get(document.fileUrl, {
+            const response = await (
+              await import('axios')
+            ).default.get(document.fileUrl, {
               responseType: 'arraybuffer',
               validateStatus: () => true, // Don't throw on error status yet so we can log it
             });
 
-            this.logger.log(`📥 Download status: ${response.status} ${response.statusText}`);
-            this.logger.log(`📥 Content-Type: ${response.headers['content-type']}`);
+            this.logger.log(
+              `📥 Download status: ${response.status} ${response.statusText}`,
+            );
+            this.logger.log(
+              `📥 Content-Type: ${response.headers['content-type']}`,
+            );
 
             if (response.status >= 400) {
-              this.logger.error(`❌ Failed to download file. Status: ${response.status}`);
+              this.logger.error(
+                `❌ Failed to download file. Status: ${response.status}`,
+              );
               // Accessing data from arraybuffer might be tricky if it's text, but Buffer.from handles it
-              const errorBody = Buffer.from(response.data).toString('utf8').slice(0, 200);
+              const errorBody = Buffer.from(response.data)
+                .toString('utf8')
+                .slice(0, 200);
               this.logger.error(`❌ Response body preview: ${errorBody}`);
-              throw new Error(`Failed to download file: Server returned ${response.status}`);
+              throw new Error(
+                `Failed to download file: Server returned ${response.status}`,
+              );
             }
 
             buffer = Buffer.from(response.data);
 
             // Debug: Check if it looks like a PDF
             const preview = buffer.toString('utf8', 0, 50);
-            this.logger.log(`📥 File header preview (hex): ${buffer.toString('hex', 0, 20)}`);
+            this.logger.log(
+              `📥 File header preview (hex): ${buffer.toString('hex', 0, 20)}`,
+            );
             this.logger.log(`📥 File header preview (text): ${preview}`);
           } else {
             // Fallback for non-http paths (e.g. local or just key)
             // This might need adjustment based on how FilesService stores paths
-            throw new Error(`Cannot download file with URL: ${document.fileUrl}`);
+            throw new Error(
+              `Cannot download file with URL: ${document.fileUrl}`,
+            );
           }
 
           // 2. Extract Text
@@ -116,12 +134,19 @@ export class KBProcessor extends WorkerHost {
           let mimeType = document.mimeType || 'application/octet-stream';
           if (!document.mimeType) {
             if (ext === 'pdf') mimeType = 'application/pdf';
-            else if (ext === 'docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            else if (ext === 'docx')
+              mimeType =
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             else if (ext === 'txt') mimeType = 'text/plain';
           }
 
-          this.logger.log(`📄 Extracting text from downloaded file (${buffer.length} bytes, ${mimeType})`);
-          content = await this.textExtractorService.extractText(buffer, mimeType);
+          this.logger.log(
+            `📄 Extracting text from downloaded file (${buffer.length} bytes, ${mimeType})`,
+          );
+          content = await this.textExtractorService.extractText(
+            buffer,
+            mimeType,
+          );
 
           // Update document with extracted content
           document.content = content;
@@ -131,10 +156,13 @@ export class KBProcessor extends WorkerHost {
             extractedLength: content.length,
           };
           await this.documentRepository.save(document);
-          this.logger.log(`✅ Text extracted and saved to DB (${content.length} chars)`);
-
+          this.logger.log(
+            `✅ Text extracted and saved to DB (${content.length} chars)`,
+          );
         } catch (extractError) {
-          this.logger.error(`❌ Background extraction failed: ${extractError.message}`);
+          this.logger.error(
+            `❌ Background extraction failed: ${extractError.message}`,
+          );
           throw extractError;
         }
       }
@@ -240,12 +268,102 @@ export class KBProcessor extends WorkerHost {
   }
 
   private async handleCrawlWebsite(job: Job<any>) {
-    // Crawl logic would be more complex as it spawns other jobs or does it sequentially
-    // For now, let's just log and provide a placeholder
-    this.logger.log(`Crawl job processing for ${job.data.url}`);
-    // The actual crawling happens in KBCrawlerService which now should probably just
-    // call this processor or we keep the crawler as is but use workers for document processing.
-    return { success: true };
+    const { documentId, internalJobId } = job.data;
+
+    try {
+      this.logger.log(
+        `🕷️ Starting crawl for job ${internalJobId} (Doc: ${documentId})`,
+      );
+      this.processingQueue.startJob(internalJobId);
+
+      const document = await this.documentRepository.findOne({
+        where: { id: documentId },
+      });
+
+      if (!document) {
+        throw new Error(`Document ${documentId} not found`);
+      }
+
+      // Use sourceUrl for websites, fallback to fileUrl
+      const url = document.sourceUrl || document.fileUrl;
+      if (!url) {
+        throw new Error('No URL provided for crawling');
+      }
+
+      this.logger.log(`🕸️ Fetching URL: ${url}`);
+
+      // Dynamic imports
+      const axios = (await import('axios')).default;
+      const cheerio = await import('cheerio');
+
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'WataAI-Crawler/1.0',
+        },
+        timeout: 10000, // 10s timeout
+      });
+
+      const $ = cheerio.load(response.data);
+
+      // Cleanup
+      $('script, style, nav, footer, iframe, noscript, svg').remove();
+
+      // Extract metadata
+      const title = $('title').text().trim() || document.name;
+      const description = $('meta[name="description"]').attr('content') || '';
+
+      // Extract main content
+      // Prioritize article, main, or body
+      let content = '';
+      if ($('article').length > 0) {
+        content = $('article').text();
+      } else if ($('main').length > 0) {
+        content = $('main').text();
+      } else {
+        content = $('body').text();
+      }
+
+      content = content.replace(/\s+/g, ' ').trim();
+
+      if (!content) {
+        throw new Error('Crawled content is empty');
+      }
+
+      this.logger.log(
+        `✅ Crawled ${content.length} chars. Updating document...`,
+      );
+
+      document.content = content;
+      document.metadata = {
+        ...document.metadata,
+        title,
+        description,
+        crawledAt: new Date().toISOString(),
+        contentType: 'text/html',
+      };
+      // Keep status as PROCESSING so handleProcessDocument doesn't freak out
+      document.processingStatus = KbProcessingStatus.PROCESSING;
+
+      await this.documentRepository.save(document);
+
+      // Chain to standard processing (Chunking -> Embedding)
+      return this.handleProcessDocument(job);
+    } catch (error) {
+      this.logger.error(`❌ Crawl failed: ${error.message}`);
+      this.processingQueue.failJob(internalJobId, error.message);
+
+      // Update document status
+      const document = await this.documentRepository.findOne({
+        where: { id: documentId },
+      });
+      if (document) {
+        document.processingStatus = KbProcessingStatus.FAILED;
+        document.processingError = `Crawl failed: ${error.message}`;
+        await this.documentRepository.save(document);
+      }
+
+      throw error;
+    }
   }
 
   @OnWorkerEvent('completed')

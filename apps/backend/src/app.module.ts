@@ -45,6 +45,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { StatsModule } from './stats/stats.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { BillingModule } from './billing/billing.module';
 import { AuditModule } from './audit/audit.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PermissionsModule } from './permissions/permissions.module';
@@ -188,6 +189,7 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
 
     WebhooksModule,
     SubscriptionsModule,
+    BillingModule,
     AuditModule,
     NotificationsModule,
 

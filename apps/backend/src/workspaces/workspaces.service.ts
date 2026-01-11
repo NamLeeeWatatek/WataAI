@@ -25,7 +25,7 @@ export class WorkspacesService {
     private workspaceRepository: Repository<WorkspaceEntity>,
     @InjectRepository(WorkspaceMemberEntity)
     private memberRepository: Repository<WorkspaceMemberEntity>,
-  ) { }
+  ) {}
 
   async create(createDto: CreateWorkspaceDto, ownerId: string) {
     const existing = await this.workspaceRepository.findOne({

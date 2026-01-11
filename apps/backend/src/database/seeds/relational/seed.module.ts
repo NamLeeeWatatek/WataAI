@@ -16,6 +16,7 @@ import { ConversationSeedModule } from './conversation/conversation-seed.module'
 import { TemplatesSeedModule } from './templates/templates-seed.module';
 import { CreationToolsSeedModule } from './creation-tools/creation-tools-seed.module';
 import { CategoriesSeedModule } from './categories/categories-seed.module';
+import { PlanSeedModule } from './plan/plan-seed.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
 
@@ -31,6 +32,7 @@ import appConfig from '../../../config/app.config';
     TemplatesSeedModule,
     CreationToolsSeedModule,
     CategoriesSeedModule,
+    PlanSeedModule,
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],
@@ -44,4 +46,4 @@ import appConfig from '../../../config/app.config';
     }),
   ],
 })
-export class SeedModule {}
+export class SeedModule { }

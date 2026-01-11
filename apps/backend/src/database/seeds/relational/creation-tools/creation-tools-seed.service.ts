@@ -17,7 +17,7 @@ export class CreationToolsSeederService {
     private templateRepository: Repository<TemplateEntity>,
     @InjectRepository(CategoryEntity)
     private categoryRepository: Repository<CategoryEntity>,
-  ) { }
+  ) {}
 
   async run() {
     this.logger.log('Seeding Creation Tools...');

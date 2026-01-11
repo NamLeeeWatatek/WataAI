@@ -19,7 +19,7 @@ interface StepperProps {
 export function Stepper({ steps, currentStep, className }: StepperProps) {
     return (
         <div className={cn("w-full py-6", className)}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center">
                 {steps.map((step, index) => {
                     const isCompleted = currentStep > index
                     const isActive = currentStep === index
@@ -35,7 +35,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                                             ? "bg-primary border-primary text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.3)] dark:shadow-[0_0_20px_rgba(var(--primary),0.1)]"
                                             : isActive
                                                 ? "border-primary text-primary bg-background ring-8 ring-primary/10 scale-110 shadow-lg"
-                                                : "border-muted text-muted-foreground bg-muted/20 dark:bg-zinc-800/50"
+                                                : "border-muted-foreground/30 text-muted-foreground bg-muted/20 dark:bg-zinc-800/50"
                                     )}
                                 >
                                     {isCompleted ? (
@@ -67,7 +67,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                             </div>
 
                             {!isLast && (
-                                <div className="flex-1 h-[3px] mx-2 -mb-0.5 bg-muted dark:bg-muted/10 relative overflow-hidden rounded-full min-w-[20px]">
+                                <div className="w-16 md:w-32 h-[3px] mx-2 -mb-0.5 bg-border dark:bg-zinc-700 relative overflow-hidden rounded-full shrink-0">
                                     <div
                                         className={cn(
                                             "absolute inset-0 bg-primary transition-transform duration-1000 ease-in-out origin-left",

@@ -12,7 +12,7 @@ interface EncryptableConfig {
 export class AiEncryptionService {
   private readonly logger = new Logger(AiEncryptionService.name);
 
-  constructor(private readonly encryptionService: EncryptionService) { }
+  constructor(private readonly encryptionService: EncryptionService) {}
 
   /**
    * Helper interface for type safety inside encryption methods
@@ -53,7 +53,9 @@ export class AiEncryptionService {
 
     // Encrypt API keys
     if (encryptedObject.apiKey && typeof encryptedObject.apiKey === 'string') {
-      encryptedObject.apiKey = this.encryptionService.encrypt(encryptedObject.apiKey);
+      encryptedObject.apiKey = this.encryptionService.encrypt(
+        encryptedObject.apiKey,
+      );
     }
 
     // For custom providers, encrypt URL as well to prevent visibility
@@ -62,7 +64,9 @@ export class AiEncryptionService {
       typeof encryptedObject.baseUrl === 'string' &&
       encryptedObject.baseUrl.includes('//')
     ) {
-      encryptedObject.baseUrl = this.encryptionService.encrypt(encryptedObject.baseUrl);
+      encryptedObject.baseUrl = this.encryptionService.encrypt(
+        encryptedObject.baseUrl,
+      );
     }
 
     return encrypted;
@@ -87,7 +91,9 @@ export class AiEncryptionService {
     // Decrypt API keys
     if (decryptedObject.apiKey && typeof decryptedObject.apiKey === 'string') {
       try {
-        decryptedObject.apiKey = this.encryptionService.decrypt(decryptedObject.apiKey);
+        decryptedObject.apiKey = this.encryptionService.decrypt(
+          decryptedObject.apiKey,
+        );
       } catch (error) {
         this.logger.warn(`Decryption of API key failed: ${error.message}`);
       }
@@ -103,7 +109,9 @@ export class AiEncryptionService {
       try {
         // Only try to decrypt if it looks like encrypted format (has :)
         if (decryptedObject.baseUrl.split(':').length === 3) {
-          decryptedObject.baseUrl = this.encryptionService.decrypt(decryptedObject.baseUrl);
+          decryptedObject.baseUrl = this.encryptionService.decrypt(
+            decryptedObject.baseUrl,
+          );
         }
       } catch (error) {
         // Not encrypted or wrong format

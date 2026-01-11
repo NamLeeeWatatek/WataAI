@@ -23,7 +23,7 @@ export class SubscriptionsService {
     private quotaRepo: Repository<UsageQuotaEntity>,
     @InjectRepository(InvoiceEntity)
     private invoiceRepo: Repository<InvoiceEntity>,
-  ) {}
+  ) { }
 
   async getPlans() {
     return this.planRepo.find({ order: { priceMonthly: 'ASC' } });
@@ -33,6 +33,10 @@ export class SubscriptionsService {
     const plan = await this.planRepo.findOne({ where: { id } });
     if (!plan) throw new NotFoundException('Plan not found');
     return plan;
+  }
+
+  async getPlanByPriceId(stripePriceId: string) {
+    return this.planRepo.findOne({ where: { stripePriceId } });
   }
 
   async createPlan(data: Partial<PlanEntity>) {
@@ -204,13 +208,14 @@ export class SubscriptionsService {
     workspaceId: string;
     subscriptionId: string;
     amount: number;
+    currency: string;
+    status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+    provider: 'stripe' | 'payos';
+    providerInvoiceId?: string;
     periodStart: Date;
     periodEnd: Date;
   }) {
-    const invoice = this.invoiceRepo.create({
-      ...data,
-      status: 'draft',
-    });
+    const invoice = this.invoiceRepo.create(data);
     return this.invoiceRepo.save(invoice);
   }
 

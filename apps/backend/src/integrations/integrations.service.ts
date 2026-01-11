@@ -16,7 +16,7 @@ export class IntegrationsService {
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) { }
+  ) {}
 
   async findAll(workspaceId?: string): Promise<ChannelCredentialEntity[]> {
     const where: FindOptionsWhere<ChannelCredentialEntity> = {};
@@ -30,7 +30,9 @@ export class IntegrationsService {
     provider: string,
     workspaceId?: string,
   ): Promise<ChannelCredentialEntity | null> {
-    const where: FindOptionsWhere<ChannelCredentialEntity> = { provider: provider.toLowerCase() };
+    const where: FindOptionsWhere<ChannelCredentialEntity> = {
+      provider: provider.toLowerCase(),
+    };
     if (workspaceId) {
       where.workspaceId = workspaceId;
     }

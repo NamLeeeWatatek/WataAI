@@ -20,7 +20,7 @@ export const generateZodSchema = (fields: FormField[]) => {
         );
 
         // Determine if this field should be an array (multi-file or multi-select)
-        const isArrayType = ['multi-select', 'files'].includes(type as any) ||
+        const isArrayType = ['multi-select', 'files', 'channel-selector'].includes(type as any) ||
             ((type === 'file' || type === 'select') && (field as any).multiple === true);
 
         console.log(`Field: [${name}] | Type: [${type}] | isArray: ${isArrayType} | Required: ${isRequired}`, {

@@ -195,7 +195,6 @@ export class WorkspaceInvitationsService {
     });
   }
 
- 
   async findExistingInvitation(
     workspaceId: string,
     email: string,

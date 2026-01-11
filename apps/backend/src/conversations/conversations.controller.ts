@@ -43,7 +43,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller({ path: 'conversations', version: '1' })
 export class ConversationsController {
-  constructor(private readonly conversationsService: ConversationsService) { }
+  constructor(private readonly conversationsService: ConversationsService) {}
 
   @Permissions('conversation:Create')
   @Post()

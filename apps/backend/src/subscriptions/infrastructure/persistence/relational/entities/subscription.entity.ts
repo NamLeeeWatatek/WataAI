@@ -22,6 +22,9 @@ export class PlanEntity extends EntityRelationalHelper {
   @Column({ name: 'price_monthly', type: 'decimal', precision: 10, scale: 2 })
   priceMonthly: number;
 
+  @Column({ name: 'stripe_price_id', nullable: true })
+  stripePriceId: string; // From Stripe
+
   @Column({ name: 'price_yearly', type: 'decimal', precision: 10, scale: 2 })
   priceYearly: number;
 
@@ -124,6 +127,15 @@ export class InvoiceEntity extends EntityRelationalHelper {
 
   @Column({ type: String, default: 'draft' })
   status: 'draft' | 'open' | 'paid' | 'void' | 'uncollectible';
+
+  @Column({ type: String, default: 'stripe' })
+  provider: 'stripe' | 'payos';
+
+  @Column({ name: 'provider_invoice_id', type: String, nullable: true })
+  providerInvoiceId?: string | null;
+
+  @Column({ type: String, default: 'usd' })
+  currency: string;
 
   @Column({ name: 'pdf_url', type: String, nullable: true })
   pdfUrl?: string | null;

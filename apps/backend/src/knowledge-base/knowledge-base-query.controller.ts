@@ -15,7 +15,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
 @Controller({ path: 'knowledge-bases', version: '1' })
 export class KnowledgeBaseQueryController {
-  constructor(private readonly ragService: KBRagService) { }
+  constructor(private readonly ragService: KBRagService) {}
 
   @Post('query')
   @ApiOperation({ summary: 'Query knowledge base (vector search)' })
@@ -50,7 +50,8 @@ export class KnowledgeBaseQueryController {
       {
         limit: answerDto.limit || 5,
         similarityThreshold: answerDto.similarityThreshold || 0.5,
-        fallbackToGeneralKnowledge: answerDto.fallbackToGeneralKnowledge || false,
+        fallbackToGeneralKnowledge:
+          answerDto.fallbackToGeneralKnowledge || false,
       },
     );
 
@@ -64,7 +65,8 @@ export class KnowledgeBaseQueryController {
   @Post('stream/answer')
   @ApiOperation({
     summary: 'Generate answer using RAG with Streaming (SSE)',
-    description: 'Returns a stream of events: "source" (JSON) and "token" (string).',
+    description:
+      'Returns a stream of events: "source" (JSON) and "token" (string).',
   })
   async generateAnswerStream(
     @Body() answerDto: GenerateAnswerDto,
@@ -82,7 +84,8 @@ export class KnowledgeBaseQueryController {
         {
           limit: answerDto.limit || 5,
           similarityThreshold: answerDto.similarityThreshold || 0.5,
-          fallbackToGeneralKnowledge: answerDto.fallbackToGeneralKnowledge || false,
+          fallbackToGeneralKnowledge:
+            answerDto.fallbackToGeneralKnowledge || false,
         },
       );
 
@@ -92,16 +95,22 @@ export class KnowledgeBaseQueryController {
         } else if (event.type === 'token') {
           // Sanitize newlines for SSE data format if necessary, or just send raw data payload
           // Usually data: <json> is safer, but for tokens we might want simpler
-          res.write(`event: token\ndata: ${JSON.stringify({ token: event.data })}\n\n`);
+          res.write(
+            `event: token\ndata: ${JSON.stringify({ token: event.data })}\n\n`,
+          );
         } else if (event.type === 'error') {
-          res.write(`event: error\ndata: ${JSON.stringify({ message: event.data })}\n\n`);
+          res.write(
+            `event: error\ndata: ${JSON.stringify({ message: event.data })}\n\n`,
+          );
         }
       }
 
       res.write('event: done\ndata: [DONE]\n\n');
       res.end();
     } catch (error) {
-      res.write(`event: error\ndata: ${JSON.stringify({ message: error.message })}\n\n`);
+      res.write(
+        `event: error\ndata: ${JSON.stringify({ message: error.message })}\n\n`,
+      );
       res.end();
     }
   }

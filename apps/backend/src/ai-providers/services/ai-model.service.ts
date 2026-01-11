@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { GoogleGenerativeAI, Tool } from '@google/generative-ai';
-import { OpenAI, ClientOptions } from 'openai';
+import { OpenAI, ClientOptions, AzureOpenAI } from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { ChatMessage, ProviderConfig } from '../domain/ai-provider';
 
@@ -216,8 +216,9 @@ export class AiModelService {
     const systemMessage = messages.find((m) => m.role === 'system');
     const relevantMessages = messages.filter((m) => m.role !== 'system');
     if (relevantMessages.length === 0) {
-      // eslint-disable-next-line require-yield
-      async function* empty() { return; }
+      async function* empty() {
+        return;
+      }
       return empty();
     }
 
@@ -335,14 +336,20 @@ export class AiModelService {
 
       async function* streamGenerator() {
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
             yield chunk.delta.text;
           }
         }
       }
       return streamGenerator();
     } catch (error) {
-      this.logger.error(`Anthropic Stream Error: ${error.message}`, error.stack);
+      this.logger.error(
+        `Anthropic Stream Error: ${error.message}`,
+        error.stack,
+      );
       throw new InternalServerErrorException(
         `Anthropic Error: ${error.message}`,
       );
@@ -438,7 +445,6 @@ export class AiModelService {
         }
       }
       return streamGenerator();
-
     } catch (error) {
       if (error.message?.includes('not found')) {
         throw new BadRequestException(
@@ -446,6 +452,81 @@ export class AiModelService {
         );
       }
       throw new InternalServerErrorException(`Ollama Error: ${error.message}`);
+    }
+  }
+
+  async chatWithAzureHistory(
+    messages: ChatMessage[],
+    model: string, // In Azure, model usually == deployment name, or handled via config
+    apiKey: string,
+    endpoint?: string,
+  ): Promise<string> {
+    if (!endpoint)
+      throw new BadRequestException('Azure Endpoint (baseURL) is required');
+
+    // We assume 'model' passed here is the 'deployment' name in Azure
+    // Or users configure it. For simplicity, we use passed model as deployment.
+    const client = new AzureOpenAI({
+      apiKey,
+      endpoint,
+      deployment: model,
+      apiVersion: '2024-05-01-preview', // Default or config? Best to stick to a specialized version or make it checking.
+    });
+
+    try {
+      const sanitizedMessages = messages.map((m) => ({
+        role: m.role as 'user' | 'assistant' | 'system',
+        content: m.content || '',
+      }));
+
+      const response = await client.chat.completions.create({
+        messages: sanitizedMessages,
+        model: model, // Azure SDK often needs this redundant field or ignores it if deployment is set
+      });
+      return response.choices[0]?.message?.content || '';
+    } catch (error) {
+      this.logger.error(`Azure Chat Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(`Azure Error: ${error.message}`);
+    }
+  }
+
+  async chatWithAzureStream(
+    messages: ChatMessage[],
+    model: string,
+    apiKey: string,
+    endpoint?: string,
+  ): Promise<AsyncGenerator<string>> {
+    if (!endpoint) throw new BadRequestException('Azure Endpoint is required');
+
+    const client = new AzureOpenAI({
+      apiKey,
+      endpoint,
+      deployment: model,
+      apiVersion: '2024-05-01-preview',
+    });
+
+    try {
+      const sanitizedMessages = messages.map((m) => ({
+        role: m.role as 'user' | 'assistant' | 'system',
+        content: m.content || '',
+      }));
+
+      const stream = await client.chat.completions.create({
+        messages: sanitizedMessages,
+        model: model,
+        stream: true,
+      });
+
+      async function* streamGenerator() {
+        for await (const chunk of stream) {
+          const content = chunk.choices[0]?.delta?.content || '';
+          if (content) yield content;
+        }
+      }
+      return streamGenerator();
+    } catch (error) {
+      this.logger.error(`Azure Stream Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(`Azure Error: ${error.message}`);
     }
   }
 
@@ -797,12 +878,13 @@ export class AiModelService {
 
       // Block access to AWS/GCP Metadata services
       if (hostname === '169.254.169.254') {
-        throw new BadRequestException('Access to metadata services is restricted.');
+        throw new BadRequestException(
+          'Access to metadata services is restricted.',
+        );
       }
 
       // Additional block list can be added here
       // e.g. internal range 10.x.x.x etc, but that might be valid for self-hosted LLMs.
-
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
       // Invalid URL format

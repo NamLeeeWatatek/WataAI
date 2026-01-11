@@ -57,7 +57,7 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateConversationDto & {
@@ -93,7 +93,10 @@ export class ConversationsService {
       channelType: createDto.channelType ?? 'web',
       workspaceId: createDto.workspaceId,
       source: createDto.source ?? ConversationSource.WEB,
-      type: createDto.source === ConversationSource.WIDGET ? ConversationType.SUPPORT : ConversationType.SUPPORT, // Logic handling
+      type:
+        createDto.source === ConversationSource.WIDGET
+          ? ConversationType.SUPPORT
+          : ConversationType.SUPPORT, // Logic handling
       status: ConversationStatus.ACTIVE,
       contactId,
       metadata: createDto.metadata ?? {},
@@ -330,7 +333,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (error) { }
+        } catch (error) {}
 
         return {
           ...item,
@@ -690,7 +693,7 @@ Message: ${currentMessage}`;
 
       const response = await this.aiProvidersService.chat(
         prompt,
-        'gemini-2.0-flash',
+        process.env.DISCOVERY_MODEL || 'gemini-1.5-flash',
       );
 
       const lines = response.split('\n');
@@ -805,8 +808,8 @@ Message: ${currentMessage}`;
 
     if (existing) {
       // ✅ FIX: Track if this is an update for notification
-      const isUpdate = existing.rating !== dto.rating ||
-        (existing.comment !== dto.comment);
+      const isUpdate =
+        existing.rating !== dto.rating || existing.comment !== dto.comment;
 
       existing.rating = dto.rating;
       existing.comment = dto.comment;
