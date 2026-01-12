@@ -56,7 +56,7 @@ export class KBRagService {
     @InjectRepository(KBChunkEntity)
     private readonly chunkRepository: Repository<KBChunkEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -403,60 +403,40 @@ export class KBRagService {
         where: { id: knowledgeBaseId },
       });
 
-      const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
+      const providerConfig = await this.resolveAIProvider(null, knowledgeBaseId);
 
-      if (kb && kb.aiProviderId) {
-        const userId = kb.createdBy;
-
-        if (
-          kb.workspaceId &&
-          isUUID(kb.workspaceId) &&
-          (await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'workspace',
-            kb.workspaceId,
-          ))
-        ) {
-          this.logger.log(
-            `🔎 Using KB's workspace AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
-          );
-          return await this.aiProvidersService.chatWithHistoryUsingProvider(
-            [{ role: 'user', content: prompt }],
-            finalModel,
-            kb.aiProviderId,
-            'workspace',
-            kb.workspaceId,
-          );
-        } else if (
-          userId &&
-          isUUID(userId) &&
-          (await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'user',
-            userId,
-          ))
-        ) {
-          this.logger.log(
-            `🔎 Using KB's user AI provider: ${kb.aiProviderId} with model: ${finalModel}`,
-          );
-          return await this.aiProvidersService.chatWithHistoryUsingProvider(
-            [{ role: 'user', content: prompt }],
-            finalModel,
-            kb.aiProviderId,
-            'user',
-            userId,
-          );
-        }
+      if (providerConfig) {
+        const finalModel =
+          model || providerConfig.modelName || KbAiConfig.defaults.model;
+        this.logger.log(
+          `🔎 [RAG] Using resolved provider: ${providerConfig.providerId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
+        );
+        return await this.aiProvidersService.chatWithHistoryUsingProvider(
+          [{ role: 'user', content: prompt }],
+          finalModel,
+          providerConfig.providerId,
+          providerConfig.scope,
+          providerConfig.scopeId,
+        );
       }
-      return await this.aiProvidersService.chat(prompt, finalModel);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to use KB AI provider, falling back to default: ${error.message}`,
+
+      const fallbackModel = kb?.ragModel || model || KbAiConfig.defaults.model;
+      this.logger.log(
+        `⚠️ [RAG] No specific provider found for KB ${knowledgeBaseId}, falling back to default chat for model: ${fallbackModel}`,
       );
       return await this.aiProvidersService.chat(
         prompt,
-        model || KbAiConfig.defaults.model,
+        fallbackModel,
+        undefined,
+        undefined,
+        kb?.workspaceId,
       );
+    } catch (error) {
+      this.logger.error(
+        `❌ [RAG] Error in generateAnswerFromKb: ${error.message}`,
+      );
+      const fallbackModel = model || KbAiConfig.defaults.model;
+      return await this.aiProvidersService.chat(prompt, fallbackModel);
     }
   }
 
@@ -470,57 +450,42 @@ export class KBRagService {
         where: { id: knowledgeBaseId },
       });
 
-      const finalModel = kb?.ragModel || model || KbAiConfig.defaults.model;
+      const providerConfig = await this.resolveAIProvider(null, knowledgeBaseId);
 
-      if (kb && kb.aiProviderId) {
-        const userId = kb.createdBy;
-
-        if (
-          kb.workspaceId &&
-          isUUID(kb.workspaceId) &&
-          (await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'workspace',
-            kb.workspaceId,
-          ))
-        ) {
-          return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
-            [{ role: 'user', content: prompt }],
-            finalModel,
-            kb.aiProviderId,
-            'workspace',
-            kb.workspaceId,
-          );
-        } else if (
-          userId &&
-          isUUID(userId) &&
-          (await this.aiProvidersService.configExists(
-            kb.aiProviderId,
-            'user',
-            userId,
-          ))
-        ) {
-          return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
-            [{ role: 'user', content: prompt }],
-            finalModel,
-            kb.aiProviderId,
-            'user',
-            userId,
-          );
-        }
+      if (providerConfig) {
+        const finalModel =
+          model || providerConfig.modelName || KbAiConfig.defaults.model;
+        this.logger.log(
+          `🔎 [RAG Stream] Using resolved provider: ${providerConfig.providerId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
+        );
+        return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
+          [{ role: 'user', content: prompt }],
+          finalModel,
+          providerConfig.providerId,
+          providerConfig.scope,
+          providerConfig.scopeId,
+        );
       }
-      return await this.aiProvidersService.chatStream(prompt, finalModel);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to use KB AI provider for stream, falling back to default: ${error.message}`,
+
+      const fallbackModel = kb?.ragModel || model || KbAiConfig.defaults.model;
+      this.logger.log(
+        `⚠️ [RAG Stream] No specific provider found for KB ${knowledgeBaseId}, falling back to default stream for model: ${fallbackModel}`,
       );
       return await this.aiProvidersService.chatStream(
         prompt,
-        model || KbAiConfig.defaults.model,
+        fallbackModel,
+        undefined,
+        undefined,
+        kb?.workspaceId,
       );
+    } catch (error) {
+      this.logger.error(
+        `❌ [RAG Stream] Error in generateAnswerFromKbStream: ${error.message}`,
+      );
+      const fallbackModel = model || KbAiConfig.defaults.model;
+      return await this.aiProvidersService.chatStream(prompt, fallbackModel);
     }
   }
-
   async generateAnswerForAgent(
     question: string,
     agentId: string,
@@ -589,6 +554,7 @@ export class KBRagService {
       }
 
       let systemPrompt = botSystemPrompt || 'You are a helpful assistant.';
+      systemPrompt += '\n\nIMPORTANT: Always respond in the same language as the user\'s latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English. Do not override this based on the retrieved context language.';
 
       if (relevantChunks.length > 0) {
         const context = relevantChunks
@@ -612,12 +578,12 @@ export class KBRagService {
 
       const answer = aiProviderId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiProviderId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiProviderId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -677,17 +643,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiProviderId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiProviderId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
@@ -821,6 +787,11 @@ export class KBRagService {
     scopeId: string;
     modelName?: string;
   } | null> {
+    this.logger.debug(
+      `🔎 Resolving AI Provider for Bot: ${bot?.id || 'none'}, KB: ${knowledgeBaseId || 'none'}`,
+    );
+
+    // 1. Knowledge Base specific AI settings
     if (knowledgeBaseId && isUUID(knowledgeBaseId)) {
       const kb = await this.kbRepository.findOne({
         where: { id: knowledgeBaseId },
@@ -836,6 +807,9 @@ export class KBRagService {
             kb.workspaceId,
           ))
         ) {
+          this.logger.log(
+            `✅ Found KB workspace provider: ${kb.aiProviderId} in workspace ${kb.workspaceId}`,
+          );
           return {
             providerId: kb.aiProviderId,
             scope: 'workspace',
@@ -854,6 +828,9 @@ export class KBRagService {
             userId,
           ))
         ) {
+          this.logger.log(
+            `✅ Found KB user provider: ${kb.aiProviderId} for user ${userId}`,
+          );
           return {
             providerId: kb.aiProviderId,
             scope: 'user',
@@ -864,6 +841,7 @@ export class KBRagService {
       }
     }
 
+    // 2. Bot-specific AI settings
     if (bot?.aiProviderId && isUUID(bot.aiProviderId)) {
       if (
         bot.workspaceId &&
@@ -874,6 +852,9 @@ export class KBRagService {
           bot.workspaceId,
         ))
       ) {
+        this.logger.log(
+          `✅ Found Bot workspace provider: ${bot.aiProviderId} in workspace ${bot.workspaceId}`,
+        );
         return {
           providerId: bot.aiProviderId,
           scope: 'workspace',
@@ -891,6 +872,9 @@ export class KBRagService {
           bot.createdBy,
         ))
       ) {
+        this.logger.log(
+          `✅ Found Bot user provider: ${bot.aiProviderId} for user ${bot.createdBy}`,
+        );
         return {
           providerId: bot.aiProviderId,
           scope: 'user',
@@ -900,43 +884,79 @@ export class KBRagService {
       }
     }
 
-    // Fallback: Try to find ANY configured provider for the workspace
-    if (bot?.workspaceId && isUUID(bot.workspaceId)) {
+    // 3. Fallback: Try to find ANY configured provider for the workspace
+    const targetWorkspaceId =
+      bot?.workspaceId ||
+      (knowledgeBaseId && isUUID(knowledgeBaseId)
+        ? (
+          await this.kbRepository.findOne({
+            where: { id: knowledgeBaseId },
+            select: ['workspaceId'],
+          })
+        )?.workspaceId
+        : null);
+
+    if (targetWorkspaceId && isUUID(targetWorkspaceId)) {
+      this.logger.log(
+        `🔄 Falling back to any provider in workspace ${targetWorkspaceId}`,
+      );
       const workspaceConfigs =
-        await this.aiProvidersService.getWorkspaceConfigs(bot.workspaceId);
+        await this.aiProvidersService.getWorkspaceConfigs(targetWorkspaceId);
       if (workspaceConfigs.length > 0) {
         // Prefer verified configs if available
         const verifiedConfig =
           workspaceConfigs.find((c) => c.config?.isVerified) ||
           workspaceConfigs[0];
+        this.logger.log(
+          `✅ Selected workspace fallback provider: ${verifiedConfig.id}`,
+        );
         return {
           providerId: verifiedConfig.id,
           scope: 'workspace',
-          scopeId: bot.workspaceId,
+          scopeId: targetWorkspaceId,
         };
       }
     }
 
-    // Fallback: Try to find ANY configured provider for the user
-    const fallbackUserId = bot?.createdBy;
-    if (fallbackUserId && isUUID(fallbackUserId)) {
+    // 4. Fallback: Try to find ANY configured provider for the user
+    const targetUserId =
+      bot?.createdBy ||
+      (knowledgeBaseId && isUUID(knowledgeBaseId)
+        ? (
+          await this.kbRepository.findOne({
+            where: { id: knowledgeBaseId },
+            select: ['createdBy'],
+          })
+        )?.createdBy
+        : null);
+
+    if (targetUserId && isUUID(targetUserId)) {
+      this.logger.log(
+        `🔄 Falling back to any provider for user ${targetUserId}`,
+      );
       try {
         const userConfigs =
-          await this.aiProvidersService.getUserConfigs(fallbackUserId);
+          await this.aiProvidersService.getUserConfigs(targetUserId);
         if (userConfigs.length > 0) {
           const verifiedConfig =
             userConfigs.find((c) => c.config?.isVerified) || userConfigs[0];
+          this.logger.log(
+            `✅ Selected user fallback provider: ${verifiedConfig.id}`,
+          );
           return {
             providerId: verifiedConfig.id,
             scope: 'user',
-            scopeId: fallbackUserId,
+            scopeId: targetUserId,
           };
         }
       } catch (e) {
-        // Ignore
+        this.logger.error(`Error finding user fallback configs: ${e.message}`);
       }
     }
 
+    this.logger.warn(
+      `❌ No AI provider could be resolved for Bot ${bot?.id}, KB ${knowledgeBaseId}`,
+    );
     return null;
   }
 
@@ -977,8 +997,6 @@ export class KBRagService {
         const key = `${docId}_${neighbor.chunkIndex}`;
         if (!seenChunkIds.has(key)) {
           // Merge neighbor into result
-          // Note: Neighbors don't have a semantic score relative to the query,
-          // but we can inherit or assign a slightly lower score.
           expandedChunks.push({
             content: neighbor.content,
             score: chunk.score * 0.9, // Decay score slightly
@@ -991,10 +1009,6 @@ export class KBRagService {
       }
     }
 
-    // Sort again by docId then index to keep flow, OR by score.
-    // RAG usually benefits from score sorting, but "Context Window" means we might want coherent blocks.
-    // Here we'll stick to score primary, but maybe we should group by document?
-    // For simplicity: Return by score descending (high relevance first).
     return expandedChunks.sort((a, b) => b.score - a.score);
   }
 

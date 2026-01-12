@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { CreateCreationToolDto } from './dto/create-creation-tool.dto';
@@ -18,6 +19,8 @@ import { IPaginationOptions } from '../utils/types/pagination-options';
 
 @Injectable()
 export class CreationToolsService {
+  private readonly logger = new Logger(CreationToolsService.name);
+
   constructor(
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
@@ -34,33 +37,43 @@ export class CreationToolsService {
     return this.repository.findAll();
   }
 
-  async importTools(tools: any[]): Promise<{ success: number; failed: number }> {
+  async importTools(
+    tools: CreationTool[],
+  ): Promise<{ success: number; failed: number }> {
     let success = 0;
     let failed = 0;
 
-    for (const toolData of tools) {
+    for (const tool of tools) {
       try {
-        const { id, createdAt, updatedAt, deletedAt, categories, ...cleanData } =
-          toolData;
-        const existing = await this.repository.findBySlug(cleanData.slug);
+        // Strip metadata to avoid collisions and ensure clean import
+        const {
+          id,
+          createdAt,
+          updatedAt,
+          deletedAt,
+          categories, // Destructure categories to exclude it from toolData
+          ...toolData // The rest of the properties are now in toolData
+        } = tool;
 
-        const categoryIds =
-          cleanData.categoryIds || categories?.map((c: any) => c.id);
+        const existing = await this.repository.findBySlug(toolData.slug);
+
+        // Map categories from the imported tool to categoryIds for DTOs
+        const categoryIds = categories?.map((c: any) => c.id);
 
         if (existing) {
           await this.update(existing.id, {
-            ...cleanData,
-            categoryIds,
-          });
+            ...toolData,
+            categoryIds, // Pass categoryIds to update
+          } as any); // Cast to any because toolData might not perfectly match UpdateCreationToolDto
         } else {
           await this.create({
-            ...cleanData,
-            categoryIds,
-          });
+            ...toolData,
+            categoryIds, // Pass categoryIds to create
+          } as any); // Cast to any because toolData might not perfectly match CreateCreationToolDto
         }
         success++;
       } catch (error) {
-        console.error(`Failed to import tool ${toolData.slug}:`, error);
+        this.logger.error(`Failed to import tool ${tool.slug}: ${error.message}`);
         failed++;
       }
     }

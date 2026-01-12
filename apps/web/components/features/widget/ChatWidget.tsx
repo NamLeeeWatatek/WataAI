@@ -239,19 +239,19 @@ export function ChatWidget({ botId, apiUrl = '/api/v1' }: ChatWidgetProps) {
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                                 placeholder={config.placeholderText || "Type a message..."}
                                 disabled={loading || Boolean(error)}
-                                className="flex-1 bg-transparent border-none focus:outline-none p-2 min-h-[44px] max-h-[120px] text-sm resize-none placeholder:text-muted-foreground/50"
+                                className="flex-1 bg-transparent border-none focus:outline-none p-2 min-h-[44px] max-h-[120px] text-sm resize-none placeholder:text-muted-foreground/50 transition-colors"
                                 style={{
-                                    color: config.theme?.inputTextColor || config.theme?.userMessageTextColor || 'inherit'
+                                    color: config.theme?.inputTextColor || 'inherit'
                                 }}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || loading || Boolean(error)}
-                                className="p-2 rounded-lg text-white transition-all disabled:opacity-30 disabled:scale-95 hover:scale-105 active:scale-95 shrink-0 mb-0.5"
+                                className="p-2 rounded-lg text-white transition-all disabled:opacity-30 disabled:scale-95 hover:scale-105 active:scale-95 shrink-0 mb-0.5 flex items-center justify-center"
                                 style={{ backgroundColor: primaryColor }}
                                 aria-label="Send message"
                             >
-                                <SendHorizontal className="w-4 h-4" />
+                                <SendHorizontal className="w-4 h-4" style={{ transform: 'rotate(0deg)' }} />
                             </button>
                         </div>
                         <div className="text-center mt-2">

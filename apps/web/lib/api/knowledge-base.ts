@@ -107,13 +107,13 @@ export async function getKBFolderTree(kbId: string): Promise<GetFolderTreeRespon
 /**
  * Get unified content (folders and documents) in a specific level
  */
-export async function getKBContent(kbId: string, folderId?: string | null, page: number = 1, limit: number = 10): Promise<{
+export async function getKBContent(kbId: string, folderId?: string | null, page: number = 1, limit: number = 10, search?: string): Promise<{
   folders: KBFolder[]
   documents: { data: KBDocument[]; total: number }
   breadcrumbs: Array<{ id: string; name: string }>
 }> {
   return axiosClient.get(`/knowledge-bases/${kbId}/content`, {
-    params: { folderId: folderId || 'null', page, limit }
+    params: { folderId: folderId || 'null', page, limit, search }
   }) as unknown as Promise<{
     folders: KBFolder[]
     documents: { data: KBDocument[]; total: number }

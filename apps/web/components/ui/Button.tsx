@@ -44,28 +44,27 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, children, ...props }, ref) => {
-    if (asChild) {
-      return (
-        <Slot
-          className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </Slot>
-      )
-    }
+    const Comp = asChild ? Slot : "button"
+
+    // Default button styling + variant styling
+    const combinedClassName = cn(buttonVariants({ variant, size, className }))
 
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
+      <Comp
+        className={combinedClassName}
         ref={ref}
         disabled={loading || props.disabled}
         {...props}
       >
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {children}
-      </button>
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {children}
+          </>
+        )}
+      </Comp>
     )
   }
 )

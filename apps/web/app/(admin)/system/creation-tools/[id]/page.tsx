@@ -42,7 +42,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
-import { cn } from '@/lib/utils';
+import { cn, slugify } from '@/lib/utils';
 import { Pagination } from '@/components/ui/Pagination';
 import { Badge } from '@/components/ui/Badge';
 
@@ -126,11 +126,7 @@ export default function EditCreationToolPage() {
     const handleNameChange = (value: string) => {
         setValue('name', value);
         if (isNew) {
-            const generatedSlug = value
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)+/g, '');
-            setValue('slug', generatedSlug);
+            setValue('slug', slugify(value));
         }
     };
 

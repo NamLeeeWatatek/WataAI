@@ -24,7 +24,7 @@ export class KBFoldersService {
     private readonly kbManagementService: KBManagementService,
     @Inject(forwardRef(() => KBDocumentsService))
     private readonly kbDocumentsService: KBDocumentsService,
-  ) {}
+  ) { }
 
   async create(userId: string, createDto: CreateFolderDto) {
     const kb = await this.kbManagementService.findOne(
@@ -178,16 +178,31 @@ export class KBFoldersService {
     return rootFolders;
   }
 
-  async findAllByParent(kbId: string, parentId: string | null, userId: string) {
+  async findAllByParent(
+    kbId: string,
+    parentId: string | null,
+    userId: string,
+    search?: string,
+  ) {
     await this.kbManagementService.findOne(kbId, userId);
 
-    return this.folderRepository.find({
-      where: {
-        knowledgeBaseId: kbId,
-        parentId: parentId === null ? IsNull() : parentId,
-      },
-      order: { name: 'ASC' },
-    });
+    const query = this.folderRepository
+      .createQueryBuilder('folder')
+      .where('folder.knowledgeBaseId = :kbId', { kbId });
+
+    if (parentId === null) {
+      query.andWhere('folder.parentId IS NULL');
+    } else {
+      query.andWhere('folder.parentId = :parentId', { parentId });
+    }
+
+    if (search) {
+      query.andWhere('folder.name ILIKE :search', { search: `%${search}%` });
+    }
+
+    query.orderBy('folder.name', 'ASC');
+
+    return query.getMany();
   }
 
   async getBreadcrumbs(folderId: string, userId: string): Promise<any[]> {

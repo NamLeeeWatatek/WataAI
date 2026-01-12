@@ -63,7 +63,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) {}
+  ) { }
 
   @Permissions('kb:List')
   @Get()
@@ -129,6 +129,7 @@ export class KnowledgeBaseController {
     @Query('folderId') folderId: string,
     @Query('page') page: number = 1,
     @Query('limit') rawLimit: number = 10,
+    @Query('search') search: string,
     @Request() req,
   ) {
     const userId = req.user.id;
@@ -136,11 +137,12 @@ export class KnowledgeBaseController {
     const effectiveFolderId =
       folderId === 'null' || !folderId ? null : folderId;
 
-    // 1. Get ALL folders (assuming count is reasonable)
+    // 1. Get ALL folders matching search
     const allFolders = await this.foldersService.findAllByParent(
       kbId,
       effectiveFolderId,
       userId,
+      search,
     );
 
     // 2. Calculate Folder Slice
@@ -168,7 +170,7 @@ export class KnowledgeBaseController {
       const { data, total } =
         await this.documentsService.findManyWithPagination({
           kbId,
-          filterOptions: { folderId: effectiveFolderId },
+          filterOptions: { folderId: effectiveFolderId, search },
           paginationOptions: {
             page: 1,
             limit: docLimit > 0 ? docLimit : 0,
@@ -183,7 +185,7 @@ export class KnowledgeBaseController {
       // But we still need total Docs count for pagination to work
       const { total } = await this.documentsService.findManyWithPagination({
         kbId,
-        filterOptions: { folderId: effectiveFolderId },
+        filterOptions: { folderId: effectiveFolderId, search },
         paginationOptions: { page: 1, limit: 1 }, // minimized fetch
         userId,
       });
