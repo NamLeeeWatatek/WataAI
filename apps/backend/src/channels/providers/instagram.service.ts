@@ -8,7 +8,7 @@ import { SendMessageOptions, SendMessageResult } from './messenger.service';
 @Injectable()
 export class InstagramService {
   private readonly logger = new Logger(InstagramService.name);
-  private readonly apiVersion = 'v18.0';
+  private readonly apiVersion = 'v24.0';
 
   constructor(
     private configService: ConfigService,

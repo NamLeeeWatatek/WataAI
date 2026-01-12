@@ -20,7 +20,7 @@ export class AiExecutionStrategy implements IExecutionStrategy {
   async execute(
     config: AiExecutionConfig,
     inputs: Record<string, any>,
-    context?: { workspaceId?: string; userId?: string },
+    context?: { workspaceId?: string; userId?: string; jobId?: string },
   ): Promise<any> {
     this.logger.log(
       `Executing AI Strategy: ${config.provider} - ${config.model}`,

@@ -85,9 +85,12 @@ export async function getOAuthUrl(
 }
 
 export interface ConnectFacebookDto {
-  facebookPageId: string
+  pageId: string
+  pageName: string
+  userAccessToken: string
+  pageAccessToken: string
+  category?: string
   botId?: string | null
-  accessToken?: string | null
 }
 
 /**

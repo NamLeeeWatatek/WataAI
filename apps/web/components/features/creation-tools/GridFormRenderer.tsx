@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 
+import { creationJobsApi } from '@/lib/api/creation-jobs'
+
 interface GridFormRendererProps {
     config: FormConfig
     onSubmit: (data: Record<string, unknown>) => void
@@ -15,6 +17,7 @@ interface GridFormRendererProps {
     form?: any
     activeStep?: number
     onStepChange?: (step: number) => void
+    toolId?: string
 }
 
 export function GridFormRenderer({
@@ -23,9 +26,13 @@ export function GridFormRenderer({
     isSubmitting = false,
     form: externalForm,
     activeStep,
-    onStepChange
+    onStepChange,
+    toolId
 }: GridFormRendererProps) {
     const [localStep, setLocalStep] = useState(0)
+    const [isPreviewing, setIsPreviewing] = useState(false)
+    const [previewResults, setPreviewResults] = useState<any>(null)
+
     const currentStepIndex = activeStep !== undefined ? activeStep : localStep
     const steps = config.steps || [];
     const totalSteps = steps.length || 1
@@ -66,6 +73,44 @@ export function GridFormRenderer({
             console.warn('%c[GRID-RENDERER] Validation Failed!', 'color: red;', form.formState.errors);
             return;
         }
+
+        // --- PREVIEW LOGIC ---
+        // Check if NEXT step has a result-preview field
+        const nextStepIndex = currentStepIndex + 1;
+        if (nextStepIndex < totalSteps && toolId) {
+            const nextStep = steps[nextStepIndex];
+            let hasResultPreview = false;
+            if (nextStep.layout?.rows) {
+                nextStep.layout.rows.forEach(row => {
+                    row.zones.forEach(zone => {
+                        zone.fieldRows.forEach(fr => {
+                            fr.fields.forEach(fName => {
+                                const f = config.fields.find(field => field.name === fName);
+                                if (f?.type === 'result-preview') hasResultPreview = true;
+                            });
+                        });
+                    });
+                });
+            }
+
+            if (hasResultPreview) {
+                try {
+                    setIsPreviewing(true);
+                    const currentData = form.getValues();
+                    console.log('%c[GRID-RENDERER] Triggering Preview Execution...', 'color: #8b5cf6;');
+                    const result = await creationJobsApi.preview({
+                        creationToolId: toolId,
+                        inputData: currentData
+                    });
+                    setPreviewResults(result);
+                } catch (err) {
+                    console.error('[GRID-RENDERER] Preview execution failed', err);
+                } finally {
+                    setIsPreviewing(false);
+                }
+            }
+        }
+        // --- END PREVIEW LOGIC ---
 
         if (activeStep !== undefined && onStepChange) {
             onStepChange(currentStepIndex + 1)
@@ -114,7 +159,7 @@ export function GridFormRenderer({
                                 form.trigger(field.name as any);
                             }
                         }}
-                        allValues={form.watch()}
+                        allValues={{ ...form.watch(), prev: previewResults?.steps || {} }}
                         error={fieldState.error?.message}
                     />
                 )}
@@ -141,10 +186,31 @@ export function GridFormRenderer({
     )
 
     const renderStepContent = () => {
-        if (!currentStepConfig || !currentStepConfig.layout) {
+        // Fallback to simple grid if no layout, OR if layout rows are empty (preventing blank pages)
+        if (!currentStepConfig || !currentStepConfig.layout || !currentStepConfig.layout.rows || currentStepConfig.layout.rows.length === 0) {
             return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {config.fields.map(f => renderFormField(f))}
+                    {config.fields.map(f => (
+                        <ShadcnFormField
+                            key={f.name}
+                            control={form.control}
+                            name={f.name}
+                            render={({ field: formField, fieldState }) => (
+                                <DynamicFormField
+                                    field={f}
+                                    value={formField.value}
+                                    onChange={(_, val) => {
+                                        formField.onChange(val);
+                                        if (f.validation) {
+                                            form.trigger(f.name as any);
+                                        }
+                                    }}
+                                    allValues={{ ...form.watch(), prev: previewResults?.steps || {} }}
+                                    error={fieldState.error?.message}
+                                />
+                            )}
+                        />
+                    ))}
                 </div>
             )
         }
@@ -182,9 +248,10 @@ export function GridFormRenderer({
                         <Button
                             type="button"
                             onClick={handleNext}
+                            disabled={isPreviewing}
                             className="flex-[2] h-16 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10 hover:shadow-primary/20 bg-primary text-primary-foreground"
                         >
-                            Continue
+                            {isPreviewing ? 'Processing Preview...' : 'Continue'}
                         </Button>
                     ) : (
                         <Button

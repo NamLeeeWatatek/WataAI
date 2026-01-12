@@ -111,6 +111,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
       const result = await strategy.execute(config, systemInputs, {
         workspaceId: jobEntity.workspaceId,
         userId: 'createdBy' in jobEntity ? jobEntity.createdBy : undefined,
+        jobId: jobEntity.id,
       });
 
       // UX Improvement: Enforce minimum execution time of 2 seconds

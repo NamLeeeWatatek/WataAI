@@ -30,4 +30,9 @@ export const creationJobsApi = {
     removeMany: async (ids: string[]): Promise<void> => {
         await axiosClient.post('/creation-jobs/bulk-delete', { ids });
     },
+
+    preview: async (data: CreateCreationJobDto): Promise<any> => {
+        const response = await axiosClient.post<any>('/creation-jobs/preview', data);
+        return response;
+    },
 };

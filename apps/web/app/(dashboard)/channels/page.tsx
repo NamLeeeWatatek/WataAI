@@ -84,7 +84,7 @@ export default function ChannelsPage() {
             let oauthUrl: string;
 
             if (provider === 'facebook' || provider === 'messenger' || provider === 'instagram') {
-                const response = await getOAuthUrl('facebook', undefined, workspaceId);
+                const response = await getOAuthUrl('facebook', configId, workspaceId);
                 oauthUrl = response.url;
             } else {
                 const config = configId ? configs.find(c => String(c.id) === String(configId)) : configs.find(c => c.provider === provider);
@@ -116,17 +116,22 @@ export default function ChannelsPage() {
 
             const messageHandler = (event: MessageEvent) => {
                 if (event.data?.status === 'success') {
-                    if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && event.data.pages) {
+                    const hasPages = Array.isArray(event.data.pages) && event.data.pages.length > 0;
+
+                    if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && hasPages) {
                         dispatch(setFacebookPages(event.data.pages));
                         dispatch(setFacebookTempToken(event.data.tempToken));
                         toast.success(`Discovered ${event.data.pages.length} terminals`);
-                    } else {
-                        toast.success(`Connected to ${event.data.channel || provider}`);
                         refetch();
+                        // We intentionally DON'T clear setConnecting(null) here 
+                        // so the selection list stays visible in the toast card
+                    } else {
+                        toast.success(event.data.message || `Connected to ${event.data.channel || provider}`);
+                        refetch();
+                        dispatch(setConnecting(null));
                     }
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
-                    dispatch(setConnecting(null));
                 } else if (event.data?.status === 'error') {
                     toast.error(`Connection failed: ${event.data.message || 'Unknown protocol error'}`);
                     popup?.close();
@@ -164,22 +169,33 @@ export default function ChannelsPage() {
 
     const handleSaveConfig = async (data: any) => {
         try {
-            await saveIntegration({ id: deleteConfigId || undefined, data });
+            const { id, ...payload } = data;
+            await saveIntegration({ id: id || undefined, data: payload });
         } catch (error) {
         }
     };
 
-    const handleConnectFacebookPage = async (facebookPageId: string) => {
+    const handleConnectFacebookPage = async (page: any) => {
+        console.log('[DEBUG] Connecting Facebook Page:', {
+            pageId: page.id,
+            pageName: page.name,
+            tokenExists: !!facebookTempToken,
+            tokenType: typeof facebookTempToken,
+            tokenPrefix: typeof facebookTempToken === 'string' ? facebookTempToken.substring(0, 10) : 'N/A'
+        });
         try {
-            dispatch(setConnectingPage(facebookPageId));
+            dispatch(setConnectingPage(page.id));
             await connectFacebook({
-                facebookPageId,
+                pageId: page.id,
+                pageName: page.name,
+                category: page.category,
+                userAccessToken: facebookTempToken,
+                pageAccessToken: page.access_token,
                 botId: selectedBotId,
-                accessToken: facebookTempToken
             });
 
             toast.success('Facebook page connected successfully');
-            dispatch(setFacebookPages(facebookPages.filter(p => p.id !== facebookPageId)));
+            dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
             refetch();
         } catch (error: any) {
         } finally {
@@ -266,11 +282,19 @@ export default function ChannelsPage() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                <RefreshCw className="w-5 h-5 animate-spin" />
+                                {facebookPages.length > 0 ? (
+                                    <Facebook className="w-5 h-5" />
+                                ) : (
+                                    <RefreshCw className="w-5 h-5 animate-spin" />
+                                )}
                             </div>
                             <div>
                                 <h4 className="font-semibold">Connecting {isConnecting}</h4>
-                                <p className="text-xs text-muted-foreground">Waiting for authentication...</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {facebookPages.length > 0
+                                        ? 'Select the terminals you want to connect'
+                                        : 'Waiting for authentication...'}
+                                </p>
                             </div>
                         </div>
                         <Button
@@ -307,7 +331,7 @@ export default function ChannelsPage() {
                                             </div>
                                             <Button
                                                 size="sm"
-                                                onClick={() => handleConnectFacebookPage(page.id)}
+                                                onClick={() => handleConnectFacebookPage(page)}
                                                 disabled={connectingPage === page.id}
                                                 className="rounded-lg h-8 px-3 shadow-sm hover:shadow-md transition-all active:scale-95"
                                             >

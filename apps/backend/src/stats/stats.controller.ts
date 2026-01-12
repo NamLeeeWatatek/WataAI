@@ -24,7 +24,7 @@ import { StatsQueryDto } from './dto/stats-query.dto';
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'stats', version: '1' })
 export class StatsController {
-  constructor(private readonly statsService: StatsService) {}
+  constructor(private readonly statsService: StatsService) { }
 
   @Get('system')
   @HttpCode(HttpStatus.OK)
@@ -39,6 +39,16 @@ export class StatsController {
   })
   async getSystemStats(@Query() query: StatsQueryDto): Promise<SystemStatsDto> {
     return this.statsService.getSystemStats(query);
+  }
+
+  @Get('admin/control-plane')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get system health statistics',
+    description: 'Retrieve CPU, RAM, and Service status',
+  })
+  getControlPlaneStats() {
+    return this.statsService.getControlPlaneStats();
   }
 
   @Get('dashboard')

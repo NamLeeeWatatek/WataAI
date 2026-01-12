@@ -376,7 +376,24 @@ export default function EditCreationToolPage() {
                                         name="formConfig"
                                         render={({ field }) => (
                                             <div className="h-[calc(100vh-250px)] min-h-[600px] border rounded-lg bg-background overflow-hidden shadow-sm">
-                                                <FormBuilder config={field.value} onChange={(config) => field.onChange(config)} />
+                                                <FormBuilder
+                                                    config={field.value}
+                                                    onChange={(config) => field.onChange(config)}
+                                                    onFieldRename={(oldName, newName) => {
+                                                        const currentFlow = watch('executionFlow');
+                                                        if (currentFlow.type === 'ai-generation' && currentFlow.promptTemplate) {
+                                                            // Simple Regex replacement for {{name}} or {name} or [name] depending on usage
+                                                            // Standardized to {{name}} in our UI feedback
+                                                            const newTemplate = currentFlow.promptTemplate.replace(
+                                                                new RegExp(`{{${oldName}}}`, 'g'),
+                                                                `{{${newName}}}`
+                                                            );
+                                                            if (newTemplate !== currentFlow.promptTemplate) {
+                                                                setValue('executionFlow', { ...currentFlow, promptTemplate: newTemplate }, { shouldDirty: true });
+                                                            }
+                                                        }
+                                                    }}
+                                                />
                                             </div>
                                         )}
                                     />

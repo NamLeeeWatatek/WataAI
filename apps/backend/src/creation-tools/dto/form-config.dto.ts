@@ -69,6 +69,8 @@ export const FORM_FIELD_TYPES = [
   'channel-selector',
   'multi-select',
   'template-selector',
+  'page-selector',
+  'result-preview',
 ] as const;
 
 export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];

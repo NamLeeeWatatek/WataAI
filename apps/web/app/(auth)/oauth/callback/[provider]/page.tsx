@@ -38,7 +38,9 @@ export default function OAuthCallbackPage() {
                 const session = await getSession()
                 const token = session?.accessToken
 
-                const res = await fetch(`${apiUrl}/oauth/callback/${provider}?code=${code}`, {
+                const state = searchParams.get('state')
+
+                const res = await fetch(`${apiUrl}/oauth/callback/${provider}?code=${code}&state=${state}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

@@ -41,11 +41,13 @@ export class ExecutionValidationService {
         case 'files':
         case 'multi-select':
         case 'channel-selector':
+        case 'page-selector':
         case 'json':
         case 'key-value':
           // These fields can be arrays, objects, strings, or numbers
           fieldSchema = z.any();
           break;
+        case 'result-preview':
         case 'text':
         case 'textarea':
         case 'string':

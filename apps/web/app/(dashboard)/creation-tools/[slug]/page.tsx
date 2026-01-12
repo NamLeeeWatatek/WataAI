@@ -188,6 +188,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                     form={form}
                     activeStep={activeStep}
                     onStepChange={setActiveStep}
+                    toolId={tool.id}
                 />
             </div>
         </div>

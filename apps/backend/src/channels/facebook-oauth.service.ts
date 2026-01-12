@@ -129,13 +129,18 @@ export class FacebookOAuthService extends BaseOAuthService {
       return data.data || [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        const fbError = error.response?.data?.error;
         this.logger.error(
-          'Get pages failed:',
-          error.response?.data || error.message,
+          `[FacebookOAuthService] Get pages failed: ${fbError?.message || error.message}`,
+          {
+            code: fbError?.code,
+            subcode: fbError?.error_subcode,
+            type: fbError?.type,
+            fullError: error.response?.data
+          }
         );
         throw new HttpException(
-          error.response?.data?.error?.message ||
-            'Failed to get Facebook pages',
+          fbError?.message || 'Failed to get Facebook pages',
           HttpStatus.BAD_REQUEST,
         );
       }

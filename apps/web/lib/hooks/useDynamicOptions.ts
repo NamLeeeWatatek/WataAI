@@ -40,8 +40,11 @@ export function useDynamicOptions(field: FormField) {
             : field.type === 'template-selector' ? 'templates'
                 : null);
 
-    const selectFn = useCallback((data: unknown[]) => {
+    const selectFn = useCallback((rawData: any) => {
         if (!optionsConfig) return [];
+
+        // Safety: Extract array even if API returns { data: [...], ... }
+        const data = Array.isArray(rawData) ? rawData : (rawData?.data && Array.isArray(rawData.data) ? rawData.data : []);
 
         if (optionsConfig === 'channels') {
             // Professional transformation with TanStack Query 'select'

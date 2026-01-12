@@ -41,7 +41,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post()
   @Permissions('job:Create')
@@ -54,6 +54,26 @@ export class CreationJobsController {
     @CurrentWorkspace() workspaceId: string,
   ) {
     return this.service.create(createDto, req.user.id, workspaceId);
+  }
+
+  @Post('preview')
+  @Permissions('job:Create')
+  @ApiOkResponse({
+    description: 'Execute tool synchronously for preview',
+  })
+  preview(
+    @Body() createDto: CreateCreationJobDto,
+    @Request() req,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.executePreview(
+      createDto.creationToolId,
+      createDto.inputData,
+      {
+        workspaceId,
+        userId: req.user.id,
+      },
+    );
   }
 
   @Get()
