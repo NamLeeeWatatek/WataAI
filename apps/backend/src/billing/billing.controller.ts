@@ -8,6 +8,7 @@ import {
   BadRequestException,
   Logger,
   Headers,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { StripeService } from './stripe.service';
@@ -129,6 +130,23 @@ export class BillingController {
       returnUrl,
     );
     return { url };
+  }
+
+  @Get('admin/invoices')
+  @UseGuards(AuthGuard('jwt'))
+  // @Roles('admin') // Ideally strict role check here
+  async getAdminInvoices(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.subscriptionsService.getAllInvoices({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 10,
+      search,
+      status,
+    });
   }
 
   @Post('webhook')

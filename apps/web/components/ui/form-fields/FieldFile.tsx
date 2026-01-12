@@ -70,15 +70,14 @@ export function FieldFile({ field, value, onChange }: DynamicFormFieldProps) {
                         // Professional Aspect-Ratio Controlled Card
                         if (!field.multiple && isMedia) {
                             return (
-                                <div key={idx} className="relative group rounded-md overflow-hidden border border-border bg-card shadow-sm hover:shadow-xl transition-all duration-500">
+                                <div key={idx} className="relative group rounded-md overflow-hidden border border-border bg-card shadow-sm mx-auto">
                                     <ImagePreview src={fileObj.url}>
-                                        <div className="relative w-full aspect-video bg-muted/20 cursor-zoom-in overflow-hidden">
-                                            {/* Studio Quality Media - Natural No-Crop Display */}
+                                        <div className="relative w-full max-w-md h-80 bg-black cursor-zoom-in overflow-hidden mx-auto">
+                                            {/* Center-Fit Professional Media Display */}
                                             <Media
                                                 src={fileObj.url}
                                                 alt={fileObj.name || `File ${idx}`}
                                                 fill
-                                                ambient
                                                 objectFit="contain"
                                                 muted
                                                 playsInline

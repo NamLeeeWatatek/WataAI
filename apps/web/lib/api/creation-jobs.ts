@@ -10,6 +10,19 @@ export const creationJobsApi = {
     findAll: async (query?: any): Promise<{ data: CreationJob[]; hasNextPage: boolean; total: number }> => {
         const response = await axiosClient.get<{ data: CreationJob[]; hasNextPage: boolean; total: number }>('/creation-jobs', {
             params: query,
+            paramsSerializer: (params) => {
+                const searchParams = new URLSearchParams();
+                Object.keys(params).forEach(key => {
+                    const value = params[key];
+                    if (value === undefined || value === null) return;
+                    if (Array.isArray(value)) {
+                        value.forEach(v => searchParams.append(key, v));
+                    } else {
+                        searchParams.append(key, value);
+                    }
+                });
+                return searchParams.toString();
+            },
         });
         return response as unknown as { data: CreationJob[]; hasNextPage: boolean; total: number };
     },
@@ -29,5 +42,10 @@ export const creationJobsApi = {
 
     removeMany: async (ids: string[]): Promise<void> => {
         await axiosClient.post('/creation-jobs/bulk-delete', { ids });
+    },
+
+    preview: async (data: CreateCreationJobDto): Promise<any> => {
+        const response = await axiosClient.post<any>('/creation-jobs/preview', data);
+        return response;
     },
 };

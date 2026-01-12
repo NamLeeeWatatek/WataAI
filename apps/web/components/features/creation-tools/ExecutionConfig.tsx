@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/Select';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check } from 'lucide-react';
+import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check, Plus, X, Box } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { Button } from '@/components/ui/Button';
 import {
@@ -58,7 +58,7 @@ export function ExecutionConfig({ config, onChange, availableFields = [] }: Exec
             // Create a smart default body based on available fields
             const lines: string[] = [];
             availableFields.forEach(f => {
-                const isComplex = ['file', 'files', 'multi-select', 'channel-select', 'channel-selector', 'json', 'key-value', 'multi-select'].includes(f.type);
+                const isComplex = ['file', 'files', 'multi-select', 'channel-select', 'channel-selector', 'page-selector', 'json', 'key-value'].includes(f.type);
                 const variable = isComplex ? `{{${f.name} | json}}` : `{{${f.name}}}`;
                 if (isComplex) {
                     lines.push(`  "${f.name}": ${variable}`);
@@ -78,6 +78,22 @@ export function ExecutionConfig({ config, onChange, availableFields = [] }: Exec
                 timeoutMs: 60000,
                 retryCount: 3
             });
+        } else if (type === 'workflow-chain' as any) {
+            onChange({
+                type: 'workflow-chain' as any,
+                steps: [
+                    {
+                        id: 'step-1',
+                        title: 'First Action',
+                        execution: {
+                            type: 'ai-generation',
+                            provider: 'openai',
+                            model: 'gpt-4o',
+                            promptTemplate: ''
+                        }
+                    }
+                ]
+            } as any);
         }
     };
 
@@ -128,6 +144,24 @@ export function ExecutionConfig({ config, onChange, availableFields = [] }: Exec
                                 Trigger external workflows (e.g., n8n, Zapier) or call custom APIs via HTTP requests.
                             </p>
                         </div>
+
+                        <div
+                            onClick={() => handleTypeChange('workflow-chain' as any)}
+                            className={`
+                                cursor-pointer rounded-xl border-2 p-4 transition-all hover:bg-accent/50
+                                ${config.type === 'workflow-chain' ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-muted bg-card'}
+                            `}
+                        >
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className={`p-2 rounded-lg ${config.type === 'workflow-chain' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                    <Box className="w-5 h-5" />
+                                </div>
+                                <div className="font-semibold">Workflow Chain</div>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Execute multiple steps in sequence. Results from previous steps can be used in later steps.
+                            </p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -170,7 +204,7 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
     const copyAllAsJson = () => {
         const lines: string[] = [];
         fields.forEach(f => {
-            const isComplex = ['file', 'files', 'multi-select', 'channel-selector', 'json', 'key-value'].includes(f.type);
+            const isComplex = ['file', 'files', 'multi-select', 'channel-selector', 'page-selector', 'json', 'key-value'].includes(f.type);
             const variable = isComplex ? `{{${f.name} | json}}` : `{{${f.name}}}`;
             if (isComplex) {
                 // For complex types, don't wrap in quotes so it injects raw JSON
@@ -548,3 +582,111 @@ function TemplateSelector({ onSelect }: { onSelect: (templateContent: string) =>
     );
 }
 
+
+function WorkflowConfigEditor({ config, onChange }: { config: any, onChange: (c: any) => void }) {
+    const addStep = () => {
+        const newStep = {
+            id: `step-${config.steps.length + 1}`,
+            title: `New Action`,
+            execution: {
+                type: 'ai-generation',
+                provider: 'openai',
+                model: 'gpt-4o',
+                promptTemplate: ''
+            }
+        };
+        onChange({ ...config, steps: [...config.steps, newStep] });
+    };
+
+    const removeStep = (index: number) => {
+        const newSteps = [...config.steps];
+        newSteps.splice(index, 1);
+        onChange({ ...config, steps: newSteps });
+    };
+
+    return (
+        <Card className="border-border/60 bg-card/40">
+            <CardContent className="space-y-6 p-5">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="font-bold text-sm">Execution Chain</h3>
+                        <p className="text-xs text-muted-foreground">Configure the steps to be executed in sequence.</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={addStep} className="h-8 gap-1.5">
+                        <Plus className="w-3.5 h-3.5" /> Add Step
+                    </Button>
+                </div>
+
+                <div className="space-y-4">
+                    {config.steps.map((step: any, idx: number) => (
+                        <Card key={step.id} className="border-border/40 shadow-none bg-background/50 overflow-hidden">
+                            <div className="flex items-center justify-between p-3 bg-muted/20 border-b">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                                        {idx + 1}
+                                    </div>
+                                    <Input
+                                        value={step.title}
+                                        onChange={(e) => {
+                                            const newSteps = [...config.steps];
+                                            newSteps[idx] = { ...step, title: e.target.value };
+                                            onChange({ ...config, steps: newSteps });
+                                        }}
+                                        className="h-7 text-xs font-bold border-transparent hover:border-border bg-transparent w-[200px]"
+                                    />
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeStep(idx)}>
+                                    <X className="w-3.5 h-3.5" />
+                                </Button>
+                            </div>
+                            <div className="p-4 space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold uppercase text-muted-foreground">Step Type</Label>
+                                    <Select
+                                        value={step.execution.type}
+                                        onValueChange={(val) => {
+                                            const newSteps = [...config.steps];
+                                            const newExecution = val === 'ai-generation'
+                                                ? { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' }
+                                                : { type: 'http-webhook', urlTemplate: 'https://', method: 'POST', bodyTemplate: '{}' };
+                                            newSteps[idx] = { ...step, execution: newExecution };
+                                            onChange({ ...config, steps: newSteps });
+                                        }}
+                                    >
+                                        <SelectTrigger className="h-8 text-xs font-medium">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ai-generation">AI Generation</SelectItem>
+                                            <SelectItem value="http-webhook">HTTP Webhook</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {step.execution.type === 'ai-generation' ? (
+                                    <AiConfigEditor
+                                        config={step.execution}
+                                        onChange={(c) => {
+                                            const newSteps = [...config.steps];
+                                            newSteps[idx] = { ...step, execution: c };
+                                            onChange({ ...config, steps: newSteps });
+                                        }}
+                                    />
+                                ) : (
+                                    <HttpConfigEditor
+                                        config={step.execution}
+                                        onChange={(c) => {
+                                            const newSteps = [...config.steps];
+                                            newSteps[idx] = { ...step, execution: c };
+                                            onChange({ ...config, steps: newSteps });
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

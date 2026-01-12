@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from 'react'
+
+import { ReactNode } from "react"
 import { memo } from 'react'
 import { Label } from './Label'
 import { cn } from '@/lib/utils'
@@ -20,6 +22,8 @@ import { FieldSlider } from './form-fields/FieldSlider'
 import { FieldChannelSelector } from './form-fields/FieldChannelSelector'
 import { FieldTemplateSelector } from './form-fields/FieldTemplateSelector'
 import { JsonEditor } from './JsonEditor'
+import { FieldPageSelector } from './form-fields/FieldPageSelector'
+import { FieldResultPreview } from './form-fields/FieldResultPreview'
 
 interface OptionItem {
     label: string
@@ -60,9 +64,12 @@ const fieldRegistry: Record<string, React.ComponentType<DynamicFormFieldProps>> 
     'file': FieldFile,
     'files': FieldFile,
     'multi-select': FieldMultiSelect,
+    'page-selector': FieldPageSelector,
+    'result-preview': FieldResultPreview,
     'radio': (props) => {
         const { field, value, onChange } = props
-        const radioOptions = (field.options as OptionItem[]) || []
+        // Ensure field.options is always an array for mapping
+        const radioOptions = Array.isArray(field.options) ? field.options : []
         return (
             <RadioGroup
                 value={String(value || '')}
@@ -108,6 +115,15 @@ function arePropsEqual(prev: DynamicFormFieldProps, next: DynamicFormFieldProps)
         const key = prev.field.showIf.field
         if (prev.allValues?.[key] !== next.allValues?.[key]) return false
     }
+
+    if (prev.field !== next.field) return false
+
+    if (prev.field.label !== next.field.label) return false
+    if (prev.field.description !== next.field.description) return false
+    if (prev.field.placeholder !== next.field.placeholder) return false
+    if (prev.field.required !== next.field.required) return false
+    if (JSON.stringify(prev.field.options) !== JSON.stringify(next.field.options)) return false
+    if (JSON.stringify(prev.field.validation) !== JSON.stringify(next.field.validation)) return false
 
     return true
 }

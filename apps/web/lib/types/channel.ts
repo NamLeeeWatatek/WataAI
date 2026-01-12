@@ -44,45 +44,38 @@ export enum ChannelConnectionStatus {
 }
 
 /** Metadata stored with a channel connection */
+/** Metadata stored with a channel connection */
 export interface ChannelMetadata {
   botId?: string
   pageId?: string
   pageName?: string
-  pageAccessToken?: string
-  webhookVerified?: boolean
-  lastSyncAt?: string
-  errorMessage?: string
-  pages?: FacebookPage[]
+  accountId?: string
+  accountName?: string
+  connectedBy?: string
+  pages?: ChannelPage[]
   [key: string]: unknown
 }
 
-/** Facebook page data structure */
-export interface FacebookPage {
+/** Normalized Page data structure (Facebook/Instagram/etc) */
+export interface ChannelPage {
   id: string
   name: string
-  access_token?: string
+  category?: string
+  tasks?: string[]
   picture?: {
     data: {
       url: string
     }
   }
-  category?: string
-  isPage?: boolean
 }
 
 export interface Channel {
   id: string
   name: string
   type: ChannelPlatform | string
-  icon?: string
   status: ChannelConnectionStatus | string
   connected_at: string
-  accessToken?: string
-  refreshToken?: string
-  expiresAt?: string
-  botId?: string
-  bot?: { id: string; name: string } | null
-  metadata?: ChannelMetadata
+  metadata: ChannelMetadata
 }
 
 export interface IntegrationConfig {
@@ -92,7 +85,7 @@ export interface IntegrationConfig {
   client_id: string
   client_secret: string
   scopes?: string
-  verify_token?: string // ✅ For Facebook webhook verification
+  verify_token?: string
   is_active: boolean
   createdAt?: string
   updatedAt?: string
@@ -101,17 +94,19 @@ export interface IntegrationConfig {
 export interface CreateIntegrationDto {
   provider: string
   name?: string
-  clientId: string
-  clientSecret: string
+  client_id: string
+  client_secret: string
   scopes?: string
-  isActive?: boolean
+  verify_token?: string
+  is_active?: boolean
 }
 
 export interface UpdateIntegrationDto {
   name?: string
-  clientId?: string
-  clientSecret?: string
+  client_id?: string
+  client_secret?: string
   scopes?: string
-  isActive?: boolean
+  verify_token?: string
+  is_active?: boolean
 }
 

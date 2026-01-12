@@ -16,7 +16,7 @@ interface OptionItem {
 }
 
 export function FieldChannelSelector({ field, value, onChange }: DynamicFormFieldProps) {
-    const { options: dynamicOptions } = useDynamicOptions(field as any);
+    const { options: dynamicOptions, isLoading } = useDynamicOptions(field as any);
 
     const activeChannels = dynamicOptions.filter((c) =>
         c.status === 'active' || c.status === 'connected' || c.isPage === true
@@ -98,7 +98,19 @@ export function FieldChannelSelector({ field, value, onChange }: DynamicFormFiel
                 </DropdownMenuContent>
             </DropdownMenu>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {activeChannels.length > 0 ? (
+                {isLoading ? (
+                    <>
+                        {[1, 2].map((i) => (
+                            <div key={i} className="flex items-center gap-3 p-3 rounded-md border bg-card/50">
+                                <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+                                <div className="flex flex-col gap-1.5 flex-1">
+                                    <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                                    <div className="h-3 w-16 bg-muted/50 animate-pulse rounded" />
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                ) : activeChannels.length > 0 ? (
                     activeChannels.map((channel) => {
                         const channelId = String(channel.id);
                         const isSelected = selectedValues.includes(channelId);

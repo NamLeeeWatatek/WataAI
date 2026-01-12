@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class OAuthService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   getFacebookAuthUrl(clientId: string, state?: string): string {
     const redirectUri =
@@ -30,7 +30,7 @@ export class OAuthService {
       state: state || '',
     });
 
-    return `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+    return `https://www.facebook.com/v24.0/dialog/oauth?${params.toString()}`;
   }
 
   async exchangeFacebookCode(
@@ -54,7 +54,7 @@ export class OAuthService {
     });
 
     const response = await axios.get(
-      `https://graph.facebook.com/v18.0/oauth/access_token?${params.toString()}`,
+      `https://graph.facebook.com/v24.0/oauth/access_token?${params.toString()}`,
     );
 
     return {
@@ -65,7 +65,7 @@ export class OAuthService {
 
   async getFacebookPages(accessToken: string): Promise<any[]> {
     const response = await axios.get(
-      `https://graph.facebook.com/v18.0/me/accounts`,
+      `https://graph.facebook.com/v24.0/me/accounts`,
       {
         params: { access_token: accessToken },
       },

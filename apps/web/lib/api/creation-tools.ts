@@ -76,7 +76,9 @@ export interface FormField {
     | 'channel-select'
     | 'channel-selector'
     | 'template-selector'
-    | 'multi-select';
+    | 'multi-select'
+    | 'page-selector'
+    | 'result-preview';
     label: string;
     placeholder?: string;
     description?: string;
@@ -127,7 +129,17 @@ export interface HttpExecutionConfig extends BaseExecutionConfig {
     asyncPattern?: boolean;
 }
 
-export type ExecutionFlow = AiExecutionConfig | HttpExecutionConfig;
+export interface WorkflowExecutionConfig extends BaseExecutionConfig {
+    type: 'workflow-chain';
+    steps: Array<{
+        id: string;
+        title: string;
+        execution: AiExecutionConfig | HttpExecutionConfig;
+        inputMapping?: Record<string, string>;
+    }>;
+}
+
+export type ExecutionFlow = AiExecutionConfig | HttpExecutionConfig | WorkflowExecutionConfig;
 
 export const creationToolsApi = {
     getActive: async (): Promise<CreationTool[]> => {
@@ -175,5 +187,11 @@ export const creationToolsApi = {
 
     delete: async (id: string): Promise<void> => {
         await axiosClient.delete(`/creation-tools/${id}`);
+    },
+    exportTools: async (ids?: string[]): Promise<CreationTool[]> => {
+        return await axiosClient.post('/creation-tools/export', { ids });
+    },
+    importTools: async (tools: any[]): Promise<{ success: number; failed: number }> => {
+        return await axiosClient.post('/creation-tools/import', { tools });
     },
 };

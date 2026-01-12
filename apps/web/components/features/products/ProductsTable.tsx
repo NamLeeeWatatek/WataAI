@@ -243,20 +243,7 @@ export function ProductsTable({
         }
     ], [onDelete]);
 
-    if (jobs.length === 0 && !isLoading) {
-        return (
-            <EmptyState
-                icon={<Package className="w-12 h-12" />}
-                title="No products found"
-                description="You haven't created any products yet. Start by using one of our creation tools."
-                action={{
-                    label: "Explore Tools",
-                    onClick: () => window.location.href = '/creation-tools',
-                    variant: "default"
-                }}
-            />
-        );
-    }
+
 
     return (
         <>
@@ -309,6 +296,18 @@ export function ProductsTable({
                 compact
                 noCard
                 className="w-full"
+                emptyComponent={
+                    <EmptyState
+                        icon={<Package className="w-12 h-12" />}
+                        title="No products found"
+                        description="You haven't created any products yet."
+                        action={{
+                            label: "Explore Tools",
+                            onClick: () => window.location.href = '/creation-tools',
+                            variant: "default"
+                        }}
+                    />
+                }
             />
 
             <ProductDetailsDialog

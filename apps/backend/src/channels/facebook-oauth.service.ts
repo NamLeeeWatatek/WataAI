@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelConnectionEntity } from '../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
 import { ChannelCredentialEntity } from '../integrations/infrastructure/persistence/relational/entities/channel-credential.entity';
+import { ConversationEntity } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
 import { BaseOAuthService } from './services/base-oauth.service';
 import axios from 'axios';
 
@@ -32,8 +33,10 @@ export class FacebookOAuthService extends BaseOAuthService {
     connectionRepository: Repository<ChannelConnectionEntity>,
     @InjectRepository(ChannelCredentialEntity)
     credentialRepository: Repository<ChannelCredentialEntity>,
+    @InjectRepository(ConversationEntity)
+    conversationRepository: Repository<ConversationEntity>,
   ) {
-    super(connectionRepository, credentialRepository);
+    super(connectionRepository, credentialRepository, conversationRepository);
   }
 
   getOAuthUrl(appId: string, redirectUri: string, state?: string): string {
@@ -129,13 +132,18 @@ export class FacebookOAuthService extends BaseOAuthService {
       return data.data || [];
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        const fbError = error.response?.data?.error;
         this.logger.error(
-          'Get pages failed:',
-          error.response?.data || error.message,
+          `[FacebookOAuthService] Get pages failed: ${fbError?.message || error.message}`,
+          {
+            code: fbError?.code,
+            subcode: fbError?.error_subcode,
+            type: fbError?.type,
+            fullError: error.response?.data
+          }
         );
         throw new HttpException(
-          error.response?.data?.error?.message ||
-            'Failed to get Facebook pages',
+          fbError?.message || 'Failed to get Facebook pages',
           HttpStatus.BAD_REQUEST,
         );
       }

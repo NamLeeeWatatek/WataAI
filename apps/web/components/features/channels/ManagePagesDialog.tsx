@@ -16,7 +16,7 @@ import { Bot, CheckCircle2, Link2Off, Facebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 
-interface AssignBotDialogProps {
+interface ManagePagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   channel: {
@@ -30,13 +30,13 @@ interface AssignBotDialogProps {
   onSuccess?: () => void;
 }
 
-export function AssignBotDialog({
+export function ManagePagesDialog({
   open,
   onOpenChange,
   channel,
   workspaceId,
   onSuccess,
-}: AssignBotDialogProps) {
+}: ManagePagesDialogProps) {
   if (!channel) return null;
 
   const pages = channel.metadata?.pages || [];

@@ -12,28 +12,17 @@ import {
   CheckCircle2,
   Settings,
   Trash2,
-  Facebook,
-  MessageCircle,
-  Instagram,
-  Phone,
-  Mail,
-  Youtube,
-  Twitter,
-  Linkedin,
-  Music,
-  Hash,
-  MessageSquare,
-  Smartphone,
-  Globe,
-  ShoppingCart,
-  Target,
-  Cloud,
-  Send,
-  Book,
-  BarChart,
-  Zap
+  MoreVertical,
+  Edit2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getChannelIcon, getChannelColor } from '@/lib/constants/channels';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { formatDate } from '@/lib/utils/date';
 import { Search } from '@/components/ui/Search';
 import type { Channel } from '@/lib/types/channel';
@@ -53,7 +42,7 @@ interface ConnectedChannelsTabProps {
   onPageSizeChange: (size: number) => void;
   onToggleSelection: (id: string) => void;
   onClearSelection: () => void;
-  onAssignBot: (channel: Channel) => void;
+  onManagePages: (channel: Channel) => void;
   onDisconnect: (id: string) => void;
   onLoadData: () => void;
   isLoading?: boolean;
@@ -65,91 +54,23 @@ export function ConnectedChannelsTab({
   viewMode,
   currentPage,
   pageSize,
+  totalCount,
   selectedIds,
   onSearchChange,
   onViewModeChange,
   onPageChange,
   onPageSizeChange,
-  onAssignBot,
+  onManagePages,
   onDisconnect,
   onLoadData,
   isLoading = false
 }: ConnectedChannelsTabProps) {
-  const getIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
-      'facebook': <Facebook className="w-5 h-5" />,
-      'messenger': <MessageCircle className="w-5 h-5" />,
-      'instagram': <Instagram className="w-5 h-5" />,
-      'whatsapp': <Phone className="w-5 h-5" />,
-      'telegram': <Send className="w-5 h-5" />,
-      'email': <Mail className="w-5 h-5" />,
-      'youtube': <Youtube className="w-5 h-5" />,
-      'twitter': <Twitter className="w-5 h-5" />,
-      'linkedin': <Linkedin className="w-5 h-5" />,
-      'tiktok': <Music className="w-5 h-5" />,
-      'discord': <Hash className="w-5 h-5" />,
-      'slack': <MessageSquare className="w-5 h-5" />,
-      'zalo': <MessageCircle className="w-5 h-5" />,
-      'line': <MessageSquare className="w-5 h-5" />,
-      'viber': <Phone className="w-5 h-5" />,
-      'wechat': <MessageCircle className="w-5 h-5" />,
-      'sms': <Smartphone className="w-5 h-5" />,
-      'webchat': <Globe className="w-5 h-5" />,
-      'shopify': <ShoppingCart className="w-5 h-5" />,
-      'google': <Globe className="w-5 h-5" />,
-      'hubspot': <Target className="w-5 h-5" />,
-      'salesforce': <Cloud className="w-5 h-5" />,
-      'mailchimp': <Mail className="w-5 h-5" />,
-      'intercom': <MessageSquare className="w-5 h-5" />,
-      'zapier': <Zap className="w-5 h-5" />,
-      'notion': <Book className="w-5 h-5" />,
-      'airtable': <BarChart className="w-5 h-5" />,
-    };
-    return icons[type] || <Smartphone className="w-5 h-5" />;
-  };
 
-  const getColor = (type: string) => {
-    const colors: Record<string, string> = {
-      'facebook': 'text-primary bg-primary/10 border-primary/20',
-      'messenger': 'text-primary bg-primary/10 border-primary/20',
-      'instagram': 'text-pink-500 bg-pink-500/10 border-pink-500/20',
-      'whatsapp': 'text-success bg-success/10 border-success/20',
-      'telegram': 'text-info bg-info/10 border-info/20',
-      'youtube': 'text-destructive bg-destructive/10 border-destructive/20',
-      'twitter': 'text-info bg-info/10 border-info/20',
-      'linkedin': 'text-primary bg-primary/10 border-primary/20',
-      'tiktok': 'text-foreground bg-muted border-border/40',
-      'discord': 'text-primary bg-primary/10 border-primary/20',
-      'slack': 'text-primary bg-primary/10 border-primary/20',
-      'zalo': 'text-info bg-info/10 border-info/20',
-      'line': 'text-success bg-success/10 border-success/20',
-      'viber': 'text-primary bg-primary/10 border-primary/20',
-      'wechat': 'text-success bg-success/10 border-success/20',
-      'sms': 'text-warning bg-warning/10 border-warning/20',
-      'email': 'text-destructive bg-destructive/10 border-destructive/20',
-      'webchat': 'text-primary bg-primary/10 border-primary/20',
-      'shopify': 'text-success bg-success/10 border-success/20',
-      'google': 'text-destructive bg-destructive/10 border-destructive/20',
-      'hubspot': 'text-warning bg-warning/10 border-warning/20',
-      'salesforce': 'text-primary bg-primary/10 border-primary/20',
-      'mailchimp': 'text-warning bg-warning/10 border-warning/20',
-      'intercom': 'text-primary bg-primary/10 border-primary/20',
-      'zapier': 'text-warning bg-warning/10 border-warning/20',
-      'notion': 'text-foreground bg-muted border-border/40',
-      'airtable': 'text-info bg-info/10 border-info/20',
-    };
-    return colors[type] || 'text-muted-foreground bg-muted/50 border-border/40';
-  };
 
-  const filteredChannels = channels.filter(channel =>
-    channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    channel.type.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
-  const paginatedChannels = filteredChannels.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+
+  // Server-side filtered and paginated
+  const paginatedChannels = channels;
 
   const columns = React.useMemo<ColumnDef<Channel>[]>(() => [
     {
@@ -158,8 +79,8 @@ export function ConnectedChannelsTab({
       accessorKey: 'name',
       cell: ({ row, getValue }) => (
         <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-lg", getColor(row.original.type))}>
-            {getIcon(row.original.type)}
+          <div className={cn("p-2 rounded-lg", getChannelColor(row.original.type))}>
+            {getChannelIcon(row.original.type)}
           </div>
           <div>
             <div className="font-semibold text-sm">{row.original.metadata?.pageName || (getValue() as React.ReactNode)}</div>
@@ -196,30 +117,34 @@ export function ConnectedChannelsTab({
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onAssignBot(row.original)}
-            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDisconnect(row.original.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onManagePages(row.original)}>
+                <Settings className="w-3.5 h-3.5 mr-2" />
+                Manage Configuration
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDisconnect(row.original.id)}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-2" />
+                Disconnect
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     }
-  ], [onAssignBot, onDisconnect]);
+  ], [onManagePages, onDisconnect]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6">
       {/* Controls Toolbar */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
         <div className="relative flex-1 w-full max-w-sm group">
@@ -260,7 +185,25 @@ export function ConnectedChannelsTab({
         </div>
       </div>
 
-      {channels.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="h-[240px] border-border/50 bg-muted/5 animate-pulse rounded-2xl">
+              <div className="p-6 space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-muted/20" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-3/4 bg-muted/20 rounded" />
+                    <div className="h-3 w-1/2 bg-muted/20 rounded" />
+                  </div>
+                </div>
+                <div className="h-20 bg-muted/10 rounded-xl" />
+                <div className="h-9 w-full bg-muted/10 rounded-lg" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : channels.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-border/40 rounded-3xl bg-muted/10">
           <h3 className="text-xl font-semibold mb-2">No connections yet</h3>
           <p className="text-muted-foreground mb-8 mx-auto max-w-lg">
@@ -278,55 +221,82 @@ export function ConnectedChannelsTab({
                 const sameTypeCount = channels.filter(c => c.type === channel.type).length;
 
                 return (
-                  <Card key={channel.id} className="group h-full flex flex-col">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4 pt-6">
-                      <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(channel.type))}>
-                        {getIcon(channel.type)}
+                  <Card key={channel.id} className="group h-full flex flex-col border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                    <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
+                      <div className="flex gap-4">
+                        <div className={cn("p-2.5 rounded-xl border border-white/5 h-fit", getChannelColor(channel.type))}>
+                          {getChannelIcon(channel.type)}
+                        </div>
+                        <div className="space-y-1">
+                          <CardTitle className="text-base font-bold line-clamp-1">
+                            {channel.metadata?.pageName || channel.name}
+                          </CardTitle>
+                          <CardDescription className="capitalize text-xs font-medium flex items-center gap-2">
+                            <span className="text-foreground/80">{channel.metadata?.pageId ? 'Facebook Page' : `${channel.type} Channel`}</span>
+                            <span className="text-muted-foreground/40">•</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-green-500">Active</span>
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <Badge variant="default" className="font-bold">
-                          <CheckCircle2 className="w-3 h-3 mr-1" /> Active
-                        </Badge>
-                        {channel.metadata?.botId && (
-                          <Badge variant="secondary" className="font-bold">
-                            <Settings className="w-3 h-3 mr-1" /> Linked
-                          </Badge>
-                        )}
-                      </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground -mr-2 -mt-2">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onManagePages(channel)}>
+                            <Settings className="w-3.5 h-3.5 mr-2" />
+                            Manage Configuration
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onDisconnect(channel.id)}
+                            className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                            Disconnect
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </CardHeader>
-                    <CardContent className="flex-1 pb-6">
-                      <CardTitle className="text-xl font-black mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-                        {channel.metadata?.pageName || channel.name}
-                      </CardTitle>
-                      <CardDescription className="capitalize font-bold text-xs tracking-widest opacity-70">
-                        {channel.metadata?.pageId ? 'Facebook Page' : `${channel.type} Channel`}
-                      </CardDescription>
+
+                    <CardContent className="flex-1 py-4 space-y-3">
+                      {channel.metadata?.botId ? (
+                        <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                          <span className="text-muted-foreground font-medium">Assigned Bot</span>
+                          <Badge variant="outline" className="bg-background text-[10px] font-mono border-primary/20 text-primary">
+                            Active
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                          <span className="text-muted-foreground font-medium">Bot Status</span>
+                          <Badge variant="outline" className="bg-background text-[10px] font-mono border-orange-500/20 text-orange-500">
+                            Unassigned
+                          </Badge>
+                        </div>
+                      )}
+
                       {sameTypeCount > 1 && (
-                        <p className="text-[10px] font-black text-muted-foreground uppercase mt-3 tracking-wider opacity-60">
-                          {channel.metadata?.accountName
-                            ? `${channel.metadata.accountName}`
-                            : `Account ${channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1}`}
-                        </p>
+                        <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+                          <span className="text-muted-foreground font-medium">Account</span>
+                          <span className="font-semibold text-foreground">
+                            {channel.metadata?.accountName || `Account ${channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1}`}
+                          </span>
+                        </div>
                       )}
                     </CardContent>
-                    <CardFooter className="grid grid-cols-2 gap-3 border-t border-white/5 bg-muted/5 p-4 mt-auto">
+
+                    <CardFooter className="pt-0">
                       <Button
-                        variant="outline"
                         size="sm"
-                        onClick={() => onAssignBot(channel)}
-                        className="text-[10px] font-black uppercase tracking-widest"
+                        className="w-full font-bold shadow-sm"
+                        variant="outline"
+                        onClick={() => onManagePages(channel)}
                       >
                         <Settings className="w-3.5 h-3.5 mr-2" />
-                        Configure
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDisconnect(channel.id)}
-                        className="text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 mr-2" />
-                        Sever
+                        Manage Settings
                       </Button>
                     </CardFooter>
                   </Card>
@@ -346,24 +316,22 @@ export function ConnectedChannelsTab({
           )}
 
           {/* Unified Pagination */}
-          {filteredChannels.length > pageSize && (
-            <div className="pt-8 border-t border-border/40 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground font-medium">
-                Showing <span className="text-foreground">{Math.min(currentPage * pageSize, filteredChannels.length)}</span> of <span className="text-foreground">{filteredChannels.length}</span> channels
-              </p>
-              <Pagination
-                pagination={{
-                  page: currentPage,
-                  limit: pageSize,
-                  total: filteredChannels.length,
-                  hasNextPage: currentPage * pageSize < filteredChannels.length,
-                  totalPages: Math.ceil(filteredChannels.length / pageSize)
-                }}
-                onPageChange={onPageChange}
-                onPageSizeChange={onPageSizeChange}
-              />
-            </div>
-          )}
+          <div className="pt-8 border-t border-border/40 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground font-medium">
+              Showing <span className="text-foreground">{Math.min(paginatedChannels.length, pageSize)}</span> of <span className="text-foreground">{totalCount}</span> channels
+            </p>
+            <Pagination
+              pagination={{
+                page: currentPage,
+                limit: pageSize,
+                total: totalCount,
+                hasNextPage: currentPage * pageSize < totalCount,
+                totalPages: Math.ceil(totalCount / pageSize)
+              }}
+              onPageChange={onPageChange}
+              onPageSizeChange={onPageSizeChange}
+            />
+          </div>
         </>
       )}
     </div>

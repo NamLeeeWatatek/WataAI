@@ -19,11 +19,35 @@ export async function getChannelCategories(): Promise<string[]> {
   return axiosClient.get('/channels/types/categories') as unknown as Promise<string[]>
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
+export interface ChannelQueryParams {
+  page?: number
+  limit?: number
+  search?: string
+  workspaceId?: string
+}
+
 /**
  * Get all connected channels
  */
-export async function getChannels(workspaceId?: string): Promise<Channel[]> {
-  return axiosClient.get('/channels/', { params: { workspaceId } }) as unknown as Promise<Channel[]>
+export async function getChannels(params?: ChannelQueryParams): Promise<PaginatedResponse<Channel>> {
+  return axiosClient.get('/channels/', { params }) as unknown as Promise<PaginatedResponse<Channel>>
+}
+
+/**
+ * Update a connected channel
+ */
+export async function updateChannel(id: string, data: Partial<Channel>): Promise<Channel> {
+  return axiosClient.patch<Channel>(`/channels/${id}`, data) as unknown as Promise<Channel>
 }
 
 /**
@@ -85,9 +109,12 @@ export async function getOAuthUrl(
 }
 
 export interface ConnectFacebookDto {
-  facebookPageId: string
+  pageId: string
+  pageName: string
+  userAccessToken: string
+  pageAccessToken: string
+  category?: string
   botId?: string | null
-  accessToken?: string | null
 }
 
 /**

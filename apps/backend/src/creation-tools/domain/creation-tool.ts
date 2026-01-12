@@ -7,24 +7,26 @@ import { Category } from '../../categories/domain/category';
 export interface FormField {
   name: string;
   type:
-    | 'text'
-    | 'textarea'
-    | 'string'
-    | 'select'
-    | 'radio'
-    | 'checkbox'
-    | 'boolean'
-    | 'number'
-    | 'file'
-    | 'files'
-    | 'slider'
-    | 'color'
-    | 'json'
-    | 'key-value'
-    | 'channel-select'
-    | 'channel-selector'
-    | 'multi-select'
-    | 'template-selector';
+  | 'text'
+  | 'textarea'
+  | 'string'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'boolean'
+  | 'number'
+  | 'file'
+  | 'files'
+  | 'slider'
+  | 'color'
+  | 'json'
+  | 'key-value'
+  | 'channel-select'
+  | 'channel-selector'
+  | 'multi-select'
+  | 'template-selector'
+  | 'page-selector'
+  | 'result-preview';
   label: string;
   placeholder?: string;
   description?: string;
@@ -95,6 +97,10 @@ export enum ExecutionType {
   WORKFLOW_CHAIN = 'workflow-chain',
 }
 
+export interface BaseExecutionConfig {
+  type: ExecutionType;
+}
+
 /**
  * AI Execution Configuration
  */
@@ -135,7 +141,20 @@ export interface HttpExecutionConfig {
   asyncPattern?: boolean;
 }
 
-export type ExecutionFlow = AiExecutionConfig | HttpExecutionConfig;
+export interface WorkflowExecutionConfig extends BaseExecutionConfig {
+  type: ExecutionType.WORKFLOW_CHAIN;
+  steps: Array<{
+    id: string;
+    title: string;
+    execution: AiExecutionConfig | HttpExecutionConfig;
+    inputMapping?: Record<string, string>; // Map previous step results to next step inputs
+  }>;
+}
+
+export type ExecutionFlow =
+  | AiExecutionConfig
+  | HttpExecutionConfig
+  | WorkflowExecutionConfig;
 /**
  * CreationTool domain entity
  * Main entity that defines a creation tool with dynamic forms and execution logic

@@ -7,12 +7,13 @@ import { useCreationTools } from '@/lib/hooks/features/useCreationTools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
+import { useRef } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
@@ -46,6 +47,7 @@ export default function CreationToolsPage() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Reset to page 1 when search changes
     useEffect(() => {
@@ -57,7 +59,10 @@ export default function CreationToolsPage() {
         data: response,
         isLoading: loading,
         refetch,
-        deleteTool
+        deleteTool,
+        exportTools,
+        importTools,
+        isMutating
     } = useCreationTools({
         page: currentPage,
         limit: pageSize,
@@ -120,6 +125,47 @@ export default function CreationToolsPage() {
         }
     };
 
+    const handleExport = async (ids?: string[]) => {
+        try {
+            const data = await exportTools(ids);
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `creation-tools-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success('Tools exported successfully');
+        } catch (error) {
+            toast.error('Failed to export tools');
+        }
+    };
+
+    const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const content = e.target?.result as string;
+                const tools = JSON.parse(content);
+                if (!Array.isArray(tools)) {
+                    toast.error('Invalid file format. Expected an array of tools.');
+                    return;
+                }
+                await importTools(tools);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                await refetch();
+            } catch (error) {
+                toast.error('Failed to import tools. Check file format.');
+            }
+        };
+        reader.readAsText(file);
+    };
+
 
 
     if (loading && tools.length === 0) return <PageLoading message="Loading tools..." />;
@@ -147,6 +193,29 @@ export default function CreationToolsPage() {
                                 />
                             </div>
                             <div className="flex items-center gap-2 ml-auto">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImport}
+                                    accept=".json"
+                                    className="hidden"
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isMutating}
+                                >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Import
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleExport()}
+                                    disabled={isMutating}
+                                >
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Export All
+                                </Button>
                                 <Button
                                     onClick={() => router.push('/system/creation-tools/new')}
                                     className="shadow-sm"
@@ -168,6 +237,12 @@ export default function CreationToolsPage() {
                             icon: Trash2,
                             onClick: () => setBulkDeleteAlertOpen(true),
                             variant: 'destructive'
+                        },
+                        {
+                            label: 'Export',
+                            icon: Download,
+                            onClick: () => handleExport(Array.from(selectedIds)),
+                            variant: 'outline'
                         }
                     ]}
                 />

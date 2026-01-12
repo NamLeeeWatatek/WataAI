@@ -25,6 +25,7 @@ export type NodeProperty = Omit<ApiFormField, 'type' | 'options' | 'defaultValue
     maxLength?: number
     pattern?: string
     disabled?: boolean
+    icon?: string
     properties?: NodeProperty[]
 }
 

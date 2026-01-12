@@ -22,7 +22,51 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
+
+  async exportTools(ids?: string[]): Promise<CreationTool[]> {
+    if (ids && ids.length > 0) {
+      const tools = await Promise.all(
+        ids.map((id) => this.repository.findById(id)),
+      );
+      return tools.filter((t): t is CreationTool => !!t);
+    }
+    return this.repository.findAll();
+  }
+
+  async importTools(tools: any[]): Promise<{ success: number; failed: number }> {
+    let success = 0;
+    let failed = 0;
+
+    for (const toolData of tools) {
+      try {
+        const { id, createdAt, updatedAt, deletedAt, categories, ...cleanData } =
+          toolData;
+        const existing = await this.repository.findBySlug(cleanData.slug);
+
+        const categoryIds =
+          cleanData.categoryIds || categories?.map((c: any) => c.id);
+
+        if (existing) {
+          await this.update(existing.id, {
+            ...cleanData,
+            categoryIds,
+          });
+        } else {
+          await this.create({
+            ...cleanData,
+            categoryIds,
+          });
+        }
+        success++;
+      } catch (error) {
+        console.error(`Failed to import tool ${toolData.slug}:`, error);
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  }
 
   async create(createDto: CreateCreationToolDto): Promise<CreationTool> {
     const existing = await this.repository.findBySlug(createDto.slug);
@@ -45,7 +89,7 @@ export class CreationToolsService {
         ? createDto.categoryIds.map((id) => ({ id }))
         : undefined,
       formConfig: createDto.formConfig,
-      executionFlow: createDto.executionFlow,
+      executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
       workspaceId: createDto.workspaceId,
       sortOrder: createDto.sortOrder ?? 0,
@@ -103,7 +147,7 @@ export class CreationToolsService {
       persistencePayload.categories = categoryIds.map((id) => ({ id }));
     }
 
-    const tool = await this.repository.update(id, updatePayload);
+    const tool = await this.repository.update(id, persistencePayload);
 
     if (!tool) {
       throw new NotFoundException(
