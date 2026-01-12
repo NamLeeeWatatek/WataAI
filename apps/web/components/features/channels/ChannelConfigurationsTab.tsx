@@ -8,43 +8,30 @@ import { Label } from '@/components/ui/Label';
 import { Badge } from '@/components/ui/Badge';
 import { AlertBanner, CodeBlock } from '@/components/ui/AlertBanner';
 import {
+  Plus,
+  Zap,
+  ShieldCheck,
+  X,
+  Copy,
+  ExternalLink,
   Settings,
   Trash2,
-  Check,
-  X,
-  Plus,
-  Facebook,
-  MessageCircle,
-  Instagram,
-  Phone,
-  Mail,
-  Youtube,
-  Twitter,
-  Linkedin,
-  Music,
-  Monitor,
-  MessageSquare,
-  Smartphone,
-  Globe,
-  ShoppingCart,
-  Target,
-  Cloud,
-  Send,
-  Hash,
-  MapPin,
-  PhoneCall,
-  Video,
-  Zap,
-  Book,
-  BarChart,
-  Users,
-  TrendingUp,
-  ExternalLink,
-  ShieldCheck,
-  Key,
-  Copy
+  MoreVertical,
+  Edit2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  getChannelIcon,
+  getChannelColor,
+  MESSAGING_CHANNELS,
+  BUSINESS_INTEGRATIONS
+} from '@/lib/constants/channels';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu";
 import { toast } from 'sonner';
 import type { IntegrationConfig, CreateIntegrationDto, UpdateIntegrationDto } from '@/lib/types/channel';
 
@@ -81,71 +68,9 @@ export function ChannelConfigurationsTab({
     setOrigin(window.location.origin);
   }, []);
 
-  const getIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
-      'facebook': <Facebook className="w-6 h-6" />,
-      'messenger': <MessageCircle className="w-6 h-6" />,
-      'instagram': <Instagram className="w-6 h-6" />,
-      'whatsapp': <Phone className="w-6 h-6" />,
-      'telegram': <Send className="w-6 h-6" />,
-      'email': <Mail className="w-6 h-6" />,
-      'youtube': <Youtube className="w-6 h-6" />,
-      'twitter': <Twitter className="w-6 h-6" />,
-      'linkedin': <Linkedin className="w-6 h-6" />,
-      'tiktok': <Music className="w-6 h-6" />,
-      'discord': <Hash className="w-6 h-6" />,
-      'slack': <MessageSquare className="w-6 h-6" />,
-      'zalo': <MessageCircle className="w-6 h-6" />,
-      'line': <MessageSquare className="w-6 h-6" />,
-      'viber': <PhoneCall className="w-6 h-6" />,
-      'wechat': <MessageCircle className="w-6 h-6" />,
-      'sms': <Smartphone className="w-6 h-6" />,
-      'webchat': <Globe className="w-6 h-6" />,
-      'shopify': <ShoppingCart className="w-6 h-6" />,
-      'google': <Globe className="w-6 h-6" />,
-      'hubspot': <Target className="w-6 h-6" />,
-      'salesforce': <Cloud className="w-6 h-6" />,
-      'mailchimp': <Mail className="w-6 h-6" />,
-      'intercom': <MessageSquare className="w-6 h-6" />,
-      'zapier': <Zap className="w-6 h-6" />,
-      'notion': <Book className="w-6 h-6" />,
-      'airtable': <BarChart className="w-6 h-6" />,
-    };
-    return icons[type] || <Smartphone className="w-6 h-6" />;
-  };
 
-  const getColor = (type: string) => {
-    const colors: Record<string, string> = {
-      'facebook': 'text-primary bg-primary/10 border-primary/20',
-      'messenger': 'text-primary bg-primary/10 border-primary/20',
-      'instagram': 'text-pink-500 bg-pink-500/10 border-pink-500/20',
-      'whatsapp': 'text-success bg-success/10 border-success/20',
-      'telegram': 'text-info bg-info/10 border-info/20',
-      'youtube': 'text-destructive bg-destructive/10 border-destructive/20',
-      'twitter': 'text-info bg-info/10 border-info/20',
-      'linkedin': 'text-primary bg-primary/10 border-primary/20',
-      'tiktok': 'text-foreground bg-muted border-border/40',
-      'discord': 'text-primary bg-primary/10 border-primary/20',
-      'slack': 'text-primary bg-primary/10 border-primary/20',
-      'zalo': 'text-info bg-info/10 border-info/20',
-      'line': 'text-success bg-success/10 border-success/20',
-      'viber': 'text-primary bg-primary/10 border-primary/20',
-      'wechat': 'text-success bg-success/10 border-success/20',
-      'sms': 'text-warning bg-warning/10 border-warning/20',
-      'email': 'text-destructive bg-destructive/10 border-destructive/20',
-      'webchat': 'text-primary bg-primary/10 border-primary/20',
-      'shopify': 'text-success bg-success/10 border-success/20',
-      'google': 'text-destructive bg-destructive/10 border-destructive/20',
-      'hubspot': 'text-warning bg-warning/10 border-warning/20',
-      'salesforce': 'text-primary bg-primary/10 border-primary/20',
-      'mailchimp': 'text-warning bg-warning/10 border-warning/20',
-      'intercom': 'text-primary bg-primary/10 border-primary/20',
-      'zapier': 'text-warning bg-warning/10 border-warning/20',
-      'notion': 'text-foreground bg-muted border-border/40',
-      'airtable': 'text-info bg-info/10 border-info/20',
-    };
-    return colors[type] || 'text-muted-foreground bg-muted border-border/40';
-  };
+
+
 
   const openConfig = (configId?: string, provider?: string) => {
     const existing = configId ? configs.find(c => String(c.id) === String(configId)) : null;
@@ -213,38 +138,9 @@ export function ChannelConfigurationsTab({
     }
   };
 
-  const MESSAGING_CHANNELS = [
-    { id: 'facebook', name: 'Facebook Page', description: 'Manage posts and comments on your Facebook Page', category: 'social', multiAccount: true },
-    { id: 'messenger', name: 'Messenger', description: 'Reply to messages from your Facebook Page', category: 'messaging', multiAccount: true },
-    { id: 'instagram', name: 'Instagram', description: 'Manage Instagram DMs, comments and posts', category: 'social', multiAccount: true },
-    { id: 'whatsapp', name: 'WhatsApp Business', description: 'Connect WhatsApp Business API', category: 'messaging', multiAccount: true },
-    { id: 'telegram', name: 'Telegram', description: 'Connect Telegram Bot for messaging', category: 'messaging', multiAccount: true },
-    { id: 'youtube', name: 'YouTube', description: 'Manage YouTube channel and comments', category: 'social', multiAccount: true },
-    { id: 'twitter', name: 'X / Twitter', description: 'Post tweets and manage DMs', category: 'social', multiAccount: true },
-    { id: 'linkedin', name: 'LinkedIn', description: 'Post to LinkedIn and manage messages', category: 'social', multiAccount: true },
-    { id: 'tiktok', name: 'TikTok', description: 'Post videos and manage TikTok account', category: 'social', multiAccount: true },
-    { id: 'discord', name: 'Discord', description: 'Connect Discord bot for community', category: 'messaging', multiAccount: true },
-    { id: 'slack', name: 'Slack', description: 'Send notifications to Slack channels', category: 'messaging', multiAccount: true },
-    { id: 'zalo', name: 'Zalo OA', description: 'Connect Zalo Official Account (Vietnam)', category: 'messaging', multiAccount: true },
-    { id: 'line', name: 'LINE', description: 'Connect LINE Official Account (Asia)', category: 'messaging', multiAccount: true },
-    { id: 'viber', name: 'Viber', description: 'Connect Viber Business Messages', category: 'messaging', multiAccount: true },
-    { id: 'wechat', name: 'WeChat', description: 'Connect WeChat Official Account (China)', category: 'messaging', multiAccount: true },
-    { id: 'sms', name: 'SMS', description: 'Send SMS via Twilio or other providers', category: 'messaging', multiAccount: false },
-    { id: 'email', name: 'Email', description: 'Send emails via SMTP or providers', category: 'messaging', multiAccount: false },
-    { id: 'webchat', name: 'Web Chat', description: 'Embed chat widget on your website', category: 'messaging', multiAccount: false },
-  ];
 
-  const BUSINESS_INTEGRATIONS = [
-    { id: 'shopify', name: 'Shopify', description: 'Sync orders and customers from Shopify', category: 'ecommerce', multiAccount: true },
-    { id: 'google', name: 'Google Business', description: 'Manage Google Business Profile reviews', category: 'business', multiAccount: true },
-    { id: 'hubspot', name: 'HubSpot', description: 'Sync contacts and deals with HubSpot CRM', category: 'crm', multiAccount: false },
-    { id: 'salesforce', name: 'Salesforce', description: 'Connect to Salesforce CRM', category: 'crm', multiAccount: false },
-    { id: 'mailchimp', name: 'Mailchimp', description: 'Sync contacts for email marketing', category: 'marketing', multiAccount: false },
-    { id: 'intercom', name: 'Intercom', description: 'Sync conversations with Intercom', category: 'support', multiAccount: false },
-    { id: 'zapier', name: 'Zapier', description: 'Connect to 5000+ apps via Zapier', category: 'automation', multiAccount: false },
-    { id: 'notion', name: 'Notion', description: 'Sync data with Notion databases', category: 'productivity', multiAccount: true },
-    { id: 'airtable', name: 'Airtable', description: 'Connect to Airtable bases', category: 'productivity', multiAccount: true },
-  ];
+
+
 
   return (
     <div>
@@ -262,69 +158,84 @@ export function ChannelConfigurationsTab({
               const channelInfo = [...MESSAGING_CHANNELS, ...BUSINESS_INTEGRATIONS].find(c => c.id === provider);
 
               return (
-                <Card key={config.id} className="group h-full flex flex-col">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6 pt-6 px-6">
-                    <div className={cn("p-4 rounded-xl transition-all duration-500", getColor(provider))}>
-                      {getIcon(provider)}
+                <Card key={config.id} className="group h-full flex flex-col border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden">
+                  <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
+                    <div className="flex gap-4">
+                      <div className={cn("p-2.5 rounded-xl border border-white/5 h-fit", getChannelColor(provider))}>
+                        {getChannelIcon(provider)}
+                      </div>
+                      <div className="space-y-1">
+                        <CardTitle className="text-base font-bold flex items-center gap-2">
+                          {config.name || channelInfo?.name || provider}
+                          {config.is_active && (
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </span>
+                          )}
+                        </CardTitle>
+                        <CardDescription className="text-xs font-medium capitalize flex items-center gap-2">
+                          <span className="text-foreground/80">{channelInfo?.category || 'Integration'}</span>
+                          <span className="text-muted-foreground/40">•</span>
+                          <span className={cn("text-[10px] font-mono uppercase tracking-wider", config.is_active ? "text-green-500" : "text-muted-foreground")}>
+                            {config.is_active ? 'Online' : 'Offline'}
+                          </span>
+                        </CardDescription>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="icon"
 
-                        onClick={() => openConfig(config.id)}
-                        className="h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-
-                        onClick={() => config.id && onDeleteConfig(config.id)}
-                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground -mr-2 -mt-2">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openConfig(config.id)}>
+                          <Edit2 className="w-3.5 h-3.5 mr-2" />
+                          Edit Configuration
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => config.id && onDeleteConfig(config.id)}
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-2" />
+                          Disconnect
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </CardHeader>
-                  <CardContent className="px-6 flex-1">
-                    <CardTitle className="text-xl font-black mb-1.5 tracking-tight">{config.name || channelInfo?.name || provider}</CardTitle>
-                    <CardDescription className="mb-6 font-medium text-xs leading-relaxed opacity-70">
-                      {channelInfo?.description || 'API configured'}
-                    </CardDescription>
-                    <div className="space-y-3">
-                      <div className="bg-muted/30 rounded-xl border border-border/40 flex items-center justify-between p-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">ID Tag</span>
-                        <span className="font-mono text-[10px] font-bold bg-muted px-2 py-0.5 rounded-lg">{config.client_id?.slice(0, 10) || 'N/A'}...</span>
+
+                  <CardContent className="flex-1 py-4">
+                    <div className="bg-muted/40 rounded-lg p-3 border border-border/40 flex items-center justify-between group/id">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Client ID</span>
+                        <code className="text-xs font-mono text-foreground/80">
+                          {config.client_id?.slice(0, 8)}...{config.client_id?.slice(-4)}
+                        </code>
                       </div>
-                      <div className="bg-muted/30 rounded-xl border border-border/40 flex items-center justify-between p-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Registry</span>
-                        <Badge className="text-[10px] font-black gap-1.5 py-0 px-2 uppercase">
-                          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", config.is_active ? 'bg-current' : 'bg-current')}></span>
-                          {config.is_active ? 'STABLE' : 'OFFLINE'}
-                        </Badge>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 opacity-0 group-hover/id:opacity-100 transition-opacity"
+                        onClick={() => {
+                          navigator.clipboard.writeText(config.client_id);
+                          toast.success("Copied Client ID");
+                        }}
+                      >
+                        <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex gap-3 px-6 pb-6 pt-4">
-                    <Button
-                      size="lg"
 
-                      className="flex-1 font-black tracking-tight"
+                  <CardFooter className="pt-0">
+                    <Button
+                      size="sm"
+                      className="w-full font-bold shadow-sm"
                       onClick={() => onConnect(provider, config.id)}
                     >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Link Account
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-
-                      onClick={() => openConfig(config.id)}
-                      className="px-4"
-                    >
-                      <Settings className="w-4 h-4" />
+                      <Zap className="w-3.5 h-3.5 mr-2 fill-current" />
+                      Connect Channel
                     </Button>
                   </CardFooter>
                 </Card>
@@ -351,21 +262,22 @@ export function ChannelConfigurationsTab({
               <Card
                 key={channel.id}
                 onClick={() => openConfig(undefined, channel.id)}
-
-                className="cursor-pointer transition-all duration-300 group overflow-hidden"
+                className="group cursor-pointer hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
-                  <div className={cn("p-3 rounded-xl transition-all duration-500", getColor(channel.id))}>
-                    {getIcon(channel.id)}
+                <CardHeader className="flex flex-row items-center gap-4 p-4">
+                  <div className={cn("p-2.5 rounded-xl border border-white/5 bg-muted/20 group-hover:scale-105 transition-transform", getChannelColor(channel.id))}>
+                    {getChannelIcon(channel.id)}
                   </div>
-                  <Settings className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-bold truncate pr-2">{channel.name}</CardTitle>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0" />
+                    </div>
+                    <CardDescription className="text-[10px] opacity-70 line-clamp-1 mt-0.5">
+                      {channel.description}
+                    </CardDescription>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <CardTitle className="text-md font-bold mb-1 group-hover:text-primary transition-colors">{channel.name}</CardTitle>
-                  <CardDescription className="text-[10px] opacity-70 font-medium leading-relaxed line-clamp-2">
-                    {channel.description}
-                  </CardDescription>
-                </CardContent>
               </Card>
             ))}
           </div>
@@ -382,23 +294,24 @@ export function ChannelConfigurationsTab({
               <Card
                 key={integration.id}
                 onClick={() => openConfig(undefined, integration.id)}
-
-                className="cursor-pointer transition-all duration-300 group overflow-hidden"
+                className="group cursor-pointer hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4">
-                  <div className={cn("p-3 rounded-xl transition-all duration-500", getColor(integration.id))}>
-                    {getIcon(integration.id)}
+                <CardHeader className="flex flex-row items-center gap-4 p-4">
+                  <div className={cn("p-2.5 rounded-xl border border-white/5 bg-muted/20 group-hover:scale-105 transition-transform", getChannelColor(integration.id))}>
+                    {getChannelIcon(integration.id)}
                   </div>
-                  <Badge variant="outline" className="text-[9px] font-black tracking-widest uppercase py-0 px-2 opacity-60">
-                    {integration.category}
-                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-bold truncate pr-2">{integration.name}</CardTitle>
+                      <Badge variant="secondary" className="text-[9px] h-5 px-1.5 font-normal opacity-60">
+                        {integration.category}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-[10px] opacity-70 line-clamp-1 mt-0.5">
+                      {integration.description}
+                    </CardDescription>
+                  </div>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <CardTitle className="text-md font-bold mb-1 group-hover:text-primary transition-colors">{integration.name}</CardTitle>
-                  <CardDescription className="text-[10px] opacity-70 font-medium leading-relaxed line-clamp-2">
-                    {integration.description}
-                  </CardDescription>
-                </CardContent>
               </Card>
             ))}
           </div>
@@ -411,8 +324,8 @@ export function ChannelConfigurationsTab({
           <Card className="w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-center gap-5 mb-8 border-b border-border/40 pb-6">
-                <div className={cn("p-4 rounded-2xl", getColor(configForm.provider))}>
-                  {getIcon(configForm.provider)}
+                <div className={cn("p-4 rounded-2xl", getChannelColor(configForm.provider))}>
+                  {getChannelIcon(configForm.provider)}
                 </div>
                 <div className="flex-1">
                   <h3 className="text-2xl font-black tracking-tight capitalize">{configForm.provider}</h3>

@@ -231,10 +231,29 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
             toast.error("At least one step is required.");
             return;
         }
+
+        // Find fields to remove
+        const stepToRemove = steps[index];
+        const fieldsToRemove = new Set<string>();
+        stepToRemove?.layout?.rows?.forEach(row => {
+            row.zones?.forEach(zone => {
+                zone.fieldRows?.forEach(fr => {
+                    fr.fields?.forEach(f => fieldsToRemove.add(f));
+                });
+            });
+        });
+
         const newSteps = steps.filter((_, i) => i !== index);
-        onChange({ ...config, steps: newSteps });
+        const newFields = config.fields.filter(f => !fieldsToRemove.has(f.name));
+
+        onChange({ ...config, steps: newSteps, fields: newFields });
+
         if (activeStepIndex >= newSteps.length) {
             setActiveStepIndex(newSteps.length - 1);
+        }
+
+        if (selectedFieldName && fieldsToRemove.has(selectedFieldName)) {
+            setSelectedFieldName(null);
         }
     }
 
@@ -269,15 +288,36 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
     }
 
     const handleRemoveZone = (rowId: string, zoneId: string) => {
+        // Collect removed fields
+        const fieldsToRemove = new Set<string>();
+        const row = layoutRows.find(r => r.id === rowId);
+        const zone = row?.zones.find(z => z.id === zoneId);
+
+        zone?.fieldRows.forEach(fr => {
+            fr.fields.forEach(f => fieldsToRemove.add(f));
+        });
+
         const newRows = layoutRows.map(row => {
             if (row.id !== rowId) return row;
             return {
                 ...row,
                 zones: row.zones.filter(z => z.id !== zoneId)
             };
-        }).filter(row => row.zones.length > 0); // Remove empty rows
+        }).filter(row => row.zones.length > 0);
 
-        updateStepLayout(newRows);
+        const newFields = config.fields.filter(f => !fieldsToRemove.has(f.name));
+
+        const newSteps = [...steps];
+        newSteps[activeStepIndex] = {
+            ...currentStep,
+            layout: { ...currentStep.layout, rows: newRows }
+        };
+
+        onChange({ ...config, steps: newSteps, fields: newFields });
+
+        if (selectedFieldName && fieldsToRemove.has(selectedFieldName)) {
+            setSelectedFieldName(null);
+        }
     }
 
     const handleCreateField = (type: FieldType, targetZoneId?: string) => {
@@ -854,8 +894,22 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                                             const newRows = JSON.parse(JSON.stringify(layoutRows)) as LayoutRow[];
                                                                             const fRow = newRows[rowIdx].zones[zoneIdx].fieldRows.find(fr => fr.id === fieldRowId);
                                                                             if (fRow) {
-                                                                                fRow.fields.splice(fieldIdx, 1);
-                                                                                updateStepLayout(newRows);
+                                                                                const [removedField] = fRow.fields.splice(fieldIdx, 1);
+
+                                                                                const newFields = config.fields.filter(f => f.name !== removedField);
+
+                                                                                const newSteps = [...steps];
+                                                                                newSteps[activeStepIndex] = {
+                                                                                    ...newSteps[activeStepIndex],
+                                                                                    layout: { ...newSteps[activeStepIndex].layout, rows: newRows }
+                                                                                };
+
+                                                                                onChange({ ...config, fields: newFields, steps: newSteps });
+
+                                                                                if (selectedFieldName === removedField) {
+                                                                                    setSelectedFieldName(null);
+                                                                                }
+                                                                                toast.success("Field removed");
                                                                             }
                                                                         }}
                                                                     />

@@ -188,4 +188,10 @@ export const creationToolsApi = {
     delete: async (id: string): Promise<void> => {
         await axiosClient.delete(`/creation-tools/${id}`);
     },
+    exportTools: async (ids?: string[]): Promise<CreationTool[]> => {
+        return await axiosClient.post('/creation-tools/export', { ids });
+    },
+    importTools: async (tools: any[]): Promise<{ success: number; failed: number }> => {
+        return await axiosClient.post('/creation-tools/import', { tools });
+    },
 };

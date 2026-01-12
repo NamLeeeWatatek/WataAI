@@ -58,7 +58,7 @@ export function useSystemHealth() {
         queryKey: adminKeys.health(),
         queryFn: async () => {
             const result = await axiosClient.get<SystemHealth>('/stats/admin/control-plane');
-            return result;
+            return result as unknown as SystemHealth;
         },
         refetchInterval: 10000,
     });
@@ -74,7 +74,7 @@ export function useAdminInvoices(params: {
         queryKey: adminKeys.invoices(params),
         queryFn: async () => {
             const result = await axiosClient.get<InvoiceResponse>('/billing/admin/invoices', { params });
-            return result;
+            return result as unknown as InvoiceResponse;
         },
         placeholderData: (previousData) => previousData, // Keep previous data while fetching next page
     });

@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { AdminPaymentManagement } from '@/components/features/admin/AdminPaymentManagement';
 import { AdminSystemStatus } from '@/components/features/admin/AdminSystemStatus';
+import { AdminSystemTools } from '@/components/features/admin/AdminSystemTools';
 
 export default function AdminDashboardPage() {
     const router = useRouter();
@@ -56,10 +57,11 @@ export default function AdminDashboardPage() {
             <div className="pt-4 pb-20">
                 <Tabs defaultValue="overview" className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+                        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
                             <TabsTrigger value="overview">Overview</TabsTrigger>
                             <TabsTrigger value="payments">Payments</TabsTrigger>
                             <TabsTrigger value="health">System Health</TabsTrigger>
+                            <TabsTrigger value="tools">System Tools</TabsTrigger>
                         </TabsList>
                     </div>
 
@@ -137,6 +139,10 @@ export default function AdminDashboardPage() {
 
                     <TabsContent value="health" className="animate-in fade-in-50 duration-500">
                         <AdminSystemStatus />
+                    </TabsContent>
+
+                    <TabsContent value="tools" className="animate-in fade-in-50 duration-500">
+                        <AdminSystemTools />
                     </TabsContent>
                 </Tabs>
             </div>

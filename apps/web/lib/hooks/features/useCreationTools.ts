@@ -42,6 +42,18 @@ export function useCreationTools(params: any = {}) {
         },
     });
 
+    const exportMutation = useMutation({
+        mutationFn: (ids?: string[]) => creationToolsApi.exportTools(ids),
+    });
+
+    const importMutation = useMutation({
+        mutationFn: (tools: any[]) => creationToolsApi.importTools(tools),
+        onSuccess: (result) => {
+            queryClient.invalidateQueries({ queryKey: toolKeys.lists() });
+            toast.success(`Imported ${result.success} tools successfully. Failed: ${result.failed}`);
+        },
+    });
+
     return {
         ...query,
         tools: responseToArray(query.data),
@@ -49,7 +61,9 @@ export function useCreationTools(params: any = {}) {
         createTool: createMutation.mutateAsync,
         updateTool: updateMutation.mutateAsync,
         deleteTool: deleteMutation.mutateAsync,
-        isMutating: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+        exportTools: exportMutation.mutateAsync,
+        importTools: importMutation.mutateAsync,
+        isMutating: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || exportMutation.isPending || importMutation.isPending,
     };
 }
 

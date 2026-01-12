@@ -116,6 +116,15 @@ function arePropsEqual(prev: DynamicFormFieldProps, next: DynamicFormFieldProps)
         if (prev.allValues?.[key] !== next.allValues?.[key]) return false
     }
 
+    if (prev.field !== next.field) return false
+
+    if (prev.field.label !== next.field.label) return false
+    if (prev.field.description !== next.field.description) return false
+    if (prev.field.placeholder !== next.field.placeholder) return false
+    if (prev.field.required !== next.field.required) return false
+    if (JSON.stringify(prev.field.options) !== JSON.stringify(next.field.options)) return false
+    if (JSON.stringify(prev.field.validation) !== JSON.stringify(next.field.validation)) return false
+
     return true
 }
 

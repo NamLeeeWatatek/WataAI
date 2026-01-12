@@ -366,7 +366,7 @@ function DataTableInner<TData, TValue>({
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
-                      {emptyMessage}
+                      {emptyComponent || emptyMessage}
                     </TableCell>
                   </TableRow>
                 )}

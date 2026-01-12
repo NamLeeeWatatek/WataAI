@@ -34,7 +34,7 @@ import { useChannels } from '@/lib/hooks/features/useChannels';
 import { getOAuthUrl } from '@/lib/api/channels';
 import { useBots } from '@/lib/hooks/features/useBots';
 import { type Bot } from '@/lib/api/bots';
-import type { Channel, FacebookPage, IntegrationConfig } from '@/lib/types/channel';
+import type { Channel, ChannelPage, IntegrationConfig } from '@/lib/types/channel';
 
 export default function ChannelsPage() {
     const { currentWorkspace } = useWorkspace();
@@ -50,22 +50,6 @@ export default function ChannelsPage() {
         isConnecting
     } = useAppSelector(state => state.channels);
 
-    // TanStack Query Hooks
-    const {
-        channels,
-        integrations: configs,
-        isLoading,
-        refetch,
-        disconnect,
-        deleteIntegration,
-        saveIntegration,
-        connectFacebook,
-        isMutating
-    } = useChannels(workspaceId);
-
-    const { data: botsResponse, isLoading: loadingBots } = useBots(workspaceId);
-    const bots = botsResponse?.data || [];
-
     // Local UI State
     const [activeTab, setActiveTab] = useState<'connected' | 'configurations'>('connected');
     const [searchQuery, setSearchQuery] = useState('');
@@ -76,6 +60,24 @@ export default function ChannelsPage() {
     const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
     const [managePagesDialogOpen, setManagePagesDialogOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+
+    // TanStack Query Hooks
+    const {
+        channels,
+        meta,
+        integrations: configs,
+        isLoading,
+        refetch,
+        disconnect,
+        deleteIntegration,
+        saveIntegration,
+        connectFacebook,
+        isMutating
+    } = useChannels(workspaceId, {
+        page,
+        limit: pageSize,
+        search: searchQuery
+    });
 
     const handleConnect = async (provider: string, configId?: string) => {
         dispatch(setConnecting(provider));
@@ -235,15 +237,12 @@ export default function ChannelsPage() {
                 <div className="flex-1">
                     <TabsContent value="connected" className="m-0 focus-visible:outline-none">
                         <ConnectedChannelsTab
-                            channels={channels.filter((c: Channel) =>
-                                c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                c.type?.toLowerCase().includes(searchQuery.toLowerCase())
-                            )}
+                            channels={channels}
                             searchQuery={searchQuery}
                             viewMode={viewMode}
                             currentPage={page}
                             pageSize={pageSize}
-                            totalCount={channels.length}
+                            totalCount={meta?.total || 0}
                             selectedIds={[]}
                             onSearchChange={setSearchQuery}
                             onViewModeChange={setViewMode}
@@ -255,7 +254,7 @@ export default function ChannelsPage() {
                             onDisconnect={(id: string) => setDisconnectId(id)}
                             onManagePages={(channel: Channel) => {
                                 setSelectedChannel(channel);
-                                dispatch(setSelectedBotId(channel.botId || ''));
+                                dispatch(setSelectedBotId(channel.metadata?.botId || ''));
                                 setManagePagesDialogOpen(true);
                             }}
                             onLoadData={refetch}
@@ -277,7 +276,7 @@ export default function ChannelsPage() {
             </Tabs>
 
             { }
-            {isConnecting && (
+            {isConnecting && facebookPages.length > 0 && (
                 <Card className="fixed bottom-6 right-6 p-4 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-md z-50 w-80 animate-in slide-in-from-bottom-10">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -311,7 +310,7 @@ export default function ChannelsPage() {
                         <ScrollArea className="h-[300px] -mx-4 px-4">
                             <div className="space-y-2 py-2">
                                 <p className="text-xs font-medium text-muted-foreground mb-3 px-1 uppercase tracking-wider">Select a terminal to connect</p>
-                                {facebookPages.map((page: FacebookPage) => (
+                                {facebookPages.map((page: ChannelPage) => (
                                     <div key={page.id} className="group p-3 rounded-xl border bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200">
                                         <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-3 min-w-0">

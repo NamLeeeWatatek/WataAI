@@ -14,17 +14,24 @@ import toast from '@/lib/toast';
 
 export const channelKeys = {
     all: ['channels-feature'] as const,
-    channels: (workspaceId?: string) => [...channelKeys.all, 'connected', workspaceId] as const,
+    channels: (workspaceId?: string, params?: any) => [...channelKeys.all, 'connected', workspaceId, params] as const,
     integrations: (workspaceId?: string) => [...channelKeys.all, 'integrations', workspaceId] as const,
 };
 
-export function useChannels(workspaceId?: string) {
+export interface UseChannelsParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+}
+
+export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
     const queryClient = useQueryClient();
 
     const channelsQuery = useQuery({
-        queryKey: channelKeys.channels(workspaceId),
-        queryFn: () => getChannels(workspaceId),
+        queryKey: channelKeys.channels(workspaceId, params),
+        queryFn: () => getChannels({ ...params, workspaceId }),
         enabled: !!workspaceId,
+        placeholderData: (previousData) => previousData, // Keep previous data while fetching new page
     });
 
     const integrationsQuery = useQuery({
@@ -37,6 +44,7 @@ export function useChannels(workspaceId?: string) {
         mutationFn: (id: string) => disconnectChannel(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
+            // Ideally we should invalidate all channel queries, or at least the current one
             toast.success('Channel disconnected successfully');
         },
     });
@@ -68,9 +76,10 @@ export function useChannels(workspaceId?: string) {
     });
 
     return {
-        channels: channelsQuery.data || [],
+        channels: channelsQuery.data?.data || [],
+        meta: channelsQuery.data?.meta,
         integrations: integrationsQuery.data || [],
-        isLoading: channelsQuery.isLoading || integrationsQuery.isLoading,
+        isLoading: !workspaceId || channelsQuery.isLoading || integrationsQuery.isLoading,
         isRefetching: channelsQuery.isRefetching || integrationsQuery.isRefetching,
         refetch: () => {
             channelsQuery.refetch();

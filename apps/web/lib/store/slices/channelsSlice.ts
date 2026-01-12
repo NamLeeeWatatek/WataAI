@@ -4,7 +4,6 @@
  * Uses Redux Toolkit 2.0 patterns with async actions in slice
  */
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { Channel, IntegrationConfig } from '@/lib/types';
 import {
   getChannels,
   getIntegrations,
@@ -15,6 +14,7 @@ import {
 } from '@/lib/api/channels';
 import { axiosClient } from '@/lib/axios-client';
 import { setGlobalLoading } from './uiSlice';
+import type { Channel, IntegrationConfig, ChannelPage, Bot } from '@/lib/types';
 
 // Async actions defined in slice (Redux Toolkit 2.0 style)
 export const loadChannelsData = createAsyncThunk(
@@ -27,7 +27,7 @@ export const loadChannelsData = createAsyncThunk(
       ]);
 
       return {
-        channels: channelsData,
+        channels: channelsData.data,
         configs: configsData
       };
     } catch (error: any) {
@@ -141,14 +141,7 @@ export const connectFacebookPage = createAsyncThunk(
   }
 );
 
-export interface FacebookPage {
-  id: string;
-  name: string;
-  category?: string;
-  [key: string]: unknown;
-}
-
-import type { Bot } from '@/lib/types';
+// export interface FacebookPage { ... } - Removed in favor of ChannelPage
 
 interface ChannelsState {
   channels: Channel[];
@@ -157,7 +150,7 @@ interface ChannelsState {
   isConnecting: string | null;
   error: string | null;
   // Facebook specific state
-  facebookPages: FacebookPage[];
+  facebookPages: ChannelPage[];
   facebookTempToken: string;
   connectingPage: string | null;
   // Bot selection for Facebook
