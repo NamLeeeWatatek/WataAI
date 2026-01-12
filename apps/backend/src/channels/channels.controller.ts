@@ -9,6 +9,7 @@
   UseGuards,
   Request,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -30,7 +31,7 @@ export class ChannelsController {
   constructor(
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })
@@ -125,5 +126,26 @@ export class ChannelsController {
   ) {
     await this.channelsService.delete(id, workspaceId);
     return { success: true };
+  }
+
+  @Get(':id/access-token')
+  @ApiOperation({ summary: 'Get channel access token for external integrations' })
+  async getAccessToken(
+    @Param('id') id: string,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    const connection = await this.channelsService.findOne(id, workspaceId);
+    if (!connection) {
+      throw new NotFoundException('Channel connection not found');
+    }
+
+    return {
+      success: true,
+      id: connection.id,
+      name: connection.name,
+      type: connection.type,
+      accessToken: connection.accessToken,
+      metadata: connection.metadata,
+    };
   }
 }

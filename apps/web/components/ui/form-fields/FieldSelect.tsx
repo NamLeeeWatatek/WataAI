@@ -8,7 +8,7 @@ import { ReactNode } from "react"
 
 interface OptionItem {
     label: string
-    value: string | number
+    value: string | number | boolean
     icon?: string
     [key: string]: unknown
 }
@@ -18,8 +18,8 @@ export function FieldSelect({ field, value, onChange, allValues }: DynamicFormFi
     const { options: dynamicOptions, isLoading: loadingOptions, optionsConfig } = useDynamicOptions(field as unknown as FormField)
 
     const options: OptionItem[] = (field.type === 'channel-select' || (typeof field.options === 'string' && field.options.startsWith('dynamic:')))
-        ? dynamicOptions
-        : (field.options as OptionItem[]) || []
+        ? (Array.isArray(dynamicOptions) ? dynamicOptions : [])
+        : (Array.isArray(field.options) ? field.options : (typeof field.options === 'string' && field.options.length > 0 ? field.options.split(',').map(v => ({ label: v.trim(), value: v.trim() })) : []));
 
     const selectValue = value ? String(value) : undefined
 

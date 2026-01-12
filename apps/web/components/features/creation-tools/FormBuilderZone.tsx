@@ -1,10 +1,10 @@
-import React from 'react'
-import { Droppable, Draggable } from 'react-beautiful-dnd'
+import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, rectSortingStrategy } from '@dnd-kit/sortable'
+import { SortableItem } from './SortableItem'
 import { Box, GripVertical, MoreVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/utils'
-import { StrictModeDroppable } from '@/components/ui/StrictModeDroppable'
 import { FormField, ZoneConfig } from '@/lib/api/creation-tools'
 import { DynamicFormField } from '@/components/ui/DynamicFormField'
 
@@ -29,19 +29,28 @@ export function FormBuilderZone({
     onSelectField,
     onDeleteField
 }: FormBuilderZoneProps) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: zone.id,
+        data: {
+            type: 'ZONE',
+            zoneId: zone.id
+        }
+    });
+
     return (
-        <div className={cn(
-            "flex flex-col gap-4 transition-all group/zone relative h-full",
-            "bg-card/30 rounded-3xl p-6 border-2 border-dashed border-transparent hover:border-primary/10 transition-colors",
-            zone.fieldRows.length === 0 && "border-muted-foreground/10 min-h-[160px]"
-        )}>
+        <div
+            ref={setNodeRef}
+            className={cn(
+                "flex flex-col gap-4 transition-all group/zone relative h-full",
+                "bg-card/30 rounded-3xl p-6 border-2 border-dashed border-transparent hover:border-primary/10 transition-colors",
+                zone.fieldRows.length === 0 && "border-muted-foreground/10 min-h-[160px]",
+                isOver && "bg-primary/5 border-primary/20 ring-4 ring-primary/20 ring-inset"
+            )}
+        >
             {/* Zone Header */}
             <div className="flex items-center justify-between px-2 mb-4">
                 <div className="flex items-center gap-3 flex-1">
-                    <div
-                        {...dragHandleProps}
-                        className="cursor-move hover:bg-muted p-1 rounded"
-                    >
+                    <div className="cursor-move hover:bg-muted p-1 rounded" {...dragHandleProps}>
                         <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center">
                             <Box className="w-4 h-4 text-primary/40" />
                         </div>
@@ -61,73 +70,69 @@ export function FormBuilderZone({
             </div>
 
             {/* Zone Content (Field Rows) */}
-            <StrictModeDroppable droppableId={zone.id} type="FIELD">
-                {(providedZoneDrop, snapshotZoneDrop) => (
-                    <div
-                        ref={providedZoneDrop.innerRef}
-                        {...providedZoneDrop.droppableProps}
-                        className={cn(
-                            "flex flex-col gap-3 min-h-[50px] flex-1 transition-colors rounded-xl p-2",
-                            snapshotZoneDrop.isDraggingOver ? "bg-primary/5 ring-2 ring-primary/20" : "bg-transparent"
-                        )}
-                    >
-                        {zone.fieldRows.map((fieldRow, rowIdx) => (
-                            <StrictModeDroppable key={fieldRow.id} droppableId={fieldRow.id} type="FIELD" direction="horizontal">
-                                {(provided, snapshot) => (
+            <div className="flex flex-col gap-3 min-h-[120px] pb-12 flex-1 transition-colors rounded-xl p-2">
+                <SortableContext items={zone.fieldRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
+                    {zone.fieldRows.map((fieldRow, rowIdx) => (
+                        <SortableItem key={fieldRow.id} id={fieldRow.id}>
+                            {({ ref, style, attributes, listeners, isDragging: isRowDragging }) => (
+                                <div
+                                    ref={ref}
+                                    className={cn(
+                                        "grid gap-4 p-4 min-h-[90px] rounded-2xl transition-all border-2 border-dashed mb-3 relative group/row-container",
+                                        "hover:border-primary/20 bg-card/50 border-muted-foreground/5",
+                                        fieldRow.fields.length === 0 ? "grid-cols-1" : `grid-cols-${Math.min(4, fieldRow.fields.length)}`
+                                    )}
+                                    style={{
+                                        ...style,
+                                        gridTemplateColumns: `repeat(${Math.max(1, fieldRow.fields.length)}, minmax(0, 1fr))`
+                                    }}
+                                >
+                                    {/* Drag handle for row reordering */}
                                     <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        className={cn(
-                                            "grid gap-4 p-3 min-h-[80px] rounded-xl transition-all border-2 border-dashed border-transparent mb-2", // Added mb-2 for spacing
-                                            snapshot.isDraggingOver ? "bg-background border-primary shadow-sm" : "hover:border-border/40 bg-card/40",
-                                            // Auto-grid columns based on field count
-                                            `grid-cols-${Math.max(1, fieldRow.fields.length)}`
-                                        )}
-                                        style={{
-                                            gridTemplateColumns: `repeat(${Math.max(1, fieldRow.fields.length)}, minmax(0, 1fr))`
-                                        }}
+                                        {...attributes}
+                                        {...listeners}
+                                        className="absolute top-1 left-1 opacity-0 group-hover/row-container:opacity-100 cursor-move z-10"
                                     >
+                                        <GripVertical className="w-3 h-3 text-muted-foreground" />
+                                    </div>
+
+                                    <SortableContext items={fieldRow.fields} strategy={rectSortingStrategy}>
                                         {fieldRow.fields.map((fieldName, fieldIdx) => {
                                             const field = configFields.find(f => f.name === fieldName);
-                                            // Handle potential missing fields gracefully
                                             if (!field) return null;
 
                                             return (
-                                                <Draggable key={fieldName} draggableId={fieldName} index={fieldIdx}>
-                                                    {(providedField, snapshotField) => (
+                                                <SortableItem key={fieldName} id={fieldName} data={{ type: 'FIELD', fieldName, zoneId: zone.id, rowId: fieldRow.id }}>
+                                                    {({ ref: fieldRef, style: fieldStyle, attributes: fieldAttrs, listeners: fieldListeners, isDragging }) => (
                                                         <div
-                                                            ref={providedField.innerRef}
-                                                            {...providedField.draggableProps}
-                                                            {...providedField.dragHandleProps}
+                                                            ref={fieldRef}
+                                                            style={fieldStyle}
+                                                            {...fieldAttrs}
+                                                            {...fieldListeners}
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 onSelectField(fieldName);
                                                             }}
-                                                            style={{
-                                                                ...providedField.draggableProps.style,
-                                                                height: '100%'
-                                                            }}
+                                                            className="h-full"
                                                         >
                                                             <FieldPreview
                                                                 field={field}
                                                                 isSelected={selectedFieldName === fieldName}
-                                                                isDragging={snapshotField.isDragging}
+                                                                isDragging={isDragging}
                                                                 onDelete={() => onDeleteField(fieldRow.id, fieldIdx)}
                                                             />
                                                         </div>
                                                     )}
-                                                </Draggable>
+                                                </SortableItem>
                                             );
                                         })}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </StrictModeDroppable>
-                        ))}
-                        {providedZoneDrop.placeholder}
-                    </div>
-                )}
-            </StrictModeDroppable>
+                                    </SortableContext>
+                                </div>
+                            )}
+                        </SortableItem>
+                    ))}
+                </SortableContext>
+            </div>
         </div>
     )
 }

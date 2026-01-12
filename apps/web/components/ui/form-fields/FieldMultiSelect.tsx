@@ -14,9 +14,13 @@ export function FieldMultiSelect({ field, value, onChange }: DynamicFormFieldPro
     // Cast to FormField to match hook expectation
     const { options: dynamicOptions, isLoading: loadingOptions } = useDynamicOptions(field as unknown as FormField)
 
-    const multiOptions: OptionItem[] = typeof field.options === 'string' && field.options.startsWith('dynamic:')
-        ? dynamicOptions
-        : (field.options as OptionItem[]) || []
+    const multiOptions: any[] = typeof field.options === 'string' && field.options.startsWith('dynamic:')
+        ? (Array.isArray(dynamicOptions) ? dynamicOptions : [])
+        : (Array.isArray(field.options)
+            ? field.options
+            : (typeof field.options === 'string' && field.options.length > 0
+                ? field.options.split(',').map(v => v.trim())
+                : []));
 
     // Format options for MultiSelect component
     const formattedOptions = multiOptions.map(opt => ({

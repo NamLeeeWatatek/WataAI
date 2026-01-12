@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, JSX } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -185,18 +185,20 @@ export function ChannelConfigurationsTab({
       return;
     }
 
-    // Prepare data by mapping snake_case to camelCase for the backend
-    const payload: CreateIntegrationDto | (UpdateIntegrationDto & { id?: string }) = {
+    // Prepare data using snake_case to match backend DTO @Expose expectations
+    const payload: any = {
+      id: configForm.id,
       provider: configForm.provider,
       name: configForm.name,
-      clientId: configForm.client_id,
+      client_id: configForm.client_id,
       scopes: configForm.scopes,
-      isActive: true // Default to active
+      verify_token: configForm.verify_token,
+      is_active: true // Default to active
     };
 
     // Only send secret if it's changed and not the mask '***'
     if (configForm.client_secret && configForm.client_secret !== '***') {
-      payload.clientSecret = configForm.client_secret;
+      payload.client_secret = configForm.client_secret;
     } else if (!configForm.id && !configForm.client_secret) {
       // Secret is required for new configs
       toast.error("Client Secret is required");

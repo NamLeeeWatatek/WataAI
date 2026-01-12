@@ -234,4 +234,43 @@ export class SubscriptionsService {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   }
+
+  // --- Admin Methods ---
+
+  async getAllInvoices(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) {
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.invoiceRepo.createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.subscription', 'subscription') // Ensure relations exist in entity
+      // If subscription has relation to workspace/user, join them here too.
+      // Assuming naive implementation for now:
+      .orderBy('invoice.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    if (query.status && query.status !== 'all') {
+      queryBuilder.andWhere('invoice.status = :status', { status: query.status });
+    }
+
+    if (query.search) {
+      queryBuilder.andWhere('invoice.id LIKE :search OR invoice.providerInvoiceId LIKE :search', { search: `%${query.search}%` });
+    }
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

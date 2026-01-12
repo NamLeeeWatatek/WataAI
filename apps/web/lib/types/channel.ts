@@ -101,17 +101,19 @@ export interface IntegrationConfig {
 export interface CreateIntegrationDto {
   provider: string
   name?: string
-  clientId: string
-  clientSecret: string
+  client_id: string
+  client_secret: string
   scopes?: string
-  isActive?: boolean
+  verify_token?: string
+  is_active?: boolean
 }
 
 export interface UpdateIntegrationDto {
   name?: string
-  clientId?: string
-  clientSecret?: string
+  client_id?: string
+  client_secret?: string
   scopes?: string
-  isActive?: boolean
+  verify_token?: string
+  is_active?: boolean
 }
 

@@ -10,6 +10,12 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { FormConfigDto } from './form-config.dto';
+import {
+  AiExecutionConfigDto,
+  HttpExecutionConfigDto,
+  WorkflowExecutionConfigDto,
+} from './execution-config.dto';
+import { ExecutionType } from '../domain/creation-tool';
 
 export class CreateCreationToolDto {
   @ApiProperty({ example: 'Create Image', type: String })
@@ -66,16 +72,25 @@ export class CreateCreationToolDto {
 
   @ApiProperty({
     type: Object,
-    example: {
-      type: 'ai-generation',
-      provider: 'replicate',
-      model: 'stability-ai/sdxl',
-      outputType: 'image',
-    },
+    description: 'Execution flow configuration',
   })
   @IsNotEmpty()
-  @IsObject()
-  executionFlow: any;
+  @ValidateNested()
+  @Type(() => Object, {
+    keepDiscriminatorProperty: true,
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: AiExecutionConfigDto, name: ExecutionType.AI_GENERATION },
+        { value: HttpExecutionConfigDto, name: ExecutionType.HTTP_WEBHOOK },
+        { value: WorkflowExecutionConfigDto, name: ExecutionType.WORKFLOW_CHAIN },
+      ],
+    },
+  })
+  executionFlow:
+    | AiExecutionConfigDto
+    | HttpExecutionConfigDto
+    | WorkflowExecutionConfigDto;
 
   @ApiPropertyOptional({ type: Boolean, default: true })
   @IsOptional()

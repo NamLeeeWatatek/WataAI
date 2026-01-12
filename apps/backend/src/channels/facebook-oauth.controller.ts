@@ -23,6 +23,7 @@ import { ChannelStrategy } from './channel.strategy';
 import { FacebookSyncService } from './services/facebook-sync.service';
 import { FacebookConversationSyncService } from './services/facebook-conversation-sync.service';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
+import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 
 @ApiTags('Facebook OAuth')
 @Controller({ path: 'channels/facebook', version: '1' })
@@ -46,31 +47,32 @@ export class FacebookOAuthController {
     @CurrentWorkspace() workspaceId: string,
     @Query('redirect_uri') redirectUri?: string,
   ) {
-    // If no workspace context, use personal context (user.id)
-    const wsId = workspaceId || req.user.id;
+    if (!workspaceId) {
+      throw new BadRequestException('Workspace ID is required');
+    }
 
     this.logger.log(
       `[FacebookOAuth] Getting OAuth URL for workspace: ${workspaceId} (user: ${req.user.id})`,
     );
 
     const credential = await this.facebookOAuthService.getCredential(
-      workspaceId || req.user.id,
+      workspaceId,
       req.user.id,
     );
 
     if (!credential) {
       this.logger.warn(
-        `[FacebookOAuth] No credential found for workspace: ${wsId}`,
+        `[FacebookOAuth] No credential found for workspace: ${workspaceId}`,
       );
       throw new NotFoundException(
-        `Facebook App not configured for workspace ${wsId}. Please setup your Facebook App in Channels -> Configurations first.`,
+        `Facebook App not configured for workspace ${workspaceId}. Please setup your Facebook App in Channels -> Configurations first.`,
       );
     }
 
     const defaultRedirectUri = `${process.env.FRONTEND_DOMAIN}/channels/callback?provider=facebook`;
     const uri = redirectUri || defaultRedirectUri;
 
-    const state = `${req.user?.id}:${wsId}`;
+    const state = `${req.user?.id}:${workspaceId}`;
 
     const oauthUrl = this.facebookOAuthService.getOAuthUrl(
       credential.clientId!,
@@ -119,8 +121,9 @@ export class FacebookOAuthController {
           userId = parts[0];
           if (!wsId) wsId = parts[1];
         } else if (!wsId) {
-          wsId = state; // Fallback to state if not in our format
-          userId = state;
+          // If state is just one part, we don't know if it's userId or workspaceId
+          // This should be avoided by ensuring state is always formatted as userId:workspaceId
+          throw new BadRequestException('Invalid OAuth state format');
         }
       }
 
@@ -172,57 +175,75 @@ export class FacebookOAuthController {
 
   @Post('connect')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Connect a Facebook Page' })
   async connectPage(
     @Request() req,
+    @CurrentWorkspace() workspaceId: string,
     @Body()
     body: {
       pageId: string;
       pageName: string;
       userAccessToken: string;
+      pageAccessToken?: string; // Optional Page-level token
       category?: string;
       botId?: string;
     },
   ) {
     try {
       const userId = req.user.id;
-      const workspaceId = req.user.workspaceId || userId;
+      this.logger.log(`[FacebookOAuth] Connecting page ${body.pageId} for workspace ${workspaceId}`);
+      this.logger.debug(`[FacebookOAuth] User Token received (first 10 chars): ${body.userAccessToken?.substring(0, 10)}...`);
+      this.logger.debug(`[FacebookOAuth] Page Token received (exists): ${!!body.pageAccessToken}`);
 
-      const pages = await this.facebookOAuthService.getUserPages(
-        body.userAccessToken,
-      );
+      let pageToConnect: { id: string; name: string; access_token: string; category?: string; tasks?: string[] } | null = null;
 
-      const page = pages.find((p) => p.id === body.pageId);
-
-      if (!page) {
-        throw new NotFoundException('Page not found or no permission');
+      // Try to re-verify using userAccessToken (Security best practice)
+      try {
+        const pages = await this.facebookOAuthService.getUserPages(
+          body.userAccessToken,
+        );
+        const verifiedPage = pages.find((p) => p.id === body.pageId);
+        if (verifiedPage) {
+          pageToConnect = verifiedPage;
+        }
+      } catch (error) {
+        this.logger.warn(`[FacebookOAuth] Could not re-verify page with user token: ${error.message}`);
       }
 
+      if (!pageToConnect) {
+        if (body.pageAccessToken) {
+          this.logger.log(`[FacebookOAuth] Falling back to provided pageAccessToken for page ${body.pageId}`);
+          pageToConnect = {
+            id: body.pageId,
+            name: body.pageName,
+            access_token: body.pageAccessToken,
+            category: body.category,
+          };
+        } else {
+          throw new BadRequestException('Could not verify page ownership and no page token provided');
+        }
+      }
+
+      const verifiedPageToConnect = pageToConnect; // Local const for type safety
+
       const connection = await this.facebookOAuthService.connectPage(
-        page.id,
-        page.name,
-        page.access_token,
+        verifiedPageToConnect.id,
+        verifiedPageToConnect.name,
+        verifiedPageToConnect.access_token,
         workspaceId,
         userId,
         {
-          category: page.category,
-          tasks: page.tasks,
+          category: verifiedPageToConnect.category,
+          tasks: verifiedPageToConnect.tasks,
           botId: body.botId,
-          userAccessToken: body.userAccessToken, // Store user token to fetch pages later
-          pages: pages.map(p => ({
-            id: p.id,
-            name: p.name,
-            category: p.category,
-            tasks: p.tasks,
-            access_token: p.access_token // detailed info for potential future usage
-          })),
+          userAccessToken: body.userAccessToken,
         },
       );
 
       const subscribed = await this.facebookOAuthService.subscribePageWebhooks(
-        page.id,
-        page.access_token,
+        verifiedPageToConnect.id,
+        verifiedPageToConnect.access_token,
       );
 
       return {
@@ -238,23 +259,23 @@ export class FacebookOAuthController {
         webhookSubscribed: subscribed,
       };
     } catch (error) {
-      throw new InternalServerErrorException(
+      this.logger.error(`[FacebookOAuth] Connection failed: ${error.message}`);
+      throw new HttpException(
         error.message || 'Failed to connect Facebook page',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   @Get('connections')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Get connected Facebook pages' })
   async getConnections(
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
   ) {
-    const wsId = workspaceId || req.user.id;
-
-    const connections = await this.facebookOAuthService.getConnectedPages(wsId);
+    const connections = await this.facebookOAuthService.getConnectedPages(workspaceId);
 
     return {
       success: true,
@@ -271,16 +292,14 @@ export class FacebookOAuthController {
 
   @Delete('connections/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Disconnect a Facebook page' })
   async disconnectPage(
     @Request() req,
     @Param('id') connectionId: string,
     @CurrentWorkspace() workspaceId: string,
   ) {
-    const wsId = workspaceId || req.user.id;
-
-    await this.facebookOAuthService.disconnectPage(connectionId, wsId);
+    await this.facebookOAuthService.disconnectPage(connectionId, workspaceId);
 
     return {
       success: true,
@@ -290,7 +309,7 @@ export class FacebookOAuthController {
 
   @Post('connections/:id/test')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Test Facebook page connection' })
   async testConnection(
     @Request() req,
@@ -298,9 +317,7 @@ export class FacebookOAuthController {
     @Param('id') connectionId: string,
     @Body() body: { recipientId: string; message: string },
   ) {
-    const wsId = workspaceId || req.user.id;
-
-    const connection = await this.channelsService.findOne(connectionId, wsId);
+    const connection = await this.channelsService.findOne(connectionId, workspaceId);
     if (!connection) {
       throw new HttpException('Connection not found', HttpStatus.NOT_FOUND);
     }
@@ -334,7 +351,7 @@ export class FacebookOAuthController {
 
   @Post('setup')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Setup Facebook App credentials' })
   async setupApp(
     @Request() req,
@@ -346,10 +363,8 @@ export class FacebookOAuthController {
     },
     @CurrentWorkspace() workspaceId: string,
   ) {
-    const wsId = workspaceId || req.user.id;
-
     const credential = await this.facebookOAuthService.updateCredential(
-      wsId,
+      workspaceId,
       body.appId,
       body.appSecret,
       body.verifyToken ? { verifyToken: body.verifyToken } : undefined,
@@ -369,12 +384,10 @@ export class FacebookOAuthController {
 
   @Get('setup')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Get Facebook App credentials' })
   async getSetup(@Request() req, @CurrentWorkspace() workspaceId: string) {
-    const wsId = workspaceId || req.user.id;
-
-    const credential = await this.facebookOAuthService.getCredential(wsId);
+    const credential = await this.facebookOAuthService.getCredential(workspaceId);
 
     if (!credential) {
       return {
@@ -400,7 +413,7 @@ export class FacebookOAuthController {
 
   @Get('connections/:id/sync')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Sync conversations and messages from Facebook' })
   async syncMessages(
     @Request() req,
@@ -409,10 +422,8 @@ export class FacebookOAuthController {
     @Query('conversation_limit') conversationLimit?: number,
     @Query('message_limit') messageLimit?: number,
   ) {
-    const wsId = workspaceId || req.user.id;
-
     // Get connection
-    const connection = await this.channelsService.findOne(connectionId, wsId);
+    const connection = await this.channelsService.findOne(connectionId, workspaceId);
     if (!connection) {
       throw new HttpException('Connection not found', HttpStatus.NOT_FOUND);
     }
@@ -469,7 +480,7 @@ export class FacebookOAuthController {
 
   @Post('connections/:id/sync-to-db')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Sync Facebook conversations into database' })
   async syncConversationsToDatabase(
     @Request() req,
@@ -481,12 +492,10 @@ export class FacebookOAuthController {
       messageLimit?: number;
     },
   ) {
-    const wsId = workspaceId || req.user.id;
-
     const result =
       await this.facebookConversationSyncService.syncConversationsForChannel(
         connectionId,
-        wsId,
+        workspaceId,
         {
           conversationLimit: body?.conversationLimit || 25,
           messageLimit: body?.messageLimit || 50,

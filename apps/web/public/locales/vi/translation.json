@@ -85,8 +85,8 @@
     },
     "admin": {
       "stats": {
-        "creationTools": "Công cụ AI",
-        "generationJobs": "Tiến trình xử lý"
+        "creationTools": "Công cụ Sáng tạo",
+        "generationJobs": "Tác vụ Tạo nội dung"
       }
     },
     "charts": {

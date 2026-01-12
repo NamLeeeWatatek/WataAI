@@ -2,6 +2,8 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -17,6 +19,10 @@ import { CreationToolsService } from '../creation-tools/creation-tools.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { AuditService } from '../audit/audit.service';
 
+import { ExecutionStrategyResolver } from '../execution/execution-strategy.resolver';
+import { ExecutionValidationService } from '../execution/validation/execution-validation.service';
+import { ExecutionFlow } from '../creation-tools/domain/creation-tool';
+
 @Injectable()
 export class CreationJobsService {
   constructor(
@@ -27,7 +33,48 @@ export class CreationJobsService {
     private readonly i18n: I18nService,
     private readonly eventEmitter: EventEmitter2,
     private readonly creationToolsService: CreationToolsService,
-  ) {}
+    @Inject(forwardRef(() => ExecutionStrategyResolver))
+    private readonly strategyResolver: ExecutionStrategyResolver,
+    @Inject(forwardRef(() => ExecutionValidationService))
+    private readonly validationService: ExecutionValidationService,
+  ) { }
+
+  async executePreview(
+    toolId: string,
+    inputData: Record<string, any>,
+    context?: { workspaceId?: string; userId?: string },
+  ): Promise<any> {
+    const tool = await this.creationToolsService.findById(toolId);
+    if (!tool) {
+      throw new NotFoundException(`Creation Tool with ID ${toolId} not found`);
+    }
+
+    // 1. Validate and Prepare Inputs
+    let validatedInputs = inputData;
+    try {
+      validatedInputs = this.validationService.validateInputs(
+        tool.formConfig,
+        inputData,
+      );
+    } catch (validationError) {
+      throw new BadRequestException(
+        `Input Validation Failed: ${validationError.message}`,
+      );
+    }
+
+    const executionInputs = this.validationService.prepareInputs(
+      tool.formConfig,
+      validatedInputs,
+    );
+
+    const config = tool.executionFlow as ExecutionFlow;
+
+    // 2. Resolve and Execute Strategy
+    const strategy = this.strategyResolver.resolve(config.type);
+    const result = await strategy.execute(config, executionInputs, context);
+
+    return result;
+  }
 
   async create(
     createDto: CreateCreationJobDto,

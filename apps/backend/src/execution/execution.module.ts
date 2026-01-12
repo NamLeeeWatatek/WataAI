@@ -10,6 +10,7 @@ import { AiProvidersModule } from '../ai-providers/ai-providers.module';
 import { TemplatesModule } from '../templates/templates.module';
 
 import { AiExecutionStrategy } from './strategies/ai-execution.strategy';
+import { WorkflowExecutionStrategy } from './strategies/workflow-execution.strategy';
 import { ExecutionStrategyResolver } from './execution-strategy.resolver';
 
 @Module({
@@ -24,10 +25,18 @@ import { ExecutionStrategyResolver } from './execution-strategy.resolver';
   providers: [
     HttpExecutionStrategy,
     AiExecutionStrategy,
+    WorkflowExecutionStrategy,
     ExecutionStrategyResolver,
     JobProcessor,
     ExecutionValidationService,
   ],
-  exports: [ExecutionQueueModule, HttpExecutionStrategy],
+  exports: [
+    ExecutionQueueModule,
+    HttpExecutionStrategy,
+    AiExecutionStrategy,
+    WorkflowExecutionStrategy,
+    ExecutionStrategyResolver,
+    ExecutionValidationService,
+  ],
 })
-export class ExecutionModule {}
+export class ExecutionModule { }

@@ -11,6 +11,8 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { forwardRef } from '@nestjs/common';
 import { CreationToolsModule } from '../creation-tools/creation-tools.module';
 
+import { ExecutionModule } from '../execution/execution.module';
+
 @Module({
   imports: [
     RelationalCreationJobsPersistenceModule,
@@ -18,6 +20,7 @@ import { CreationToolsModule } from '../creation-tools/creation-tools.module';
     AuditModule,
     ExecutionQueueModule,
     forwardRef(() => WorkspacesModule),
+    forwardRef(() => ExecutionModule),
     PermissionsModule,
     CreationToolsModule,
   ],
@@ -25,4 +28,4 @@ import { CreationToolsModule } from '../creation-tools/creation-tools.module';
   providers: [CreationJobsService],
   exports: [CreationJobsService, RelationalCreationJobsPersistenceModule],
 })
-export class CreationJobsModule {}
+export class CreationJobsModule { }
