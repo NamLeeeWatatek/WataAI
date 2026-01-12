@@ -208,7 +208,7 @@ export default function KnowledgeBaseDetailPage() {
                 <Card className="overflow-hidden flex flex-col border-border/50 bg-card/30 backdrop-blur-sm">
                     <CardContent className="p-0 flex-1 flex flex-col">
                         {viewMode === 'table' ? (
-                            <div className="p-6">
+                            <div className="p-8">
                                 <KbTableView
                                     items={items}
                                     selectedIds={selectedIds}

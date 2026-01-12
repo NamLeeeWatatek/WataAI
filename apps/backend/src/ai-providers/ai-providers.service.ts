@@ -39,7 +39,7 @@ export class AiProvidersService {
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
-  ) {}
+  ) { }
 
   /**
    * Encrypt an API key
@@ -219,20 +219,52 @@ export class AiProvidersService {
 
   private resolveProviderKey(model: string, explicitProvider?: string): string {
     if (explicitProvider && explicitProvider !== 'auto') {
-      return explicitProvider.toLowerCase();
+      const key = explicitProvider.toLowerCase();
+      // Normalize 'gemini' to 'google' for internal routing
+      if (key === 'gemini') return 'google';
+      return key;
     }
 
-    // Heuristics for auto-detection
+    // Heuristics for auto-detection based on common model name prefixes
     const modelLower = model.toLowerCase();
-    if (modelLower.startsWith('gpt')) return 'openai';
-    if (modelLower.startsWith('claude')) return 'anthropic';
-    if (
-      (modelLower.includes('llama') || modelLower.includes('mistral')) &&
-      !modelLower.includes('gpt')
-    )
-      return 'ollama';
 
-    // Default fallback
+    // Anthropic Claude
+    if (
+      modelLower.startsWith('claude') ||
+      modelLower.includes('haiku') ||
+      modelLower.includes('sonnet') ||
+      modelLower.includes('opus')
+    ) {
+      return 'anthropic';
+    }
+
+    // OpenAI GPT and o1
+    if (
+      modelLower.startsWith('gpt') ||
+      modelLower.startsWith('o1-') ||
+      modelLower.includes('dall-e')
+    ) {
+      return 'openai';
+    }
+
+    // Google Gemini
+    if (modelLower.includes('gemini') || modelLower.includes('palm')) {
+      return 'google';
+    }
+
+    // Ollama / Local / Common open source
+    if (
+      modelLower.includes('llama') ||
+      modelLower.includes('mistral') ||
+      modelLower.includes('mixtral') ||
+      modelLower.includes('qwen') ||
+      modelLower.includes('deepseek') ||
+      modelLower.includes('phi')
+    ) {
+      return 'ollama';
+    }
+
+    // Default fallback (Google is used as the system default)
     return 'google';
   }
 
@@ -369,7 +401,7 @@ export class AiProvidersService {
     baseUrl?: string,
     useTools?: boolean,
   ): Promise<string> {
-    if (providerKey === 'google') {
+    if (providerKey === 'google') { // 'gemini' is normalized to 'google' by resolveProviderKey
       return this.aiModelService.chatWithGoogleHistory(
         messages,
         model,

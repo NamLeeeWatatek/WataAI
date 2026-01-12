@@ -201,9 +201,10 @@ export default function CreationToolsPage() {
                                     className="hidden"
                                 />
                                 <Button
-                                    variant="outline"
+                                    variant="default"
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isMutating}
+                                    className="shadow-primary/20 shadow-lg"
                                 >
                                     <Upload className="w-4 h-4 mr-2" />
                                     Import
@@ -242,7 +243,7 @@ export default function CreationToolsPage() {
                             label: 'Export',
                             icon: Download,
                             onClick: () => handleExport(Array.from(selectedIds)),
-                            variant: 'outline'
+                            variant: 'default'
                         }
                     ]}
                 />

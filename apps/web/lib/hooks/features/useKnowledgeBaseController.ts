@@ -82,13 +82,13 @@ export function useKnowledgeBaseController(kbId: string) {
         isLoading: isQueryLoading,
         refetch: refresh
     } = useQuery({
-        queryKey: ['kb-detail', kbId, folderParam, currentPage, pageSize],
+        queryKey: ['kb-detail', kbId, folderParam, currentPage, pageSize, searchQuery],
         queryFn: async () => {
             if (!kbId) return null;
             const [kbRes, statsRes, contentRes] = await Promise.all([
                 getKnowledgeBase(kbId),
                 getKnowledgeBaseStats(kbId),
-                getKBContent(kbId, folderParam || null, currentPage, pageSize),
+                getKBContent(kbId, folderParam || null, currentPage, pageSize, searchQuery),
             ]);
 
             const kb = (kbRes as any)?.data || kbRes;

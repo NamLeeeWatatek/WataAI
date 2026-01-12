@@ -38,11 +38,6 @@ export class OAuthController {
     @Query('configId') configId?: string,
   ) {
     const userId = req.user?.id;
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.log(`[OAuth DEBUG] Provider: ${provider}, ConfigId: ${configId}, WorkspaceId: ${workspaceId}, UserId: ${userId}`);
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-
-    this.logger.log(`[OAuth] Starting login for provider: ${provider}, configId: ${configId}, context workspaceId: ${workspaceId}, userId: ${userId}`);
 
     const credential = configId
       ? await this.integrationsService.findById(configId)
