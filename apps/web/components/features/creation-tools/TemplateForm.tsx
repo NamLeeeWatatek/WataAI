@@ -148,11 +148,9 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                                     value={previewUrl || ''}
                                     onUpload={(url, file) => {
                                         setValue('thumbnailUrl', url, { shouldDirty: true });
-                                        setValue('previewFile', file);
                                     }}
                                     onDelete={() => {
                                         setValue('thumbnailUrl', '', { shouldDirty: true });
-                                        setValue('previewFile', null);
                                     }}
                                     aspectRatio={16 / 9}
                                     description="Images (JPG, PNG, GIF, JFIF...) & Videos (MP4...)"

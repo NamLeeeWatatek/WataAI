@@ -47,8 +47,9 @@ function ChannelCallbackContent() {
     const handleCallback = async (code: string, provider: string, state: string) => {
         try {
             if (provider === 'facebook') {
+                const redirectUri = `${window.location.origin}/channels/callback/facebook`;
                 const res: any = await axiosClient.get(
-                    `/channels/facebook/oauth/callback?code=${code}&state=${state}`
+                    `/channels/facebook/oauth/callback?code=${code}&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}`
                 );
                 const response = res.data || res;
 

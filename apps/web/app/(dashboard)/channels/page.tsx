@@ -94,7 +94,8 @@ export default function ChannelsPage() {
             let oauthUrl: string;
 
             if (provider === 'facebook' || provider === 'messenger' || provider === 'instagram') {
-                const response = await getOAuthUrl('facebook', configId, workspaceId);
+                const redirectUri = `${window.location.origin}/channels/callback/facebook`;
+                const response = await getOAuthUrl('facebook', configId, workspaceId, redirectUri);
                 oauthUrl = response.url;
             } else {
                 const config = configId ? configs.find(c => String(c.id) === String(configId)) : configs.find(c => c.provider === provider);
