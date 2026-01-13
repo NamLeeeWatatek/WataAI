@@ -16,6 +16,8 @@ import { PageShell } from '@/components/layout/PageShell';
 import { useRef } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useCategories } from '@/lib/hooks/useCategories';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -29,11 +31,26 @@ import {
 import { Checkbox } from '@/components/ui/Checkbox';
 import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
 import { cn } from '@/lib/utils';
+import { Category } from '@/lib/api/categories';
 
+
+function AdminCategoryItems() {
+    const { data: categories = [] } = useCategories('creation-tool');
+    return (
+        <>
+            {categories.map((cat: Category) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                </SelectItem>
+            ))}
+        </>
+    );
+}
 
 export default function CreationToolsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
@@ -49,10 +66,10 @@ export default function CreationToolsPage() {
     const [pageSize, setPageSize] = useState(10);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Reset to page 1 when search changes
+    // Reset to page 1 when search or category changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [debouncedSearch]);
+    }, [debouncedSearch, selectedCategory]);
 
 
     const {
@@ -66,7 +83,10 @@ export default function CreationToolsPage() {
     } = useCreationTools({
         page: currentPage,
         limit: pageSize,
-        filters: debouncedSearch ? { name: debouncedSearch } : undefined
+        filters: {
+            ...(debouncedSearch ? { name: debouncedSearch } : {}),
+            ...(selectedCategory !== 'all' ? { categoryId: selectedCategory } : {})
+        }
     })
 
     const tools = response && Array.isArray(response.data)
@@ -127,7 +147,20 @@ export default function CreationToolsPage() {
 
     const handleExport = async (ids?: string[]) => {
         try {
+            // Add a small delay for better UX if the response is too fast
+            const start = Date.now();
             const data = await exportTools(ids);
+
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+                toast.error('No tools found to export');
+                return;
+            }
+
+            const elapsed = Date.now() - start;
+            if (elapsed < 600) {
+                await new Promise(resolve => setTimeout(resolve, 600 - elapsed));
+            }
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -137,8 +170,9 @@ export default function CreationToolsPage() {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            toast.success('Tools exported successfully');
+            toast.success(`Successfully exported ${Array.isArray(data) ? data.length : ''} tools`);
         } catch (error) {
+            console.error('Export failed:', error);
             toast.error('Failed to export tools');
         }
     };
@@ -191,6 +225,17 @@ export default function CreationToolsPage() {
                                         setSearchQuery('')
                                     }}
                                 />
+                            </div>
+                            <div className="w-[180px]">
+                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        <AdminCategoryItems />
+                                    </SelectContent>
+                                </Select>
                             </div>
                             <div className="flex items-center gap-2 ml-auto">
                                 <input
@@ -326,11 +371,19 @@ export default function CreationToolsPage() {
                                     </CardHeader>
 
                                     <CardContent className="mt-auto pt-0 pb-5 px-5">
-                                        <div className="flex gap-2 mb-4">
-                                            {tool.category && (
-                                                <Badge variant="outline" className="text-xs font-normal text-muted-foreground bg-secondary/30">
-                                                    {tool.category.name}
-                                                </Badge>
+                                        <div className="flex gap-1.5 flex-wrap mb-4">
+                                            {(tool.categories || []).length > 0 ? (
+                                                (tool.categories || []).map((cat: Category) => (
+                                                    <Badge key={cat.id} variant="outline" className="text-[10px] font-normal text-muted-foreground bg-secondary/30">
+                                                        {cat.name}
+                                                    </Badge>
+                                                ))
+                                            ) : (
+                                                tool.category && (
+                                                    <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground bg-secondary/30">
+                                                        {tool.category.name}
+                                                    </Badge>
+                                                )
                                             )}
                                         </div>
 
@@ -445,6 +498,6 @@ export default function CreationToolsPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </PageShell>
+        </PageShell >
     );
 }
