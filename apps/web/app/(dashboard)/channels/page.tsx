@@ -309,7 +309,7 @@ export default function ChannelsPage() {
                                 {facebookPages.map((page: ChannelPage) => (
                                     <div
                                         key={page.id}
-                                        className="group relative flex items-start gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200"
+                                        className="group flex items-center gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200"
                                     >
                                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-sm">
                                             {page.picture?.data?.url ? (
@@ -339,7 +339,7 @@ export default function ChannelsPage() {
                                             </p>
                                         </div>
 
-                                        <div className="absolute top-4 right-4">
+                                        <div className="flex items-center ml-4">
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleConnectFacebookPage(page)}
