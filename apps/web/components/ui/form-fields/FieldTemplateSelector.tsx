@@ -135,11 +135,22 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
                             >
                                 {opt.thumbnailUrl ? (
                                     <div className="w-full aspect-video rounded-xl overflow-hidden bg-muted border border-border/50 relative shadow-inner">
-                                        <img
-                                            src={opt.thumbnailUrl}
-                                            alt={opt.name}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                        />
+                                        {(opt.thumbnailUrl.match(/\.(mp4|webm|ogg|mov)$/i)) ? (
+                                            <video
+                                                src={opt.thumbnailUrl}
+                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                                                autoPlay
+                                                muted
+                                                loop
+                                                playsInline
+                                            />
+                                        ) : (
+                                            <img
+                                                src={opt.thumbnailUrl}
+                                                alt={opt.name}
+                                                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                        )}
                                         {/* Overlay for selection */}
                                         {isSelected && (
                                             <div className="absolute inset-0 bg-primary/20 flex items-center justify-center backdrop-blur-[2px]">
