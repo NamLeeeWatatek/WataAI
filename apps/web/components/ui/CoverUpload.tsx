@@ -55,18 +55,36 @@ export function CoverUpload({
         }
     };
 
+    const isVideo = (url: string) => {
+        return url.match(/\.(mp4|webm|ogg|mov)$/i) || accept.includes('video');
+    };
+
     return (
         <div className={cn("w-full group relative overflow-hidden rounded-md border-2 border-dashed border-muted transition-all hover:bg-muted/5", className)}>
             <div style={{ aspectRatio }} className="w-full relative bg-muted/20">
                 {value ? (
                     <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={value}
-                            alt="Cover"
-                            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-60"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+                        {isVideo(value) ? (
+                            <video
+                                src={value}
+                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                                controls
+                                muted
+                                loop
+                            />
+                        ) : (
+                            <img
+                                src={value}
+                                alt="Cover"
+                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-60"
+                            />
+                        )}
+
+                        <div className={cn(
+                            "absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2",
+                            isVideo(value) ? "bg-black/20" : ""
+                        )}>
                             <Button
                                 type="button"
                                 variant="secondary"
