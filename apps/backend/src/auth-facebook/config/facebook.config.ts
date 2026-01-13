@@ -12,6 +12,10 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   FACEBOOK_APP_SECRET: string;
+
+  @IsString()
+  @IsOptional()
+  FACEBOOK_REDIRECT_URI: string;
 }
 
 export default registerAs<FacebookConfig>('facebook', () => {
@@ -20,5 +24,6 @@ export default registerAs<FacebookConfig>('facebook', () => {
   return {
     appId: process.env.FACEBOOK_APP_ID,
     appSecret: process.env.FACEBOOK_APP_SECRET,
+    redirectUri: process.env.FACEBOOK_REDIRECT_URI,
   };
 });

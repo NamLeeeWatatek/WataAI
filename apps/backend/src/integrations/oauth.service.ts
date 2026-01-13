@@ -115,11 +115,10 @@ export class OAuthService {
   }
 
   private getRedirectUri(provider: 'facebook' | 'google'): string {
-    const envKey =
-      provider === 'facebook'
-        ? 'FACEBOOK_REDIRECT_URI'
-        : 'GOOGLE_REDIRECT_URI';
-    const configValue = this.configService.get<string>(envKey, { infer: true });
+    const configValue = this.configService.get<string>(
+      provider === 'facebook' ? 'facebook.redirectUri' : 'google.redirectUri',
+      { infer: true },
+    );
 
     if (configValue) return configValue;
 
