@@ -5,39 +5,56 @@ import { useRouter } from 'next/navigation';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Loader2, Sparkles, Search as SearchIcon } from 'lucide-react';
+import { Loader2, Sparkles, Search as SearchIcon, icons } from 'lucide-react';
 import { Pagination } from '@/components/ui/Pagination';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Search } from '@/components/ui/Search';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useCategories } from '@/lib/hooks/useCategories';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+
+function CategoryItems() {
+    const { data: categories = [] } = useCategories('creation-tool');
+    return (
+        <>
+            {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                </SelectItem>
+            ))}
+        </>
+    );
+}
 
 export default function CreationToolsPage() {
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const debouncedSearch = useDebounce(searchQuery, 500);
 
     const { data: toolsData, isLoading, refetch, isFetching } = useQuery({
-        queryKey: ['creation-tools', currentPage, pageSize, debouncedSearch],
+        queryKey: ['creation-tools', currentPage, pageSize, debouncedSearch, selectedCategory],
         queryFn: () => creationToolsApi.getAll({
             page: currentPage,
             limit: pageSize,
             filters: {
                 isActive: true,
-                ...(debouncedSearch ? { name: debouncedSearch } : {})
+                ...(debouncedSearch ? { name: debouncedSearch } : {}),
+                ...(selectedCategory !== 'all' ? { categoryId: selectedCategory } : {})
             }
         }),
         placeholderData: keepPreviousData,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    // Reset page on search change
+    // Reset page on search or category change
     useEffect(() => {
         setCurrentPage(1);
-    }, [debouncedSearch]);
+    }, [debouncedSearch, selectedCategory]);
 
     const items = toolsData?.data || [];
     const totalItems = toolsData?.total || 0;
@@ -63,13 +80,28 @@ export default function CreationToolsPage() {
                 refreshing={isLoading || isFetching}
             />
 
-            <div className="max-w-md">
-                <Search
-                    placeholder="Search tools..."
-                    value={searchQuery}
-                    onChange={(e: any) => setSearchQuery(e.target.value)}
-                    onClear={() => setSearchQuery('')}
-                />
+            <div className="flex flex-col sm:flex-row gap-4 items-center max-w-2xl">
+                <div className="flex-1 w-full">
+                    <Search
+                        placeholder="Search tools..."
+                        value={searchQuery}
+                        onChange={(e: any) => setSearchQuery(e.target.value)}
+                        onClear={() => setSearchQuery('')}
+                    />
+                </div>
+                <div className="w-full sm:w-[200px]">
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger className="w-full bg-card/50 backdrop-blur-sm border-border/40 font-bold">
+                            <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            {/* We should ideally fetch these, but for now we can extract from data or fetch separately. 
+                                Let's use the hook to fetch them properly. */}
+                            <CategoryItems />
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,24 +113,31 @@ export default function CreationToolsPage() {
                     >
                         <CardHeader>
                             <div className="flex items-start justify-between">
-                                <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 mb-4 transition-transform">
-                                    <Sparkles className="w-6 h-6 text-white" />
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 mb-4 transition-transform group-hover:scale-110 duration-500">
+                                    {tool.icon && (icons as any)[tool.icon] ? (
+                                        (() => {
+                                            const ToolIcon = (icons as any)[tool.icon];
+                                            return <ToolIcon className="w-6 h-6 text-white" />;
+                                        })()
+                                    ) : (
+                                        <Sparkles className="w-6 h-6 text-white" />
+                                    )}
                                 </div>
-                                <div className="flex gap-2 flex-wrap justify-end max-w-[60%]">
+                                <div className="flex gap-1.5 flex-wrap justify-end max-w-[65%]">
                                     {(tool.categories || [])
-                                        .slice(0, 3)
+                                        .slice(0, 5)
                                         .map((cat) => (
                                             <Badge
                                                 key={cat.id}
                                                 variant="secondary"
-                                                className="text-[10px] px-2 h-5 font-bold uppercase tracking-wider"
+                                                className="text-[9px] px-2 h-5 font-bold uppercase tracking-wider bg-primary/10 text-primary border-none hover:bg-primary/20 transition-colors"
                                             >
                                                 {cat.name}
                                             </Badge>
                                         ))}
-                                    {(tool.categories || []).length > 3 && (
-                                        <Badge variant="outline" className="text-[10px] px-1 h-5 font-bold">
-                                            +{(tool.categories || []).length - 3}
+                                    {(tool.categories || []).length > 5 && (
+                                        <Badge variant="outline" className="text-[9px] px-1.5 h-5 font-bold border-dashed opacity-70">
+                                            +{(tool.categories || []).length - 5}
                                         </Badge>
                                     )}
                                 </div>

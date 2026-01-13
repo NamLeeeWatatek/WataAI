@@ -7,14 +7,17 @@ import { useCreationTools } from '@/lib/hooks/features/useCreationTools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload } from 'lucide-react';
 import { Search } from '@/components/ui/Search';
 import { PageLoading } from '@/components/ui/PageLoading';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
+import { useRef } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useCategories } from '@/lib/hooks/useCategories';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,11 +31,26 @@ import {
 import { Checkbox } from '@/components/ui/Checkbox';
 import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
 import { cn } from '@/lib/utils';
+import { Category } from '@/lib/api/categories';
 
+
+function AdminCategoryItems() {
+    const { data: categories = [] } = useCategories('creation-tool');
+    return (
+        <>
+            {categories.map((cat: Category) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                </SelectItem>
+            ))}
+        </>
+    );
+}
 
 export default function CreationToolsPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
@@ -46,22 +64,29 @@ export default function CreationToolsPage() {
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Reset to page 1 when search changes
+    // Reset to page 1 when search or category changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [debouncedSearch]);
+    }, [debouncedSearch, selectedCategory]);
 
 
     const {
         data: response,
         isLoading: loading,
         refetch,
-        deleteTool
+        deleteTool,
+        exportTools,
+        importTools,
+        isMutating
     } = useCreationTools({
         page: currentPage,
         limit: pageSize,
-        filters: debouncedSearch ? { name: debouncedSearch } : undefined
+        filters: {
+            ...(debouncedSearch ? { name: debouncedSearch } : {}),
+            ...(selectedCategory !== 'all' ? { categoryId: selectedCategory } : {})
+        }
     })
 
     const tools = response && Array.isArray(response.data)
@@ -120,6 +145,61 @@ export default function CreationToolsPage() {
         }
     };
 
+    const handleExport = async (ids?: string[]) => {
+        try {
+            // Add a small delay for better UX if the response is too fast
+            const start = Date.now();
+            const data = await exportTools(ids);
+
+            if (!data || (Array.isArray(data) && data.length === 0)) {
+                toast.error('No tools found to export');
+                return;
+            }
+
+            const elapsed = Date.now() - start;
+            if (elapsed < 600) {
+                await new Promise(resolve => setTimeout(resolve, 600 - elapsed));
+            }
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `creation-tools-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success(`Successfully exported ${Array.isArray(data) ? data.length : ''} tools`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export tools');
+        }
+    };
+
+    const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const content = e.target?.result as string;
+                const tools = JSON.parse(content);
+                if (!Array.isArray(tools)) {
+                    toast.error('Invalid file format. Expected an array of tools.');
+                    return;
+                }
+                await importTools(tools);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                await refetch();
+            } catch (error) {
+                toast.error('Failed to import tools. Check file format.');
+            }
+        };
+        reader.readAsText(file);
+    };
+
 
 
     if (loading && tools.length === 0) return <PageLoading message="Loading tools..." />;
@@ -146,7 +226,42 @@ export default function CreationToolsPage() {
                                     }}
                                 />
                             </div>
+                            <div className="w-[180px]">
+                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        <AdminCategoryItems />
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="flex items-center gap-2 ml-auto">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImport}
+                                    accept=".json"
+                                    className="hidden"
+                                />
+                                <Button
+                                    variant="default"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isMutating}
+                                    className="shadow-primary/20 shadow-lg"
+                                >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Import
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleExport()}
+                                    disabled={isMutating}
+                                >
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Export All
+                                </Button>
                                 <Button
                                     onClick={() => router.push('/system/creation-tools/new')}
                                     className="shadow-sm"
@@ -168,6 +283,12 @@ export default function CreationToolsPage() {
                             icon: Trash2,
                             onClick: () => setBulkDeleteAlertOpen(true),
                             variant: 'destructive'
+                        },
+                        {
+                            label: 'Export',
+                            icon: Download,
+                            onClick: () => handleExport(Array.from(selectedIds)),
+                            variant: 'default'
                         }
                     ]}
                 />
@@ -250,11 +371,19 @@ export default function CreationToolsPage() {
                                     </CardHeader>
 
                                     <CardContent className="mt-auto pt-0 pb-5 px-5">
-                                        <div className="flex gap-2 mb-4">
-                                            {tool.category && (
-                                                <Badge variant="outline" className="text-xs font-normal text-muted-foreground bg-secondary/30">
-                                                    {tool.category.name}
-                                                </Badge>
+                                        <div className="flex gap-1.5 flex-wrap mb-4">
+                                            {(tool.categories || []).length > 0 ? (
+                                                (tool.categories || []).map((cat: Category) => (
+                                                    <Badge key={cat.id} variant="outline" className="text-[10px] font-normal text-muted-foreground bg-secondary/30">
+                                                        {cat.name}
+                                                    </Badge>
+                                                ))
+                                            ) : (
+                                                tool.category && (
+                                                    <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground bg-secondary/30">
+                                                        {tool.category.name}
+                                                    </Badge>
+                                                )
                                             )}
                                         </div>
 
@@ -369,6 +498,6 @@ export default function CreationToolsPage() {
                     </AlertDialogContent>
                 </AlertDialog>
             </div>
-        </PageShell>
+        </PageShell >
     );
 }

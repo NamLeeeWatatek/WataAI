@@ -27,19 +27,21 @@ export function ImagePreview({ src, alt, children }: ImagePreviewProps) {
                         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
                     )}
                 >
+                    <DialogPrimitive.Title className="sr-only">
+                        Image Preview
+                    </DialogPrimitive.Title>
                     <div className="relative w-full h-full flex items-center justify-center p-4">
                         <Media
                             src={src}
                             alt={alt || "Preview"}
                             fill
-                            ambient
                             objectFit="contain"
                             controls
                             autoPlay
                             loop
                             muted={false}
                             playsInline
-                            className="transition-transform duration-700 hover:scale-[1.01]"
+                            className="drop-shadow-2xl"
                         />
 
                         {/* Top Right Controls */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, Suspense, useEffect } from 'react';
+import { useState, useCallback, useMemo, Suspense, useEffect, JSX } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
@@ -56,15 +56,6 @@ import type { SocketConversation, SocketMessage } from '@/lib/types/socket';
 
 
 type Conversation = ChannelConversation;
-
-interface Channel {
-  id: string;
-  name: string;
-  type: string;
-  icon: JSX.Element;
-  color: string;
-  unreadCount: number;
-}
 
 const formatRelativeTime = (dateString: string): string => {
   try {

@@ -195,7 +195,7 @@ function DataTableInner<TData, TValue>({
   const headerContent = (title || description || headerActions || filterActions || searchable || actions || renderGridItem) && (
     <CardHeader className={cn(
       "px-6 py-4 border-b bg-card/50",
-      noCard && "px-6 border-b bg-transparent py-4"
+      noCard && "px-0 border-b bg-transparent py-4"
     )}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left Side: Context, Filters, Search, Query */}
@@ -366,7 +366,7 @@ function DataTableInner<TData, TValue>({
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
-                      {emptyMessage}
+                      {emptyComponent || emptyMessage}
                     </TableCell>
                   </TableRow>
                 )}

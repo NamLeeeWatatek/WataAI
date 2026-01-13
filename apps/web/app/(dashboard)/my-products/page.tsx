@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { useCreationJobs } from '@/lib/hooks/features/useCreationJobs';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Trash2, RotateCcw } from 'lucide-react';
@@ -32,6 +31,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
 import { Search } from "@/components/ui/Search";
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 
 export default function MyProductsPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -109,11 +109,7 @@ export default function MyProductsPage() {
                             {/* Unified Toolbar for Grid View */}
                             <div className="px-6 py-4 border-b bg-card/50 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                 {/* Left Side: Context & Filters */}
-                                <div className="flex items-center gap-4 min-w-0">
-                                    <div className="flex items-center gap-3">
-                                        <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-                                    </div>
-                                </div>
+                                <DateRangePicker date={dateRange} setDate={setDateRange} />
 
                                 {/* Right Side: Interaction */}
                                 <div className="flex items-center gap-3">
@@ -215,7 +211,7 @@ export default function MyProductsPage() {
                                 onStatusFilterChange={setStatusFilter}
                                 searchFilter={searchFilter}
                                 onSearchChange={setSearchFilter}
-                                headerActions={<DatePickerWithRange date={dateRange} setDate={setDateRange} />}
+                                headerActions={<DateRangePicker date={dateRange} setDate={setDateRange} />}
                                 actions={
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">

@@ -2,6 +2,7 @@
 import { Repository } from 'typeorm';
 import { ChannelConnectionEntity } from '../../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
 import { ChannelCredentialEntity } from '../../integrations/infrastructure/persistence/relational/entities/channel-credential.entity';
+import { ConversationEntity } from '../../conversations/infrastructure/persistence/relational/entities/conversation.entity';
 import { OAuthProviderInterface } from '../interfaces/oauth-provider.interface';
 import {
   ChannelConnectionStatus,
@@ -19,7 +20,8 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
   constructor(
     protected readonly connectionRepository: Repository<ChannelConnectionEntity>,
     protected readonly credentialRepository: Repository<ChannelCredentialEntity>,
-  ) {}
+    protected readonly conversationRepository: Repository<ConversationEntity>,
+  ) { }
 
   abstract getOAuthUrl(redirectUri: string, state?: string): string;
   abstract exchangeCodeForToken(
@@ -171,23 +173,29 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     workspaceId: string,
   ): Promise<void> {
     try {
-      // âœ… FIX: Update conversations to set channelId to null
-      // This prevents orphaned references
-      // Use snake_case column names as they appear in database
-      const updateResult = await this.connectionRepository.manager.query(
-        `UPDATE conversation SET channel_id = NULL, channel_type = 'internal' WHERE channel_id = $1`,
-        [connectionId],
-      );
+      // ✅ FIX: Update conversations to set channelId to null using TypeORM repository
+      // This prevents orphaned references safely without raw SQL
+      await this.connectionRepository.manager.transaction(async (manager) => {
+        // We use the transaction manager to ensure consistency, 
+        // but we can also use the injected repository if we aren't in a transaction block covering both.
+        // Since we need to update conversations based on channel_id, and we want to be safe:
+
+        // Option 1: Direct update via repository (Simpler, works for most cases)
+        await this.conversationRepository.update(
+          { channelId: connectionId },
+          { channelId: null, channelType: 'internal' } // or keep generic? The raw SQL set channel_type='internal'
+        );
+
+        // Delete the connection
+        await manager.delete(ChannelConnectionEntity, {
+          id: connectionId,
+          workspaceId: workspaceId,
+        });
+      });
 
       this.logger.log(
-        `âœ… Updated ${updateResult[1] || 0} conversations to remove reference to channel ${connectionId}`,
+        `✅ Disconnected ${this.providerName} account ${connectionId} and cleaned up conversations`,
       );
-
-      // Then delete the channel connection
-      await this.connectionRepository.delete({
-        id: connectionId,
-        workspaceId: workspaceId,
-      });
 
       this.logger.log(
         `âœ… Disconnected ${this.providerName} account ${connectionId}`,

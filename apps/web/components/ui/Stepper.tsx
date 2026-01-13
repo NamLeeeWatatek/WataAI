@@ -39,7 +39,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                                     )}
                                 >
                                     {isCompleted ? (
-                                        <Check className="w-5 h-5 stroke-[3] animate-in zoom-in duration-300" />
+                                        <Check className="w-5 h-5 stroke-[3]" />
                                     ) : (
                                         <span className={cn(
                                             "text-sm font-bold transition-colors duration-300",
@@ -75,7 +75,7 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                                         )}
                                     />
                                     {isActive && (
-                                        <div className="absolute inset-0 bg-primary/20 animate-pulse" />
+                                        <div className="absolute inset-0 bg-primary/20" />
                                     )}
                                 </div>
                             )}

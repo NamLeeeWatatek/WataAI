@@ -48,7 +48,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationToolsController {
-  constructor(private readonly service: CreationToolsService) {}
+  constructor(private readonly service: CreationToolsService) { }
 
   @ApiCreatedResponse({ type: CreationTool })
   @ApiOperation({ summary: 'Create new creation tool' })
@@ -166,5 +166,23 @@ export class CreationToolsController {
   @ApiParam({ name: 'id', type: String, required: true })
   deactivate(@Param('id') id: CreationTool['id']): Promise<CreationTool> {
     return this.service.deactivate(id);
+  }
+
+  @ApiOperation({ summary: 'Export curation tools' })
+  @Permissions('tool:List')
+  @Post('export')
+  @HttpCode(HttpStatus.OK)
+  export(@Body() data: { ids?: string[] }): Promise<CreationTool[]> {
+    return this.service.exportTools(data.ids);
+  }
+
+  @ApiOperation({ summary: 'Import curation tools' })
+  @Permissions('tool:Update')
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  import(
+    @Body() data: { tools: any[] },
+  ): Promise<{ success: number; failed: number }> {
+    return this.service.importTools(data.tools);
   }
 }

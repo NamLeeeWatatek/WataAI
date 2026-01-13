@@ -147,7 +147,7 @@ export function NotificationDropdown({
         <div
           ref={dropdownRef}
           className={cn(
-            'absolute right-0 mt-2 w-80 bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 fade-in duration-200',
+            'absolute right-0 mt-2 w-80 bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-50',
             dropdownClassName
           )}
         >

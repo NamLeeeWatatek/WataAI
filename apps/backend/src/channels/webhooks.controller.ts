@@ -48,7 +48,7 @@ export class WebhooksController {
     private readonly facebookProcessor: FacebookWebhookProcessor,
     private readonly instagramProcessor: InstagramWebhookProcessor,
     private readonly telegramProcessor: TelegramWebhookProcessor,
-  ) {}
+  ) { }
 
   // DEPRECATED: This generic endpoint only parses but doesn't save messages
   // Use specific endpoints like @Post('facebook') instead
@@ -215,28 +215,26 @@ export class WebhooksController {
         this.logger.debug(`🔍 Looking for credentials for page ${pageId}`);
 
         // Find channel connection by pageId
-        const channels = await this.channelsService.findAll();
-        this.logger.debug(`Found ${channels.length} total channels`);
-
-        const facebookChannels = channels.filter((c) => c.type === 'facebook');
-        this.logger.debug(`Found ${facebookChannels.length} Facebook channels`);
-
-        const channel = facebookChannels.find(
-          (c) => c.metadata?.pageId === pageId,
-        );
+        // Refactored to use optimized findByExternalId instead of fetching all channels
+        const channel = await this.channelsService.findByExternalId(pageId);
 
         if (channel) {
-          this.logger.debug(`Found channel: ${channel.name} (${channel.id})`);
-          this.logger.debug(`Has credential: ${!!channel.credential}`);
-          this.logger.debug(
-            `Has clientSecret: ${!!channel.credential?.clientSecret}`,
-          );
-
-          if (channel.credential?.clientSecret) {
-            appSecret = channel.credential.clientSecret;
-            this.logger.log(
-              `✅ Using App Secret from database for page ${pageId}`,
+          // Verify it is indeed a Facebook channel (though pageId is unique enough)
+          if (channel.type === 'facebook') {
+            this.logger.debug(`Found channel: ${channel.name} (${channel.id})`);
+            this.logger.debug(`Has credential: ${!!channel.credential}`);
+            this.logger.debug(
+              `Has clientSecret: ${!!channel.credential?.clientSecret}`,
             );
+
+            if (channel.credential?.clientSecret) {
+              appSecret = channel.credential.clientSecret;
+              this.logger.log(
+                `✅ Using App Secret from database for page ${pageId}`,
+              );
+            }
+          } else {
+            this.logger.warn(`⚠️ Found channel for pageId ${pageId} but type is ${channel.type}`);
           }
         } else {
           this.logger.warn(`⚠️ No channel found for page ${pageId}`);
@@ -244,7 +242,6 @@ export class WebhooksController {
       } else {
         this.logger.warn('⚠️ No pageId found in webhook payload');
       }
-
       // Fallback to environment variable
       if (!appSecret) {
         appSecret = this.configService.get<string>('FACEBOOK_APP_SECRET');

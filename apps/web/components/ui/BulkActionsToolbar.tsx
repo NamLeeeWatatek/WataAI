@@ -65,10 +65,14 @@ export function BulkActionsToolbar({
                                     size="sm"
                                     onClick={action.onClick}
                                     className={cn(
-                                        "h-8 px-3 rounded-full text-xs gap-2",
+                                        "h-8 px-3 rounded-full text-xs gap-2 font-medium transition-all",
                                         action.variant === 'destructive'
-                                            ? "text-destructive-foreground hover:bg-destructive/90"
-                                            : "hover:bg-background/20 hover:text-background",
+                                            ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            : action.variant === 'default'
+                                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                                : action.variant === 'secondary'
+                                                    ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                                    : "text-background hover:bg-background/20",
                                         action.className
                                     )}
                                 >

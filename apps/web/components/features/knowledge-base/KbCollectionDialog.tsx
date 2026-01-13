@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
@@ -68,7 +68,10 @@ export function KBCollectionDialog({
         },
     })
 
-    const selectedProviderId = form.watch('aiProviderId')
+    const selectedProviderId = useWatch({
+        control: form.control,
+        name: 'aiProviderId'
+    })
     const selectedProvider = providers.find(p => p.id === selectedProviderId)
     const availableModels = selectedProvider?.modelList || []
 

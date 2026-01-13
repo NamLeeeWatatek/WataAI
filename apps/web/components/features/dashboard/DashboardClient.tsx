@@ -13,7 +13,7 @@ import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useAuth } from '@/lib/hooks/useAuth'
 
-import { DatePickerWithRange } from "@/components/ui/date-range-picker"
+import { DateRangePicker } from "@/components/ui/DateRangePicker"
 import { DateRange } from "react-day-picker"
 import { useState } from 'react'
 import { subDays } from 'date-fns'
@@ -56,7 +56,7 @@ export function DashboardClient() {
                     className="mb-10 px-2"
                 >
                     <div className="flex items-center gap-2">
-                        <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+                        <DateRangePicker date={dateRange} setDate={setDateRange} />
                         <Button className="shadow-lg shadow-primary/10">
                             <FiDownload className="mr-2 h-4 w-4" />
                             {t('dashboard.downloadReport')}

@@ -156,15 +156,15 @@ export default function BotDetailPage() {
 
     const isOnline = formData.status === 'active';
 
-    if (botLoading && !bot) return <PageLoading message="Connecting to neural interface..." />;
+    if (botLoading && !bot) return <PageLoading message="Loading bot details..." />;
 
     if (!bot && !botLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                 <AlertCircle className="w-16 h-16 text-destructive/20 mb-4" />
-                <h2 className="text-xl font-black mb-2">Interface Offline</h2>
-                <p className="text-muted-foreground text-sm font-medium">The requested agent signature could not be located in the current workspace.</p>
-                <Button variant="link" onClick={() => router.push('/bots')} className="mt-4">Return to Fleet</Button>
+                <h2 className="text-xl font-black mb-2">Bot Not Found</h2>
+                <p className="text-muted-foreground text-sm font-medium">The requested bot could not be found in this workspace.</p>
+                <Button variant="link" onClick={() => router.push('/bots')} className="mt-4">Back to Bots</Button>
             </div>
         );
     }
@@ -173,8 +173,8 @@ export default function BotDetailPage() {
         <div className="h-full overflow-y-auto scrollbar-hide bg-grid-pattern">
             <div className="max-w-[1440px] mx-auto p-4 md:p-8">
                 <PageHeader
-                    title={bot?.name || 'Agent'}
-                    description="Neural architecture and interface protocol management"
+                    title={bot?.name || 'Bot'}
+                    description="Manage your bot settings and integrations"
                     onRefresh={refetchBot}
                     refreshing={botLoading}
                     premium
@@ -191,7 +191,7 @@ export default function BotDetailPage() {
                             className="font-bold h-10 px-8 shadow-lg shadow-primary/20"
                         >
                             <Save className="w-4 h-4 mr-2" />
-                            Commit Protocol
+                            Save Changes
                         </Button>
                     </div>
                 </PageHeader>
@@ -201,7 +201,7 @@ export default function BotDetailPage() {
                         <CardContent className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
                                 <RefreshCw className="w-5 h-5 animate-spin-slow" />
-                                <p className="text-sm font-black tracking-tight uppercase">Uncommitted changes detected in neural core</p>
+                                <p className="text-sm font-black tracking-tight uppercase">You have unsaved changes</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -211,11 +211,11 @@ export default function BotDetailPage() {
                     <TabsHeader>
                         <TabsList variant="pills">
                             {[
-                                { value: 'configuration', label: 'Neural Core', icon: BotIcon },
-                                { value: 'knowledge-base', label: 'Knowledge RAG', icon: Code },
-                                { value: 'channels', label: 'Omnichannel', icon: Palette },
-                                { value: 'widget', label: 'Visual Interface', icon: History },
-                                { value: 'settings', label: 'Protocol Settings', icon: Clock }
+                                { value: 'configuration', label: 'General', icon: BotIcon },
+                                { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
+                                { value: 'channels', label: 'Channels', icon: Palette },
+                                { value: 'widget', label: 'Interface', icon: History },
+                                { value: 'settings', label: 'Settings', icon: Clock }
                             ].map((tab) => (
                                 <TabsTrigger key={tab.value} value={tab.value} variant="pills">
                                     <tab.icon className="w-3.5 h-3.5 mr-2" />
@@ -235,7 +235,7 @@ export default function BotDetailPage() {
                         </TabsContent>
 
                         <TabsContent value="channels" className="m-0 focus-visible:outline-none">
-                            <BotChannelsSection botId={botId} botChannels={botChannels} onRefresh={refetchBot} />
+                            <BotChannelsSection botId={botId} botChannels={botChannels} onRefresh={refetchBot} workspaceId={bot?.workspaceId} />
                         </TabsContent>
 
                         <TabsContent value="widget" className="m-0 focus-visible:outline-none">

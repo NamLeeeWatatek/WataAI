@@ -36,7 +36,7 @@ export default function ActivityPage() {
     const [querySearch, setQuerySearch] = useState('');
 
     // Manual debounce for search to prevent double-fetch/race conditions
-    const searchTimerRef = useRef<NodeJS.Timeout>();
+    const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         return () => {

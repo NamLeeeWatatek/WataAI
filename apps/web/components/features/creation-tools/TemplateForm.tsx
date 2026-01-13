@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, ImageIcon, Film } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -46,8 +46,11 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
         },
     });
 
-    const { reset, setValue, watch, control, handleSubmit, formState: { isSubmitting } } = form;
-    const previewUrl = watch('thumbnailUrl');
+    const { reset, setValue, control, handleSubmit, formState: { isSubmitting } } = form;
+    const previewUrl = useWatch({
+        control,
+        name: 'thumbnailUrl'
+    });
 
     useEffect(() => {
         if (template) {

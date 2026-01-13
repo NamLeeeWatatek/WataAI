@@ -1,7 +1,9 @@
 ﻿import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
+import { PaginationQueryDto } from '../shared/dto/pagination-query.dto';
 import { ChannelConnectionEntity } from '../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
+import { ConversationEntity } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
 import { CreateConnectionDto } from '../integrations/dto/create-connection.dto';
 import { UpdateConnectionDto } from './dto/update-connection.dto';
 import {
@@ -16,18 +18,36 @@ export class ChannelsService {
   constructor(
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) {}
+    @InjectRepository(ConversationEntity)
+    private conversationRepository: Repository<ConversationEntity>,
+  ) { }
 
-  async findAll(workspaceId?: string): Promise<ChannelConnectionEntity[]> {
-    const where: FindOptionsWhere<ChannelConnectionEntity> = {};
-    if (workspaceId) {
-      where.workspaceId = workspaceId;
+  async findAll(
+    workspaceId: string,
+    query: PaginationQueryDto,
+  ): Promise<{ data: ChannelConnectionEntity[]; total: number }> {
+    const builder = this.connectionRepository.createQueryBuilder('channel');
+
+    // Ensure we scope by workspaceId to prevent data leaks
+    builder.where('channel.workspaceId = :workspaceId', { workspaceId });
+
+    if (query.search) {
+      builder.andWhere(
+        '(LOWER(channel.name) LIKE LOWER(:search) OR LOWER(channel.type) LIKE LOWER(:search))',
+        { search: `%${query.search}%` },
+      );
     }
-    return this.connectionRepository.find({
-      where,
-      relations: ['credential'],
-      order: { connectedAt: 'DESC' },
-    });
+
+    builder.leftJoinAndSelect('channel.credential', 'credential');
+    builder.orderBy('channel.connectedAt', 'DESC');
+
+    const page = query.page || 1;
+    const limit = query.limit || 20;
+
+    builder.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await builder.getManyAndCount();
+    return { data, total };
   }
 
   async findOne(
@@ -47,15 +67,14 @@ export class ChannelsService {
   async findByExternalId(
     externalId: string,
   ): Promise<ChannelConnectionEntity | null> {
-    const channels = await this.connectionRepository.find({
-      where: { status: ChannelConnectionStatus.ACTIVE },
-      relations: ['credential'],
-    });
-
-    return (
-      channels.find((channel) => channel.metadata?.pageId === externalId) ||
-      null
-    );
+    // Optimization: Query directly on the JSONB column instead of fetching all
+    // Postgres specific syntax for JSONB
+    return this.connectionRepository
+      .createQueryBuilder('channel')
+      .leftJoinAndSelect('channel.credential', 'credential')
+      .where("channel.metadata ->> 'pageId' = :externalId", { externalId })
+      .andWhere('channel.status = :status', { status: ChannelConnectionStatus.ACTIVE })
+      .getOne();
   }
 
   async findByType(
@@ -120,27 +139,25 @@ export class ChannelsService {
 
   async delete(id: string, workspaceId?: string): Promise<void> {
     try {
-      // âœ… FIX: Update conversations first to prevent orphaned references
-      // Use snake_case column names as they appear in database
-      const updateResult = await this.connectionRepository.manager.query(
-        `UPDATE conversation SET channel_id = NULL, channel_type = 'internal' WHERE channel_id = $1`,
-        [id],
-      );
+      // ✅ FIX: Safe update using TypeORM repository
+      await this.connectionRepository.manager.transaction(async (manager) => {
+        // Update conversations to remote channel reference
+        await this.conversationRepository.update(
+          { channelId: id },
+          { channelId: null, channelType: 'internal' }
+        );
 
-      this.logger.log(
-        `âœ… Updated ${updateResult[1] || 0} conversations before deleting channel ${id}`,
-      );
+        // Then delete the channel
+        const where: FindOptionsWhere<ChannelConnectionEntity> = { id };
+        if (workspaceId) {
+          where.workspaceId = workspaceId;
+        }
+        await manager.delete(ChannelConnectionEntity, where);
+      });
 
-      // Then delete the channel
-      const where: FindOptionsWhere<ChannelConnectionEntity> = { id };
-      if (workspaceId) {
-        where.workspaceId = workspaceId;
-      }
-      await this.connectionRepository.delete(where);
-
-      this.logger.log(`âœ… Deleted channel ${id}`);
+      this.logger.log(`✅ Deleted channel ${id} and cleaned up conversations`);
     } catch (error) {
-      this.logger.error(`â Œ Error deleting channel ${id}:`, error);
+      this.logger.error(`❌ Error deleting channel ${id}:`, error);
       throw error;
     }
   }

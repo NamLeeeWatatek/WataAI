@@ -7,10 +7,7 @@ export class OAuthService {
   constructor(private configService: ConfigService) { }
 
   getFacebookAuthUrl(clientId: string, state?: string): string {
-    const redirectUri =
-      this.configService.get<string>('FACEBOOK_REDIRECT_URI', {
-        infer: true,
-      }) || 'http://localhost:3000/oauth/callback/facebook';
+    const redirectUri = this.getRedirectUri('facebook');
 
     const scopes = [
       'pages_show_list',
@@ -41,10 +38,7 @@ export class OAuthService {
     accessToken: string;
     expiresIn?: number;
   }> {
-    const redirectUri =
-      this.configService.get<string>('FACEBOOK_REDIRECT_URI', {
-        infer: true,
-      }) || 'http://localhost:3000/oauth/callback/facebook';
+    const redirectUri = this.getRedirectUri('facebook');
 
     const params = new URLSearchParams({
       client_id: clientId,
@@ -75,9 +69,7 @@ export class OAuthService {
   }
 
   getGoogleAuthUrl(clientId: string, state?: string): string {
-    const redirectUri =
-      this.configService.get<string>('GOOGLE_REDIRECT_URI', { infer: true }) ||
-      'http://localhost:3000/oauth/callback/google';
+    const redirectUri = this.getRedirectUri('google');
 
     const scopes = ['https://www.googleapis.com/auth/business.manage'].join(
       ' ',
@@ -105,9 +97,7 @@ export class OAuthService {
     refreshToken?: string;
     expiresIn?: number;
   }> {
-    const redirectUri =
-      this.configService.get<string>('GOOGLE_REDIRECT_URI', { infer: true }) ||
-      'http://localhost:3000/oauth/callback/google';
+    const redirectUri = this.getRedirectUri('google');
 
     const response = await axios.post('https://oauth2.googleapis.com/token', {
       client_id: clientId,
@@ -122,5 +112,30 @@ export class OAuthService {
       refreshToken: response.data.refresh_token,
       expiresIn: response.data.expires_in,
     };
+  }
+
+  private getRedirectUri(provider: 'facebook' | 'google'): string {
+    const envKey =
+      provider === 'facebook'
+        ? 'FACEBOOK_REDIRECT_URI'
+        : 'GOOGLE_REDIRECT_URI';
+    const configValue = this.configService.get<string>(envKey, { infer: true });
+
+    if (configValue) return configValue;
+
+    const frontendDomain = this.configService.get<string>('app.frontendDomain', {
+      infer: true,
+    });
+    const base = frontendDomain
+      ? frontendDomain.endsWith('/')
+        ? frontendDomain.slice(0, -1)
+        : frontendDomain
+      : 'http://localhost:3000';
+
+    if (provider === 'facebook') {
+      return `${base}/channels/callback?provider=facebook`;
+    }
+
+    return `${base}/oauth/callback/${provider}`;
   }
 }

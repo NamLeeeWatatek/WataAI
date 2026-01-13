@@ -31,11 +31,10 @@ export function EmptyState({
     <Card className={cn(
       'p-12 text-center border-dashed',
       'bg-gradient-to-br from-card/50 to-card/30',
-      'animate-in fade-in-50 zoom-in-95 duration-500',
       className
     )}>
       {icon && (
-        <div className="flex justify-center mb-6 animate-in fade-in-50 slide-in-from-bottom-4 duration-700 delay-150">
+        <div className="flex justify-center mb-6">
           <div className={cn(
             'text-muted-foreground/60',
             'transition-all duration-300 hover:scale-110 hover:text-muted-foreground/80'
@@ -46,23 +45,21 @@ export function EmptyState({
       )}
 
       <h3 className={cn(
-        'text-xl font-semibold mb-3 text-foreground/90',
-        'animate-in fade-in-50 slide-in-from-bottom-3 duration-700 delay-300'
+        'text-xl font-semibold mb-3 text-foreground/90'
       )}>
         {title}
       </h3>
 
       {description && (
         <p className={cn(
-          'text-sm text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed',
-          'animate-in fade-in-50 slide-in-from-bottom-2 duration-700 delay-500'
+          'text-sm text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed'
         )}>
           {description}
         </p>
       )}
 
       {action && (
-        <div className="animate-in fade-in-50 slide-in-from-bottom-1 duration-700 delay-700">
+        <div>
           <Button
             onClick={action.onClick}
             variant={action.variant || 'default'}

@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { filesApi } from '@/lib/api/files';
 import { Template } from '@/lib/types/template';
 import {
     Dialog,
@@ -30,11 +31,35 @@ export function TemplateDialog({
 
     const handleSave = async (data: TemplateFormValues) => {
         try {
+            let finalThumbnailUrl = data.thumbnailUrl;
+
+            if (data.previewFile) {
+                const toastId = toast.loading('Uploading thumbnail...');
+                try {
+                    const response = await filesApi.uploadFile(data.previewFile, {
+                        bucket: 'images'
+                    });
+
+                    if (response.downloadSignedUrl) {
+                        finalThumbnailUrl = response.downloadSignedUrl;
+                    } else if (response.file?.path) {
+                        finalThumbnailUrl = filesApi.getFileUrl(response.file.path, 'images');
+                    }
+
+                    toast.dismiss(toastId);
+                } catch (error) {
+                    console.error('File upload failed:', error);
+                    toast.dismiss(toastId);
+                    toast.error('Failed to upload thumbnail');
+                    return;
+                }
+            }
+
             await onSave({
                 id: template?.id,
                 name: data.name,
                 description: data.description,
-                thumbnailUrl: data.thumbnailUrl,
+                thumbnailUrl: finalThumbnailUrl,
                 icon: data.icon,
                 creationToolId: data.creationToolId,
                 prefilledData: template?.prefilledData || {},

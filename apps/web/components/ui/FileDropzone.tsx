@@ -100,31 +100,31 @@ export function FileDropzone({
 
                 {uploading ? (
                     <div className={cn(
-                        "flex flex-col items-center justify-center space-y-4 animate-in fade-in zoom-in-95 duration-500",
-                        compact ? "p-2" : "p-8 w-full max-w-md mx-auto"
+                        "flex flex-col items-center justify-center space-y-3",
+                        compact ? "p-2" : "p-4 w-full max-w-sm mx-auto"
                     )}>
                         {!compact ? (
                             <>
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 animate-pulse">
-                                    <Upload className="w-6 h-6 text-primary" />
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-1">
+                                    <Upload className="w-5 h-5 text-primary" />
                                 </div>
-                                <div className="w-full space-y-2 text-center">
-                                    <p className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 uppercase tracking-wider">
+                                <div className="w-full space-y-1.5 text-center">
+                                    <p className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 uppercase tracking-wider">
                                         Uploading...
                                     </p>
-                                    <div className="relative pt-2">
+                                    <div className="relative pt-1">
                                         <Progress
                                             value={progress}
-                                            className="h-2 w-full bg-primary/5 rounded-full"
+                                            className="h-1.5 w-full bg-primary/5 rounded-full"
                                             indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
                                         />
                                     </div>
-                                    <span className="text-xs font-mono font-bold text-muted-foreground">{progress}%</span>
+                                    <span className="text-[10px] font-mono font-bold text-muted-foreground">{progress}%</span>
                                 </div>
                             </>
                         ) : (
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent" />
+                                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent" />
                             </div>
                         )}
                     </div>
