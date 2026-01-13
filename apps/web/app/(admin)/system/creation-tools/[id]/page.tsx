@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm, FormProvider, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -100,7 +100,23 @@ export default function EditCreationToolPage() {
         },
     });
 
-    const { reset, setValue, watch, control, handleSubmit, formState: { isSubmitting, isDirty } } = form;
+    const { reset, setValue, control, handleSubmit, formState: { isSubmitting, isDirty } } = form;
+
+    const watchedName = useWatch({
+        control,
+        name: 'name'
+    });
+
+    // Declarative Side Effect: Sync Name -> Slug
+    useEffect(() => {
+        if (isNew && watchedName) {
+            setValue('slug', slugify(watchedName), {
+                shouldDirty: true,
+                shouldValidate: true,
+                shouldTouch: true
+            });
+        }
+    }, [watchedName, isNew, setValue]);
 
     // Load Data
     useEffect(() => {
@@ -123,12 +139,6 @@ export default function EditCreationToolPage() {
         }
     }, [isNew, tool, reset]);
 
-    const handleNameChange = (value: string) => {
-        setValue('name', value);
-        if (isNew) {
-            setValue('slug', slugify(value));
-        }
-    };
 
     // Mutation
     const updateMutation = useMutation({
@@ -227,7 +237,6 @@ export default function EditCreationToolPage() {
                                                     <FormControl>
                                                         <Input
                                                             {...field}
-                                                            onChange={(e) => handleNameChange(e.target.value)}
                                                             placeholder="e.g. Blog Post Generator"
                                                         />
                                                     </FormControl>
@@ -376,7 +385,7 @@ export default function EditCreationToolPage() {
                                                     config={field.value}
                                                     onChange={(config) => field.onChange(config)}
                                                     onFieldRename={(oldName, newName) => {
-                                                        const currentFlow = watch('executionFlow');
+                                                        const currentFlow = form.getValues('executionFlow');
                                                         if (currentFlow.type === 'ai-generation' && currentFlow.promptTemplate) {
                                                             // Simple Regex replacement for {{name}} or {name} or [name] depending on usage
                                                             // Standardized to {{name}} in our UI feedback
@@ -408,7 +417,7 @@ export default function EditCreationToolPage() {
                                             <ExecutionConfig
                                                 config={field.value}
                                                 onChange={field.onChange}
-                                                availableFields={watch('formConfig').fields}
+                                                availableFields={form.getValues('formConfig').fields}
                                             />
                                         )}
                                     />

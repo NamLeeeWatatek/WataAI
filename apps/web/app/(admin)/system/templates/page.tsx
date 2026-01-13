@@ -241,25 +241,27 @@ export default function TemplatesPage() {
                                 />
                             </div>
                             <div className="flex items-center gap-3 w-full md:w-auto ml-auto">
-                                <Select value={selectedToolFilter} onValueChange={(val) => {
-                                    setSelectedToolFilter(val);
-                                    setCurrentPage(1);
-                                }}>
-                                    <SelectTrigger className="w-[180px] bg-background">
-                                        <div className="flex items-center text-muted-foreground whitespace-nowrap">
-                                            <Filter className="w-3.5 h-3.5 mr-2" />
-                                            <SelectValue placeholder="All Tools" />
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Tools</SelectItem>
-                                        {tools.map((tool) => (
-                                            <SelectItem key={tool.id} value={tool.id}>
-                                                {tool.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="w-[200px]">
+                                    <Select value={selectedToolFilter} onValueChange={(val) => {
+                                        setSelectedToolFilter(val);
+                                        setCurrentPage(1);
+                                    }}>
+                                        <SelectTrigger className="w-full h-10 border-border/40 font-bold bg-background/50">
+                                            <div className="flex items-center text-muted-foreground whitespace-nowrap">
+                                                <Filter className="w-3.5 h-3.5 mr-2" />
+                                                <SelectValue placeholder="All Tools" />
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Tools</SelectItem>
+                                            {tools.map((tool) => (
+                                                <SelectItem key={tool.id} value={tool.id}>
+                                                    {tool.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
                                 <Button
                                     onClick={() => {

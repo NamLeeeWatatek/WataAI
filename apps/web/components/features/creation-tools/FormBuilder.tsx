@@ -108,8 +108,19 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
     const [activeTab, setActiveTab] = useState<'properties' | 'fields'>('fields')
 
     // --- Initialization & Validation ---
+    // --- Initialization & Validation ---
+    const initializedRef = React.useRef(false);
+    const configString = JSON.stringify(config);
+
     useEffect(() => {
         if (!config) return;
+
+        // Prevent running if nothing materially changed
+        // We use a ref to track if we've done the initial setup. 
+        // Real-time validation should ideally be done elsewhere or less aggressively.
+        if (initializedRef.current && configString === JSON.stringify(config)) {
+            return;
+        }
 
         // Deep clone safely
         let changed = false;
@@ -174,9 +185,13 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
         }
 
         if (changed) {
+            // Only trigger update if we actually modified the structure
             onChange(newConfig);
         }
-    }, [activeStepIndex, config.steps, config]);
+
+        initializedRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeStepIndex, configString]); // Depend on stringified config to avoid ref-cycle loops
 
     const generateUniqueFieldName = useCallback((type: string) => {
         const base = `field_${type}_${Date.now()}`
