@@ -100,12 +100,12 @@ export function FileDropzone({
 
                 {uploading ? (
                     <div className={cn(
-                        "flex flex-col items-center justify-center space-y-3 animate-in fade-in zoom-in-95 duration-500",
+                        "flex flex-col items-center justify-center space-y-3",
                         compact ? "p-2" : "p-4 w-full max-w-sm mx-auto"
                     )}>
                         {!compact ? (
                             <>
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-1 animate-pulse">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-1">
                                     <Upload className="w-5 h-5 text-primary" />
                                 </div>
                                 <div className="w-full space-y-1.5 text-center">
@@ -124,7 +124,7 @@ export function FileDropzone({
                             </>
                         ) : (
                             <div className="flex flex-col items-center gap-2">
-                                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent" />
                             </div>
                         )}
                     </div>

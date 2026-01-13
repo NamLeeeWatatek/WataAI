@@ -76,7 +76,7 @@ const TabsContent = React.forwardRef<
     ref={ref}
     data-slot="tabs-content"
     className={cn(
-      "ring-offset-background focus-visible:border-ring focus-visible:ring-ring/50 mt-2 outline-none focus-visible:ring-[3px] animate-in fade-in-5 duration-300",
+      "ring-offset-background focus-visible:border-ring focus-visible:ring-ring/50 mt-2 outline-none focus-visible:ring-[3px]",
       className
     )}
     {...props}
