@@ -15,6 +15,7 @@
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FacebookOAuthService } from './facebook-oauth.service';
@@ -36,6 +37,7 @@ export class FacebookOAuthController {
     private readonly channelStrategy: ChannelStrategy,
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
+    private readonly configService: ConfigService,
   ) { }
 
   @Get('oauth/url')
@@ -69,7 +71,7 @@ export class FacebookOAuthController {
       );
     }
 
-    const defaultRedirectUri = process.env.FACEBOOK_REDIRECT_URI || `${process.env.FRONTEND_DOMAIN}/oauth/callback/facebook`;
+    const defaultRedirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
     const uri = redirectUri || defaultRedirectUri;
 
     const state = `${req.user?.id}:${workspaceId}`;
@@ -140,7 +142,7 @@ export class FacebookOAuthController {
         throw new NotFoundException('Facebook App not configured');
       }
 
-      const redirectUri = process.env.FACEBOOK_REDIRECT_URI || `${process.env.FRONTEND_DOMAIN}/oauth/callback/facebook`;
+      const redirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
 
       // âœ… Exchange code for token (may fail if code already used)
       const accessToken = await this.facebookOAuthService.exchangeCodeForToken(

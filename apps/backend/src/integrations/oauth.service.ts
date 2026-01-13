@@ -132,7 +132,7 @@ export class OAuthService {
       : 'http://localhost:3000';
 
     if (provider === 'facebook') {
-      return `${base}/channels/callback?provider=facebook`;
+      return `${base}/channels/callback/facebook`;
     }
 
     return `${base}/oauth/callback/${provider}`;
