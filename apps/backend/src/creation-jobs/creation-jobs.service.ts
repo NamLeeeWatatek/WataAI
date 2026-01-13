@@ -379,20 +379,38 @@ export class CreationJobsService {
 
     const results: any[] = [];
 
-    for (const channelId of channels) {
+    for (const rawChannelId of channels) {
+      let channelId = rawChannelId;
+      let targetPageId: string | undefined;
+
+      // Handle composite IDs (e.g. "uuid:pageId")
+      if (rawChannelId.includes(':')) {
+        const parts = rawChannelId.split(':');
+        if (parts.length === 2) {
+          channelId = parts[0];
+          targetPageId = parts[1];
+        }
+      }
+
       try {
         const channel = await this.channelsService.findOne(channelId, workspaceId);
         if (!channel) {
-          results.push({ channelId, status: 'error', error: 'Channel not found' });
+          results.push({ channelId: rawChannelId, status: 'error', error: 'Channel not found' });
           continue;
         }
 
         if (channel.type === 'facebook') {
-          const pageId = channel.metadata?.pageId || channel.metadata?.id;
+          // If targetPageId was provided in the composite ID, use it. 
+          // Otherwise fall back to metadata.
+          let pageId = targetPageId || channel.metadata?.pageId || channel.metadata?.id;
+
+          // If we still don't have a pageId, check if metadata.pages exists and try to find a match or default?
+          // But usually targetPageId should cover the specific selection case.
+
           const accessToken = channel.accessToken;
 
           if (!pageId || !accessToken) {
-            results.push({ channelId, status: 'error', error: 'Invalid channel configuration: missing Page ID or Access Token' });
+            results.push({ channelId: rawChannelId, status: 'error', error: 'Invalid channel configuration: missing Page ID or Access Token' });
             continue;
           }
 
@@ -403,12 +421,12 @@ export class CreationJobsService {
             imageUrl,
             scheduledTime ? Math.floor(new Date(scheduledTime).getTime() / 1000) : undefined
           );
-          results.push({ channelId, status: 'success', data: result });
+          results.push({ channelId: rawChannelId, status: 'success', data: result });
         } else {
-          results.push({ channelId, status: 'error', error: `Channel type ${channel.type} not supported for posting yet` });
+          results.push({ channelId: rawChannelId, status: 'error', error: `Channel type ${channel.type} not supported for posting yet` });
         }
       } catch (err) {
-        results.push({ channelId, status: 'error', error: err.message });
+        results.push({ channelId: rawChannelId, status: 'error', error: err.message });
       }
     }
 
