@@ -68,6 +68,42 @@ export class OAuthService {
     return response.data.data || [];
   }
 
+  async postToFacebookPage(
+    pageAccessToken: string,
+    pageId: string,
+    message: string,
+    imageUrl?: string,
+    scheduledTime?: number,
+  ): Promise<any> {
+    const params: any = {
+      message,
+      access_token: pageAccessToken,
+    };
+
+    if (imageUrl) {
+      params.url = imageUrl;
+    }
+
+    if (scheduledTime) {
+      params.published = false;
+      params.scheduled_publish_time = scheduledTime;
+    }
+
+    const endpoint = imageUrl
+      ? `https://graph.facebook.com/v24.0/${pageId}/photos`
+      : `https://graph.facebook.com/v24.0/${pageId}/feed`;
+
+    try {
+      const response = await axios.post(endpoint, null, { params });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(`Facebook API Error: ${error.response.data.error.message}`);
+      }
+      throw error;
+    }
+  }
+
   getGoogleAuthUrl(clientId: string, state?: string): string {
     const redirectUri = this.getRedirectUri('google');
 

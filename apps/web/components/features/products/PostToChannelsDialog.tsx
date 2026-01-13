@@ -40,20 +40,18 @@ export function PostToChannelsDialog({
 
         setIsPosting(true);
         try {
-            // Mock API call since we don't have the real endpoint yet
-            // In production this would be: await axiosClient.post(`/jobs/${jobId}/post`, { channels: selectedChannels });
-
-            // Simulating API delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            console.log('Posting job', jobId, 'to channels', selectedChannels);
+            await axiosClient.post(`/creation-jobs/${jobId}/post`, {
+                channels: selectedChannels,
+                // We'll support scheduling in the future, for now it's immediate
+            });
 
             toast.success("Content scheduled for posting successfully!");
             onOpenChange(false);
             setSelectedChannels([]);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Failed to post content");
+            const message = error.response?.data?.message || "Failed to post content";
+            toast.error(message);
         } finally {
             setIsPosting(false);
         }
