@@ -311,6 +311,7 @@ export default function ChannelsPage() {
                                         key={page.id}
                                         className="group flex items-center gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200"
                                     >
+                                        {/* Avatar */}
                                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-sm">
                                             {page.picture?.data?.url ? (
                                                 <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
@@ -319,40 +320,42 @@ export default function ChannelsPage() {
                                             )}
                                         </div>
 
-                                        <div className="flex-1 min-w-0 space-y-1">
-                                            <div className="flex justify-between items-start gap-2">
-                                                <div>
-                                                    <h4 className="font-semibold text-sm truncate leading-tight">{page.name}</h4>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant="outline" className="text-[10px] h-5 font-normal opacity-70">
-                                                            {page.category || 'Page'}
-                                                        </Badge>
-                                                        <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
-                                                            FB Terminal
-                                                        </Badge>
-                                                    </div>
+                                        {/* Text Info */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
+                                            <div>
+                                                <h4 className="font-semibold text-sm truncate leading-tight pr-2" title={page.name}>
+                                                    {page.name}
+                                                </h4>
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                    <Badge variant="outline" className="text-[10px] h-5 font-normal opacity-70 whitespace-nowrap px-1.5">
+                                                        {page.category || 'Page'}
+                                                    </Badge>
+                                                    <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 whitespace-nowrap px-1.5">
+                                                        FB Terminal
+                                                    </Badge>
                                                 </div>
                                             </div>
 
-                                            <p className="text-xs text-muted-foreground line-clamp-2 pt-1">
+                                            <p className="text-[10px] text-muted-foreground font-mono truncate opacity-60">
                                                 ID: {page.id}
                                             </p>
                                         </div>
 
-                                        <div className="flex items-center ml-4">
+                                        {/* Action Button */}
+                                        <div className="flex items-center shrink-0 ml-2">
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleConnectFacebookPage(page)}
                                                 disabled={connectingPage === page.id}
                                                 className={cn(
-                                                    "rounded-lg shadow-sm transition-all",
-                                                    connectingPage === page.id ? "w-24" : "w-auto"
+                                                    "rounded-lg shadow-sm transition-all h-9 px-4",
+                                                    connectingPage === page.id ? "w-28" : "w-20"
                                                 )}
                                             >
                                                 {connectingPage === page.id ? (
                                                     <>
                                                         <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                                                        Connecting
+                                                        Creating...
                                                     </>
                                                 ) : (
                                                     'Connect'
