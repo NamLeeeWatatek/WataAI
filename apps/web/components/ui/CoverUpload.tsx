@@ -68,7 +68,7 @@ export function CoverUpload({
                         {isVideo(value) ? (
                             <video
                                 src={value}
-                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                                className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
                                 controls
                                 muted
                                 loop
@@ -77,7 +77,7 @@ export function CoverUpload({
                             <img
                                 src={value}
                                 alt="Cover"
-                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-60"
+                                className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 group-hover:opacity-60"
                             />
                         )}
 
