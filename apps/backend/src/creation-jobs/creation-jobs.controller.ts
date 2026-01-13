@@ -162,6 +162,19 @@ export class CreationJobsController {
   ) {
     return this.service.removeMany(ids, workspaceId);
   }
+  @Post(':id/post')
+  @Permissions('job:Update')
+  @ApiOkResponse({
+    description: 'Post job result to channels',
+  })
+  post(
+    @Param('id') id: string,
+    @Body() body: { channels: string[]; scheduledTime?: string },
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.postToChannels(id, body.channels, workspaceId, body.scheduledTime);
+  }
+
   @Post(':id/cancel')
   @Permissions('job:Update')
   @ApiParam({

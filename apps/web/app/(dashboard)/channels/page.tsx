@@ -22,13 +22,6 @@ import {
     Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from '@/components/ui/Dialog';
 import { PageHeader } from '@/components/ui/PageHeader';
 // import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
@@ -59,7 +52,7 @@ export default function ChannelsPage() {
     } = useAppSelector(state => state.channels);
 
     // Local UI State
-    const [activeTab, setActiveTab] = useState<'connected' | 'configurations'>('connected');
+    const [activeTab, setActiveTab] = useState<'connected' | 'configurations' | 'discovery'>('connected');
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [page, setPage] = useState(1);
@@ -134,8 +127,7 @@ export default function ChannelsPage() {
                         dispatch(setFacebookTempToken(event.data.tempToken));
                         toast.success(`Discovered ${event.data.pages.length} terminals`);
                         refetch();
-                        // We intentionally DON'T clear setConnecting(null) here 
-                        // so the selection list stays visible in the toast card
+                        setActiveTab('discovery');
                     } else {
                         toast.success(event.data.message || `Connected to ${event.data.channel || provider}`);
                         refetch();
@@ -155,34 +147,6 @@ export default function ChannelsPage() {
         } catch (error) {
             toast.error('Failed to get connection URL');
             dispatch(setConnecting(null));
-        }
-    };
-
-    const handleDisconnect = async () => {
-        if (!disconnectId) return;
-        try {
-            await disconnect(disconnectId);
-        } catch (error) {
-        } finally {
-            setDisconnectId(null);
-        }
-    };
-
-    const handleDeleteConfig = async () => {
-        if (!deleteConfigId) return;
-        try {
-            await deleteIntegration(deleteConfigId);
-        } catch (error) {
-        } finally {
-            setDeleteConfigId(null);
-        }
-    };
-
-    const handleSaveConfig = async (data: any) => {
-        try {
-            const { id, ...payload } = data;
-            await saveIntegration({ id: id || undefined, data: payload });
-        } catch (error) {
         }
     };
 
@@ -214,6 +178,34 @@ export default function ChannelsPage() {
         }
     };
 
+    const handleDisconnect = async () => {
+        if (!disconnectId) return;
+        try {
+            await disconnect(disconnectId);
+        } catch (error) {
+        } finally {
+            setDisconnectId(null);
+        }
+    };
+
+    const handleDeleteConfig = async () => {
+        if (!deleteConfigId) return;
+        try {
+            await deleteIntegration(deleteConfigId);
+        } catch (error) {
+        } finally {
+            setDeleteConfigId(null);
+        }
+    };
+
+    const handleSaveConfig = async (data: any) => {
+        try {
+            const { id, ...payload } = data;
+            await saveIntegration({ id: id || undefined, data: payload });
+        } catch (error) {
+        }
+    };
+
     return (
         <div className="h-full flex flex-col space-y-8 p-8">
             <div className="flex items-center justify-between space-y-2">
@@ -223,7 +215,7 @@ export default function ChannelsPage() {
                 </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'connected' | 'configurations')} className="flex-1 flex flex-col">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
                 <TabsHeader>
                     <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
                         <TabsTrigger value="connected" variant="pills">
@@ -240,10 +232,86 @@ export default function ChannelsPage() {
                                 {configs.length}
                             </Badge>
                         </TabsTrigger>
+                        {facebookPages.length > 0 && (
+                            <TabsTrigger value="discovery" variant="pills" className="animate-in fade-in slide-in-from-left-4">
+                                <Facebook className="w-4 h-4 mr-2" />
+                                <span>Discovered Pages</span>
+                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
+                                    {facebookPages.length}
+                                </Badge>
+                            </TabsTrigger>
+                        )}
                     </TabsList>
                 </TabsHeader>
 
-                <div className="flex-1">
+                <div className="flex-1 mt-6">
+                    <TabsContent value="discovery" className="m-0 focus-visible:outline-none h-full">
+                        <div className="flex flex-col gap-6 h-full">
+                            <div className="flex items-center justify-between p-4 rounded-lg border bg-card/50">
+                                <div>
+                                    <h3 className="font-semibold flex items-center gap-2 text-lg">
+                                        <Facebook className="w-5 h-5 text-blue-600" />
+                                        Connect Facebook Pages
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Select the pages you want to connect to WataAI.
+                                    </p>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    dispatch(clearFacebookState());
+                                    setActiveTab('connected');
+                                }}>
+                                    <X className="w-4 h-4 mr-2" />
+                                    Cancel Selection
+                                </Button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20 overflow-y-auto">
+                                {facebookPages.map((page: ChannelPage) => (
+                                    <div
+                                        key={page.id}
+                                        className="group flex flex-col gap-4 p-5 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 shadow-sm"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-md">
+                                                {page.picture?.data?.url ? (
+                                                    <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Facebook className="w-6 h-6 text-primary" />
+                                                )}
+                                            </div>
+                                            <Badge variant="outline" className="opacity-70">{page.category || 'Page'}</Badge>
+                                        </div>
+
+                                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                                            <h4 className="font-semibold text-base truncate" title={page.name}>
+                                                {page.name}
+                                            </h4>
+                                            <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
+                                                ID: {page.id}
+                                            </span>
+                                        </div>
+
+                                        <Button
+                                            onClick={() => handleConnectFacebookPage(page)}
+                                            disabled={connectingPage === page.id}
+                                            className="w-full"
+                                            variant={connectingPage === page.id ? "secondary" : "default"}
+                                        >
+                                            {connectingPage === page.id ? (
+                                                <>
+                                                    <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+                                                    Connecting...
+                                                </>
+                                            ) : (
+                                                'Connect Page'
+                                            )}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </TabsContent>
                     <TabsContent value="connected" className="m-0 focus-visible:outline-none">
                         <ConnectedChannelsTab
                             channels={channels}
@@ -283,105 +351,6 @@ export default function ChannelsPage() {
                     </TabsContent>
                 </div>
             </Tabs>
-
-            <Dialog
-                open={!!isConnecting}
-                onOpenChange={(open) => {
-                    if (!open) dispatch(clearFacebookState());
-                }}
-            >
-                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-                    <DialogHeader className="p-6 pb-4 border-b">
-                        <DialogTitle className="flex items-center gap-2">
-                            <div className="p-2 rounded-lg bg-[#1877F2]/10 text-[#1877F2]">
-                                <Facebook className="w-5 h-5" />
-                            </div>
-                            Connect Facebook Pages
-                        </DialogTitle>
-                        <DialogDescription>
-                            Select the Facebook Pages you want to connect to WataAI. You can manage multiple pages from a single account.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="flex-1 overflow-y-auto p-6 min-h-[300px]">
-                        {facebookPages.length > 0 ? (
-                            <div className="flex flex-col gap-4">
-                                {facebookPages.map((page: ChannelPage) => (
-                                    <div
-                                        key={page.id}
-                                        className="group flex flex-row items-center gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 w-full"
-                                    >
-                                        {/* Avatar - Fixed Width */}
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-sm">
-                                            {page.picture?.data?.url ? (
-                                                <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <Facebook className="w-6 h-6 text-primary" />
-                                            )}
-                                        </div>
-
-                                        {/* Text Info - Flexible Width */}
-                                        <div className="flex-1 min-w-0 flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-semibold text-sm truncate" title={page.name}>
-                                                    {page.name}
-                                                </h4>
-                                                <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 whitespace-nowrap px-1.5 shrink-0">
-                                                    FB Terminal
-                                                </Badge>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 text-muted-foreground">
-                                                <Badge variant="outline" className="text-[10px] h-4 font-normal opacity-70 whitespace-nowrap px-1.5 shrink-0">
-                                                    {page.category || 'Page'}
-                                                </Badge>
-                                                <span className="text-[10px] font-mono truncate opacity-60">
-                                                    #{page.id}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Action Button - Fixed Width */}
-                                        <div className="flex items-center shrink-0 ml-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleConnectFacebookPage(page)}
-                                                disabled={connectingPage === page.id}
-                                                className={cn(
-                                                    "rounded-lg shadow-sm transition-all h-9 px-4 font-semibold",
-                                                    connectingPage === page.id ? "w-28" : "w-24"
-                                                )}
-                                            >
-                                                {connectingPage === page.id ? (
-                                                    <>
-                                                        <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                                                        Wait...
-                                                    </>
-                                                ) : (
-                                                    'Connect'
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full py-12 space-y-4 text-center">
-                                <div className="p-4 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
-                                    <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h3 className="font-semibold">Waiting for Authorization</h3>
-                                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                                        Please complete the authorization process in the popup window.
-                                        Once authorized, your pages will appear here.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <AlertDialogConfirm
                 open={!!disconnectId}

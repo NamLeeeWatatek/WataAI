@@ -12,6 +12,8 @@ import { forwardRef } from '@nestjs/common';
 import { CreationToolsModule } from '../creation-tools/creation-tools.module';
 
 import { ExecutionModule } from '../execution/execution.module';
+import { ChannelsModule } from '../channels/channels.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { ExecutionModule } from '../execution/execution.module';
     forwardRef(() => ExecutionModule),
     PermissionsModule,
     CreationToolsModule,
+    ChannelsModule,
+    IntegrationsModule,
   ],
   controllers: [CreationJobsController, JobCallbacksController],
   providers: [CreationJobsService],

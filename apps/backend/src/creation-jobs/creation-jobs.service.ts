@@ -22,6 +22,8 @@ import { AuditService } from '../audit/audit.service';
 import { ExecutionStrategyResolver } from '../execution/execution-strategy.resolver';
 import { ExecutionValidationService } from '../execution/validation/execution-validation.service';
 import { ExecutionFlow } from '../creation-tools/domain/creation-tool';
+import { ChannelsService } from '../channels/channels.service';
+import { OAuthService } from '../integrations/oauth.service';
 
 @Injectable()
 export class CreationJobsService {
@@ -37,6 +39,8 @@ export class CreationJobsService {
     private readonly strategyResolver: ExecutionStrategyResolver,
     @Inject(forwardRef(() => ExecutionValidationService))
     private readonly validationService: ExecutionValidationService,
+    private readonly channelsService: ChannelsService,
+    private readonly oauthService: OAuthService,
   ) { }
 
   async executePreview(
@@ -328,5 +332,86 @@ export class CreationJobsService {
         error: error,
       });
     }
+  }
+  async postToChannels(
+    jobId: string,
+    channels: string[],
+    workspaceId: string,
+    scheduledTime?: string,
+  ): Promise<any> {
+    const job = await this.creationJobsRepository.findById(jobId, workspaceId);
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${jobId} not found`);
+    }
+
+    // Assume outputData contains the result content
+    // We expect outputData to have 'content' and optional 'imageUrl'
+    // This depends on the tool output structure. 
+    // For now, we'll look for common fields or joined text.
+
+    let message = '';
+    let imageUrl = '';
+
+    if (job.outputData) {
+      if (typeof job.outputData.content === 'string') {
+        message = job.outputData.content;
+      } else if (typeof job.outputData.text === 'string') {
+        message = job.outputData.text;
+      } else if (typeof job.outputData === 'string') {
+        message = job.outputData;
+      } else {
+        // Fallback: try to stringify or join values
+        message = Object.values(job.outputData)
+          .filter(v => typeof v === 'string')
+          .join('\n');
+      }
+
+      if (typeof job.outputData.imageUrl === 'string') {
+        imageUrl = job.outputData.imageUrl;
+      } else if (typeof job.outputData.image === 'string') {
+        imageUrl = job.outputData.image;
+      }
+    }
+
+    if (!message && !imageUrl) {
+      throw new BadRequestException('Job has no content to post');
+    }
+
+    const results: any[] = [];
+
+    for (const channelId of channels) {
+      try {
+        const channel = await this.channelsService.findOne(channelId, workspaceId);
+        if (!channel) {
+          results.push({ channelId, status: 'error', error: 'Channel not found' });
+          continue;
+        }
+
+        if (channel.type === 'facebook') {
+          const pageId = channel.metadata?.pageId || channel.metadata?.id;
+          const accessToken = channel.accessToken;
+
+          if (!pageId || !accessToken) {
+            results.push({ channelId, status: 'error', error: 'Invalid channel configuration: missing Page ID or Access Token' });
+            continue;
+          }
+
+          const result = await this.oauthService.postToFacebookPage(
+            accessToken,
+            pageId,
+            message,
+            imageUrl,
+            scheduledTime ? Math.floor(new Date(scheduledTime).getTime() / 1000) : undefined
+          );
+          results.push({ channelId, status: 'success', data: result });
+        } else {
+          results.push({ channelId, status: 'error', error: `Channel type ${channel.type} not supported for posting yet` });
+        }
+      } catch (err) {
+        results.push({ channelId, status: 'error', error: err.message });
+      }
+    }
+
+    return results;
   }
 }
