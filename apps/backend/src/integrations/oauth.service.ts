@@ -126,13 +126,16 @@ export class OAuthService {
     const frontendDomain = this.configService.get<string>('app.frontendDomain', {
       infer: true,
     });
-    if (frontendDomain) {
-      const base = frontendDomain.endsWith('/')
+    const base = frontendDomain
+      ? frontendDomain.endsWith('/')
         ? frontendDomain.slice(0, -1)
-        : frontendDomain;
-      return `${base}/oauth/callback/${provider}`;
+        : frontendDomain
+      : 'http://localhost:3000';
+
+    if (provider === 'facebook') {
+      return `${base}/channels/callback?provider=facebook`;
     }
 
-    return `http://localhost:3000/oauth/callback/${provider}`;
+    return `${base}/oauth/callback/${provider}`;
   }
 }

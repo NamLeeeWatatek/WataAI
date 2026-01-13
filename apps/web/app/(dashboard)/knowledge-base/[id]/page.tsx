@@ -37,7 +37,8 @@ import {
     ChevronDown,
     RotateCcw,
     LayoutGrid,
-    List
+    List,
+    X
 } from 'lucide-react'
 import {
     DropdownMenu,
@@ -238,78 +239,105 @@ export default function KnowledgeBaseDetailPage() {
                                     onSearch={setSearchQuery}
                                     searchPlaceholder="Search files..."
                                     actions={
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
+                                        selectedIds.length > 0 ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold border border-primary/20 flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-primary" />
+                                                    {selectedIds.length} Selected
+                                                </div>
                                                 <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() => refresh()}
-                                                    disabled={isLoading}
-                                                    className="h-9 w-9"
-                                                    title="Refresh"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="h-9 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 font-bold"
+                                                    onClick={() => setShowBulkDelete(true)}
                                                 >
-                                                    <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                                                </Button>
-
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
-                                                            <Plus className="w-4 h-4" />
-                                                            <span>New</span>
-                                                            <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48 p-2">
-                                                        <DropdownMenuLabel>Add Content</DropdownMenuLabel>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
-                                                            New Folder
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <FileText className="w-4 h-4 mr-2 text-green-500" />
-                                                            New Document
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
-                                                            <Upload className="w-4 h-4 mr-2 text-orange-500" />
-                                                            Upload Files
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <Globe className="w-4 h-4 mr-2 text-purple-500" />
-                                                            Crawl Website
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-
-                                            <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setViewMode('grid')}
-                                                    className={cn(
-                                                        "h-8 w-8 rounded-md transition-all",
-                                                        "text-muted-foreground hover:text-foreground"
-                                                    )}
-                                                    title="Grid View"
-                                                >
-                                                    <LayoutGrid className="w-4 h-4" />
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setViewMode('table')}
-                                                    className={cn(
-                                                        "h-8 w-8 rounded-md transition-all",
-                                                        "bg-background shadow-sm text-primary"
-                                                    )}
-                                                    title="Table View"
+                                                    size="sm"
+                                                    className="h-9 w-9 p-0 rounded-lg border border-border/50 hover:bg-muted"
+                                                    onClick={() => clearSelection()}
+                                                    title="Cancel Selection"
                                                 >
-                                                    <List className="w-4 h-4" />
+                                                    <X className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => refresh()}
+                                                        disabled={isLoading}
+                                                        className="h-9 w-9"
+                                                        title="Refresh"
+                                                    >
+                                                        <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                                                    </Button>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
+                                                                <Plus className="w-4 h-4" />
+                                                                <span>New</span>
+                                                                <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 p-2">
+                                                            <DropdownMenuLabel>Add Content</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
+                                                                New Folder
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <FileText className="w-4 h-4 mr-2 text-green-500" />
+                                                                New Document
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
+                                                                <Upload className="w-4 h-4 mr-2 text-orange-500" />
+                                                                Upload Files
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <Globe className="w-4 h-4 mr-2 text-purple-500" />
+                                                                Crawl Website
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+
+                                                <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setViewMode('grid')}
+                                                        className={cn(
+                                                            "h-8 w-8 rounded-md transition-all",
+                                                            "text-muted-foreground hover:text-foreground"
+                                                        )}
+                                                        title="Grid View"
+                                                    >
+                                                        <LayoutGrid className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setViewMode('table')}
+                                                        className={cn(
+                                                            "h-8 w-8 rounded-md transition-all",
+                                                            "bg-background shadow-sm text-primary"
+                                                        )}
+                                                        title="Table View"
+                                                    >
+                                                        <List className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )
                                     }
                                 />
                             </div>
@@ -329,78 +357,105 @@ export default function KnowledgeBaseDetailPage() {
                                             />
                                         </div>
 
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
+                                        {selectedIds.length > 0 ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold border border-primary/20 flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-primary" />
+                                                    {selectedIds.length} Selected
+                                                </div>
                                                 <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() => refresh()}
-                                                    disabled={isLoading}
-                                                    className="h-9 w-9"
-                                                    title="Refresh"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="h-9 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 font-bold"
+                                                    onClick={() => setShowBulkDelete(true)}
                                                 >
-                                                    <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                                                </Button>
-
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
-                                                            <Plus className="w-4 h-4" />
-                                                            <span>New</span>
-                                                            <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48 p-2">
-                                                        <DropdownMenuLabel>Add Content</DropdownMenuLabel>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
-                                                            New Folder
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <FileText className="w-4 h-4 mr-2 text-green-500" />
-                                                            New Document
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
-                                                            <Upload className="w-4 h-4 mr-2 text-orange-500" />
-                                                            Upload Files
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                            <Globe className="w-4 h-4 mr-2 text-purple-500" />
-                                                            Crawl Website
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-
-                                            <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setViewMode('grid')}
-                                                    className={cn(
-                                                        "h-8 w-8 rounded-md transition-all",
-                                                        "bg-background shadow-sm text-primary"
-                                                    )}
-                                                    title="Grid View"
-                                                >
-                                                    <LayoutGrid className="w-4 h-4" />
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setViewMode('table')}
-                                                    className={cn(
-                                                        "h-8 w-8 rounded-md transition-all",
-                                                        "text-muted-foreground hover:text-foreground"
-                                                    )}
-                                                    title="Table View"
+                                                    size="sm"
+                                                    className="h-9 w-9 p-0 rounded-lg border border-border/50 hover:bg-muted"
+                                                    onClick={() => clearSelection()}
+                                                    title="Cancel Selection"
                                                 >
-                                                    <List className="w-4 h-4" />
+                                                    <X className="w-4 h-4" />
                                                 </Button>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => refresh()}
+                                                        disabled={isLoading}
+                                                        className="h-9 w-9"
+                                                        title="Refresh"
+                                                    >
+                                                        <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                                                    </Button>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
+                                                                <Plus className="w-4 h-4" />
+                                                                <span>New</span>
+                                                                <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 p-2">
+                                                            <DropdownMenuLabel>Add Content</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
+                                                                New Folder
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <FileText className="w-4 h-4 mr-2 text-green-500" />
+                                                                New Document
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
+                                                                <Upload className="w-4 h-4 mr-2 text-orange-500" />
+                                                                Upload Files
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
+                                                                <Globe className="w-4 h-4 mr-2 text-purple-500" />
+                                                                Crawl Website
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+
+                                                <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setViewMode('grid')}
+                                                        className={cn(
+                                                            "h-8 w-8 rounded-md transition-all",
+                                                            "text-muted-foreground hover:text-foreground"
+                                                        )}
+                                                        title="Grid View"
+                                                    >
+                                                        <LayoutGrid className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setViewMode('table')}
+                                                        className={cn(
+                                                            "h-8 w-8 rounded-md transition-all",
+                                                            "text-muted-foreground hover:text-foreground"
+                                                        )}
+                                                        title="Table View"
+                                                    >
+                                                        <List className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="p-6">

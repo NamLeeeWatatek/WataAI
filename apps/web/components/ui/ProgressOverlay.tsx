@@ -70,7 +70,7 @@ export function ProgressOverlay() {
                                 'bg-gradient-to-r from-primary/10 to-primary/5',
                                 'border border-primary/20',
                                 'shadow-lg shadow-primary/5',
-                                'animate-in slide-in-from-left duration-300'
+                                'shadow-lg shadow-primary/5',
                             )}>
                                 <div className="flex-shrink-0">
                                     <LoadingLogo size="sm" showGlow={false} />
@@ -98,10 +98,10 @@ export function ProgressOverlay() {
                                     )}
                                 >
                                     {index < currentStep ? (
-                                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 animate-in zoom-in duration-300" />
+                                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
                                     ) : index === currentStep ? (
                                         <div className="flex-shrink-0">
-                                            <div className="w-4 h-4 rounded-full border-2 border-primary animate-pulse" />
+                                            <div className="w-4 h-4 rounded-full border-2 border-primary" />
                                         </div>
                                     ) : (
                                         <Circle className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />

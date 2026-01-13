@@ -291,8 +291,8 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                     loading={loading}
                     emptyMessage="Link sources to enhance your bot's intelligence."
                     emptyComponent={
-                        <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-700">
-                            <div className="p-6 bg-primary/5 rounded-3xl mb-6 ring-8 ring-primary/5 animate-pulse">
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="p-6 bg-primary/5 rounded-3xl mb-6 ring-8 ring-primary/5">
                                 <Database className="w-10 h-10 text-primary opacity-40" />
                             </div>
                             <h3 className="text-xl font-black tracking-tight text-foreground">Intelligence Required</h3>

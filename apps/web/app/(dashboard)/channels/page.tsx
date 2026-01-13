@@ -277,7 +277,7 @@ export default function ChannelsPage() {
 
             { }
             {isConnecting && facebookPages.length > 0 && (
-                <Card className="fixed bottom-6 right-6 p-4 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-md z-50 w-80 animate-in slide-in-from-bottom-10">
+                <Card className="fixed bottom-6 right-6 p-4 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-md z-50 w-80">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10 text-primary">

@@ -29,7 +29,7 @@ export function LoadingOverlay({
                 'fixed inset-0 z-50 flex items-center justify-center',
                 'bg-gradient-to-br from-background/95 via-background/90 to-background/95',
                 'backdrop-blur-md',
-                'animate-in fade-in duration-300',
+                'backdrop-blur-md',
                 allowInteraction ? 'pointer-events-none' : 'pointer-events-auto',
                 className
             )}
@@ -42,7 +42,7 @@ export function LoadingOverlay({
                 'relative flex flex-col items-center gap-6 p-8',
                 'bg-card/50 backdrop-blur-xl',
                 'border border-border/50 rounded-2xl shadow-2xl',
-                'animate-in zoom-in-95 duration-500'
+                'border border-border/50 rounded-2xl shadow-2xl',
             )}>
                 {/* Gradient glow background */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-2xl blur-xl opacity-50" />

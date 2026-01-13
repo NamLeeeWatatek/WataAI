@@ -169,7 +169,7 @@ export function ChannelConfigurationsTab({
                           {config.name || channelInfo?.name || provider}
                           {config.is_active && (
                             <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              {/* <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span> */}
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
                           )}
@@ -320,8 +320,8 @@ export function ChannelConfigurationsTab({
 
       {/* Configuration Dialog */}
       {showConfigDialog && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <Card className="w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-center gap-5 mb-8 border-b border-border/40 pb-6">
                 <div className={cn("p-4 rounded-2xl", getChannelColor(configForm.provider))}>
