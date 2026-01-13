@@ -115,103 +115,97 @@ export function TemplateDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{template ? 'Edit Template' : 'Create Template'}</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Name *</Label>
-                        <Input
-                            id="name"
-                            placeholder="My Awesome Template"
-                            value={formData.name}
-                            onChange={(e) => updateField('name', e.target.value)}
-                            required
-                        />
-                    </div>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Name *</Label>
+                                <Input
+                                    id="name"
+                                    placeholder="My Awesome Template"
+                                    value={formData.name}
+                                    onChange={(e) => updateField('name', e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                            id="description"
-                            placeholder="Describe what this template is for..."
-                            rows={3}
-                            value={formData.description}
-                            onChange={(e) => updateField('description', e.target.value)}
-                        />
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Describe what this template is for..."
+                                    rows={3}
+                                    value={formData.description}
+                                    onChange={(e) => updateField('description', e.target.value)}
+                                />
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select value={formData.category} onValueChange={(value) => updateField('category', value)}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categoryOptions.map((cat) => (
-                                    <SelectItem key={cat.value} value={cat.value}>
-                                        {cat.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Select value={formData.category} onValueChange={(value) => updateField('category', value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categoryOptions.map((cat) => (
+                                            <SelectItem key={cat.value} value={cat.value}>
+                                                {cat.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="creationToolId">Assign to Creation Tool</Label>
-                        <Select
-                            value={formData.creationToolId || "unassigned"}
-                            onValueChange={(value) => updateField('creationToolId', value === "unassigned" ? "" : value)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a tool" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="unassigned">None (Standalone Template)</SelectItem>
-                                {creationTools.map((tool) => (
-                                    <SelectItem key={tool.id} value={tool.id}>
-                                        {tool.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="text-sm text-muted-foreground">
-                            Optional: Assign this template to a specific Creation Tool flow.
-                        </p>
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="creationToolId">Assign to Creation Tool</Label>
+                                <Select
+                                    value={formData.creationToolId || "unassigned"}
+                                    onValueChange={(value) => updateField('creationToolId', value === "unassigned" ? "" : value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a tool" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="unassigned">None (Standalone Template)</SelectItem>
+                                        {creationTools.map((tool) => (
+                                            <SelectItem key={tool.id} value={tool.id}>
+                                                {tool.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="promptTemplate">AI Prompt Template</Label>
-                        <Textarea
-                            id="promptTemplate"
-                            placeholder="Enter the AI prompt for content generation..."
-                            rows={4}
-                            value={formData.promptTemplate}
-                            onChange={(e) => updateField('promptTemplate', e.target.value)}
-                        />
-                        <p className="text-sm text-muted-foreground">
-                            The prompt that will be used to generate content with AI
-                        </p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Style Configuration</Label>
-                        <div className="rounded-md border p-4 bg-muted/20">
-
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Define key-value pairs for template styling (e.g., colors, fonts)
-                            </p>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="promptTemplate">AI Prompt Template</Label>
+                                <Textarea
+                                    id="promptTemplate"
+                                    placeholder="Enter the AI prompt for content generation..."
+                                    rows={8}
+                                    className="min-h-[200px]"
+                                    value={formData.promptTemplate}
+                                    onChange={(e) => updateField('promptTemplate', e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <div className="space-y-2">
                         <Label>Media Files</Label>
-                        <div className="rounded-md border p-4 bg-muted/20">
+                        <div className="rounded-md border p-6 bg-muted/20">
                             <div className="space-y-4">
                                 <FileDropzone
                                     onUploadComplete={(url) => {
-                                        updateField('mediaFiles', [...formData.mediaFiles, url])
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            mediaFiles: [...prev.mediaFiles, url]
+                                        }))
                                     }}
                                     onUploadError={(error) => {
                                         console.error('Upload failed:', error)
@@ -219,6 +213,7 @@ export function TemplateDialog({
                                     }}
                                     accept="image/*,video/*"
                                 />
+
 
                                 {formData.mediaFiles.length > 0 && (
                                     <div className="grid grid-cols-2 gap-4">

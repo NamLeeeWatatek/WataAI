@@ -69,7 +69,7 @@ export class FacebookOAuthController {
       );
     }
 
-    const defaultRedirectUri = `${process.env.FRONTEND_DOMAIN}/channels/callback?provider=facebook`;
+    const defaultRedirectUri = process.env.FACEBOOK_REDIRECT_URI || `${process.env.FRONTEND_DOMAIN}/oauth/callback/facebook`;
     const uri = redirectUri || defaultRedirectUri;
 
     const state = `${req.user?.id}:${workspaceId}`;
@@ -140,7 +140,7 @@ export class FacebookOAuthController {
         throw new NotFoundException('Facebook App not configured');
       }
 
-      const redirectUri = `${process.env.FRONTEND_DOMAIN}/channels/callback?provider=facebook`;
+      const redirectUri = process.env.FACEBOOK_REDIRECT_URI || `${process.env.FRONTEND_DOMAIN}/oauth/callback/facebook`;
 
       // âœ… Exchange code for token (may fail if code already used)
       const accessToken = await this.facebookOAuthService.exchangeCodeForToken(

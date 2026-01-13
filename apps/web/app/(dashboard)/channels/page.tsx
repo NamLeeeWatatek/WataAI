@@ -21,6 +21,14 @@ import {
     RefreshCw,
     Activity,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/Dialog';
 import { PageHeader } from '@/components/ui/PageHeader';
 // import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
@@ -277,66 +285,77 @@ export default function ChannelsPage() {
             </Tabs>
 
             { }
-            {isConnecting && (
-                <Card className="fixed bottom-6 right-6 p-4 shadow-2xl border-primary/20 bg-background/95 backdrop-blur-md z-50 w-80 animate-in slide-in-from-bottom-10">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                {facebookPages.length > 0 ? (
-                                    <Facebook className="w-5 h-5" />
-                                ) : (
-                                    <RefreshCw className="w-5 h-5 animate-spin" />
-                                )}
+            {/* Facebook Connection Dialog */}
+            <Dialog
+                open={!!isConnecting}
+                onOpenChange={(open) => {
+                    if (!open) dispatch(clearFacebookState());
+                }}
+            >
+                <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="p-6 pb-4 border-b">
+                        <DialogTitle className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-[#1877F2]/10 text-[#1877F2]">
+                                <Facebook className="w-5 h-5" />
                             </div>
-                            <div>
-                                <h4 className="font-semibold">Connecting {isConnecting}</h4>
-                                <p className="text-xs text-muted-foreground">
-                                    {facebookPages.length > 0
-                                        ? 'Select the terminals you want to connect'
-                                        : 'Waiting for authentication...'}
-                                </p>
-                            </div>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={() => dispatch(clearFacebookState())}
-                        >
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
+                            Connect Facebook Pages
+                        </DialogTitle>
+                        <DialogDescription>
+                            Select the Facebook Pages you want to connect to WataAI. You can manage multiple pages from a single account.
+                        </DialogDescription>
+                    </DialogHeader>
 
-                    {facebookPages.length > 0 && (
-                        <ScrollArea className="h-[300px] -mx-4 px-4">
-                            <div className="space-y-2 py-2">
-                                <p className="text-xs font-medium text-muted-foreground mb-3 px-1 uppercase tracking-wider">Select a terminal to connect</p>
+                    <div className="flex-1 overflow-y-auto p-6 min-h-[300px]">
+                        {facebookPages.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {facebookPages.map((page: FacebookPage) => (
-                                    <div key={page.id} className="group p-3 rounded-xl border bg-card/50 hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background">
-                                                    {page.picture?.data?.url ? (
-                                                        <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Facebook className="w-5 h-5 text-primary" />
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-semibold text-sm truncate leading-tight mb-0.5">{page.name}</p>
-                                                    <Badge variant="outline" className="text-[10px] h-4 py-0 font-normal opacity-70">
-                                                        FB Terminal
-                                                    </Badge>
+                                    <div
+                                        key={page.id}
+                                        className="group relative flex items-start gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200"
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-sm">
+                                            {page.picture?.data?.url ? (
+                                                <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Facebook className="w-6 h-6 text-primary" />
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div>
+                                                    <h4 className="font-semibold text-sm truncate leading-tight">{page.name}</h4>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant="outline" className="text-[10px] h-5 font-normal opacity-70">
+                                                            {page.category || 'Page'}
+                                                        </Badge>
+                                                        <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+                                                            FB Terminal
+                                                        </Badge>
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            <p className="text-xs text-muted-foreground line-clamp-2 pt-1">
+                                                ID: {page.id}
+                                            </p>
+                                        </div>
+
+                                        <div className="absolute top-4 right-4">
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleConnectFacebookPage(page)}
                                                 disabled={connectingPage === page.id}
-                                                className="rounded-lg h-8 px-3 shadow-sm hover:shadow-md transition-all active:scale-95"
+                                                className={cn(
+                                                    "rounded-lg shadow-sm transition-all",
+                                                    connectingPage === page.id ? "w-24" : "w-auto"
+                                                )}
                                             >
                                                 {connectingPage === page.id ? (
-                                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                                    <>
+                                                        <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+                                                        Connecting
+                                                    </>
                                                 ) : (
                                                     'Connect'
                                                 )}
@@ -345,10 +364,23 @@ export default function ChannelsPage() {
                                     </div>
                                 ))}
                             </div>
-                        </ScrollArea>
-                    )}
-                </Card>
-            )}
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full py-12 space-y-4 text-center">
+                                <div className="p-4 rounded-full bg-primary/5 border border-primary/10 animate-pulse">
+                                    <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold">Waiting for Authorization</h3>
+                                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                                        Please complete the authorization process in the popup window.
+                                        Once authorized, your pages will appear here.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialogConfirm
                 open={!!disconnectId}
