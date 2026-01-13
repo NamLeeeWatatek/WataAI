@@ -100,6 +100,7 @@ export class FacebookOAuthController {
     @Query('workspace_id') workspaceId?: string,
     @Query('error') error?: string,
     @Query('error_description') errorDescription?: string,
+    @Query('redirect_uri') redirectUriParam?: string,
   ) {
     // âœ… Handle Facebook OAuth errors
     if (error) {
@@ -142,7 +143,8 @@ export class FacebookOAuthController {
         throw new NotFoundException('Facebook App not configured');
       }
 
-      const redirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
+      const defaultRedirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
+      const redirectUri = redirectUriParam || defaultRedirectUri;
 
       // âœ… Exchange code for token (may fail if code already used)
       const accessToken = await this.facebookOAuthService.exchangeCodeForToken(

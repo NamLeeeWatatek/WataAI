@@ -99,11 +99,18 @@ export interface OAuthParams {
 export async function getOAuthUrl(
   provider: string,
   configId?: string,
-  workspaceId?: string
+  workspaceId?: string,
+  redirectUri?: string
 ): Promise<{ url: string }> {
-  const params: OAuthParams = {}
+  const params: OAuthParams & { redirect_uri?: string } = {}
   if (configId) params.configId = configId
   if (workspaceId) params.workspaceId = workspaceId
+  if (redirectUri) params.redirect_uri = redirectUri
+
+  // Use the specific controller for Facebook to ensure consistency
+  if (provider === 'facebook') {
+    return axiosClient.get('/channels/facebook/oauth/url', { params }) as unknown as Promise<{ url: string }>
+  }
 
   return axiosClient.get(`/oauth/login/${provider}`, { params }) as unknown as Promise<{ url: string }>
 }

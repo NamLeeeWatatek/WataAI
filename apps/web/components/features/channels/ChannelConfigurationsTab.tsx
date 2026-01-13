@@ -400,7 +400,7 @@ export function ChannelConfigurationsTab({
                         <div className="flex items-center gap-2">
                           <Input
                             readOnly
-                            value={`${origin}/channels/callback?provider=${configForm.provider || 'facebook'}`}
+                            value={`${origin}/channels/callback/${configForm.provider || 'facebook'}`}
                             className="bg-background/50 font-mono text-[10px] h-8 truncate"
                           />
                           <Button
@@ -409,7 +409,7 @@ export function ChannelConfigurationsTab({
                             variant="outline"
                             className="h-8 w-8 shrink-0"
                             onClick={() => {
-                              navigator.clipboard.writeText(`${origin}/channels/callback?provider=${configForm.provider || 'facebook'}`);
+                              navigator.clipboard.writeText(`${origin}/channels/callback/${configForm.provider || 'facebook'}`);
                               toast.success("Copied OAuth URL");
                             }}
                           >
