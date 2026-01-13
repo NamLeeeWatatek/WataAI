@@ -305,13 +305,13 @@ export default function ChannelsPage() {
 
                     <div className="flex-1 overflow-y-auto p-6 min-h-[300px]">
                         {facebookPages.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-4">
                                 {facebookPages.map((page: ChannelPage) => (
                                     <div
                                         key={page.id}
-                                        className="group flex items-center gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200"
+                                        className="group flex flex-row items-center gap-4 p-4 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 w-full"
                                     >
-                                        {/* Avatar */}
+                                        {/* Avatar - Fixed Width */}
                                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-sm">
                                             {page.picture?.data?.url ? (
                                                 <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
@@ -320,42 +320,42 @@ export default function ChannelsPage() {
                                             )}
                                         </div>
 
-                                        {/* Text Info */}
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-                                            <div>
-                                                <h4 className="font-semibold text-sm truncate leading-tight pr-2" title={page.name}>
+                                        {/* Text Info - Flexible Width */}
+                                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-semibold text-sm truncate" title={page.name}>
                                                     {page.name}
                                                 </h4>
-                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                                    <Badge variant="outline" className="text-[10px] h-5 font-normal opacity-70 whitespace-nowrap px-1.5">
-                                                        {page.category || 'Page'}
-                                                    </Badge>
-                                                    <Badge variant="secondary" className="text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 whitespace-nowrap px-1.5">
-                                                        FB Terminal
-                                                    </Badge>
-                                                </div>
+                                                <Badge variant="secondary" className="hidden sm:inline-flex text-[10px] h-5 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 whitespace-nowrap px-1.5 shrink-0">
+                                                    FB Terminal
+                                                </Badge>
                                             </div>
 
-                                            <p className="text-[10px] text-muted-foreground font-mono truncate opacity-60">
-                                                ID: {page.id}
-                                            </p>
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <Badge variant="outline" className="text-[10px] h-4 font-normal opacity-70 whitespace-nowrap px-1.5 shrink-0">
+                                                    {page.category || 'Page'}
+                                                </Badge>
+                                                <span className="text-[10px] font-mono truncate opacity-60">
+                                                    #{page.id}
+                                                </span>
+                                            </div>
                                         </div>
 
-                                        {/* Action Button */}
+                                        {/* Action Button - Fixed Width */}
                                         <div className="flex items-center shrink-0 ml-2">
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleConnectFacebookPage(page)}
                                                 disabled={connectingPage === page.id}
                                                 className={cn(
-                                                    "rounded-lg shadow-sm transition-all h-9 px-4",
-                                                    connectingPage === page.id ? "w-28" : "w-20"
+                                                    "rounded-lg shadow-sm transition-all h-9 px-4 font-semibold",
+                                                    connectingPage === page.id ? "w-28" : "w-24"
                                                 )}
                                             >
                                                 {connectingPage === page.id ? (
                                                     <>
                                                         <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                                                        Creating...
+                                                        Wait...
                                                     </>
                                                 ) : (
                                                     'Connect'
