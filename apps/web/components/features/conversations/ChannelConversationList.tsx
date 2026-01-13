@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { MessageSquare, Facebook, Instagram, Mail, MessageCircle } from 'lucide-react';
 import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
 import { Badge } from '@/components/ui/Badge';
+import { JSX } from 'react';
 
 export interface ChannelConversation {
   id: string;

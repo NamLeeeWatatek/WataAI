@@ -18,7 +18,7 @@ import { creationToolsApi } from '@/lib/api/creation-tools';
 import { useEffect } from 'react';
 
 // Reusing constant from original file or moving to constants
-const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+const ACCEPTED_FILE_TYPES = ['image/*', 'video/*'];
 
 interface TemplateFormProps {
     template?: Template | null;
@@ -155,7 +155,7 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                                         setValue('previewFile', null);
                                     }}
                                     aspectRatio={16 / 9}
-                                    description="JPG, PNG, GIF, MP4 (Max 10MB)"
+                                    description="Images (JPG, PNG, GIF, JFIF...) & Videos (MP4...)"
                                     accept={ACCEPTED_FILE_TYPES.join(',')}
                                 />
                             </div>

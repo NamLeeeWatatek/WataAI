@@ -10,7 +10,6 @@ import { Button } from "./Button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover"
 import { Calendar } from "./Calendar"
 
-
 interface DateRangePickerProps extends React.HTMLAttributes<HTMLDivElement> {
     date?: DateRange
     setDate?: (date: DateRange | undefined) => void

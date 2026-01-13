@@ -40,7 +40,7 @@ export function useSocketConnection({
 }: UseSocketConnectionConfig): UseSocketConnectionReturn {
   const { data: session } = useSession();
   const socketRef = useRef<Socket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
