@@ -683,32 +683,34 @@ export class AiModelService {
       }
 
       if (key === 'google') {
-        if (config.apiKey) {
-          try {
-            const response = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}`,
-            );
-            if (response.ok) {
-              const data = await response.json();
-              return (
-                data.models
-                  ?.map((m: any) => m.name.replace('models/', ''))
-                  .filter((name: string) => !name.includes('embedding')) || []
-              );
-            }
-          } catch (e) {
-            this.logger.warn(`Failed to fetch Google models via API: ${e.message}`);
+        if (!config.apiKey) return [];
+
+        try {
+          // Use the SDK to list models if available in future, currently REST API is reliable
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}`,
+          );
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            this.logger.warn(`Google Model Fetch Error: ${response.status} - ${errorText}`);
+            throw new Error(`Google API Info Error: ${response.statusText}`);
           }
+
+          const data = await response.json();
+          const models = data.models
+            ?.filter((m: any) =>
+              m.supportedGenerationMethods?.includes('generateContent') &&
+              !m.name.includes('embedding')
+            )
+            .map((m: any) => m.name.replace('models/', '')) || [];
+
+          return models;
+        } catch (e) {
+          this.logger.warn(`Failed to fetch Google models: ${e.message}`);
+          // Only fallback if strictly necessary, but prefer empty to indicate error in "Agent" mode
+          return [];
         }
-        return [
-          'gemini-2.0-flash',
-          'gemini-2.0-flash-lite',
-          'gemini-1.5-pro',
-          'gemini-1.5-flash',
-          'gemini-1.5-flash-8b',
-          'gemini-1.0-pro',
-          'text-embedding-004',
-        ];
       }
 
       if (key === 'ollama') {
