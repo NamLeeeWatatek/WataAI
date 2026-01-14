@@ -12,20 +12,16 @@ import {
     KBProcessingStatus,
     KBCrawlerDialog,
     KBItemEditDialog,
-    KbToolbar,
-    KbGridView,
     KbTableView,
+    KbFileIcon,
 } from '@/components/features/knowledge-base'
+import { KbBreadcrumbs } from '@/components/features/knowledge-base/KbBreadcrumbs'
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription
 } from '@/components/ui/Card'
 import {
     Trash2,
-    Move,
     ArrowLeft,
     Database,
     Settings,
@@ -36,8 +32,6 @@ import {
     Globe,
     ChevronDown,
     RotateCcw,
-    LayoutGrid,
-    List,
     X
 } from 'lucide-react'
 import {
@@ -51,6 +45,8 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Badge } from '@/components/ui/Badge'
+import { Checkbox } from '@/components/ui/Checkbox'
 import { PageLoading } from '@/components/ui/PageLoading'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
@@ -198,7 +194,7 @@ export default function KnowledgeBaseDetailPage() {
                     </div>
                 </PageHeader>
 
-                {/* Summary Stats & Status Indicators (Now Outside the Card) */}
+                {/* Summary Stats & Status Indicators */}
                 {(stats || kbId) && (
                     <div className="flex flex-col gap-4">
                         {stats && <KBStatsCards stats={stats} />}
@@ -206,293 +202,176 @@ export default function KnowledgeBaseDetailPage() {
                     </div>
                 )}
 
-                <Card className="overflow-hidden flex flex-col border-border/50 bg-card/30 backdrop-blur-sm">
-                    <CardContent className="p-0 flex-1 flex flex-col">
-                        {viewMode === 'table' ? (
-                            <div className="p-8">
-                                <KbTableView
-                                    items={items}
-                                    selectedIds={selectedIds}
-                                    sortColumn="name"
-                                    sortDirection="asc"
-                                    isLoading={isLoading}
-                                    pagination={pagination}
-                                    onPageChange={(p: number) => setPagination(p, pageSize)}
-                                    onPageSizeChange={(s: number) => setPagination(1, s)}
-                                    onItemClick={(item: any) => item.type === 'folder' && handleNavigateToFolder(item.id, item.name)}
-                                    onToggleSelection={toggleSelection}
-                                    onToggleSelectAll={(checked: boolean) => toggleSelectAll(checked)}
-                                    onSort={() => { }}
-                                    onEditItem={(item: any) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
-                                    onDeleteItem={(item: any) => setDeleteItem({ type: item.type, id: item.id })}
-                                    onPreviewDocument={(id: string) => {
-                                        import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
-                                    }}
-                                    onDownloadDocument={(id: string, filename: string) => {
-                                        import('@/lib/utils/document-actions').then(({ downloadDocument }) => downloadDocument(id, filename));
-                                    }}
-                                    onDragStart={(item: any) => setDraggedItem({ type: item.type, id: item.id })}
-                                    onDragOver={(folderId: string | null) => setDragOverFolder(folderId)}
-                                    onDrop={(targetId) => draggedItem && handleDrop(draggedItem.id, draggedItem.type, targetId)}
-                                    searchable={true}
-                                    searchValue={searchQuery}
-                                    onSearch={setSearchQuery}
-                                    searchPlaceholder="Search files..."
-                                    actions={
-                                        selectedIds.length > 0 ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold border border-primary/20 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-primary" />
-                                                    {selectedIds.length} Selected
-                                                </div>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="h-9 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 font-bold"
-                                                    onClick={() => setShowBulkDelete(true)}
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-9 w-9 p-0 rounded-lg border border-border/50 hover:bg-muted"
-                                                    onClick={() => clearSelection()}
-                                                    title="Cancel Selection"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={() => refresh()}
-                                                        disabled={isLoading}
-                                                        className="h-9 w-9"
-                                                        title="Refresh"
-                                                    >
-                                                        <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                                                    </Button>
+                {/* Breadcrumbs & Folder Navigation */}
+                <div className="px-1 flex items-center justify-between">
+                    <KbBreadcrumbs
+                        breadcrumbs={breadcrumbs}
+                        onNavigate={(id) => handleNavigateToFolder(id)}
+                    />
+                </div>
 
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
-                                                                <Plus className="w-4 h-4" />
-                                                                <span>New</span>
-                                                                <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48 p-2">
-                                                            <DropdownMenuLabel>Add Content</DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
-                                                                New Folder
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <FileText className="w-4 h-4 mr-2 text-green-500" />
-                                                                New Document
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
-                                                                <Upload className="w-4 h-4 mr-2 text-orange-500" />
-                                                                Upload Files
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <Globe className="w-4 h-4 mr-2 text-purple-500" />
-                                                                Crawl Website
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-
-                                                <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setViewMode('grid')}
-                                                        className={cn(
-                                                            "h-8 w-8 rounded-md transition-all",
-                                                            "text-muted-foreground hover:text-foreground"
-                                                        )}
-                                                        title="Grid View"
-                                                    >
-                                                        <LayoutGrid className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setViewMode('table')}
-                                                        className={cn(
-                                                            "h-8 w-8 rounded-md transition-all",
-                                                            "bg-background shadow-sm text-primary"
-                                                        )}
-                                                        title="Table View"
-                                                    >
-                                                        <List className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )
-                                    }
-                                />
-                            </div>
-                        ) : (
-                            <div className="flex flex-col">
-                                {/* Manual Toolbar for Grid View - Matches DataTable Header Context-Left / Interaction-Right */}
-                                <div className="px-6 py-4 border-b bg-card/50 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-                                    {/* Right Side: Interaction */}
-                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                        <div className="relative w-full sm:w-[250px] lg:w-[300px]">
-                                            <Input
-                                                placeholder="Search files..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="h-9"
-                                            />
-                                        </div>
-
-                                        {selectedIds.length > 0 ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold border border-primary/20 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-primary" />
-                                                    {selectedIds.length} Selected
-                                                </div>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="h-9 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 font-bold"
-                                                    onClick={() => setShowBulkDelete(true)}
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-9 w-9 p-0 rounded-lg border border-border/50 hover:bg-muted"
-                                                    onClick={() => clearSelection()}
-                                                    title="Cancel Selection"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-2 pr-2 border-r border-border/40 mr-1 last:border-0 last:pr-0 last:mr-0">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        onClick={() => refresh()}
-                                                        disabled={isLoading}
-                                                        className="h-9 w-9"
-                                                        title="Refresh"
-                                                    >
-                                                        <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                                                    </Button>
-
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
-                                                                <Plus className="w-4 h-4" />
-                                                                <span>New</span>
-                                                                <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48 p-2">
-                                                            <DropdownMenuLabel>Add Content</DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
-                                                                New Folder
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <FileText className="w-4 h-4 mr-2 text-green-500" />
-                                                                New Document
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="cursor-pointer font-medium p-2.5">
-                                                                <Upload className="w-4 h-4 mr-2 text-orange-500" />
-                                                                Upload Files
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="cursor-pointer font-medium p-2.5">
-                                                                <Globe className="w-4 h-4 mr-2 text-purple-500" />
-                                                                Crawl Website
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-
-                                                <div className="border border-border/40 rounded-lg p-1 flex items-center gap-1 bg-muted/20">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setViewMode('grid')}
-                                                        className={cn(
-                                                            "h-8 w-8 rounded-md transition-all",
-                                                            "text-muted-foreground hover:text-foreground"
-                                                        )}
-                                                        title="Grid View"
-                                                    >
-                                                        <LayoutGrid className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setViewMode('table')}
-                                                        className={cn(
-                                                            "h-8 w-8 rounded-md transition-all",
-                                                            "text-muted-foreground hover:text-foreground"
-                                                        )}
-                                                        title="Table View"
-                                                    >
-                                                        <List className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="p-6">
-                                    <KbGridView
-                                        items={items}
-                                        selectedIds={selectedIds}
-                                        draggedItem={draggedItem}
-                                        dragOverFolder={dragOverFolder}
-                                        isLoading={isLoading}
-                                        onItemClick={(item: any) => item.type === 'folder' && handleNavigateToFolder(item.id, item.name)}
-                                        onToggleSelection={toggleSelection}
-                                        onDragStart={(item: any) => setDraggedItem({ type: item.type, id: item.id })}
-                                        onDragOver={(folderId: string | null) => setDragOverFolder(folderId)}
-                                        onDrop={(targetId) => draggedItem && handleDrop(draggedItem.id, draggedItem.type, targetId)}
-                                        onEditItem={(item: any) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
-                                        onDeleteItem={(item: any) => setDeleteItem({ type: item.type, id: item.id })}
-                                        onPreviewDocument={(id: string) => {
-                                            import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
-                                        }}
-                                        onDownloadDocument={(id: string, filename: string) => {
-                                            import('@/lib/utils/document-actions').then(({ downloadDocument }) => downloadDocument(id, filename));
-                                        }}
-                                        onToggleSelectAll={(checked: boolean) => toggleSelectAll(checked)}
-                                        pagination={pagination}
-                                        onPageChange={(p: number) => setPagination(p, pageSize)}
-                                        onPageSizeChange={(s: number) => setPagination(1, s)}
+                <div className="flex-1 min-h-0 flex flex-col">
+                    <KbTableView
+                        items={items}
+                        selectedIds={selectedIds}
+                        sortColumn="name"
+                        sortDirection="asc"
+                        isLoading={isLoading}
+                        pagination={pagination}
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                        onPageChange={(p: number) => setPagination(p, pageSize)}
+                        onPageSizeChange={(s: number) => setPagination(1, s)}
+                        onItemClick={(item: any) => item.type === 'folder' && handleNavigateToFolder(item.id, item.name)}
+                        onToggleSelection={toggleSelection}
+                        onToggleSelectAll={(checked: boolean) => toggleSelectAll(checked)}
+                        onSort={() => { }}
+                        onEditItem={(item: any) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
+                        onDeleteItem={(item: any) => setDeleteItem({ type: item.type, id: item.id })}
+                        onPreviewDocument={(id: string) => {
+                            import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
+                        }}
+                        onDownloadDocument={(id: string, filename: string) => {
+                            import('@/lib/utils/document-actions').then(({ downloadDocument }) => downloadDocument(id, filename));
+                        }}
+                        onDragStart={(item: any) => setDraggedItem({ type: item.type, id: item.id })}
+                        onDragOver={(folderId: string | null) => setDragOverFolder(folderId)}
+                        onDrop={(targetId) => draggedItem && handleDrop(draggedItem.id, draggedItem.type, targetId)}
+                        searchable={true}
+                        searchValue={searchQuery}
+                        onSearch={setSearchQuery}
+                        searchPlaceholder="Search files & folders..."
+                        renderGridItem={(item) => (
+                            <Card
+                                key={item.id}
+                                className={cn(
+                                    "group p-5 cursor-pointer transition-all duration-500 relative overflow-hidden flex flex-col items-center text-center",
+                                    "bg-card/40 backdrop-blur-md border border-border/50 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2",
+                                    selectedIds.includes(item.id) && "ring-2 ring-primary border-primary bg-primary/5",
+                                    dragOverFolder === item.id && "ring-2 ring-primary bg-primary/10 scale-105"
+                                )}
+                                onClick={() => item.type === 'folder' && handleNavigateToFolder(item.id, item.name)}
+                            >
+                                <div className={cn(
+                                    "absolute top-4 right-4 z-20 transition-all duration-300",
+                                    selectedIds.includes(item.id) ? "opacity-100 scale-100" : "opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100"
+                                )}>
+                                    <Checkbox
+                                        checked={selectedIds.includes(item.id)}
+                                        onCheckedChange={() => toggleSelection(item.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-5 h-5 rounded-md border-primary/50 data-[state=checked]:bg-primary"
                                     />
                                 </div>
-                            </div>
+
+                                <div className={cn(
+                                    "w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-500 shadow-premium border border-white/5",
+                                    "group-hover:scale-110 group-hover:rotate-2",
+                                    item.type === 'folder'
+                                        ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+                                        : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
+                                )}>
+                                    <KbFileIcon name={item.name} type={item.type} className="w-7 h-7" />
+                                </div>
+
+                                <h3 className="font-bold text-xs truncate w-full px-2 group-hover:text-primary transition-colors leading-relaxed">
+                                    {item.name}
+                                </h3>
+                                {item.type === 'folder' && <span className="text-[10px] font-bold text-muted-foreground/60 uppercase mt-1 tracking-tighter">Folder</span>}
+                                {item.type === 'document' && item.processingStatus && (
+                                    <Badge variant="outline" className="mt-2 text-[8px] font-black uppercase tracking-tighter border-primary/10 bg-primary/5 text-primary">
+                                        {item.processingStatus}
+                                    </Badge>
+                                )}
+                            </Card>
                         )}
-                    </CardContent>
-                </Card>
+                        actions={
+                            selectedIds.length > 0 ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-xs font-bold border border-primary/20 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                        {selectedIds.length} Selected
+                                    </div>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="h-9 px-4 shadow-sm hover:shadow-md transition-all active:scale-95 font-bold uppercase text-[10px] tracking-widest"
+                                        onClick={() => setShowBulkDelete(true)}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-9 w-9 p-0 rounded-lg border border-border/50 hover:bg-muted"
+                                        onClick={() => clearSelection()}
+                                        title="Cancel Selection"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => refresh()}
+                                        disabled={isLoading}
+                                        className="h-9 w-9 border-border/50"
+                                        title="Refresh"
+                                    >
+                                        <RotateCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                                    </Button>
+
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button className="h-9 gap-2 shadow-sm font-black text-[10px] uppercase tracking-widest pl-3 pr-4 shadow-primary/20 transition-all hover:shadow-primary/30 active:scale-95">
+                                                <Plus className="w-4 h-4" />
+                                                <span>New Asset</span>
+                                                <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48 p-2 rounded-xl shadow-premium border-border/50">
+                                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 px-2 py-1.5">Add Content</DropdownMenuLabel>
+                                            <DropdownMenuSeparator className="bg-border/30" />
+                                            <DropdownMenuItem onClick={() => setFolderDialogOpen(true)} className="rounded-lg cursor-pointer font-bold p-2.5">
+                                                <FolderPlus className="w-4 h-4 mr-3 text-indigo-500" />
+                                                New Folder
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setDocumentDialogOpen(true)} className="rounded-lg cursor-pointer font-bold p-2.5">
+                                                <FileText className="w-4 h-4 mr-3 text-cyan-500" />
+                                                New Document
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator className="bg-border/30" />
+                                            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="rounded-lg cursor-pointer font-bold p-2.5">
+                                                <Upload className="w-4 h-4 mr-3 text-orange-500" />
+                                                Upload Files
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="rounded-lg cursor-pointer font-bold p-2.5">
+                                                <Globe className="w-4 h-4 mr-3 text-purple-500" />
+                                                Crawl Website
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            )
+                        }
+                    />
+                </div>
             </div>
 
             {/* Dialogs */}
-            <KBFolderDialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen} onSubmit={async (data) => { await createNewFolder(data.name, data.description || ''); }} />
-            <KBDocumentDialog open={documentDialogOpen} onOpenChange={setDocumentDialogOpen} onSubmit={async (data) => { await createNewDoc(data.name, data.content || ''); }} />
+            <KBFolderDialog
+                open={folderDialogOpen}
+                onOpenChange={setFolderDialogOpen}
+                onSubmit={async (data) => { await createNewFolder(data.name, data.description || ''); }}
+            />
+            <KBDocumentDialog
+                open={documentDialogOpen}
+                onOpenChange={setDocumentDialogOpen}
+                onSubmit={async (data) => { await createNewDoc(data.name, data.content || ''); }}
+            />
 
             <KBQueryDialog
                 open={queryDialogOpen}
@@ -511,6 +390,7 @@ export default function KnowledgeBaseDetailPage() {
                 open={settingsDialogOpen}
                 onOpenChange={setSettingsDialogOpen}
                 knowledgeBase={kb}
+                workspaceId={kb?.workspaceId || undefined}
                 onSave={handleSaveSettings}
             />
 
@@ -550,7 +430,7 @@ export default function KnowledgeBaseDetailPage() {
             />
 
             {/* Hidden Input for Uploads */}
-            <Input
+            <input
                 type="file"
                 ref={fileInputRef}
                 className="hidden"

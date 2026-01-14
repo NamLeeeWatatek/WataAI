@@ -84,6 +84,18 @@ export function useTemplates(params?: QueryTemplateDto, options?: { enabled?: bo
     },
   });
 
+  const importMutation = useMutation({
+    mutationFn: ({ templates, workspaceId }: { templates: any[]; workspaceId: string }) =>
+      templatesApi.import(templates, workspaceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+    },
+  });
+
+  const exportTemplates = useCallback(async (ids: string[]) => {
+    return templatesApi.export(ids);
+  }, []);
+
   const executeTemplate = useCallback(async (id: string, data: any) => {
     // Note: This matches the old implementation, optionally could be a mutation too
     const { generationJobsApi } = await import('@/lib/api/generation-jobs');
@@ -102,6 +114,9 @@ export function useTemplates(params?: QueryTemplateDto, options?: { enabled?: bo
     deactivateTemplate: deactivateMutation.mutateAsync,
     bulkUpdateTemplates: bulkUpdateMutation.mutateAsync,
     bulkDeleteTemplates: bulkDeleteMutation.mutateAsync,
+    importTemplates: importMutation.mutateAsync,
+    exportTemplates,
+    importing: importMutation.isPending,
     executeTemplate,
     refreshTemplates,
   }

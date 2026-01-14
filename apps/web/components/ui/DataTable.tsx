@@ -92,6 +92,8 @@ export interface DataTableProps<TData, TValue = unknown> {
   noCard?: boolean
   renderGridItem?: (item: TData) => React.ReactNode
   gridClassName?: string
+  viewMode?: 'table' | 'grid'
+  onViewModeChange?: (mode: 'table' | 'grid') => void
 }
 
 function DataTableInner<TData, TValue>({
@@ -136,12 +138,20 @@ function DataTableInner<TData, TValue>({
   noCard,
   renderGridItem,
   gridClassName,
+  viewMode: externalViewMode,
+  onViewModeChange,
 }: DataTableProps<TData, TValue> & { fixed?: boolean }) {
   // --- TanStack Table State ---
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [expanded, setExpanded] = React.useState<ExpandedState>({})
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({})
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table')
+  const [internalViewMode, setInternalViewMode] = React.useState<'table' | 'grid'>('table')
+
+  const viewMode = externalViewMode || internalViewMode
+  const setViewMode = (mode: 'table' | 'grid') => {
+    setInternalViewMode(mode)
+    onViewModeChange?.(mode)
+  }
 
   // Sync external sorting
   React.useEffect(() => {

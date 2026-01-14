@@ -15,8 +15,6 @@ import {
     Code,
     History,
     Clock,
-    Eye,
-    EyeOff,
     RefreshCw
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -27,6 +25,7 @@ import {
 import { BotKnowledgeBaseSection } from '@/components/features/bots/BotKnowledgeBaseSection';
 import { BotChannelsSection } from '@/components/features/bots/BotChannelsSection';
 import { BotSettingsTab } from '@/components/features/bots/BotSettingsTab';
+import { BotGlobalInterfaceTab } from '@/components/features/bots/BotGlobalInterfaceTab';
 import { WidgetAppearanceSettings } from '@/components/features/widget/WidgetAppearanceSettings';
 import { WidgetDeploymentHistory } from '@/components/features/widget/WidgetDeploymentHistory';
 import { WidgetEmbedCode } from '@/components/features/widget/WidgetEmbedCode';
@@ -180,10 +179,7 @@ export default function BotDetailPage() {
                     premium
                 >
                     <div className="flex items-center gap-3">
-                        <Badge variant={isOnline ? "default" : "secondary"} className="h-8 px-3 font-black tracking-widest text-[10px]">
-                            {isOnline ? <Eye className="w-3.5 h-3.5 mr-2" /> : <EyeOff className="w-3.5 h-3.5 mr-2" />}
-                            {isOnline ? 'ONLINE' : 'OFFLINE'}
-                        </Badge>
+
                         <Button
                             onClick={handleSave}
                             disabled={!hasChanges}
@@ -239,38 +235,11 @@ export default function BotDetailPage() {
                         </TabsContent>
 
                         <TabsContent value="widget" className="m-0 focus-visible:outline-none">
-                            <div className="space-y-12">
-                                <div>
-                                    <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3 uppercase">Interface Identity</h2>
-                                    <p className="text-sm font-medium text-muted-foreground/60 mb-8">Synchronize the visual aesthetics and messaging protocols of the public widget.</p>
-
-                                    <WidgetAppearanceSettings
-                                        botId={botId}
-                                        currentSettings={formData}
-                                        onSave={(updated) => {
-                                            handleChange(updated as any);
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12 border-t border-border/10">
-                                    <div className="lg:col-span-2 space-y-8">
-                                        <h3 className="text-xl font-black flex items-center gap-2 uppercase">Deployment Script</h3>
-                                        <WidgetEmbedCode botId={botId} activeVersion={activeVersion} />
-                                    </div>
-
-                                    <div className="lg:col-span-1 space-y-10">
-                                        <div>
-                                            <h3 className="text-lg font-black mb-4 uppercase">Versioning</h3>
-                                            <WidgetVersionsList botId={botId} versions={versions || []} isLoading={versionsLoading} onRefresh={mutateVersions} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-black mb-4 uppercase">Ledger</h3>
-                                            <WidgetDeploymentHistory deployments={deployments || []} isLoading={deploymentsLoading} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <BotGlobalInterfaceTab
+                                botId={botId}
+                                formData={formData}
+                                onChange={handleChange}
+                            />
                         </TabsContent>
 
                         <TabsContent value="settings" className="m-0 focus-visible:outline-none">

@@ -25,7 +25,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {
@@ -47,33 +47,32 @@ export class CreationToolsService {
       try {
         // Strip metadata to avoid collisions and ensure clean import
         const {
-          id,
-          createdAt,
-          updatedAt,
-          deletedAt,
-          categories, // Destructure categories to exclude it from toolData
-          ...toolData // The rest of the properties are now in toolData
+          id: _id,
+          createdAt: _createdAt,
+          updatedAt: _updatedAt,
+          deletedAt: _deletedAt,
+          categories: _categories,
+          ...toolData
         } = tool;
 
         const existing = await this.repository.findBySlug(toolData.slug);
 
-        // Map categories from the imported tool to categoryIds for DTOs
-        const categoryIds = categories?.map((c: any) => c.id);
-
         if (existing) {
           await this.update(existing.id, {
             ...toolData,
-            categoryIds, // Pass categoryIds to update
-          } as any); // Cast to any because toolData might not perfectly match UpdateCreationToolDto
+            categoryIds: undefined,
+          } as any);
         } else {
           await this.create({
             ...toolData,
-            categoryIds, // Pass categoryIds to create
-          } as any); // Cast to any because toolData might not perfectly match CreateCreationToolDto
+            categoryIds: undefined,
+          } as any);
         }
         success++;
       } catch (error) {
-        this.logger.error(`Failed to import tool ${tool.slug}: ${error.message}`);
+        this.logger.error(
+          `Failed to import tool ${tool.slug}: ${error.message}`,
+        );
         failed++;
       }
     }

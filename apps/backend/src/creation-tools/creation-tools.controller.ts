@@ -48,7 +48,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationToolsController {
-  constructor(private readonly service: CreationToolsService) { }
+  constructor(private readonly service: CreationToolsService) {}
 
   @ApiCreatedResponse({ type: CreationTool })
   @ApiOperation({ summary: 'Create new creation tool' })

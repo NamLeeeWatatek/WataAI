@@ -21,9 +21,12 @@ import {
   ApiQuery,
   ApiCreatedResponse,
   ApiOkResponse,
+  getSchemaPath,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AiProvidersService } from './ai-providers.service';
+import { AiModel } from './domain/ai-provider';
 import {
   CreateUserAiProviderConfigDto,
   UpdateUserAiProviderConfigDto,
@@ -48,9 +51,34 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('AI Providers')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'ai-providers', version: '1' })
+@Controller({
+  path: 'ai-providers',
+  version: '1',
+})
+@ApiExtraModels(AiModel)
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) {}
+  constructor(private readonly aiProvidersService: AiProvidersService) { }
+
+  @Permissions('ai:Get')
+  @Get('unified-config/:id/details')
+  @ApiOperation({ summary: 'Get unified config details' })
+  @ApiOkResponse({ type: UserAiProviderConfig }) // or WorkspaceAiProviderConfig
+  async getConfigDetails(
+    @Param('id') id: string,
+    @Request() req,
+    @Query('workspaceId') workspaceId?: string,
+  ) {
+    const config = await this.aiProvidersService.getConfigDetails(
+      id,
+      req.user.id,
+      workspaceId,
+    );
+    if (!config) return null;
+    return {
+      ...config,
+      config: this.aiProvidersService.maskConfig(config.config),
+    };
+  }
 
   // Get all available AI providers (global list)
   @Get()
@@ -297,7 +325,7 @@ export class AiProvidersController {
           configId: { type: 'string' },
           models: {
             type: 'array',
-            items: { type: 'string' },
+            items: { $ref: getSchemaPath(AiModel) },
           },
         },
       },
@@ -311,7 +339,7 @@ export class AiProvidersController {
       configs
         .filter((config) => config.isActive)
         .map(async (config) => {
-          const models = await this.aiProvidersService.fetchProviderModels(
+          const models = await this.aiProvidersService.getModelsByConfig(
             config.id,
             'user',
             userId,
@@ -320,7 +348,8 @@ export class AiProvidersController {
           return {
             providerId: config.providerId,
             providerKey: config.provider?.key || '',
-            providerName: config.provider?.label || config.providerId,
+            providerName:
+              config.displayName || config.provider?.label || config.providerId,
             configId: config.id,
             models,
           };
@@ -328,6 +357,69 @@ export class AiProvidersController {
     );
 
     return results;
+  }
+  @Get('user/config/:configId/models')
+  @ApiOperation({ summary: 'Get persisted AI models for a user config' })
+  @ApiParam({ name: 'configId', type: String })
+  @ApiOkResponse({ type: [AiModel] })
+  async getUserModelsByConfig(
+    @Param('configId') configId: string,
+    @Query('type') type: string,
+    @Request() req,
+  ) {
+    return this.aiProvidersService.getModelsByConfig(
+      configId,
+      'user',
+      req.user.id,
+      type,
+    );
+  }
+
+  @Post('user/config/:configId/fetch-models')
+  @ApiOperation({ summary: 'Fetch models from provider and update cache' })
+  @ApiParam({ name: 'configId', type: String })
+  @ApiOkResponse({ type: [AiModel] })
+  async fetchUserModels(@Param('configId') configId: string, @Request() req) {
+    return this.aiProvidersService.fetchProviderModels(
+      configId,
+      'user',
+      req.user.id,
+    );
+  }
+
+  @Post('workspace/:workspaceId/config/:configId/fetch-models')
+  @Permissions('ai:List')
+  @ApiOperation({ summary: 'Fetch models from provider and update cache' })
+  @ApiParam({ name: 'workspaceId', type: String })
+  @ApiParam({ name: 'configId', type: String })
+  @ApiOkResponse({ type: [AiModel] })
+  async fetchWorkspaceModels(
+    @Param('workspaceId') workspaceId: string,
+    @Param('configId') configId: string,
+  ) {
+    return this.aiProvidersService.fetchProviderModels(
+      configId,
+      'workspace',
+      workspaceId,
+    );
+  }
+
+  @Get('workspace/:workspaceId/config/:configId/models')
+  @ApiOperation({ summary: 'Get persisted AI models for a workspace config' })
+  @ApiParam({ name: 'workspaceId', type: String })
+  @ApiParam({ name: 'configId', type: String })
+  @ApiOkResponse({ type: [AiModel] })
+  async getWorkspaceModelsByConfig(
+    @Param('configId') configId: string,
+    @Param('workspaceId') workspaceId: string,
+    @Query('type') type: string,
+  ) {
+    return this.aiProvidersService.getModelsByConfig(
+      configId,
+      'workspace',
+      workspaceId,
+      type,
+    );
   }
 
   @Get('workspace/:workspaceId/models')
@@ -345,7 +437,7 @@ export class AiProvidersController {
       configs
         .filter((config) => config.isActive)
         .map(async (config) => {
-          const models = await this.aiProvidersService.fetchProviderModels(
+          const models = await this.aiProvidersService.getModelsByConfig(
             config.id,
             'workspace',
             workspaceId,
@@ -354,7 +446,8 @@ export class AiProvidersController {
           return {
             providerId: config.providerId,
             providerKey: config.provider?.key || '',
-            providerName: config.provider?.label || config.providerId,
+            providerName:
+              config.displayName || config.provider?.label || config.providerId,
             configId: config.id,
             models,
           };
@@ -408,6 +501,29 @@ export class AiProvidersController {
     });
   }
 
+  @Post('enhance-prompt')
+  @ApiOperation({ summary: 'Enhance a user prompt using AI' })
+  @ApiOkResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        enhancedPrompt: { type: 'string' },
+      },
+    },
+  })
+  async enhanceUserPrompt(
+    @Body()
+    dto: { prompt: string; type?: 'image' | 'text' | 'code' | 'general' },
+    @Request() req,
+  ) {
+    const enhanced = await this.aiProvidersService.enhancePrompt(
+      req.user.id,
+      dto.prompt,
+      dto.type,
+    );
+    return { enhancedPrompt: enhanced };
+  }
+
   // System AI Settings endpoints
   @Get('system/settings')
   @Permissions('ai:Get')
@@ -453,11 +569,12 @@ export class AiProvidersController {
     @Param('configId') configId: string,
     @Request() req,
   ) {
-    return this.aiProvidersService.fetchProviderModels(
+    const models = await this.aiProvidersService.fetchProviderModels(
       configId,
       'user',
       req.user.id,
     );
+    return models.map((m) => m.name);
   }
 
   @Post('verify-models')
@@ -469,12 +586,20 @@ export class AiProvidersController {
     description: 'Array of available model names from the provider',
   })
   async verifyApiKeyAndGetModels(
-    @Body() dto: { providerId: string; config: Record<string, unknown> },
+    @Body()
+    dto: {
+      providerId: string;
+      config: Record<string, unknown>;
+      configId?: string;
+    },
+    @Request() req,
   ) {
-    // Call service method with direct config instead of saved config lookup
-    return this.aiProvidersService.fetchModelsFromDirectConfig(
+    // Call service method with smart merging for masked keys
+    return this.aiProvidersService.fetchModelsWithPotentialMask(
       dto.providerId,
       dto.config,
+      req.user.id,
+      dto.configId,
     );
   }
 }

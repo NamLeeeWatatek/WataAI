@@ -50,6 +50,9 @@ interface KbTableViewProps {
   searchValue?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
+  renderGridItem?: (item: KbItem) => React.ReactNode;
+  viewMode?: 'table' | 'grid';
+  onViewModeChange?: (mode: 'table' | 'grid') => void;
 }
 
 export function KbTableView({
@@ -78,6 +81,9 @@ export function KbTableView({
   searchValue,
   onSearch,
   searchPlaceholder,
+  renderGridItem,
+  viewMode,
+  onViewModeChange,
 }: KbTableViewProps) {
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
@@ -115,7 +121,7 @@ export function KbTableView({
           checked={items.length > 0 && items.every(item => selectedIds.includes(item.id))}
           onCheckedChange={(checked) => onToggleSelectAll?.(!!checked)}
           aria-label="Select all"
-          className="translate-y-[2px]"
+          className="translate-y-[2px] border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
         />
       ),
       size: 40,
@@ -125,6 +131,7 @@ export function KbTableView({
             checked={selectedIds.includes(row.original.id)}
             onCheckedChange={() => onToggleSelection(row.original.id)}
             aria-label="Select row"
+            className="border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
           />
         </div>
       )
@@ -243,7 +250,7 @@ export function KbTableView({
   ], [items, selectedIds, onToggleSelectAll, onToggleSelection, onPreviewDocument, onDownloadDocument, onEditItem, onDeleteItem]);
 
   return (
-    <div>
+    <div className="flex-1 min-h-0">
       <DataTable
         data={items}
         columns={columns}
@@ -262,9 +269,11 @@ export function KbTableView({
         onPageSizeChange={onPageSizeChange}
         emptyMessage="This collection is currently empty"
         onRowClick={onItemClick}
-        className="w-full"
+        className="h-full border-none shadow-none bg-transparent"
+        gridClassName="grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 p-6"
         tableClassName="bg-transparent border-0"
         noCard
+        renderGridItem={renderGridItem}
         onRowDragStart={(e, row) => {
           if (onDragStart) onDragStart(row);
         }}

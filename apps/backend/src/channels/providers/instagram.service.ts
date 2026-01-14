@@ -14,7 +14,7 @@ export class InstagramService {
     private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) { }
+  ) {}
 
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
     try {
@@ -80,7 +80,7 @@ export class InstagramService {
           // If we want detailed API errors, checking response.ok above is correct.
           // But if the library or framework wraps it...
           // Let's just log the error object safely.
-        } catch (e) { }
+        } catch (e) {}
       }
       return {
         success: false,

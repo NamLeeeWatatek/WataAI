@@ -24,7 +24,7 @@ export class OAuthController {
     private readonly oauthService: OAuthService,
     private readonly channelsService: ChannelsService,
     private readonly integrationsService: IntegrationsService,
-  ) { }
+  ) {}
 
   @Get('login/:provider')
   @ApiBearerAuth()
@@ -44,7 +44,9 @@ export class OAuthController {
       : await this.integrationsService.findOne(provider, workspaceId);
 
     if (!credential) {
-      this.logger.error(`[OAuth] No configuration found for ${provider} (configId: ${configId}, workspaceId: ${workspaceId})`);
+      this.logger.error(
+        `[OAuth] No configuration found for ${provider} (configId: ${configId}, workspaceId: ${workspaceId})`,
+      );
       return { error: `No configuration found for ${provider}` };
     }
 
@@ -52,21 +54,35 @@ export class OAuthController {
     const targetWorkspaceId = credential.workspaceId;
 
     if (!targetWorkspaceId) {
-      this.logger.error(`[OAuth] Credential ${credential.id} has no workspaceId!`);
-      throw new BadRequestException('Configuration is invalid: missing workspace context');
+      this.logger.error(
+        `[OAuth] Credential ${credential.id} has no workspaceId!`,
+      );
+      throw new BadRequestException(
+        'Configuration is invalid: missing workspace context',
+      );
     }
 
-    this.logger.log(`[OAuth] Using targetWorkspaceId: ${targetWorkspaceId} from credential ${credential.id}`);
+    this.logger.log(
+      `[OAuth] Using targetWorkspaceId: ${targetWorkspaceId} from credential ${credential.id}`,
+    );
 
-    const finalState = state ? `${state}:${targetWorkspaceId}` : `${userId}:${targetWorkspaceId}`;
+    const finalState = state
+      ? `${state}:${targetWorkspaceId}`
+      : `${userId}:${targetWorkspaceId}`;
     let url: string;
 
     switch (provider) {
       case 'facebook':
-        url = this.oauthService.getFacebookAuthUrl(credential.clientId!, finalState);
+        url = this.oauthService.getFacebookAuthUrl(
+          credential.clientId!,
+          finalState,
+        );
         break;
       case 'google':
-        url = this.oauthService.getGoogleAuthUrl(credential.clientId!, finalState);
+        url = this.oauthService.getGoogleAuthUrl(
+          credential.clientId!,
+          finalState,
+        );
         break;
       default:
         return { error: 'Unsupported provider' };
@@ -88,9 +104,15 @@ export class OAuthController {
     let userId = req.user?.id;
     let workspaceId: string | undefined;
 
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    console.log(`[OAuth CALLBACK DEBUG] Provider: ${provider}, Received State: ${state}`);
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.log(
+      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+    );
+    console.log(
+      `[OAuth CALLBACK DEBUG] Provider: ${provider}, Received State: ${state}`,
+    );
+    console.log(
+      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+    );
 
     if (state) {
       const parts = state.split(':');
@@ -98,7 +120,9 @@ export class OAuthController {
         if (!userId) userId = parts[0];
         workspaceId = parts[1];
       } else {
-        this.logger.error(`[OAuth] Invalid state format: ${state}. Expected userId:workspaceId`);
+        this.logger.error(
+          `[OAuth] Invalid state format: ${state}. Expected userId:workspaceId`,
+        );
         return {
           status: 'error',
           message: 'Invalid authorization state. Please try again.',
@@ -106,10 +130,14 @@ export class OAuthController {
       }
     }
 
-    this.logger.log(`[OAuth] Callback processing for ${provider}, Workspace: ${workspaceId}, User: ${userId}`);
+    this.logger.log(
+      `[OAuth] Callback processing for ${provider}, Workspace: ${workspaceId}, User: ${userId}`,
+    );
 
     if (!workspaceId) {
-      this.logger.error(`[OAuth] Callback failed: Could not extract workspaceId from state: ${state}`);
+      this.logger.error(
+        `[OAuth] Callback failed: Could not extract workspaceId from state: ${state}`,
+      );
       return {
         status: 'error',
         message: 'Workspace context lost in OAuth flow',
@@ -122,9 +150,14 @@ export class OAuthController {
       };
     }
 
-    const credential = await this.integrationsService.findOne(provider, workspaceId);
+    const credential = await this.integrationsService.findOne(
+      provider,
+      workspaceId,
+    );
     if (!credential) {
-      this.logger.error(`[OAuth] Callback failed: No configuration found for ${provider} in workspace ${workspaceId}`);
+      this.logger.error(
+        `[OAuth] Callback failed: No configuration found for ${provider} in workspace ${workspaceId}`,
+      );
       return {
         status: 'error',
         message: `No configuration found for ${provider}`,
@@ -174,7 +207,7 @@ export class OAuthController {
           };
       }
 
-      // For Facebook, we don't auto-connect everything. 
+      // For Facebook, we don't auto-connect everything.
       // Instead, we return the discovered pages to the frontend for selection.
       if (provider !== 'facebook') {
         await this.channelsService.create(
@@ -192,9 +225,10 @@ export class OAuthController {
 
       return {
         status: 'success',
-        message: provider === 'facebook'
-          ? `Successfully authenticated with ${provider}. Please select which terminals to connect.`
-          : `Successfully connected to ${provider}`,
+        message:
+          provider === 'facebook'
+            ? `Successfully authenticated with ${provider}. Please select which terminals to connect.`
+            : `Successfully connected to ${provider}`,
         data: {
           provider,
           pages: provider === 'facebook' ? pages : [],

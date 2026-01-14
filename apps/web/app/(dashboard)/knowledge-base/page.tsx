@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { KBCollectionDialog } from '@/components/features/knowledge-base';
+import { KBSettingsDialog } from '@/components/features/knowledge-base';
 import {
     Database,
     Plus,
@@ -184,10 +184,15 @@ export default function KnowledgeBasePage() {
                                             <span>{formatSize(kb.totalSize)}</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="secondary" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0">
-                                            {kb.embeddingModel}
+                                            {kb.embeddingModel || 'No Embedding'}
                                         </Badge>
+                                        {kb.ragModel && (
+                                            <Badge variant="secondary" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0 bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+                                                {kb.ragModel}
+                                            </Badge>
+                                        )}
                                         <Badge variant="outline" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0 border-primary/20 text-primary">
                                             STABLE
                                         </Badge>
@@ -217,11 +222,12 @@ export default function KnowledgeBasePage() {
                 </div>
             )}
 
-            <KBCollectionDialog
+            <KBSettingsDialog
                 open={dialogOpen}
                 onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditingKb(null); }}
                 knowledgeBase={editingKb}
-                onSubmit={handleSaveKnowledgeBase}
+                workspaceId={workspaceId || undefined}
+                onSave={handleSaveKnowledgeBase}
             />
 
             <AlertDialogConfirm

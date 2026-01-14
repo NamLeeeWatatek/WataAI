@@ -82,73 +82,84 @@ export function KBProcessingStatus({ knowledgeBaseId, onProcessingComplete }: KB
     if (jobs.length === 0) return null
 
     return (
-        <Card className="mb-6 border-border/50 shadow-sm bg-card/50 backdrop-blur-sm">
-            <CardHeader className="py-3 px-4 border-b border-border/50">
+        <Card className="mb-6 border-border/50 shadow-sm bg-card/50 backdrop-blur-sm overflow-hidden transition-all duration-300">
+            <CardHeader className="py-3 px-4 border-b border-border/50 bg-muted/20">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Loader2 className="h-3.5 w-3.5 text-primary" />
+                        <div className={cn(
+                            "h-6 w-6 rounded-full flex items-center justify-center",
+                            jobs.some(j => j.status === 'processing') ? "bg-primary/10 text-primary animate-spin-slow" : "bg-muted text-muted-foreground"
+                        )}>
+                            <Loader2 className="h-3.5 w-3.5" />
                         </div>
-                        <CardTitle className="text-sm font-semibold">Processing Documents</CardTitle>
+                        <CardTitle className="text-sm font-semibold">
+                            Processing Documents
+                            <span className="ml-2 font-normal text-muted-foreground text-xs">
+                                ({jobs.filter(j => j.status === 'processing' || j.status === 'queued').length} active)
+                            </span>
+                        </CardTitle>
                     </div>
-                    <Badge variant="outline" className="text-xs font-normal bg-background/50">
-                        {jobs.length} active
-                    </Badge>
                 </div>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-0 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
                 <div className="divide-y divide-border/50">
                     {jobs.map((job) => (
-                        <div key={job.documentId} className="p-4 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-start justify-between gap-4 mb-3">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className={cn(
-                                        "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
-                                        job.status === 'failed' ? "bg-destructive/10 text-destructive" :
-                                            job.status === 'completed' ? "bg-green-500/10 text-green-500" :
-                                                "bg-primary/10 text-primary"
-                                    )}>
-                                        {job.status === 'failed' ? <XCircle className="h-4 w-4" /> :
-                                            job.status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> :
-                                                <FileText className="h-4 w-4" />}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">
+                        <div key={job.documentId} className="group p-3 hover:bg-muted/30 transition-colors">
+                            <div className="flex items-center gap-3">
+                                {/* Icon Status */}
+                                <div className={cn(
+                                    "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border shadow-sm",
+                                    job.status === 'failed' ? "bg-destructive/10 border-destructive/20 text-destructive" :
+                                        job.status === 'completed' ? "bg-green-500/10 border-green-500/20 text-green-500" :
+                                            "bg-background border-border text-primary"
+                                )}>
+                                    {job.status === 'failed' ? <XCircle className="h-4 w-4" /> :
+                                        job.status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> :
+                                            <FileText className="h-4 w-4" />}
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 grid gap-1.5">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <p className="text-sm font-medium truncate leading-none" title={job.documentName}>
                                             {job.documentName || 'Processing document...'}
                                         </p>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                            <span className="capitalize">{job.type || 'Embedding'}</span>
-                                            <span>•</span>
-                                            <StatusBadge
-                                                status={job.status}
-                                                showIcon={job.status === 'processing'}
-                                                label={job.status === 'processing' ? `${job.progress}%` : undefined}
-                                            />
-                                            {job.totalChunks > 0 && (
-                                                <>
-                                                    <span>•</span>
-                                                    <span>{job.processedChunks}/{job.totalChunks} chunks</span>
-                                                </>
+                                        <span className={cn(
+                                            "text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-sm",
+                                            job.status === 'completed' ? "bg-green-500/10 text-green-600 dark:text-green-400" :
+                                                job.status === 'failed' ? "bg-destructive/10 text-destructive" :
+                                                    "bg-primary/10 text-primary"
+                                        )}>
+                                            {job.status === 'queued' ? 'Queued' :
+                                                job.status === 'failed' ? 'Failed' :
+                                                    job.status === 'completed' ? 'Done' :
+                                                        `${Math.round(job.progress)}%`
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <Progress
+                                            value={job.status === 'completed' ? 100 : job.progress}
+                                            className={cn("h-1.5 flex-1", job.status === 'failed' && "bg-destructive/20")}
+                                            indicatorClassName={cn(
+                                                job.status === 'completed' && "bg-green-500",
+                                                job.status === 'failed' && "bg-destructive"
                                             )}
-                                        </div>
+                                        />
+                                        {job.totalChunks > 0 && (
+                                            <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline-block">
+                                                {job.processedChunks}/{job.totalChunks} chunks
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
-                                {job.status === 'queued' && (
-                                    <Clock className="h-4 w-4 text-muted-foreground animate-pulse" />
-                                )}
                             </div>
 
-                            {(job.status === 'processing' || job.status === 'queued') && (
-                                <Progress
-                                    value={job.progress}
-                                    className="h-1.5"
-                                />
-                            )}
-
                             {job.error && (
-                                <p className="text-xs text-destructive mt-2 bg-destructive/5 p-2 rounded-md">
-                                    {job.error}
-                                </p>
+                                <div className="mt-2 text-xs text-destructive bg-destructive/5 p-2 rounded-md border border-destructive/10">
+                                    Error: {job.error}
+                                </div>
                             )}
                         </div>
                     ))}

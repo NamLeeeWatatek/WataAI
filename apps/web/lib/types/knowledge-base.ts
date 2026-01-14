@@ -10,9 +10,12 @@ export interface KnowledgeBase {
   icon?: string | null;
   color: string;
   isPublic: boolean;
-  aiProviderId?: string | null;
+  aiConfigId?: string | null;
+  aiConfig?: any;
   ragModel?: string | null;
-  embeddingModel: string;
+  embeddingConfigId?: string | null;
+  embeddingConfig?: any;
+  embeddingModel?: string | null;
   chunkSize: number;
   chunkOverlap: number;
   totalDocuments: number;
@@ -30,8 +33,9 @@ export interface CreateKnowledgeBaseDto {
   name: string;
   description?: string;
   workspaceId?: string;
-  aiProviderId?: string;
+  aiConfigId?: string;
   ragModel?: string;
+  embeddingConfigId?: string;
   embeddingModel?: string;
   chunkSize?: number;
   chunkOverlap?: number;
@@ -44,8 +48,9 @@ export interface CreateKnowledgeBaseDto {
 export interface UpdateKnowledgeBaseDto {
   name?: string;
   description?: string;
-  aiProviderId?: string;
+  aiConfigId?: string;
   ragModel?: string;
+  embeddingConfigId?: string;
   embeddingModel?: string;
   chunkSize?: number;
   chunkOverlap?: number;

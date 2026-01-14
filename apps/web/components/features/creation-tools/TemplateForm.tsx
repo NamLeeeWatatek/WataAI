@@ -6,6 +6,7 @@ import { Loader2, ImageIcon, Film } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { AiEnhancedTextarea } from '@/components/ui/AiEnhancedTextarea';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { IconPicker } from '@/components/ui/IconPicker';
@@ -208,7 +209,7 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                             <FormItem>
                                 <FormLabel>Description</FormLabel>
                                 <FormControl>
-                                    <Textarea
+                                    <AiEnhancedTextarea
                                         placeholder="Describe the style, mood, and intended use case..."
                                         rows={3}
                                         className="resize-none min-h-[80px]"

@@ -30,9 +30,7 @@ export class BillingController {
     private readonly stripeService: StripeService,
     private readonly payOSService: PayOSService,
     private readonly subscriptionsService: SubscriptionsService,
-  ) { }
-
-
+  ) {}
 
   @Post('checkout')
   @UseGuards(AuthGuard('jwt'))
@@ -190,7 +188,7 @@ export class BillingController {
           provider: 'stripe',
           providerInvoiceId: session.invoice as string,
           periodStart: new Date(),
-          periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1))
+          periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1)),
         });
       }
     }
@@ -239,7 +237,7 @@ export class BillingController {
             provider: 'payos',
             providerInvoiceId: `payos_${data.orderCode}`,
             periodStart: new Date(),
-            periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1))
+            periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1)),
           });
         }
       }

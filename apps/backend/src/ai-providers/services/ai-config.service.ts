@@ -18,15 +18,20 @@ import {
   AiProvider,
   AiUsageLog,
   AiUsageStats,
+  AiModel,
+  AiModelType,
 } from '../domain/ai-provider';
 import { NullableType } from '../../utils/types/nullable.type';
+import { AiModelRepository } from '../infrastructure/persistence/ai-model.repository';
+import { AiProviderOwnerType } from '../ai-providers.enum';
 
 @Injectable()
 export class AiConfigService {
   constructor(
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
-  ) {}
+    private readonly aiModelRepository: AiModelRepository,
+  ) { }
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -35,6 +40,97 @@ export class AiConfigService {
 
   async getProviderById(id: string): Promise<NullableType<AiProvider>> {
     return this.aiProviderConfigRepository.findProviderById(id);
+  }
+
+  async getConfigByProviderId(
+    providerId: string,
+    scope: 'user' | 'workspace',
+    scopeId: string,
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    const config = await this.aiProviderConfigRepository.getConfigByProviderId(
+      providerId,
+      scope,
+      scopeId,
+    );
+    // The repository should return a mapped domain object. We just decrypt it.
+    // Note: The decryptConfig type definition might need to handle the union type if not generic.
+    // Assuming decryptConfig accepts any config structure with a 'config' property.
+    return config
+      ? this.aiEncryptionService.decryptConfig(config as any)
+      : null;
+  }
+
+  // Helper to sync models from string list to Entity table (Upsert Strategy)
+  private async syncModelsFromList(
+    configId: string,
+    ownerType: AiProviderOwnerType,
+    ownerId: string,
+    providerId: string,
+    modelList: string[],
+  ): Promise<void> {
+    if (!modelList) return;
+
+    // 1. Get existing models
+    const existingModels = await this.aiModelRepository.findByConfigId(
+      configId,
+      ownerType,
+    );
+
+    const modelsToSave: AiModel[] = [];
+    const processedNames = new Set<string>();
+
+    // 2. Process incoming list (Insert or Update)
+    for (const name of modelList) {
+      processedNames.add(name);
+      const existing = existingModels.find((m) => m.name === name);
+
+      if (existing) {
+        // Activate if it was inactive
+        if (!existing.isActive) {
+          existing.isActive = true;
+          modelsToSave.push(existing);
+        }
+        // Metadata is PRESERVED here because we use the existing entity
+      } else {
+        // Create new
+        const m = new AiModel();
+        m.name = name;
+        m.displayName = name; // Default display name = name
+
+        const lower = name.toLowerCase();
+        // Improve heuristic for Ollama (nomic-embed-text) and others
+        const isEmbedding =
+          lower.includes('embed') ||
+          lower.includes('bert') ||
+          lower.includes('ada-002') ||
+          lower.includes('text-embedding');
+
+        m.type = isEmbedding ? AiModelType.EMBEDDING : AiModelType.CHAT;
+
+        m.providerId = providerId;
+        m.ownerType = ownerType;
+        m.ownerId = ownerId;
+        m.configId = configId;
+        m.isActive = true;
+        m.metadata = {};
+        modelsToSave.push(m);
+      }
+    }
+
+    // 3. Process removed models (Deactivate instead of Delete)
+    for (const existing of existingModels) {
+      if (!processedNames.has(existing.name)) {
+        if (existing.isActive) {
+          existing.isActive = false;
+          modelsToSave.push(existing);
+        }
+      }
+    }
+
+    // 4. Save changes
+    if (modelsToSave.length > 0) {
+      await this.aiModelRepository.saveAll(modelsToSave);
+    }
   }
 
   // User configuration methods
@@ -52,6 +148,17 @@ export class AiConfigService {
         modelList: dto.modelList || [],
       },
     );
+
+    // Sync models to DB
+    if (dto.modelList && dto.modelList.length > 0) {
+      await this.syncModelsFromList(
+        config.id,
+        AiProviderOwnerType.USER,
+        userId,
+        dto.providerId,
+        dto.modelList,
+      );
+    }
 
     // Decrypt for return
     config.config = this.aiEncryptionService.decryptConfig(config.config);
@@ -85,6 +192,13 @@ export class AiConfigService {
       userId,
       id,
     );
+    return config ? this.aiEncryptionService.decryptConfig(config) : null;
+  }
+
+  async findUserConfigById(
+    id: string,
+  ): Promise<NullableType<UserAiProviderConfig>> {
+    const config = await this.aiProviderConfigRepository.findUserConfigById(id);
     return config ? this.aiEncryptionService.decryptConfig(config) : null;
   }
 
@@ -127,11 +241,23 @@ export class AiConfigService {
         updateDto,
       );
 
+    // Sync models to DB (if modelList provided)
+    if (dto.modelList) {
+      await this.syncModelsFromList(
+        id,
+        AiProviderOwnerType.USER,
+        userId,
+        updatedConfig.providerId,
+        dto.modelList,
+      );
+    }
+
     // Decrypt for return
     return this.aiEncryptionService.decryptConfig(updatedConfig);
   }
 
   async deleteUserConfig(userId: string, id: string): Promise<void> {
+    await this.aiModelRepository.deleteByConfigId(id, AiProviderOwnerType.USER);
     return this.aiProviderConfigRepository.deleteUserConfig(userId, id);
   }
 
@@ -151,6 +277,17 @@ export class AiConfigService {
       },
     );
 
+    // Sync models to DB
+    if (dto.modelList && dto.modelList.length > 0) {
+      await this.syncModelsFromList(
+        config.id,
+        AiProviderOwnerType.WORKSPACE,
+        workspaceId,
+        dto.providerId,
+        dto.modelList,
+      );
+    }
+
     // Decrypt for return
     return this.aiEncryptionService.decryptConfig(config);
   }
@@ -161,10 +298,18 @@ export class AiConfigService {
     const configs =
       await this.aiProviderConfigRepository.getWorkspaceConfigs(workspaceId);
 
-    // Decrypt sensitive fields
-    return configs.map((config) =>
-      this.aiEncryptionService.decryptConfig(config),
-    );
+    // Get available providers to populate provider relations
+    const availableProviders =
+      await this.aiProviderConfigRepository.findAvailableProviders();
+
+    // Decrypt sensitive fields and populate provider relationship
+    return configs.map((config) => ({
+      ...config,
+      config: this.aiEncryptionService.decryptConfig(config.config),
+      provider:
+        config.provider ||
+        availableProviders.find((p) => p.id === config.providerId),
+    }));
   }
 
   async getWorkspaceConfig(
@@ -175,7 +320,38 @@ export class AiConfigService {
       workspaceId,
       id,
     );
-    return config ? this.aiEncryptionService.decryptConfig(config) : null;
+    if (!config) return null;
+
+    // Ensure provider is populated if missing from repo relations (fallback)
+    if (!config.provider) {
+      const provider = await this.aiProviderConfigRepository.findProviderById(config.providerId);
+      if (provider) config.provider = provider;
+    }
+
+    return this.aiEncryptionService.decryptConfig(config);
+  }
+
+  // Unified Config Retrieval (User or Workspace)
+  async getConfigDetails(
+    configId: string,
+    userId: string,
+    workspaceId?: string
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    // 1. Try User Config
+    const userConfig = await this.getUserConfig(userId, configId);
+    if (userConfig) return userConfig;
+
+    // 2. Try Workspace Config
+    if (workspaceId) {
+      const workspaceConfig = await this.getWorkspaceConfig(workspaceId, configId);
+      if (workspaceConfig) return workspaceConfig;
+    }
+
+    // 3. Last Resort: Try Generic Config ID (e.g., System or Shared)
+    const genericConfig = await this.aiProviderConfigRepository.getConfigById(configId);
+    if (genericConfig) return genericConfig;
+
+    return null;
   }
 
   async updateWorkspaceConfig(
@@ -217,11 +393,26 @@ export class AiConfigService {
         updateDto,
       );
 
+    // Sync models to DB
+    if (dto.modelList) {
+      await this.syncModelsFromList(
+        id,
+        AiProviderOwnerType.WORKSPACE,
+        workspaceId,
+        updatedConfig.providerId,
+        dto.modelList,
+      );
+    }
+
     // Decrypt for return
     return this.aiEncryptionService.decryptConfig(updatedConfig);
   }
 
   async deleteWorkspaceConfig(workspaceId: string, id: string): Promise<void> {
+    await this.aiModelRepository.deleteByConfigId(
+      id,
+      AiProviderOwnerType.WORKSPACE,
+    );
     return this.aiProviderConfigRepository.deleteWorkspaceConfig(
       workspaceId,
       id,

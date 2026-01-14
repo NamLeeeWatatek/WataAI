@@ -32,4 +32,4 @@ import { IntegrationsModule } from '../integrations/integrations.module';
   providers: [CreationJobsService],
   exports: [CreationJobsService, RelationalCreationJobsPersistenceModule],
 })
-export class CreationJobsModule { }
+export class CreationJobsModule {}

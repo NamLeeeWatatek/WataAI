@@ -4,6 +4,14 @@ export enum AiProviderOwnerType {
     WORKSPACE = 'workspace',
 }
 
+export enum AiModelType {
+    CHAT = 'chat',
+    EMBEDDING = 'embedding',
+    VISION = 'vision',
+    IMAGE = 'image',
+    OTHER = 'other',
+}
+
 // Matches backend ProviderConfig
 export interface AiProviderConfig {
     apiKey?: string;
@@ -24,6 +32,21 @@ export interface AiProviderConfig {
     [key: string]: unknown;
 }
 
+export interface AiModel {
+    id: string;
+    name: string;
+    displayName?: string;
+    type: AiModelType;
+    providerId: string;
+    ownerType: AiProviderOwnerType;
+    ownerId: string;
+    configId?: string;
+    metadata: Record<string, any>;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface UserAiProviderConfig {
     id: string;
     userId: string;
@@ -31,8 +54,22 @@ export interface UserAiProviderConfig {
     displayName: string;
     config: AiProviderConfig;
     modelList: string[];
+    models?: AiModel[];
     isActive: boolean;
     isDefault: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface WorkspaceAiProviderConfig {
+    id: string;
+    workspaceId: string;
+    providerId: string;
+    displayName: string;
+    config: AiProviderConfig;
+    modelList: string[];
+    models?: AiModel[];
+    isActive: boolean;
     createdAt: string;
     updatedAt: string;
 }

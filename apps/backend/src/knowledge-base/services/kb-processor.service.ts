@@ -218,7 +218,7 @@ export class KBProcessor extends WorkerHost {
       const processingResult =
         await this.embeddingsService.processChunksWithProgress(
           chunkEntities,
-          kb.embeddingModel,
+          kb.embeddingModel || undefined,
           async (processed, total) => {
             this.processingQueue.updateJobProgress(
               internalJobId,

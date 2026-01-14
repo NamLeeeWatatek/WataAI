@@ -15,6 +15,7 @@ import { UserEntity } from '../../../../../users/infrastructure/persistence/rela
 import { EncryptionTransformer } from '../../../../../utils/transformers/encryption.transformer';
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { AiProviderOwnerType } from '../../../../ai-providers.enum';
+import { AiModelEntity } from './ai-model.entity';
 
 @Entity({ name: 'ai_providers' })
 export class AiProviderEntity extends EntityRelationalHelper {
@@ -48,12 +49,6 @@ export class AiProviderEntity extends EntityRelationalHelper {
   @OneToMany(() => AiProviderConfigEntity, (config) => config.provider)
   configs?: AiProviderConfigEntity[];
 
-  @OneToMany(() => UserAiProviderConfigEntity, (config) => config.provider)
-  userConfigs?: UserAiProviderConfigEntity[];
-
-  @OneToMany(() => WorkspaceAiProviderConfigEntity, (config) => config.provider)
-  workspaceConfigs?: WorkspaceAiProviderConfigEntity[];
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
@@ -70,27 +65,14 @@ export class AiProviderConfigEntity extends EntityRelationalHelper {
   @Index()
   providerId: string;
 
-  @Column({ name: 'model', type: String })
-  model: string;
+  @Column({ name: 'display_name', type: String, nullable: true })
+  displayName: string;
 
-  @Column({
-    name: 'api_key',
-    type: String,
-    transformer: new EncryptionTransformer(),
-  })
-  apiKey: string;
+  @Column({ name: 'config', type: 'jsonb' })
+  config: Record<string, unknown>;
 
-  @Column({ name: 'base_url', type: String, nullable: true })
-  baseUrl?: string;
-
-  @Column({ name: 'api_version', type: String, nullable: true })
-  apiVersion?: string;
-
-  @Column({ name: 'timeout', type: 'int', nullable: true })
-  timeout?: number;
-
-  @Column({ name: 'use_stream', type: Boolean, default: true })
-  useStream: boolean;
+  @Column({ name: 'model_list', type: 'jsonb', default: [] })
+  modelList: string[];
 
   @Column({
     name: 'owner_type',
@@ -114,83 +96,14 @@ export class AiProviderConfigEntity extends EntityRelationalHelper {
   @JoinColumn({ name: 'provider_id' })
   provider?: AiProviderEntity;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
-}
-
-@Entity({ name: 'user_ai_provider_configs' })
-export class UserAiProviderConfigEntity extends EntityRelationalHelper {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ name: 'user_id', type: 'uuid' })
-  @Index()
-  userId: string;
-
-  @Column({ name: 'provider_id', type: 'uuid' })
-  @Index()
-  providerId: string;
-
-  @Column({ name: 'display_name', type: String })
-  displayName: string;
-
-  @Column({ name: 'config', type: 'jsonb' })
-  config: Record<string, unknown>;
-
-  @Column({ name: 'model_list', type: 'jsonb', default: [] })
-  modelList: string[];
-
-  @Column({ name: 'is_active', type: Boolean, default: true })
-  isActive: boolean;
-
-  // Relations
-  @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user?: UserEntity;
-
-  @ManyToOne(() => AiProviderEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'provider_id' })
-  provider?: AiProviderEntity;
+  @OneToMany(() => AiModelEntity, (model) => model.config)
+  models?: AiModelEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-}
-
-@Entity({ name: 'workspace_ai_provider_configs' })
-export class WorkspaceAiProviderConfigEntity extends WorkspaceOwnedEntity {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  // workspaceId and relation are now inherited from WorkspaceOwnedEntity
-  // but we keep the relation here for clarity or custom options if needed.
-  // Actually, we should let inheritance handle it to be DRY.
-
-  @Column({ name: 'provider_id', type: 'uuid' })
-  @Index()
-  providerId: string;
-
-  @Column({ name: 'display_name', type: String })
-  displayName: string;
-
-  @Column({ name: 'config', type: 'jsonb' })
-  config: Record<string, unknown>;
-
-  @Column({ name: 'model_list', type: 'jsonb', default: [] })
-  modelList: string[];
-
-  @Column({ name: 'is_active', type: Boolean, default: true })
-  isActive: boolean;
-
-  // Relations
-  @ManyToOne(() => AiProviderEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'provider_id' })
-  provider?: AiProviderEntity;
 }
 
 @Entity({ name: 'ai_usage_log' })

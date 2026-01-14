@@ -4,8 +4,8 @@ import { PlanEntity } from '../../../../subscriptions/infrastructure/persistence
 import { PlanSeedService } from './plan-seed.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([PlanEntity])],
-    providers: [PlanSeedService],
-    exports: [PlanSeedService],
+  imports: [TypeOrmModule.forFeature([PlanEntity])],
+  providers: [PlanSeedService],
+  exports: [PlanSeedService],
 })
-export class PlanSeedModule { }
+export class PlanSeedModule {}

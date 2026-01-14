@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class OAuthService {
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   getFacebookAuthUrl(clientId: string, state?: string): string {
     const redirectUri = this.getRedirectUri('facebook');
@@ -98,7 +98,9 @@ export class OAuthService {
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        throw new Error(`Facebook API Error: ${error.response.data.error.message}`);
+        throw new Error(
+          `Facebook API Error: ${error.response.data.error.message}`,
+        );
       }
       throw error;
     }
@@ -158,9 +160,12 @@ export class OAuthService {
 
     if (configValue) return configValue;
 
-    const frontendDomain = this.configService.get<string>('app.frontendDomain', {
-      infer: true,
-    });
+    const frontendDomain = this.configService.get<string>(
+      'app.frontendDomain',
+      {
+        infer: true,
+      },
+    );
     const base = frontendDomain
       ? frontendDomain.endsWith('/')
         ? frontendDomain.slice(0, -1)

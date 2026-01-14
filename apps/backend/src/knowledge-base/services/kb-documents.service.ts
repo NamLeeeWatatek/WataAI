@@ -302,7 +302,15 @@ export class KBDocumentsService {
   async getDownloadUrl(documentId: string, userId: string) {
     const document = await this.findOne(documentId, userId);
 
+    // If no fileUrl, check if it's a web document with a sourceUrl
     if (!document.fileUrl) {
+      if (document.sourceUrl) {
+        return {
+          url: document.sourceUrl,
+          filename: document.name || 'document',
+          mimeType: 'text/html',
+        };
+      }
       throw new NotFoundException('Document file not found');
     }
 
@@ -421,10 +429,24 @@ export class KBDocumentsService {
         where: { id: document.knowledgeBaseId },
       });
       if (kb) {
-        dimension = await this.embeddingsService.probeDimension(
-          kb.aiProviderId || 'ollama', // fallback provider
-          kb.ragModel || 'mxbai-embed-large', // fallback model
-        );
+        try {
+          // Resolve provider configuration using the new embedding logic
+          const config = await this.embeddingsService.resolveEmbeddingConfig(
+            kb.embeddingConfigId || kb.aiConfigId || undefined,
+            kb.workspaceId,
+            userId,
+            kb.embeddingModel || kb.ragModel || undefined,
+          );
+
+          dimension = await this.embeddingsService.probeDimension(
+            config.provider,
+            config.model,
+          );
+        } catch (resolveError) {
+          this.logger.warn(
+            `Could not resolve embedding config for dimension probe: ${resolveError.message}`,
+          );
+        }
       }
     } catch (dimError) {
       this.logger.warn(

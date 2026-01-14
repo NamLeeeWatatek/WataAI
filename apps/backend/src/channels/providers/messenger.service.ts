@@ -26,7 +26,7 @@ export class MessengerService {
     private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
-  ) { }
+  ) {}
 
   async sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
     try {

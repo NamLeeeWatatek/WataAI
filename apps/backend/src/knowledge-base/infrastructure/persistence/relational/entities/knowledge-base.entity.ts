@@ -10,12 +10,14 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import {
   KbProcessingStatus,
   KbSourceType,
 } from '../../../../knowledge-base.enum';
+import { AiProviderConfigEntity } from '../../../../../ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
 
 @Entity({ name: 'knowledge_base' })
 export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
@@ -28,19 +30,40 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   @Column({ type: String, nullable: true })
   description?: string | null;
 
-  @Column({ name: 'ai_provider_id', type: 'uuid', nullable: true })
-  @Index()
-  aiProviderId?: string | null;
+  @Column({ name: 'is_public', type: Boolean, default: false })
+  isPublic: boolean;
 
+  @ApiProperty({ nullable: true })
+  @Column({ name: 'ai_config_id', type: 'uuid', nullable: true })
+  @Index()
+  aiConfigId?: string | null;
+
+  @ApiProperty({ type: () => AiProviderConfigEntity })
+  @ManyToOne(() => AiProviderConfigEntity, { nullable: true })
+  @JoinColumn({ name: 'ai_config_id' })
+  aiConfig?: AiProviderConfigEntity;
+
+  @ApiProperty({ nullable: true })
   @Column({ name: 'rag_model', type: String, nullable: true })
   ragModel?: string | null;
 
+  @ApiProperty({ nullable: true })
+  @Column({ name: 'embedding_config_id', type: 'uuid', nullable: true })
+  @Index()
+  embeddingConfigId?: string | null;
+
+  @ApiProperty({ type: () => AiProviderConfigEntity })
+  @ManyToOne(() => AiProviderConfigEntity, { nullable: true })
+  @JoinColumn({ name: 'embedding_config_id' })
+  embeddingConfig?: AiProviderConfigEntity;
+
+  @ApiProperty({ nullable: true })
   @Column({
     name: 'embedding_model',
     type: String,
-    default: 'text-embedding-3-small',
+    nullable: true,
   })
-  embeddingModel: string;
+  embeddingModel?: string | null;
 
   @Column({ name: 'chunk_size', type: 'int', default: 1000 })
   chunkSize: number;

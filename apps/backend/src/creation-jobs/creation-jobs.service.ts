@@ -41,7 +41,7 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) { }
+  ) {}
 
   async executePreview(
     toolId: string,
@@ -346,7 +346,7 @@ export class CreationJobsService {
 
     // Assume outputData contains the result content
     // We expect outputData to have 'content' and optional 'imageUrl'
-    // This depends on the tool output structure. 
+    // This depends on the tool output structure.
     // For now, we'll look for common fields or joined text.
 
     let message = '';
@@ -362,7 +362,7 @@ export class CreationJobsService {
       } else {
         // Fallback: try to stringify or join values
         message = Object.values(job.outputData)
-          .filter(v => typeof v === 'string')
+          .filter((v) => typeof v === 'string')
           .join('\n');
       }
 
@@ -393,16 +393,24 @@ export class CreationJobsService {
       }
 
       try {
-        const channel = await this.channelsService.findOne(channelId, workspaceId);
+        const channel = await this.channelsService.findOne(
+          channelId,
+          workspaceId,
+        );
         if (!channel) {
-          results.push({ channelId: rawChannelId, status: 'error', error: 'Channel not found' });
+          results.push({
+            channelId: rawChannelId,
+            status: 'error',
+            error: 'Channel not found',
+          });
           continue;
         }
 
         if (channel.type === 'facebook') {
-          // If targetPageId was provided in the composite ID, use it. 
+          // If targetPageId was provided in the composite ID, use it.
           // Otherwise fall back to metadata.
-          let pageId = targetPageId || channel.metadata?.pageId || channel.metadata?.id;
+          const pageId =
+            targetPageId || channel.metadata?.pageId || channel.metadata?.id;
 
           // If we still don't have a pageId, check if metadata.pages exists and try to find a match or default?
           // But usually targetPageId should cover the specific selection case.
@@ -410,7 +418,12 @@ export class CreationJobsService {
           const accessToken = channel.accessToken;
 
           if (!pageId || !accessToken) {
-            results.push({ channelId: rawChannelId, status: 'error', error: 'Invalid channel configuration: missing Page ID or Access Token' });
+            results.push({
+              channelId: rawChannelId,
+              status: 'error',
+              error:
+                'Invalid channel configuration: missing Page ID or Access Token',
+            });
             continue;
           }
 
@@ -419,14 +432,28 @@ export class CreationJobsService {
             pageId,
             message,
             imageUrl,
-            scheduledTime ? Math.floor(new Date(scheduledTime).getTime() / 1000) : undefined
+            scheduledTime
+              ? Math.floor(new Date(scheduledTime).getTime() / 1000)
+              : undefined,
           );
-          results.push({ channelId: rawChannelId, status: 'success', data: result });
+          results.push({
+            channelId: rawChannelId,
+            status: 'success',
+            data: result,
+          });
         } else {
-          results.push({ channelId: rawChannelId, status: 'error', error: `Channel type ${channel.type} not supported for posting yet` });
+          results.push({
+            channelId: rawChannelId,
+            status: 'error',
+            error: `Channel type ${channel.type} not supported for posting yet`,
+          });
         }
       } catch (err) {
-        results.push({ channelId: rawChannelId, status: 'error', error: err.message });
+        results.push({
+          channelId: rawChannelId,
+          status: 'error',
+          error: err.message,
+        });
       }
     }
 

@@ -83,7 +83,10 @@ export class CreateCreationToolDto {
       subTypes: [
         { value: AiExecutionConfigDto, name: ExecutionType.AI_GENERATION },
         { value: HttpExecutionConfigDto, name: ExecutionType.HTTP_WEBHOOK },
-        { value: WorkflowExecutionConfigDto, name: ExecutionType.WORKFLOW_CHAIN },
+        {
+          value: WorkflowExecutionConfigDto,
+          name: ExecutionType.WORKFLOW_CHAIN,
+        },
       ],
     },
   })

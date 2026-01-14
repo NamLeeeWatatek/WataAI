@@ -31,7 +31,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   async chunkText(
     text: string,
@@ -88,19 +88,26 @@ export class KBEmbeddingsService {
     const kbId = chunks[0].knowledgeBaseId;
     const kb = await this.kbRepository.findOne({
       where: { id: kbId },
-      select: ['workspaceId', 'createdBy', 'aiProviderId', 'embeddingModel'],
+      select: [
+        'workspaceId',
+        'createdBy',
+        'aiConfigId',
+        'embeddingConfigId',
+        'embeddingModel',
+      ],
     });
     const workspaceId = kb?.workspaceId || undefined;
     const userId = kb?.createdBy;
-    const kbAiProviderId = kb?.aiProviderId || undefined;
+    // Use embeddingConfigId if avail, else fallback to generic aiConfigId
+    const kbAiConfigId = kb?.embeddingConfigId || kb?.aiConfigId || undefined;
     const kbEmbeddingModel =
       embeddingModel || kb?.embeddingModel || 'text-embedding-004';
 
     // Get provider config based on KB's settings
-    const providerConfig = await this.getProviderConfig(
-      userId || undefined,
+    const providerConfig = await this.resolveEmbeddingConfig(
+      kbAiConfigId || undefined,
       workspaceId || undefined,
-      kbAiProviderId || undefined,
+      userId || undefined,
       kbEmbeddingModel,
     );
     const provider = providerConfig.provider;
@@ -115,9 +122,7 @@ export class KBEmbeddingsService {
       if (workspaceId && isUUID(workspaceId)) {
         const workspaceConfigs =
           await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
-        const config = workspaceConfigs.find(
-          (c) => c.providerId === kbAiProviderId,
-        );
+        const config = workspaceConfigs.find((c) => c.id === kbAiConfigId);
         if (config?.config?.apiKey) {
           apiKey = config.config.apiKey;
         }
@@ -126,7 +131,7 @@ export class KBEmbeddingsService {
       if (!apiKey && userId && isUUID(userId)) {
         const userConfigs =
           await this.aiProvidersService.getUserConfigs(userId);
-        const config = userConfigs.find((c) => c.providerId === kbAiProviderId);
+        const config = userConfigs.find((c) => c.id === kbAiConfigId);
         if (config?.config?.apiKey) {
           apiKey = config.config.apiKey;
         }
@@ -167,9 +172,7 @@ export class KBEmbeddingsService {
                       await this.aiProvidersService.getWorkspaceConfigs(
                         workspaceId,
                       );
-                    const config = configs.find(
-                      (c) => c.providerId === kbAiProviderId,
-                    );
+                    const config = configs.find((c) => c.id === kbAiConfigId);
                     if (config?.config?.apiKey) {
                       apiKey = config.config.apiKey;
                     }
@@ -178,9 +181,7 @@ export class KBEmbeddingsService {
                   if (!apiKey && userId) {
                     const configs =
                       await this.aiProvidersService.getUserConfigs(userId);
-                    const config = configs.find(
-                      (c) => c.providerId === kbAiProviderId,
-                    );
+                    const config = configs.find((c) => c.id === kbAiConfigId);
                     if (config?.config?.apiKey) {
                       apiKey = config.config.apiKey;
                     }
@@ -316,27 +317,33 @@ export class KBEmbeddingsService {
   ): Promise<number[]> {
     let userId: string | undefined;
     let workspaceId: string | undefined;
-    let kbAiProviderId: string | undefined;
+    let kbAiConfigId: string | undefined;
     let effectiveEmbeddingModel = embeddingModel;
 
     if (kbId) {
       const kb = await this.kbRepository.findOne({
         where: { id: kbId },
-        select: ['workspaceId', 'createdBy', 'aiProviderId', 'embeddingModel'],
+        select: [
+          'workspaceId',
+          'createdBy',
+          'aiConfigId',
+          'embeddingConfigId',
+          'embeddingModel',
+        ],
       });
       userId = kb?.createdBy ?? undefined;
       workspaceId = kb?.workspaceId || undefined;
-      kbAiProviderId = kb?.aiProviderId || undefined;
+      kbAiConfigId = kb?.embeddingConfigId || kb?.aiConfigId || undefined;
       if (kb?.embeddingModel) {
         effectiveEmbeddingModel = kb.embeddingModel;
       }
     }
 
     // Get provider config using the same logic as chunk processing
-    const providerConfig = await this.getProviderConfig(
-      userId || undefined,
+    const providerConfig = await this.resolveEmbeddingConfig(
+      kbAiConfigId,
       workspaceId || undefined,
-      kbAiProviderId,
+      userId || undefined,
       effectiveEmbeddingModel,
     );
     const provider = providerConfig.provider;
@@ -355,9 +362,7 @@ export class KBEmbeddingsService {
         if (workspaceId && isUUID(workspaceId)) {
           const workspaceConfigs =
             await this.aiProvidersService.getWorkspaceConfigs(workspaceId);
-          const config = workspaceConfigs.find(
-            (c) => c.providerId === kbAiProviderId,
-          );
+          const config = workspaceConfigs.find((c) => c.id === kbAiConfigId);
           if (config?.config?.apiKey) {
             apiKey = config.config.apiKey;
           }
@@ -366,9 +371,7 @@ export class KBEmbeddingsService {
         if (!apiKey && userId && isUUID(userId)) {
           const userConfigs =
             await this.aiProvidersService.getUserConfigs(userId);
-          const config = userConfigs.find(
-            (c) => c.providerId === kbAiProviderId,
-          );
+          const config = userConfigs.find((c) => c.id === kbAiConfigId);
           if (config?.config?.apiKey) {
             apiKey = config.config.apiKey;
           }
@@ -439,7 +442,7 @@ export class KBEmbeddingsService {
           return this.aiProvidersService.generateEmbedding(
             query,
             attempt.provider,
-            attempt.model || 'text-embedding-3-small',
+            attempt.model!,
             fallbackApiKey,
           );
         } catch (fallbackError) {
@@ -463,10 +466,10 @@ export class KBEmbeddingsService {
     return kb?.workspaceId || null;
   }
 
-  private async getProviderConfig(
-    userId?: string,
-    workspaceId?: string,
-    providerId?: string,
+  public async resolveEmbeddingConfig(
+    providerId: string | null | undefined,
+    workspaceId: string | undefined, // Reordered to match logical usage (though I can just match call sites)
+    userId: string | undefined,
     preferredModel?: string,
   ): Promise<{
     provider: string;
@@ -490,7 +493,7 @@ export class KBEmbeddingsService {
               ? await this.aiProvidersService.getWorkspaceConfigs(scope.id)
               : await this.aiProvidersService.getUserConfigs(scope.id);
 
-          const config = configs.find((c) => c.providerId === providerId);
+          const config = configs.find((c) => c.id === providerId);
 
           if (config && config.provider && config.provider.key) {
             const providerKey = config.provider.key;
@@ -502,18 +505,15 @@ export class KBEmbeddingsService {
             const baseUrl = config.config?.baseUrl || config.config?.baseURL;
 
             // Determines the embedding model to use
-            let model = 'text-embedding-ada-002'; // default
+            let model = preferredModel || 'text-embedding-ada-002'; // use preferred or default
 
-            // For Ollama/Custom, we respect the KB's specific embedding model setting
-            // or fall back to sensible defaults
-            if (providerKey === 'ollama' || providerKey === 'custom') {
-              model =
-                preferredModel ||
-                (providerKey === 'ollama'
-                  ? 'mxbai-embed-large:latest'
-                  : 'text-embedding-ada-002');
-            } else if (providerKey === 'google') {
-              model = 'text-embedding-004';
+            // Provider-specific model overrides only if no preferred model
+            if (!preferredModel) {
+              if (providerKey === 'google') {
+                model = 'text-embedding-004';
+              } else if (providerKey === 'ollama') {
+                model = 'mxbai-embed-large:latest';
+              }
             }
 
             return {
@@ -602,10 +602,10 @@ export class KBEmbeddingsService {
     kbId?: string,
   ): Promise<{ provider: string; model: string }> {
     // Reuse getProviderConfig logic
-    const config = await this.getProviderConfig(
-      userId,
+    const config = await this.resolveEmbeddingConfig(
+      undefined,
       workspaceId,
-      kbId,
+      userId,
       undefined,
     );
     return { provider: config.provider, model: config.model };

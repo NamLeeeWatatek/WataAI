@@ -39,4 +39,4 @@ import { ExecutionStrategyResolver } from './execution-strategy.resolver';
     ExecutionValidationService,
   ],
 })
-export class ExecutionModule { }
+export class ExecutionModule {}

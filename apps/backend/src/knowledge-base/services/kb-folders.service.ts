@@ -24,7 +24,7 @@ export class KBFoldersService {
     private readonly kbManagementService: KBManagementService,
     @Inject(forwardRef(() => KBDocumentsService))
     private readonly kbDocumentsService: KBDocumentsService,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateFolderDto) {
     const kb = await this.kbManagementService.findOne(

@@ -48,9 +48,15 @@ export class KBProcessingQueueService {
     };
 
     this.jobs.set(internalJobId, jobStatus);
-    this.logger.log(
-      `📥 Job ${internalJobId} added to memory status and BullMQ`,
+
+    // Fair Queueing: Calculate priority based on how many jobs this KB already has in queue
+    // BullMQ: Lower number = Higher priority. Priority 1 (High) -> Priority 100+ (Low)
+    const activeJobsForKB = this.getJobsByKnowledgeBase(knowledgeBaseId).filter(
+      (j) => j.status === 'queued' || j.status === 'processing',
     );
+    const priority = Math.min(255, 1 + activeJobsForKB.length);
+
+    this.logger.log(`📥 Job ${internalJobId} added (Priority: ${priority})`);
 
     // Add to BullMQ
     await this.kbQueue.add(
@@ -63,6 +69,7 @@ export class KBProcessingQueueService {
       },
       {
         jobId: internalJobId,
+        priority, // Apply fair-queueing priority
         removeOnComplete: true,
         removeOnFail: false,
       },

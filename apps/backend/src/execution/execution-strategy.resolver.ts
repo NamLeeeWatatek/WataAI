@@ -13,7 +13,7 @@ export class ExecutionStrategyResolver {
     private readonly httpStrategy: HttpExecutionStrategy,
     private readonly aiStrategy: AiExecutionStrategy,
     private readonly workflowStrategy: WorkflowExecutionStrategy,
-  ) { }
+  ) {}
 
   resolve(type: ExecutionType): IExecutionStrategy {
     switch (type) {

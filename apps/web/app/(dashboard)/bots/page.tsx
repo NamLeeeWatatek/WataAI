@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/Form'
 
 import { useWorkspace } from '@/lib/hooks/useWorkspace'
-import { cn } from '@/lib/utils'
 import {
     Plus,
     Edit2,
@@ -159,19 +158,18 @@ export default function BotsPage() {
         <div className="space-y-6">
             <PageHeader
                 title="AI Agent Fleet"
-                description="Harness autonomous intelligence across your specialized domains."
+                description="Manage your AI agents specialized in various tasks."
                 onRefresh={refetch}
                 refreshing={isLoading}
-                premium
             >
                 <Button onClick={() => openModal()} className="px-6 font-bold h-10 shadow-lg shadow-primary/20">
-                    <Plus className="w-4 h-4 mr-2" /> Forge New Agent
+                    <Plus className="w-4 h-4 mr-2" /> New Agent
                 </Button>
             </PageHeader>
 
             <div className="flex items-center gap-2 max-w-sm">
                 <Search
-                    placeholder="Locate specialized intelligence..."
+                    placeholder="Search agents..."
                     value={searchQuery}
                     onChange={(e: any) => {
                         setSearchQuery(e.target.value)
@@ -191,16 +189,16 @@ export default function BotsPage() {
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>
                     <h3 className="text-xl font-bold mb-2">
-                        {searchQuery ? 'Signal Not Found' : 'Hangar Empty'}
+                        {searchQuery ? 'No Results' : 'No Agents Yet'}
                     </h3>
                     <p className="text-muted-foreground mb-8 max-w-xs text-center text-xs font-medium">
                         {searchQuery
-                            ? `No agents responding to the query identifier "${searchQuery}"`
-                            : 'Initialize your first autonomous agent to orchestrate complex tasks.'
+                            ? `No agents matching "${searchQuery}"`
+                            : 'Create your first AI agent to help with tasks.'
                         }
                     </p>
                     <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8 font-bold">
-                        <Plus className="w-4 h-4 mr-2" /> Launch Initial Agent
+                        <Plus className="w-4 h-4 mr-2" /> Create First Agent
                     </Button>
                 </Card>
             ) : (
@@ -238,18 +236,18 @@ export default function BotsPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => openModal(bot)}>
-                                                        <Edit2 className="w-4 h-4 mr-2" /> Edit Persona
+                                                        <Edit2 className="w-4 h-4 mr-2" /> Edit Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => toggleStatus(bot)}>
                                                         <Activity className="w-4 h-4 mr-2" />
-                                                        {bot.status === 'active' ? 'Enter Hibernation' : 'Reactivate Core'}
+                                                        {bot.status === 'active' ? 'Pause Agent' : 'Start Agent'}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         onClick={() => setDeleteId(bot.id)}
                                                         className="text-destructive focus:bg-destructive/10"
                                                     >
-                                                        <Trash2 className="w-4 h-4 mr-2" /> Decommission
+                                                        <Trash2 className="w-4 h-4 mr-2" /> Delete
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
@@ -296,7 +294,7 @@ export default function BotsPage() {
                     <DialogHeader className="p-6 bg-muted/20 border-b">
                         <DialogTitle className="text-xl font-black flex items-center gap-3">
                             <BotIcon className="w-5 h-5 text-primary" />
-                            {editingBot ? 'Modify Neural Profile' : 'Forge New Intelligence'}
+                            {editingBot ? 'Edit Agent' : 'Create New Agent'}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="p-6">
@@ -307,9 +305,9 @@ export default function BotsPage() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identifier</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Agent Name</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g. Sentinel-7 Alpha" {...field} className="h-11 font-bold" />
+                                                <Input placeholder="e.g. Sales Assistant" {...field} className="h-11 font-bold" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -321,9 +319,9 @@ export default function BotsPage() {
                                     name="description"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Neural Constraints & Description</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description & Instructions</FormLabel>
                                             <FormControl>
-                                                <Textarea rows={4} placeholder="Define the operational boundaries and objectives..." {...field} className="resize-none font-medium" />
+                                                <Textarea rows={4} placeholder="What should this agent do?" {...field} className="resize-none font-medium" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -331,9 +329,9 @@ export default function BotsPage() {
                                 />
 
                                 <div className="flex items-center justify-end gap-3 pt-2">
-                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="font-bold">Abort</Button>
+                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="font-bold">Cancel</Button>
                                     <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8 shadow-lg shadow-primary/20">
-                                        {editingBot ? 'Commit Changes' : 'Initialize Agent'}
+                                        {editingBot ? 'Save Changes' : 'Create Agent'}
                                     </Button>
                                 </div>
                             </form>
@@ -345,8 +343,8 @@ export default function BotsPage() {
             <AlertDialogConfirm
                 open={deleteId !== null}
                 onOpenChange={(open) => !open && setDeleteId(null)}
-                title="Decommission Intelligence"
-                description="Initiating the permanent purge of this agentic entity. All neural weights and logs will be erased. Proceed?"
+                title="Delete Agent"
+                description="Are you sure you want to delete this agent? This action cannot be undone."
                 onConfirm={confirmDelete}
                 variant="destructive"
             />

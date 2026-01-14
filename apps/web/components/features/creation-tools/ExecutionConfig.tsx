@@ -30,12 +30,11 @@ import {
     DialogTrigger,
 } from '@/components/ui/Dialog';
 import { templatesApi } from '@/lib/api/templates';
-import { Template } from '@/lib/types/template';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
-import { aiProvidersApi, type AiModelProvider } from '@/lib/api/ai-providers';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/Checkbox';
+
 
 interface ExecutionConfigProps {
     config: ExecutionFlow;
@@ -265,64 +264,29 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
 }
 
 function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onChange: (c: AiExecutionConfig) => void }) {
-    const { workspaceId } = useWorkspace();
-
-    const fetchProviders = async () => {
-        const data = workspaceId
-            ? await aiProvidersApi.getWorkspaceModels(workspaceId)
-            : await aiProvidersApi.getAvailableModels();
-        return data as AiModelProvider[];
-    };
-
-    const { data: providers = [], isLoading: loading } = useQuery({
-        queryKey: ['ai-providers', 'models', workspaceId],
-        queryFn: fetchProviders,
-        staleTime: 5 * 60 * 1000,
-    });
-
-    const selectedProviderData = providers.find(p => p.providerKey === config.provider || p.providerId === config.provider);
-    const availableModels = selectedProviderData?.models || [];
-
     return (
         <Card className="border-border/60 bg-card/40">
             <CardContent className="space-y-5 p-5">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>Provider</Label>
-                        <Select
-                            value={config.provider}
-                            onValueChange={(val) => onChange({ ...config, provider: val as any, model: '' })}
-                        >
-                            <SelectTrigger className="h-10">
-                                <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {providers.map((p) => (
-                                    <SelectItem key={p.providerId + (p.configId || '')} value={p.providerKey}>
-                                        {p.providerName}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Input
+                            value={config.provider || ''}
+                            onChange={(e) => onChange({ ...config, provider: e.target.value as any })}
+                            placeholder="e.g. openai, anthropic, google"
+                            className="h-10"
+                        />
+                        <p className="text-xs text-muted-foreground">Enter the AI provider key</p>
                     </div>
                     <div className="space-y-2">
                         <Label>Model</Label>
-                        <Select
-                            value={config.model}
-                            onValueChange={(val) => onChange({ ...config, model: val })}
-                            disabled={!config.provider}
-                        >
-                            <SelectTrigger className="h-10">
-                                <SelectValue placeholder={!config.provider ? "Select provider first" : "Select model"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableModels.map((model: string) => (
-                                    <SelectItem key={model} value={model}>
-                                        {model}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Input
+                            value={config.model || ''}
+                            onChange={(e) => onChange({ ...config, model: e.target.value })}
+                            placeholder="e.g. gpt-4o, claude-3-opus"
+                            className="h-10 font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">Enter the model name manually</p>
                     </div>
                 </div>
 

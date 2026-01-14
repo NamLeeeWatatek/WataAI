@@ -6,8 +6,6 @@ import { AiProviderOwnerType } from '../../../../ai-providers.enum';
 import {
   AiProviderEntity,
   AiProviderConfigEntity,
-  UserAiProviderConfigEntity,
-  WorkspaceAiProviderConfigEntity,
   AiUsageLogEntity,
 } from '../entities/ai-provider.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
@@ -25,26 +23,22 @@ import {
 
 @Injectable()
 export class AiProviderConfigRelationalRepository
-  implements AiProviderConfigRepository
-{
+  implements AiProviderConfigRepository {
   constructor(
     @InjectRepository(AiProviderEntity)
     private readonly aiProviderRepository: Repository<AiProviderEntity>,
     @InjectRepository(AiProviderConfigEntity)
     private readonly configRepository: Repository<AiProviderConfigEntity>,
-    @InjectRepository(UserAiProviderConfigEntity)
-    private readonly userConfigRepository: Repository<UserAiProviderConfigEntity>,
-    @InjectRepository(WorkspaceAiProviderConfigEntity)
-    private readonly workspaceConfigRepository: Repository<WorkspaceAiProviderConfigEntity>,
     @InjectRepository(AiUsageLogEntity)
     private readonly usageLogRepository: Repository<AiUsageLogEntity>,
-  ) {}
+  ) { }
 
   // AiProvider operations
   async findAvailableProviders(): Promise<AiProvider[]> {
     const entities = await this.aiProviderRepository.find({
       where: { isActive: true },
       order: { label: 'ASC' },
+      relations: ['configs'],
     });
     return entities.map((entity) => AiProviderMapper.toDomain(entity));
   }
@@ -73,17 +67,23 @@ export class AiProviderConfigRelationalRepository
       createdAt: new Date(),
       updatedAt: new Date(),
     } as UserAiProviderConfig;
+
+    // Convert to persistence entity using the mapper logic which sets ownerType=USER
     const persistenceModel = UserAiProviderConfigMapper.toPersistence(fullData);
-    const newEntity = await this.userConfigRepository.save(
-      this.userConfigRepository.create(persistenceModel),
+
+    const newEntity = await this.configRepository.save(
+      this.configRepository.create(persistenceModel),
     );
     return UserAiProviderConfigMapper.toDomain(newEntity);
   }
 
   async getUserConfigs(userId: string): Promise<UserAiProviderConfig[]> {
-    const entities = await this.userConfigRepository.find({
-      where: { userId },
-      relations: ['provider'],
+    const entities = await this.configRepository.find({
+      where: {
+        ownerType: AiProviderOwnerType.USER,
+        ownerId: userId,
+      },
+      relations: ['provider', 'models'],
       order: { createdAt: 'DESC' },
     });
     return entities.map((entity) =>
@@ -95,8 +95,25 @@ export class AiProviderConfigRelationalRepository
     userId: string,
     id: string,
   ): Promise<NullableType<UserAiProviderConfig>> {
-    const entity = await this.userConfigRepository.findOne({
-      where: { id, userId },
+    const entity = await this.configRepository.findOne({
+      where: {
+        id,
+        ownerType: AiProviderOwnerType.USER,
+        ownerId: userId,
+      },
+      relations: ['provider', 'models'],
+    });
+    return entity ? UserAiProviderConfigMapper.toDomain(entity) : null;
+  }
+
+  async findUserConfigById(
+    id: string,
+  ): Promise<NullableType<UserAiProviderConfig>> {
+    const entity = await this.configRepository.findOne({
+      where: {
+        id,
+        ownerType: AiProviderOwnerType.USER,
+      },
       relations: ['provider'],
     });
     return entity ? UserAiProviderConfigMapper.toDomain(entity) : null;
@@ -107,28 +124,40 @@ export class AiProviderConfigRelationalRepository
     id: string,
     payload: DeepPartial<UserAiProviderConfig>,
   ): Promise<UserAiProviderConfig> {
-    const entity = await this.userConfigRepository.findOne({
-      where: { id, userId },
+    const entity = await this.configRepository.findOne({
+      where: {
+        id,
+        ownerType: AiProviderOwnerType.USER,
+        ownerId: userId,
+      },
     });
 
     if (!entity) {
       throw new Error(`User config not found`);
     }
 
-    const updatedEntity = await this.userConfigRepository.save(
-      this.userConfigRepository.create(
-        UserAiProviderConfigMapper.toPersistence({
-          ...UserAiProviderConfigMapper.toDomain(entity),
-          ...payload,
-        } as UserAiProviderConfig),
-      ),
+    // Convert existing entity to domain to merge payload
+    const domainEntity = UserAiProviderConfigMapper.toDomain(entity);
+    const updatedDomain = {
+      ...domainEntity,
+      ...payload,
+    } as UserAiProviderConfig;
+    const persistenceModel =
+      UserAiProviderConfigMapper.toPersistence(updatedDomain);
+
+    const updatedEntity = await this.configRepository.save(
+      this.configRepository.create(persistenceModel),
     );
 
     return UserAiProviderConfigMapper.toDomain(updatedEntity);
   }
 
   async deleteUserConfig(userId: string, id: string): Promise<void> {
-    await this.userConfigRepository.delete({ id, userId });
+    await this.configRepository.delete({
+      id,
+      ownerType: AiProviderOwnerType.USER,
+      ownerId: userId,
+    });
   }
 
   async verifyUserConfig(userId: string, id: string): Promise<boolean> {
@@ -137,7 +166,6 @@ export class AiProviderConfigRelationalRepository
       return false;
     }
 
-    // Basic validation - check if required fields are present
     const provider = config.provider;
     const decryptedConfig = config.config;
 
@@ -145,27 +173,25 @@ export class AiProviderConfigRelationalRepository
       return false;
     }
 
-    // Simple validation based on provider requirements
     const hasRequiredFields = provider.requiredFields.every(
       (field) =>
         decryptedConfig[field] && decryptedConfig[field].toString().trim(),
     );
 
-    // For providers with no required fields (like ollama, custom), check for basic config
     if (!hasRequiredFields && provider.requiredFields.length === 0) {
-      const hasApiKey = decryptedConfig.apiKey && decryptedConfig.apiKey.trim();
+      const hasApiKey =
+        decryptedConfig.apiKey && (decryptedConfig.apiKey as string).trim();
       const hasBaseUrl =
-        decryptedConfig.baseUrl && decryptedConfig.baseUrl.trim();
+        decryptedConfig.baseUrl && (decryptedConfig.baseUrl as string).trim();
       const hasSomeConfig = hasApiKey || hasBaseUrl;
 
       if (!hasSomeConfig) {
-        return false; // Need at least something configured
+        return false;
       }
     } else if (!hasRequiredFields) {
-      return false; // Required fields not present
+      return false;
     }
 
-    // Mark as verified by updating only the config field
     const updatedConfigData = {
       config: {
         ...config.config,
@@ -196,8 +222,8 @@ export class AiProviderConfigRelationalRepository
     } as WorkspaceAiProviderConfig;
     const persistenceModel =
       WorkspaceAiProviderConfigMapper.toPersistence(fullData);
-    const newEntity = await this.workspaceConfigRepository.save(
-      this.workspaceConfigRepository.create(persistenceModel),
+    const newEntity = await this.configRepository.save(
+      this.configRepository.create(persistenceModel),
     );
     return WorkspaceAiProviderConfigMapper.toDomain(newEntity);
   }
@@ -205,9 +231,12 @@ export class AiProviderConfigRelationalRepository
   async getWorkspaceConfigs(
     workspaceId: string,
   ): Promise<WorkspaceAiProviderConfig[]> {
-    const entities = await this.workspaceConfigRepository.find({
-      where: { workspaceId },
-      relations: ['provider'],
+    const entities = await this.configRepository.find({
+      where: {
+        ownerType: AiProviderOwnerType.WORKSPACE,
+        ownerId: workspaceId,
+      },
+      relations: ['provider', 'models'],
       order: { createdAt: 'DESC' },
     });
     return entities.map((entity) =>
@@ -219,9 +248,13 @@ export class AiProviderConfigRelationalRepository
     workspaceId: string,
     id: string,
   ): Promise<NullableType<WorkspaceAiProviderConfig>> {
-    const entity = await this.workspaceConfigRepository.findOne({
-      where: { id, workspaceId },
-      relations: ['provider'],
+    const entity = await this.configRepository.findOne({
+      where: {
+        id,
+        ownerType: AiProviderOwnerType.WORKSPACE,
+        ownerId: workspaceId,
+      },
+      relations: ['provider', 'models'],
     });
     return entity ? WorkspaceAiProviderConfigMapper.toDomain(entity) : null;
   }
@@ -231,28 +264,39 @@ export class AiProviderConfigRelationalRepository
     id: string,
     payload: DeepPartial<WorkspaceAiProviderConfig>,
   ): Promise<WorkspaceAiProviderConfig> {
-    const entity = await this.workspaceConfigRepository.findOne({
-      where: { id, workspaceId },
+    const entity = await this.configRepository.findOne({
+      where: {
+        id,
+        ownerType: AiProviderOwnerType.WORKSPACE,
+        ownerId: workspaceId,
+      },
     });
 
     if (!entity) {
       throw new Error(`Workspace config not found`);
     }
 
-    const updatedEntity = await this.workspaceConfigRepository.save(
-      this.workspaceConfigRepository.create(
-        WorkspaceAiProviderConfigMapper.toPersistence({
-          ...WorkspaceAiProviderConfigMapper.toDomain(entity),
-          ...payload,
-        } as WorkspaceAiProviderConfig),
-      ),
+    const domainEntity = WorkspaceAiProviderConfigMapper.toDomain(entity);
+    const updatedDomain = {
+      ...domainEntity,
+      ...payload,
+    } as WorkspaceAiProviderConfig;
+    const persistenceModel =
+      WorkspaceAiProviderConfigMapper.toPersistence(updatedDomain);
+
+    const updatedEntity = await this.configRepository.save(
+      this.configRepository.create(persistenceModel),
     );
 
     return WorkspaceAiProviderConfigMapper.toDomain(updatedEntity);
   }
 
   async deleteWorkspaceConfig(workspaceId: string, id: string): Promise<void> {
-    await this.workspaceConfigRepository.delete({ id, workspaceId });
+    await this.configRepository.delete({
+      id,
+      ownerType: AiProviderOwnerType.WORKSPACE,
+      ownerId: workspaceId,
+    });
   }
 
   // Additional methods
@@ -404,47 +448,32 @@ export class AiProviderConfigRelationalRepository
     providerId: string,
     scope?: 'user' | 'workspace' | 'system',
   ): Promise<NullableType<string>> {
-    if (scope === 'system') {
-      const config = await this.configRepository.findOne({
-        where: {
-          providerId,
-          ownerType: AiProviderOwnerType.SYSTEM,
-          isActive: true,
-        },
-      });
-      return config?.apiKey || null;
-    }
+    let ownerType = AiProviderOwnerType.SYSTEM;
+    // We don't have the ownerId here, so this is just a quick check for existence or system config.
+    // If getting user/workspace config without ID, it's ambiguous. But we'll try to follow scope hint.
 
-    // For user/workspace, we might need to look into their respective entities
-    // since they store configs in JSONB.
-    if (scope === 'user') {
-      const config = await this.userConfigRepository.findOne({
-        where: { providerId, isActive: true },
-      });
-      return (config?.config?.apiKey as string) || null;
-    }
+    if (scope === 'user') ownerType = AiProviderOwnerType.USER;
+    if (scope === 'workspace') ownerType = AiProviderOwnerType.WORKSPACE;
 
-    if (scope === 'workspace') {
-      const config = await this.workspaceConfigRepository.findOne({
-        where: { providerId, isActive: true },
-      });
-      return (config?.config?.apiKey as string) || null;
-    }
-
-    // Default: try system first
-    const systemConfig = await this.configRepository.findOne({
+    const config = await this.configRepository.findOne({
       where: {
         providerId,
-        ownerType: AiProviderOwnerType.SYSTEM,
+        ownerType,
         isActive: true,
       },
+      order: { createdAt: 'DESC' }, // Unsafe assumption but consistent with "first found"
     });
-    return systemConfig?.apiKey || null;
+
+    return ((config?.config as any)?.apiKey as string) || null;
   }
 
   async getWorkspaceProviders(workspaceId: string): Promise<AiProvider[]> {
-    const entities = await this.workspaceConfigRepository.find({
-      where: { workspaceId, isActive: true },
+    const entities = await this.configRepository.find({
+      where: {
+        ownerType: AiProviderOwnerType.WORKSPACE,
+        ownerId: workspaceId,
+        isActive: true,
+      },
       relations: ['provider'],
     });
     return entities
@@ -453,8 +482,12 @@ export class AiProviderConfigRelationalRepository
   }
 
   async getUserProviders(userId: string): Promise<AiProvider[]> {
-    const entities = await this.userConfigRepository.find({
-      where: { userId, isActive: true },
+    const entities = await this.configRepository.find({
+      where: {
+        ownerType: AiProviderOwnerType.USER,
+        ownerId: userId,
+        isActive: true,
+      },
       relations: ['provider'],
     });
     return entities
@@ -467,22 +500,47 @@ export class AiProviderConfigRelationalRepository
     scope: 'user' | 'workspace',
     scopeId: string,
   ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    const ownerType =
+      scope === 'user'
+        ? AiProviderOwnerType.USER
+        : AiProviderOwnerType.WORKSPACE;
+
+    const entity = await this.configRepository.findOne({
+      where: {
+        ownerType,
+        ownerId: scopeId,
+        providerId,
+        isActive: true,
+      },
+      relations: ['provider', 'models'],
+    });
+
+    if (!entity) return null;
+
     if (scope === 'user') {
-      const entity = await this.userConfigRepository.findOne({
-        where: { userId: scopeId, providerId, isActive: true },
-        relations: ['provider'],
-      });
-      return entity ? UserAiProviderConfigMapper.toDomain(entity) : null;
+      return UserAiProviderConfigMapper.toDomain(entity);
     } else {
-      const entity = await this.workspaceConfigRepository.findOne({
-        where: { workspaceId: scopeId, providerId, isActive: true },
-        relations: ['provider'],
-      });
-      return entity ? WorkspaceAiProviderConfigMapper.toDomain(entity) : null;
+      return WorkspaceAiProviderConfigMapper.toDomain(entity);
     }
   }
 
-  // Usage logs
+  async getConfigById(
+    id: string,
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    const entity = await this.configRepository.findOne({
+      where: { id },
+      relations: ['provider', 'models'],
+    });
+
+    if (!entity) return null;
+
+    if (entity.ownerType === AiProviderOwnerType.USER) {
+      return UserAiProviderConfigMapper.toDomain(entity);
+    } else {
+      return WorkspaceAiProviderConfigMapper.toDomain(entity);
+    }
+  }
+
   async logUsage(data: {
     workspaceId: string;
     userId: string;
