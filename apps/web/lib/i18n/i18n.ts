@@ -8,8 +8,8 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
 // Import translations directly with type assertion
-const enTranslation = require('../../public/locales/en/translation.json') as Record<string, any>
-const viTranslation = require('../../public/locales/vi/translation.json') as Record<string, any>
+import enTranslation from '../../public/locales/en/translation.json';
+import viTranslation from '../../public/locales/vi/translation.json';
 
 // Resource bundle
 const resources = {

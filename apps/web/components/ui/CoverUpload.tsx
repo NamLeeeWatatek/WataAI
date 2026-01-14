@@ -64,7 +64,7 @@ export function CoverUpload({
             <div style={{ aspectRatio }} className="w-full relative bg-muted/20">
                 {value ? (
                     <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         {isVideo(value) ? (
                             <video
                                 src={value}

@@ -165,7 +165,7 @@ export function FileUpload({
             (preview.type === 'image' || preview.type === 'video') && (
               <div key={idx} className="relative group rounded-md overflow-hidden border bg-background/50 aspect-square shadow-sm hover:shadow-md transition-all">
                 {preview.type === 'image' && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                   
                   <img src={preview.url} alt="Preview" className="w-full h-full object-cover" />
                 )}
                 {preview.type === 'video' && (

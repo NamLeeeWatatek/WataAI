@@ -80,7 +80,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                     onClick={() => setDetailsOpen(true)}
                     aria-label="View product result"
                 >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    { }
                     <Image
                         src={outputStr}
                         alt="Product result"

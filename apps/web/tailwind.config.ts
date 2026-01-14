@@ -1,4 +1,6 @@
 import type { Config } from 'tailwindcss'
+import tailwindAnimate from "tailwindcss-animate"
+import typography from "@tailwindcss/typography"
 
 const config: Config = {
 	darkMode: 'class',
@@ -6,7 +8,7 @@ const config: Config = {
 		'./app/**/*.{js,ts,jsx,tsx,mdx}',
 		'./components/**/*.{js,ts,jsx,tsx,mdx}',
 	],
-	plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+	plugins: [tailwindAnimate, typography],
 	theme: {
 		extend: {
 			borderRadius: {

@@ -264,8 +264,9 @@ export function useNotificationsRealtime({
       if (type === 'error') soundType = 'mention';
       if (type === 'warning') soundType = 'call';
 
-      const { playSound } = require('./useNotifications');
-      playSound(soundType);
+      import('./useNotifications').then(({ playSoundUtil }) => {
+        playSoundUtil(soundType);
+      });
     } catch (error) {
       console.warn('Could not play notification sound:', error);
     }
