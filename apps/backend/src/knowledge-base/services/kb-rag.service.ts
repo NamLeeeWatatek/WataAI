@@ -247,14 +247,7 @@ export class KBRagService {
           `No chunks found, falling back to general knowledge for: "${question}"`,
         );
       } else {
-        // 2. LLM Re-ranking
-        relevantChunks = await this.reRankChunks(
-          question,
-          relevantChunks,
-          limit,
-        );
-
-        // 3. Context Expansion
+        // 2. Context Expansion (Standard RAG)
         relevantChunks = await this.expandContext(relevantChunks);
       }
 
@@ -339,14 +332,7 @@ export class KBRagService {
           `No chunks found, falling back to general knowledge for: "${question}"`,
         );
       } else {
-        // 2. LLM Re-ranking
-        relevantChunks = await this.reRankChunks(
-          question,
-          relevantChunks,
-          limit,
-        );
-
-        // 3. Context Expansion
+        // 2. Context Expansion (Standard RAG)
         relevantChunks = await this.expandContext(relevantChunks);
       }
 

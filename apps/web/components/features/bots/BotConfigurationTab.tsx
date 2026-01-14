@@ -177,7 +177,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               </div>
               <div>
                 <CardTitle className="text-xl font-bold tracking-tight">Model Intelligence</CardTitle>
-                <CardDescription className="text-xs font-medium text-muted-foreground/60">Configure the AI model and neural reasoning parameters</CardDescription>
+                <CardDescription className="text-xs font-medium text-muted-foreground/60">Configure the AI model and generation parameters</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -248,8 +248,8 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   <Separator className="bg-border/20" />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <span className="text-xs font-bold">Auto-Learning Mode</span>
-                      <p className="text-[10px] text-muted-foreground/70">Improve neural responses based on historical context</p>
+                      <span className="text-xs font-bold">Context Awareness</span>
+                      <p className="text-[10px] text-muted-foreground/70">Improve responses based on historical conversation context</p>
                     </div>
                     <Switch
                       checked={formData.enableAutoLearn}
@@ -267,7 +267,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                      Reasoning Creativity
+                      Response Creativity
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
@@ -275,8 +275,8 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                           </TooltipTrigger>
                           <TooltipContent className="rounded-xl p-4 border-border/40 max-w-[280px] bg-background shadow-2xl">
                             <p className="text-xs font-medium leading-relaxed">
-                              Lower values make the model more <span className="text-purple-500 font-black underline">Deterministic</span>.
-                              Higher values make it more <span className="text-pink-500 font-black underline">Stochastic</span>.
+                              Lower values make the model more <span className="text-purple-500 font-black underline">Precise</span>.
+                              Higher values make it more <span className="text-pink-500 font-black underline">Creative</span>.
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -303,7 +303,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
 
                 <div className="space-y-3.5">
                   <div className="flex justify-between items-center">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Neural Limit (Tokens)</Label>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Max Response Length (Tokens)</Label>
                     <Badge variant="outline" className="font-mono font-bold border-border/40">
                       {(formData.aiParameters?.maxTokens || 0).toLocaleString()}
                     </Badge>

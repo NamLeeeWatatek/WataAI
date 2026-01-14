@@ -108,9 +108,7 @@ export interface CreateBotDto {
   widgetButtonSize?: BotWidgetButtonSize
 }
 
-export interface UpdateBotDto extends Partial<CreateBotDto> {
-  // same fields but all optional
-}
+export type UpdateBotDto = Partial<CreateBotDto>
 
 export interface GetBotsResponse {
   data: Bot[]

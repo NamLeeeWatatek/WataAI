@@ -67,7 +67,7 @@ export function MultiImageUpload({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {files.map((url, idx) => (
                     <div key={idx} className="group relative aspect-square rounded-md overflow-hidden border bg-background">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-contain" />
                         <button
                             type="button"

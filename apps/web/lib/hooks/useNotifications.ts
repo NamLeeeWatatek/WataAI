@@ -31,6 +31,18 @@ const SOUNDS = {
     call: 'data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQA='
 };
 
+export const playSoundUtil = (type: 'message' | 'mention' | 'call' = 'message') => {
+    try {
+        const audio = new Audio(SOUNDS[type]);
+        audio.volume = 0.3; // 30% volume - subtle
+        audio.play().catch((error) => {
+            console.warn('Could not play notification sound:', error);
+        });
+    } catch (error) {
+        console.warn('Sound playback failed:', error);
+    }
+};
+
 export function useNotifications(): UseNotificationsReturn {
     const [permission, setPermission] = useState<NotificationPermission>(
         typeof window !== 'undefined' && 'Notification' in window
@@ -117,15 +129,7 @@ export function useNotifications(): UseNotificationsReturn {
     }, [isSupported, permission]);
 
     const playSound = useCallback((type: 'message' | 'mention' | 'call' = 'message') => {
-        try {
-            const audio = new Audio(SOUNDS[type]);
-            audio.volume = 0.3; // 30% volume - subtle
-            audio.play().catch((error) => {
-                console.warn('Could not play notification sound:', error);
-            });
-        } catch (error) {
-            console.warn('Sound playback failed:', error);
-        }
+        playSoundUtil(type);
     }, []);
 
     return {
