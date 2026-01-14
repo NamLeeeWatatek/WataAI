@@ -159,7 +159,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
         },
         {
             id: 'status',
-            header: 'Intelligence',
+            header: 'Status',
             accessorKey: 'isActive',
             cell: ({ row, getValue }) => {
                 const isActive = getValue() as boolean;
@@ -295,9 +295,9 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             <div className="p-6 bg-primary/5 rounded-3xl mb-6 ring-8 ring-primary/5">
                                 <Database className="w-10 h-10 text-primary opacity-40" />
                             </div>
-                            <h3 className="text-xl font-black tracking-tight text-foreground">Intelligence Required</h3>
+                            <h3 className="text-xl font-black tracking-tight text-foreground">Knowledge Source Required</h3>
                             <p className="max-w-xs text-sm font-medium text-muted-foreground mt-2 mb-8">
-                                Connect high-quality knowledge sources to enable accurate and professional AI responses.
+                                Connect knowledge sources to enable accurate AI responses.
                             </p>
                             <Button
                                 variant="outline"

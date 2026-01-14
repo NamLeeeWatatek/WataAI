@@ -206,7 +206,7 @@ export function BotChannelsSection({ botId, botChannels, onRefresh, workspaceId 
                                 </Badge>
                             </CardTitle>
                             <CardDescription className="font-medium mt-1">
-                                Manage the communication endpoints for this neural core
+                                Manage the communication endpoints for this bot
                             </CardDescription>
                         </div>
                         <Button
