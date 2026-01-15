@@ -1,13 +1,12 @@
 import { DynamicFormFieldProps } from "./types"
-import { FileDropzone } from "../FileUpload"
 import { Button } from "../Button"
-import { X, Eye } from "lucide-react"
-import { Media } from "../Media"
-import { ImagePreview } from "../FilePreview"
+import { X } from "lucide-react"
 import { isImageUrl, isVideoUrl } from "@/lib/utils/media"
 import axiosClient from "@/lib/axios-client"
 import { useState } from "react"
-import { cn } from "@/lib/utils"
+import { FileDropzone } from "@/components/shared/FileDropzone"
+import { ImagePreview } from "@/components/shared/FilePreview"
+import { Media } from "@/components/shared/Media"
 
 export function FieldFile({ field, value, onChange }: DynamicFormFieldProps) {
     // value can be a single file object, array of file objects, or null

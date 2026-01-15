@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react'
-import { CardSkeleton } from './Skeleton'
+import { CardSkeleton } from '@/components/ui/Skeleton'
 
 interface LazyWrapperProps {
   children: React.ReactNode

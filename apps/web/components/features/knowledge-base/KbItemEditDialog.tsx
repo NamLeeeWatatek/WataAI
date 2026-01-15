@@ -12,7 +12,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/Dialog'
-import { IconPicker } from '@/components/ui/IconPicker'
+import { IconPicker } from '@/components/shared/IconPicker'
 import { FileText, Folder as FolderIcon, Edit3, Type, AlignLeft, Image as ImageIcon, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'

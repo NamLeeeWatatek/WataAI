@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { Pagination } from '@/components/ui/Pagination'
-import { PageLoading } from '@/components/ui/PageLoading'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { Pagination } from '@/components/shared/Pagination'
+import { PageLoading } from '@/components/shared/PageLoading'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Search } from '@/components/ui/Search'
+import { Search } from '@/components/shared/Search'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
-import { IconPicker } from '@/components/ui/IconPicker'
+import { IconPicker } from '@/components/shared/IconPicker'
 import {
     Dialog,
     DialogContent,
@@ -152,10 +152,10 @@ export default function BotsPage() {
         } catch { }
     }
 
-    if (isLoading && bots.length === 0) return <PageLoading message="Synchronizing agent fleet..." />
+    if (isLoading && bots.length === 0) return <div className="page-container"><PageLoading message="Synchronizing agent fleet..." /></div>
 
     return (
-        <div className="space-y-6">
+        <div className="page-container h-full flex flex-col space-y-6">
             <PageHeader
                 title="AI Agent Fleet"
                 description="Manage your AI agents specialized in various tasks."
@@ -169,17 +169,14 @@ export default function BotsPage() {
 
             <div className="flex items-center gap-2 max-w-sm">
                 <Search
-                    placeholder="Search agents..."
+                    placeholder="Search neural agents..."
                     value={searchQuery}
-                    onChange={(e: any) => {
-                        setSearchQuery(e.target.value)
-                        setCurrentPage(1)
-                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     onClear={() => {
                         setSearchQuery('')
                         setCurrentPage(1)
                     }}
-                    className="w-full"
+                    className="max-w-sm"
                 />
             </div>
 
@@ -209,7 +206,7 @@ export default function BotsPage() {
                             return (
                                 <Card
                                     key={bot.id}
-                                    className="group relative flex flex-col overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5"
+                                    className="group relative flex flex-col overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
                                 >
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-5">
@@ -221,7 +218,7 @@ export default function BotsPage() {
                                                     <h3 className="font-bold text-lg leading-tight truncate">{bot.name}</h3>
                                                     <Badge
                                                         variant={bot.status === 'active' ? "default" : "secondary"}
-                                                        className="mt-1.5 text-[10px] uppercase font-black tracking-widest"
+                                                        className="mt-1.5 font-bold tracking-wider px-2"
                                                     >
                                                         {bot.status === 'active' ? 'ONLINE' : 'PAUSED'}
                                                     </Badge>
@@ -262,7 +259,7 @@ export default function BotsPage() {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            className="w-full font-bold transition-all h-10 group/btn bg-primary/5 hover:bg-primary hover:text-white"
+                                            className="w-full font-bold transition-all h-9 group/btn bg-primary/5 hover:bg-primary hover:text-white"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
                                             <Settings className="w-4 h-4 mr-2" />
@@ -304,13 +301,16 @@ export default function BotsPage() {
                                     control={form.control}
                                     name="name"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Agent Name</FormLabel>
+                                        <div className="space-y-2">
+                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bot Name</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g. Sales Assistant" {...field} className="h-11 font-bold" />
+                                                <Input
+                                                    placeholder="e.g. Sales Assistant"
+                                                    {...field}
+                                                    className="font-bold text-lg"
+                                                />
                                             </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
+                                        </div>
                                     )}
                                 />
 

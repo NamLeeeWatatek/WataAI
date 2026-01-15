@@ -22,7 +22,7 @@ import {
     Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 // import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ManagePagesDialog } from '@/components/features/channels/ManagePagesDialog';
@@ -207,7 +207,7 @@ export default function ChannelsPage() {
     };
 
     return (
-        <div className="h-full flex flex-col space-y-8 p-8">
+        <div className="page-container h-full flex flex-col space-y-8">
             <div className="flex items-center justify-between space-y-2">
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">Channels</h2>

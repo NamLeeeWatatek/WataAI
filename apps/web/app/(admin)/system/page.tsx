@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Wrench, Sparkles, Users, ShieldCheck, Settings } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
 import { useSystemStats } from '@/lib/hooks/useSystemStats';
+import { DashboardQuickAction } from '@/components/features/admin/DashboardQuickAction';
 import { AdminStatsCards } from '@/components/features/admin/AdminStatsCards';
 import { AdminCharts } from '@/components/features/admin/AdminCharts';
 import { QdrantMaintenanceCard } from '@/components/features/admin/QdrantMaintenanceCard';
@@ -75,19 +76,14 @@ export default function AdminDashboardPage() {
                                 {adminSections.map((section) => {
                                     const Icon = section.icon;
                                     return (
-                                        <button
+                                        <DashboardQuickAction
                                             key={section.title}
+                                            title={section.title}
+                                            description={section.description}
+                                            icon={Icon}
                                             onClick={() => router.push(section.href as any)}
-                                            className="flex items-center gap-3 p-4 rounded-xl border border-border/40 bg-card hover:bg-accent hover:border-primary/20 transition-all text-left group"
-                                        >
-                                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                                <Icon className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-bold truncate">{section.title}</div>
-                                                <div className="text-[10px] text-muted-foreground truncate uppercase font-semibold opacity-70"> Manage </div>
-                                            </div>
-                                        </button>
+                                            color={section.color as any}
+                                        />
                                     );
                                 })}
                             </div>

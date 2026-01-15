@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import { Badge } from '@/components/ui/Badge';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button, buttonVariants } from '@/components/ui/Button';
 import { Loader2, CheckCircle2, XCircle, Minimize2, Maximize2, X, List, History, ExternalLink } from 'lucide-react';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { ProductDetailsDialog } from '../products/ProductDetailsDialog';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 export function ActiveJobsWidget() {
     const { activeJobs, removeJob, cancelJob } = useCreationJobs();

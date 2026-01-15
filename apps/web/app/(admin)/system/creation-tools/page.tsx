@@ -8,13 +8,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
-import { PageLoading } from '@/components/ui/PageLoading';
+import { Search } from '@/components/shared/Search';
+import { PageLoading } from '@/components/shared/PageLoading';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
 import { useRef } from 'react';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -29,7 +29,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { cn } from '@/lib/utils';
 import { Category } from '@/lib/api/categories';
 

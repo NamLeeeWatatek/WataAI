@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation'
 import { useTemplates } from '@/lib/hooks/useTemplates'
 import { useWorkspace } from '@/lib/hooks/useWorkspace'
 import { useDebounce } from '@/lib/hooks/useDebounce'
-import { PageHeader } from '@/components/ui/PageHeader'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Edit, Trash2, Search as SearchIcon, Upload, Download } from 'lucide-react'
-import { PageLoading } from '@/components/ui/PageLoading'
+import { PageLoading } from '@/components/shared/PageLoading'
 import toast from '@/lib/toast'
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog'
 import { Template } from '@/lib/types/template'
-import { Pagination } from '@/components/ui/Pagination'
-import { Search } from '@/components/ui/Search'
+import { Pagination } from '@/components/shared/Pagination'
+import { Search } from '@/components/shared/Search'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 
 export default function TemplatesPage() {
@@ -86,7 +86,7 @@ export default function TemplatesPage() {
     if (loading && templates.length === 0) return <PageLoading />
 
     return (
-        <div className="space-y-6">
+        <div className="page-container space-y-6">
             {/* Header */}
             <PageHeader
                 title="My Templates"

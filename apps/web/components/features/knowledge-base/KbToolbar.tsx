@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { LayoutGrid, List, RefreshCw, Plus, FolderPlus, Upload, Globe, ChevronDown, FileText } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/Separator';
 import {

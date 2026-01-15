@@ -1,6 +1,6 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { PageHeader } from '../ui/PageHeader'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { LucideIcon } from 'lucide-react'
 
 interface PageShellProps {

@@ -2,14 +2,11 @@
  * Icon Resolver - Resolves icon names to React components
  * This avoids storing React components in Redux state (which can't be serialized)
  */
-import * as FiIcons from 'react-icons/fi'
-import * as SiIcons from 'react-icons/si'
-import * as MdIcons from 'react-icons/md'
+import * as LucideIcons from 'lucide-react'
+import { Circle } from 'lucide-react'
 
 const iconMap: Record<string, any> = {
-  ...FiIcons,
-  ...SiIcons,
-  ...MdIcons
+  ...LucideIcons
 }
 
 /**
@@ -18,12 +15,16 @@ const iconMap: Record<string, any> = {
  * @returns React icon component or fallback
  */
 export function resolveIcon(iconName: string | undefined): any {
-  if (!iconName) return FiIcons.FiCircle
-  
-  const Icon = iconMap[iconName]
+  if (!iconName) return Circle
+
+  // Try to find Lucide equivalent for legacy React Icons (e.g. FiZap -> Zap)
+  const legacyName = iconName.replace(/^(Fi|Si|Md|Fa|Ai|Bi|Bs|Cg|Di|Gi|Go|Gr|Hi|Im|Io|Ri|Ti|Vsc|Wi)/, '');
+  if (iconMap[legacyName]) return iconMap[legacyName];
+
+  const Icon = iconMap[iconName];
   if (Icon) return Icon
-  
-  return FiIcons.FiCircle
+
+  return Circle
 }
 
 /**
@@ -34,15 +35,15 @@ export function getNodeIcon(nodeType: any): any {
   if (nodeType?.icon && typeof nodeType.icon === 'function') {
     return nodeType.icon
   }
-  
+
   if (nodeType?.icon && typeof nodeType.icon === 'string') {
     return resolveIcon(nodeType.icon)
   }
-  
+
   if (nodeType?.iconName) {
     return resolveIcon(nodeType.iconName)
   }
-  
-  return FiIcons.FiCircle
+
+  return Circle
 }
 

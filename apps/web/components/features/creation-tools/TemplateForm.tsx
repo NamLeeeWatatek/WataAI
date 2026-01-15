@@ -5,18 +5,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, ImageIcon, Film } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { AiEnhancedTextarea } from '@/components/ui/AiEnhancedTextarea';
+import { AiEnhancedTextarea } from '@/components/shared/AiEnhancedTextarea';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
-import { IconPicker } from '@/components/ui/IconPicker';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
-import { CoverUpload } from '@/components/ui/CoverUpload';
 import { templateFormSchema, type TemplateFormValues } from '@/lib/types/template-form';
 import { Template } from '@/lib/types/template';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { useEffect } from 'react';
+import { IconPicker } from '@/components/shared/IconPicker';
+import { CoverUpload } from '@/components/shared/CoverUpload';
 
 // Reusing constant from original file or moving to constants
 const ACCEPTED_FILE_TYPES = ['image/*', 'video/*'];

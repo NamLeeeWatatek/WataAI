@@ -6,13 +6,13 @@ import { ProductsTable } from '@/components/features/products/ProductsTable';
 import { Package, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { useCreationJobs } from '@/lib/hooks/features/useCreationJobs';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Trash2, RotateCcw } from 'lucide-react';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import {
     Card,
     CardContent,
@@ -30,8 +30,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/AlertDialog";
-import { Search } from "@/components/ui/Search";
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { Search } from '@/components/shared/Search';
+import { DateRangePicker } from '@/components/shared/DateRangePicker';
 
 export default function MyProductsPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
@@ -96,7 +96,7 @@ export default function MyProductsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="page-container space-y-6">
             <div className="flex flex-col gap-1">
                 <h1 className="text-3xl font-bold tracking-tight">My Products</h1>
                 <p className="text-muted-foreground">Manage and view your generated content and products.</p>

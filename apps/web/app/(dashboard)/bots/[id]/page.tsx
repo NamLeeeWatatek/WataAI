@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PageLoading } from '@/components/ui/PageLoading';
+import { PageLoading } from '@/components/shared/PageLoading';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import {
@@ -32,7 +32,7 @@ import { WidgetEmbedCode } from '@/components/features/widget/WidgetEmbedCode';
 import { WidgetVersionsList } from '@/components/features/widget/WidgetVersionsList';
 import { useWidgetVersions, useWidgetDeployments } from '@/lib/hooks/use-widget-versions';
 
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { useBot, useBots } from '@/lib/hooks/features/useBots';
 import { BotStatus, BotWidgetPosition, BotWidgetButtonSize } from '@/lib/types/bots';
 

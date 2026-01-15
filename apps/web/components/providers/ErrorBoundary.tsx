@@ -3,7 +3,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { FiAlertTriangle, FiRefreshCw } from 'react-icons/fi'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { logger } from '@/lib/logger'
 
 interface ErrorBoundaryState {
@@ -112,7 +112,7 @@ function DefaultErrorFallback({ error, retry }: { error?: Error; retry?: () => v
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="max-w-md w-full p-6 text-center">
         <div className="flex justify-center mb-4">
-          <FiAlertTriangle className="w-12 h-12 text-destructive" />
+          <AlertTriangle className="w-12 h-12 text-destructive" />
         </div>
 
         <h2 className="text-xl font-semibold mb-2 text-foreground">
@@ -137,7 +137,7 @@ function DefaultErrorFallback({ error, retry }: { error?: Error; retry?: () => v
 
         <div className="flex gap-3 justify-center">
           <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
-            <FiRefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" />
             Tải lại trang
           </Button>
 

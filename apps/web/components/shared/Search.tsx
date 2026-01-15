@@ -1,8 +1,8 @@
 import * as React from "react"
 import { SearchIcon, XIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Input } from "./Input"
-import { Button } from "./Button"
+import { Input } from "@/components/ui/Input"
+import { Button } from "@/components/ui/Button"
 
 export interface SearchProps extends React.ComponentProps<typeof Input> {
     onClear?: () => void
@@ -22,21 +22,19 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
 
         return (
             <div className={cn("relative flex w-full items-center", className)} data-slot="search-root">
-                <SearchIcon
-                    className="text-muted-foreground absolute left-3 size-4 pointer-events-none top-1/2 -translate-y-1/2"
-                    data-slot="search-icon"
-                />
                 <Input
                     ref={ref}
-                    value={value}
-                    onChange={onChange}
                     className={cn(
-                        "pl-9",
-                        showClear && value && "pr-9",
+                        "pl-8",
                         inputClassName
                     )}
-                    data-slot="search-input"
+                    value={value}
+                    onChange={onChange}
                     {...props}
+                />
+                <SearchIcon
+                    className="text-muted-foreground absolute left-3 size-4 pointer-events-none top-1/2 -translate-y-1/2 z-10"
+                    data-slot="search-icon"
                 />
                 {showClear && value && (
                     <Button

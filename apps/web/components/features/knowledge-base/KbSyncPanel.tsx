@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { FiRefreshCw, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi'
+import { RefreshCw, AlertTriangle, CheckCircle } from "lucide-react"
 import { toast } from 'sonner'
 import axiosClient from '@/lib/axios-client'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
@@ -95,12 +95,12 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
                         >
                             {verifying ? (
                                 <>
-                                    <FiRefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                                     Verifying...
                                 </>
                             ) : (
                                 <>
-                                    <FiRefreshCw className="w-4 h-4 mr-2" />
+                                    <RefreshCw className="w-4 h-4 mr-2" />
                                     Verify
                                 </>
                             )}
@@ -112,12 +112,12 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
                             <div className="flex items-center gap-2">
                                 {isHealthy ? (
                                     <Badge variant="default" className="gap-1">
-                                        <FiCheckCircle className="w-3 h-3" />
+                                        <CheckCircle className="w-3 h-3" />
                                         Healthy
                                     </Badge>
                                 ) : (
                                     <Badge variant="destructive" className="gap-1">
-                                        <FiAlertTriangle className="w-3 h-3" />
+                                        <AlertTriangle className="w-3 h-3" />
                                         Issues Found
                                     </Badge>
                                 )}
@@ -153,7 +153,7 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
                                     >
                                         {syncing ? (
                                             <>
-                                                <FiRefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                                                 Syncing...
                                             </>
                                         ) : (
@@ -169,7 +169,7 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
                                     >
                                         {rebuilding ? (
                                             <>
-                                                <FiRefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                                                 Rebuilding...
                                             </>
                                         ) : (

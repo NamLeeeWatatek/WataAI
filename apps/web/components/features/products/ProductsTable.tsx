@@ -3,7 +3,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CreationJob, CreationJobStatus } from "@/lib/types/creation-job";
 import { Badge } from "@/components/ui/Badge";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { MoreHorizontal, Trash2, ExternalLink, Copy, Share2 } from "lucide-react";
@@ -15,20 +15,20 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { DataTable } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { ColumnDef } from '@tanstack/react-table';
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
 import { PostToChannelsDialog } from "./PostToChannelsDialog";
 import { formatDateTime } from "@/lib/utils/date";
 import { toast } from "sonner";
 import { Package } from "lucide-react";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { PaginationInfo } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PaginationInfo } from "@/components/shared/Pagination";
 import { Checkbox } from "@/components/ui/Checkbox";
 
 import { creationJobsApi } from "@/lib/api/creation-jobs";
-import { DataTableFacetedFilter } from "@/components/ui/data-table/DataTableFacetedFilter";
-import { Search } from "@/components/ui/Search";
+import { DataTableFacetedFilter } from "@/components/shared/data-table/DataTableFacetedFilter";
+import { Search } from "@/components/shared/Search";
 import { X } from "lucide-react";
 
 interface ProductsTableProps {

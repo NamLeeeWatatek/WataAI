@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/Button'
 import { CheckCircle2, XCircle, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { authApi } from '@/lib/api/auth'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 function ConfirmEmailPageContent() {
     const { t } = useTranslation()

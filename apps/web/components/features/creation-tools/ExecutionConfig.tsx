@@ -20,7 +20,7 @@ import {
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check, Plus, X, Box } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,

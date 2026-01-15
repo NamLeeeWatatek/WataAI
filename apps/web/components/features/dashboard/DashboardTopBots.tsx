@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
 
-import { FiActivity } from "react-icons/fi"
+import { Activity } from "lucide-react"
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { DashboardStats } from "@/lib/types"
@@ -63,7 +63,7 @@ export function DashboardTopBots({ stats }: DashboardTopBotsProps) {
                         ))
                     ) : (
                         <div className="flex flex-col items-center justify-center py-12 text-center opacity-50">
-                            <FiActivity className="w-12 h-12 mb-4" />
+                            <Activity className="w-12 h-12 mb-4" />
                             <p className="text-sm font-medium">{t('dashboard.stats.noDataAvailable')}</p>
                         </div>
                     )}

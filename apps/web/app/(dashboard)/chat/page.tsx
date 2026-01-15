@@ -321,13 +321,32 @@ export default function ChatWithAIPage() {
     }
 
     return (
-        <div className="h-full w-full flex bg-background overflow-hidden relative">
-            {/* Sidebar */}
-            <aside className="w-80 border-r border-border/40 flex flex-col bg-muted/20 shrink-0 h-full overflow-hidden">
+        <div className="h-full w-full flex overflow-hidden relative isolate">
+            {/* Ambient Background - Shared across the whole page to ensure continuity */}
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background z-0" />
+
+            {/* Sidebar - Glass Panel */}
+            <div className="w-80 glass border-r border-border/40 flex flex-col shrink-0 h-full overflow-hidden relative z-10">
                 <div className="p-4 border-b border-border/40">
                     <Button
-                        onClick={createNewConversation}
-                        className="w-full rounded-xl shadow-md shadow-primary/10"
+                        onClick={() => {
+                            setEditingConversationId(null)
+                            setEditingTitle('')
+                            setCreatingState(true)
+                            createConversation({ title: 'New Conversation' }, {
+                                onSuccess: (data) => {
+                                    setCurrentConversation(data)
+                                    setMessages([])
+                                    setCreatingState(false)
+                                    setConfig({
+                                        botId: 'none',
+                                        useKnowledgeBase: false,
+                                        knowledgeBaseIds: []
+                                    })
+                                }
+                            })
+                        }}
+                        className="w-full shadow-md shadow-primary/10"
                         size="lg"
                         loading={creatingState}
                     >
@@ -336,7 +355,7 @@ export default function ChatWithAIPage() {
                     </Button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                <div className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin">
                     {loadingConversations ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
                             <Spinner size="lg" className="text-primary" />
@@ -344,78 +363,94 @@ export default function ChatWithAIPage() {
                         </div>
                     ) : conversations.length === 0 ? (
                         <div className="text-center py-12 px-4 italic text-muted-foreground text-sm">
-                            No active conversations logic.
+                            No active conversations.
                         </div>
                     ) : (
                         conversations.map((conv) => (
                             <div
                                 key={conv.id}
-                                className={`group relative rounded-lg p-3 cursor-pointer transition-all duration-200 ${currentConversation?.id === conv.id
-                                    ? 'bg-primary/10 border border-primary/40 shadow-sm'
-                                    : 'hover:bg-muted/50 border border-transparent'
-                                    }`}
-                                onClick={() => selectConversation(conv)}
+                                className={cn(
+                                    "group relative rounded-lg p-3 cursor-pointer transition-all duration-200 border border-transparent",
+                                    currentConversation?.id === conv.id
+                                        ? "glass-card border-primary/20 bg-primary/5" // Active state
+                                        : "hover:bg-muted/30 hover:backdrop-blur-sm" // Hover state
+                                )}
+                                onClick={() => {
+                                    setCurrentConversation(conv)
+                                    setConfig({
+                                        botId: conv.botId || 'none',
+                                        useKnowledgeBase: conv.useKnowledgeBase || false,
+                                        knowledgeBaseIds: (conv.metadata?.knowledgeBaseIds as string[]) || []
+                                    })
+                                }}
                             >
                                 {editingConversationId === conv.id ? (
                                     <input
                                         type="text"
                                         value={editingTitle}
                                         onChange={(e) => setEditingTitle(e.target.value)}
-                                        onBlur={() => handleUpdateTitle(conv.id, editingTitle)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateTitle(conv.id, editingTitle)}
-                                        className="w-full px-2 py-1 text-sm border rounded bg-background"
+                                        onBlur={() => {
+                                            if (editingConversationId) {
+                                                updateConversation({ id: editingConversationId, data: { title: editingTitle } })
+                                                setEditingConversationId(null)
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && editingConversationId) {
+                                                updateConversation({ id: editingConversationId, data: { title: editingTitle } })
+                                                setEditingConversationId(null)
+                                            }
+                                        }}
+                                        className="glass-input w-full px-2 py-1 text-sm border rounded focus:ring-1 focus:ring-primary outline-none"
                                         autoFocus
                                         onClick={(e) => e.stopPropagation()}
                                     />
                                 ) : (
-                                    <>
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-medium text-sm truncate">{conv.title}</h3>
-                                                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">
-                                                    {formatDate(conv.updatedAt)}
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setEditingConversationId(conv.id)
-                                                        setEditingTitle(conv.title)
-                                                    }}
-                                                >
-                                                    <Edit2 className="w-3 h-3" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6 text-destructive"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        setConversationToDelete(conv.id)
-                                                        setDeleteDialogOpen(true)
-                                                    }}
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </Button>
-                                            </div>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-medium text-sm truncate text-foreground/90">{conv.title}</h3>
+                                            <p className="text-[10px] text-muted-foreground/80 mt-1 uppercase font-bold tracking-wider">
+                                                {new Date(conv.updatedAt).toLocaleDateString()}
+                                            </p>
                                         </div>
-                                    </>
+                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setEditingConversationId(conv.id)
+                                                    setEditingTitle(conv.title)
+                                                }}
+                                            >
+                                                <Edit2 className="w-3 h-3" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 text-destructive"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setConversationToDelete(conv.id)
+                                                    setDeleteDialogOpen(true)
+                                                }}
+                                            >
+                                                <Trash2 className="w-3 h-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         ))
                     )}
                 </div>
-            </aside>
+            </div>
 
-            {/* Main */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col min-w-0 relative z-10">
                 <AiChatInterface
-                    messages={messages as any} // Temporary cast until UiMessage and AiMessage alignment is perfect
-                    onSendMessage={handleSend}
+                    messages={messages}
                     loading={loading}
                     botName={bots.find((b: Bot) => b.id === config.botId)?.name || 'AI Assistant'}
                     modelName={bots.find((b: Bot) => b.id === config.botId)?.aiModelName || undefined}
@@ -426,13 +461,34 @@ export default function ChatWithAIPage() {
                                 variant={showSettings ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => setShowSettings(!showSettings)}
-                                className="rounded-xl"
+                                className={cn(showSettings ? "" : "glass")}
                             >
                                 <Settings className="w-3.5 h-3.5 mr-2" />
                                 Settings
                             </Button>
                             {currentConversation && (
-                                <Button variant="outline" size="sm" onClick={clearChat} className="rounded-xl">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setEditingConversationId(null)
+                                        setEditingTitle('')
+                                        setCreatingState(true)
+                                        createConversation({ title: 'New Conversation' }, {
+                                            onSuccess: (data) => {
+                                                setCurrentConversation(data)
+                                                setMessages([])
+                                                setCreatingState(false)
+                                                setConfig({
+                                                    botId: 'none',
+                                                    useKnowledgeBase: false,
+                                                    knowledgeBaseIds: []
+                                                })
+                                            }
+                                        })
+                                    }}
+                                    className="glass"
+                                >
                                     <Plus className="w-3.5 h-3.5 mr-2" /> New Chat
                                 </Button>
                             )}
@@ -440,15 +496,16 @@ export default function ChatWithAIPage() {
                     }
                     title={currentConversation?.title || 'New Chat'}
                     subtitle={currentConversation ? `${messages.length} interactions` : 'Quantum intelligence engine active'}
+                    onSendMessage={handleSend}
                 />
             </div>
 
-            {/* Config Sidebar */}
+            {/* Config Sidebar - Glass Panel */}
             {showSettings && (
-                <aside
-                    className="w-96 border-l border-border/40 bg-background flex flex-col shadow-2xl z-20"
+                <div
+                    className="w-96 glass border-l border-border/40 flex flex-col shadow-2xl z-20 animate-in slide-in-from-right duration-300"
                 >
-                    <div className="p-6 border-b flex items-center justify-between">
+                    <div className="p-6 border-b border-border/40 flex items-center justify-between bg-white/5 backdrop-blur-sm">
                         <h3 className="font-bold flex items-center gap-2">
                             <Settings className="w-4 h-4 text-primary" />
                             Intelligence Config
@@ -458,7 +515,7 @@ export default function ChatWithAIPage() {
                         </Button>
                     </div>
 
-                    <div className="p-6 space-y-8 overflow-y-auto">
+                    <div className="p-6 space-y-8 overflow-y-auto scrollbar-thin">
                         <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
                             <span className="text-muted-foreground">Sync Status</span>
                             <div className="flex items-center gap-2 text-primary">
@@ -480,7 +537,7 @@ export default function ChatWithAIPage() {
                                     {bots.map((bot: Bot) => (
                                         <Card
                                             key={bot.id}
-                                            className={cn("p-3 cursor-pointer border-2 transition-all", config.botId === bot.id ? "border-primary bg-primary/5" : "border-transparent bg-muted/50")}
+                                            className={cn("glass-card p-3 cursor-pointer border transition-all", config.botId === bot.id ? "border-primary bg-primary/10" : "border-border/30 hover:border-primary/30")}
                                             onClick={() => setConfig(p => ({ ...p, botId: bot.id }))}
                                         >
                                             <div className="text-xs font-bold">{bot.name}</div>
@@ -500,6 +557,7 @@ export default function ChatWithAIPage() {
                                     type="checkbox"
                                     checked={config.useKnowledgeBase}
                                     onChange={e => setConfig(p => ({ ...p, useKnowledgeBase: e.target.checked }))}
+                                    className="accent-primary h-4 w-4"
                                 />
                             </div>
                             {config.useKnowledgeBase && (
@@ -507,7 +565,7 @@ export default function ChatWithAIPage() {
                                     {knowledgeBases.map((kb: KnowledgeBase) => (
                                         <Card
                                             key={kb.id}
-                                            className={cn("p-2 cursor-pointer border-2", config.knowledgeBaseIds.includes(kb.id) ? "border-primary bg-primary/5" : "border-transparent")}
+                                            className={cn("glass-card p-2 cursor-pointer border transition-all", config.knowledgeBaseIds.includes(kb.id) ? "border-primary bg-primary/10" : "border-border/30 hover:border-primary/30")}
                                             onClick={() => setConfig(p => ({
                                                 ...p,
                                                 knowledgeBaseIds: config.knowledgeBaseIds.includes(kb.id)
@@ -521,8 +579,52 @@ export default function ChatWithAIPage() {
                                 </div>
                             )}
                         </div>
+
+                        <div className="pt-4 mt-4 border-t border-border/40">
+                            <Button
+                                className="w-full"
+                                size="lg"
+                                onClick={async () => {
+                                    if (!currentConversation) return
+                                    setSavingSettings(true)
+                                    try {
+                                        await updateConversation({
+                                            id: currentConversation.id,
+                                            data: {
+                                                botId: config.botId === 'none' ? undefined : config.botId,
+                                                useKnowledgeBase: config.useKnowledgeBase,
+                                                metadata: {
+                                                    ...currentConversation.metadata,
+                                                    knowledgeBaseIds: config.knowledgeBaseIds
+                                                }
+                                            }
+                                        })
+                                        toast.success('Chat settings saved')
+                                        const updatedConv = {
+                                            ...currentConversation,
+                                            botId: config.botId === 'none' ? undefined : config.botId,
+                                            useKnowledgeBase: config.useKnowledgeBase,
+                                            metadata: {
+                                                ...currentConversation.metadata,
+                                                knowledgeBaseIds: config.knowledgeBaseIds
+                                            }
+                                        }
+                                        setCurrentConversation(updatedConv as AiConversation)
+                                    } catch (error) {
+                                        const msg = handleApiError(error)
+                                        toast.error(msg || 'Failed to save settings')
+                                    } finally {
+                                        setSavingSettings(false)
+                                    }
+                                }}
+                                disabled={!isConfigDirty && !savingSettings}
+                                loading={savingSettings}
+                            >
+                                {isConfigDirty ? 'Save Changes' : 'Up to Date'}
+                            </Button>
+                        </div>
                     </div>
-                </aside>
+                </div>
             )}
 
             <AlertDialogConfirm
@@ -530,7 +632,16 @@ export default function ChatWithAIPage() {
                 onOpenChange={setDeleteDialogOpen}
                 title="Erase Memory"
                 description="This protocol will permanently delete this conversation history. Reconstitution is impossible."
-                onConfirm={confirmDelete}
+                onConfirm={() => {
+                    if (conversationToDelete) {
+                        deleteConversation(conversationToDelete)
+                        if (currentConversation?.id === conversationToDelete) {
+                            setCurrentConversation(null)
+                            setMessages([])
+                        }
+                        setConversationToDelete(null)
+                    }
+                }}
                 variant="destructive"
             />
         </div>

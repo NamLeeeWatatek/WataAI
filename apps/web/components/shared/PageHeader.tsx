@@ -2,15 +2,15 @@ import React from 'react'
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from '@/lib/utils'
 import { RefreshCw } from 'lucide-react'
-import { Button } from './Button'
+import { Button } from '@/components/ui/Button'
 
 const pageHeaderVariants = cva(
-    "flex flex-col gap-6 mb-8",
+    "flex flex-col gap-6",
     {
         variants: {
             variant: {
-                default: "",
-                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md -mx-4 md:-mx-8 px-4 md:px-8 py-4 border-b border-border/10",
+                default: "pb-8", // Internal padding instead of external margin
+                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md px-4 py-4 border-b border-border/10 w-full",
                 dashboard: "p-0",
             },
         },

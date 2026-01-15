@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Pagination, type PaginationInfo } from "./Pagination"
 import { Search as SearchInput } from "./Search"
-import { Checkbox } from "./Checkbox"
+import { Checkbox } from "@/components/ui/Checkbox"
 import { Skeleton } from "@/components/ui/Skeleton"
 
 import {
@@ -35,7 +35,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./Table"
+} from "@/components/ui/Table"
 import {
   Card,
   CardContent,
@@ -43,7 +43,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./Card"
+} from "@/components/ui/Card"
 
 export type SortDirection = 'asc' | 'desc' | null
 

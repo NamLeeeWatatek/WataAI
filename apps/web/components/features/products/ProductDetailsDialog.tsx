@@ -7,7 +7,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { Media } from '@/components/ui/Media';
+import { Media } from '@/components/shared/Media';
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';

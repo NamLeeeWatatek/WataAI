@@ -3,9 +3,9 @@
 import { useProgressOverlay } from '@/lib/hooks/useProgressOverlay'
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/Dialog'
 import { Progress } from '@/components/ui/Progress'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { CheckCircle2, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 export function ProgressOverlay() {
     const {

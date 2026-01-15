@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
-import { Media } from '@/components/ui/Media'
-import { FileDropzone } from '@/components/ui/FileUpload'
+import { Media } from '@/components/shared/Media'
+import { FileDropzone } from '@/components/shared/FileDropzone'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -201,13 +201,13 @@ export function TemplateDialog({
                         <div className="rounded-md border p-6 bg-muted/20">
                             <div className="space-y-4">
                                 <FileDropzone
-                                    onUploadComplete={(url) => {
+                                    onUploadComplete={(url: string) => {
                                         setFormData(prev => ({
                                             ...prev,
                                             mediaFiles: [...prev.mediaFiles, url]
                                         }))
                                     }}
-                                    onUploadError={(error) => {
+                                    onUploadError={(error: Error) => {
                                         console.error('Upload failed:', error)
                                         toast.error(`Upload failed: ${error.message}`)
                                     }}

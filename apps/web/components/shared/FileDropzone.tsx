@@ -2,10 +2,10 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, Video, Music, FileText } from 'lucide-react';
-import { Progress } from './Progress';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/lib/hooks/use-file-upload';
 import { type FileUploadOptions } from '@/lib/api/files';
+import { Progress } from '../ui/Progress';
 
 export interface FileDropzoneProps {
     onUploadComplete?: (url: string, file: any) => void;

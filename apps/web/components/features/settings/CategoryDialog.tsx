@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
-import { IconPicker } from '@/components/ui/IconPicker';
+import { IconPicker } from '@/components/shared/IconPicker';
 import { CategoryDialogProps } from '@/lib/types';
 import { Layout, Palette, Type, Hash, AlignLeft, Layers, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';

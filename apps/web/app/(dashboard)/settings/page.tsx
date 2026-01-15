@@ -11,7 +11,7 @@ import { SharingTab } from '@/components/features/settings/SharingTab';
 import { BillingTab } from '@/components/features/settings/BillingTab';
 import { QuestionsTab } from '@/components/features/settings/QuestionsTab';
 import { TeamTab } from '@/components/features/settings/TeamTab';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import {
   User,
   Settings,
@@ -23,7 +23,7 @@ import {
   Users
 } from 'lucide-react';
 
-export default function AIModelsPage() {
+export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('account');
 
   const tabs = [
@@ -38,65 +38,72 @@ export default function AIModelsPage() {
   ];
 
   return (
-    <div className="h-full overflow-y-auto bg-background/50">
+    <div className="h-full overflow-y-auto">
       <div className="flex flex-col min-h-full">
-        <div className="flex-none px-4 md:px-8 pt-6 lg:pt-8">
-          <PageHeader
-            title="System Configuration"
-            description="Neural gateway orchestration and system-wide preference matrix"
-            premium
-            className="mb-8"
-          />
+        {/* Header - Centered & Aligned */}
+        <div className="flex-none pt-8 pb-4">
+          <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <PageHeader
+              title="System Configuration"
+              description="Neural gateway orchestration and system-wide preference matrix"
+              premium
+              className="mb-0"
+            />
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-1 flex flex-col">
-          <TabsHeader>
-            <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  variant="pills"
-                  className="shrink-0"
-                >
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </TabsHeader>
+          {/* Sticky Tabs Bar - Full width background, aligned content */}
+          <div className="sticky top-0 z-30 glass-floating border-x-0 border-t-0 rounded-none shadow-sm">
+            <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+              <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0 h-auto gap-2 border-none">
+                {tabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    variant="pills"
+                    className="shrink-0 rounded-lg px-4 h-9"
+                  >
+                    <tab.icon className="w-4 h-4 mr-2" />
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          </div>
 
-          <div className="flex-1 p-6 lg:p-8">
-            <div className="max-w-screen-2xl mx-auto">
-              <TabsContent value="ai-providers" className="m-0 focus-visible:outline-none">
+          {/* Content Area - Centered & Aligned */}
+          <div className="flex-1 py-8">
+            <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+              <TabsContent value="ai-providers" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <AIProvidersTab />
               </TabsContent>
 
-              <TabsContent value="ai-settings" className="m-0 focus-visible:outline-none">
+              <TabsContent value="ai-settings" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <AISettingsTab />
               </TabsContent>
 
-              <TabsContent value="account" className="m-0 focus-visible:outline-none">
+              <TabsContent value="account" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <AccountTab />
               </TabsContent>
 
-              <TabsContent value="team" className="m-0 focus-visible:outline-none">
+              <TabsContent value="team" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <TeamTab />
               </TabsContent>
 
-              <TabsContent value="notifications" className="m-0 focus-visible:outline-none">
+              <TabsContent value="notifications" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <NotificationsTab />
               </TabsContent>
 
-              <TabsContent value="sharing" className="m-0 focus-visible:outline-none">
+              <TabsContent value="sharing" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <SharingTab />
               </TabsContent>
 
-              <TabsContent value="billing" className="m-0 focus-visible:outline-none">
+              <TabsContent value="billing" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <BillingTab />
               </TabsContent>
 
-              <TabsContent value="questions" className="m-0 focus-visible:outline-none">
+              <TabsContent value="questions" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <QuestionsTab />
               </TabsContent>
             </div>

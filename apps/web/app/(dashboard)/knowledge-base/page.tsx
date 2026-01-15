@@ -11,7 +11,7 @@ import {
     Trash2,
     FileText,
 } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { Button } from '@/components/ui/Button';
@@ -24,9 +24,9 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/DropdownMenu';
-import { PageLoading } from '@/components/ui/PageLoading';
-import { Pagination } from '@/components/ui/Pagination';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageLoading } from '@/components/shared/PageLoading';
+import { Pagination } from '@/components/shared/Pagination';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -91,10 +91,10 @@ export default function KnowledgeBasePage() {
         } catch { }
     };
 
-    if (loading && knowledgeBases.length === 0) return <PageLoading message="Synchronizing vaults..." />;
+    if (loading && knowledgeBases.length === 0) return <div className="page-container"><PageLoading message="Synchronizing vaults..." /></div>;
 
     return (
-        <div className="h-full flex flex-col space-y-6">
+        <div className="page-container h-full flex flex-col space-y-6">
             <PageHeader
                 title="Knowledge Engine"
                 description="Manage hierarchical intelligence assets and RAG protocols."
@@ -147,7 +147,7 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                className="group p-6 cursor-pointer border-border/40 hover:border-border/80 transition-all hover:bg-card/60"
+                                className="group p-6 cursor-pointer hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
                             >
                                 <div className="flex items-start justify-between mb-4">
@@ -176,7 +176,7 @@ export default function KnowledgeBasePage() {
                                     <p className="text-muted-foreground text-xs mb-4 line-clamp-2 font-medium">
                                         {kb.description || 'General purpose intelligence storage protocol active.'}
                                     </p>
-                                    <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mb-4 border-t border-border/10 pt-4">
+                                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-4 border-t border-border/10 pt-4">
                                         <div className="flex items-center gap-1.5 text-primary">
                                             <FileText className="w-3.5 h-3.5" /> <span>{kb.totalDocuments} Slots</span>
                                         </div>
@@ -185,15 +185,15 @@ export default function KnowledgeBasePage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <Badge variant="secondary" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0">
+                                        <Badge variant="secondary" className="font-bold px-2">
                                             {kb.embeddingModel || 'No Embedding'}
                                         </Badge>
                                         {kb.ragModel && (
-                                            <Badge variant="secondary" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0 bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+                                            <Badge variant="secondary" className="font-bold px-2 bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
                                                 {kb.ragModel}
                                             </Badge>
                                         )}
-                                        <Badge variant="outline" className="text-[9px] font-black tracking-tighter uppercase px-1.5 py-0 border-primary/20 text-primary">
+                                        <Badge variant="outline" className="font-bold px-2 border-primary/20 text-primary">
                                             STABLE
                                         </Badge>
                                     </div>

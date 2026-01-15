@@ -1,7 +1,7 @@
-import { MultiSelect } from "../MultiSelect"
 import { DynamicFormFieldProps } from "./types"
 import { useDynamicOptions } from "@/lib/hooks/useDynamicOptions"
 import { FormField } from "@/lib/api/creation-tools"
+import { MultiSelect } from "@/components/shared/MultiSelect"
 
 interface OptionItem {
     label: string

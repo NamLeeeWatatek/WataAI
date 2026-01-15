@@ -2,11 +2,9 @@
 
 import * as React from 'react'
 
-import { ReactNode } from "react"
 import { memo } from 'react'
 import { Label } from './Label'
 import { cn } from '@/lib/utils'
-import { KeyValueEditor } from './KeyValueEditor'
 import { RadioGroup, RadioGroupItem } from './RadioGroup'
 
 // Sub-components
@@ -21,9 +19,10 @@ import { FieldColor } from './form-fields/FieldColor'
 import { FieldSlider } from './form-fields/FieldSlider'
 import { FieldChannelSelector } from './form-fields/FieldChannelSelector'
 import { FieldTemplateSelector } from './form-fields/FieldTemplateSelector'
-import { JsonEditor } from './JsonEditor'
 import { FieldPageSelector } from './form-fields/FieldPageSelector'
 import { FieldResultPreview } from './form-fields/FieldResultPreview'
+import { JsonEditor } from '../shared/JsonEditor'
+import { KeyValueEditor } from '../shared/KeyValueEditor'
 
 interface OptionItem {
     label: string

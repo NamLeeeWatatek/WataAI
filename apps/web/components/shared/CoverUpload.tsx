@@ -2,11 +2,11 @@
 
 import React, { useRef } from 'react';
 import { ImageIcon, Trash2 } from 'lucide-react';
-import { Button } from './Button';
-import { Progress } from './Progress';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/lib/hooks/use-file-upload';
 import { type FileUploadOptions } from '@/lib/api/files';
+import { Button } from '../ui/Button';
+import { Progress } from '../ui/Progress';
 
 export interface CoverUploadProps {
     value?: string;

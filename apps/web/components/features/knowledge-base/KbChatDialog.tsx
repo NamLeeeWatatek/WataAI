@@ -3,12 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { MessageSquare, Trash2, Send } from 'lucide-react'
 import { createAIConversation, getAIConversation, addAIConversationMessage } from '@/lib/api/conversations'
 import toast from '@/lib/toast'
 import { MessageRole } from '@/lib/types/conversations'
 import { handleApiError } from '@/lib/utils/api-error'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 interface KBChatDialogProps {
     open: boolean

@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
-import { ProgressOverlay } from '@/components/ui/ProgressOverlay'
 import toast from '@/lib/toast'
 
 import { cn } from '@/lib/utils'
@@ -18,6 +16,8 @@ import { CreationJobsProvider } from '@/components/providers/CreationJobsProvide
 import { PermissionGuard } from '@/components/auth/PermissionGuard'
 import { PERMISSIONS } from '@/lib/config/permissions'
 import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
+import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
 
 export default function AdminLayout({
     children,

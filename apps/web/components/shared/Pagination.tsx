@@ -9,8 +9,8 @@ import {
   MoreHorizontal
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "./Button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select"
+import { Button, buttonVariants } from "@/components/ui/Button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select"
 
 export interface PaginationInfo {
   page: number

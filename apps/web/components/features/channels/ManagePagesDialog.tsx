@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
-import { LoadingLogo } from '@/components/ui/LoadingLogo';
 import {
   Dialog,
   DialogContent,

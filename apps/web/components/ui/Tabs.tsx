@@ -9,13 +9,13 @@ import { cn } from "@/lib/utils"
 const Tabs = TabsPrimitive.Root
 
 const tabsListVariants = cva(
-  "inline-flex items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+  "inline-flex items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
   {
     variants: {
       variant: {
-        default: "h-10",
+        default: "glass h-10 bg-muted/20 border border-border/10",
         dashboard: "bg-transparent border-none shadow-none h-auto p-0 gap-6",
-        pills: "h-12 w-auto bg-muted/50 p-1 rounded-md border border-border/10",
+        pills: "glass h-12 w-auto bg-muted/20 p-1 rounded-lg border border-border/30",
       },
     },
     defaultVariants: {
@@ -43,9 +43,9 @@ const tabsTriggerVariants = cva(
   {
     variants: {
       variant: {
-        default: "rounded-sm data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
+        default: "rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
         dashboard: "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 gap-2 font-bold text-sm transition-all text-muted-foreground hover:text-foreground data-[state=active]:text-foreground",
-        pills: "rounded-md font-bold transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md flex items-center gap-2 px-6",
+        pills: "rounded-lg font-bold transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md flex items-center gap-2 px-6",
       },
     },
     defaultVariants: {

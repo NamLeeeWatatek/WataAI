@@ -6,16 +6,16 @@ import { toast } from "sonner"
 import { Plus, Pencil, Trash2, Shield, Mail, User as UserIcon } from "lucide-react"
 import { ColumnDef } from '@tanstack/react-table'
 import { Checkbox } from "@/components/ui/Checkbox"
-import { BulkActionsToolbar } from "@/components/ui/BulkActionsToolbar"
+import { BulkActionsToolbar } from "@/components/shared/BulkActionsToolbar"
 
 import { PageShell } from "@/components/layout/PageShell"
-import { DataTable } from "@/components/ui/DataTable"
+import { DataTable } from "@/components/shared/DataTable"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { adminApi } from "@/lib/api/admin"
 import { User } from "@/lib/types/user"
-import { PaginationInfo } from "@/components/ui/Pagination"
+import { PaginationInfo } from "@/components/shared/Pagination"
 import { useDebounce } from "@/lib/hooks/useDebounce"
 import {
     AlertDialog,

@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Grid, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
-import { DataTable } from '@/components/ui/DataTable';
-import { Pagination } from '@/components/ui/Pagination';
+import { DataTable } from '@/components/shared/DataTable';
+import { Pagination } from '@/components/shared/Pagination';
 import { AIProviderDialog } from './AIProviderDialog';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { useAiProviders, type EnhancedUserConfig } from '@/lib/hooks/features/useAiProviders';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -209,7 +209,7 @@ export function AIProvidersTab() {
           <p className="text-muted-foreground text-center max-w-sm mb-8 text-sm">
             Connect an AI provider to start using AI features in your application.
           </p>
-          <Button onClick={() => handleOpenDialog()} className="h-11 px-8">
+          <Button onClick={() => handleOpenDialog()} size="lg" className="px-8">
             Connect Provider
           </Button>
         </div>

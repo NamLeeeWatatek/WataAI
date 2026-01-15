@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -83,7 +83,7 @@ export default function ActivityPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="page-container space-y-6">
             <PageHeader
                 title="Activity Feed"
                 description="Track your jobs, crawls, and system interactions in real-time."

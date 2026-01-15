@@ -15,7 +15,7 @@ import {
     Save,
     Trash2
 } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger, TabsHeader } from '@/components/ui/Tabs';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -26,7 +26,7 @@ import toast from '@/lib/toast';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Label } from '@/components/ui/Label';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import {
     Dialog,
     DialogContent,

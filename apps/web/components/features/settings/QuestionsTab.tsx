@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { HelpCircle, Book, MessageCircle, FileText, ExternalLink, Terminal } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 
 export function QuestionsTab() {
   return (

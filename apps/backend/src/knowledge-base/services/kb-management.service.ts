@@ -14,7 +14,6 @@ import {
 import { IPaginationOptions } from '../../utils/types/pagination-options';
 import { BotKnowledgeBaseEntity } from '../../bots/infrastructure/persistence/relational/entities/bot.entity';
 import { KBDocumentsService } from './kb-documents.service';
-import { Inject, forwardRef } from '@nestjs/common';
 import {
   KnowledgeBaseDocumentEntity,
   KbDocumentEntity,

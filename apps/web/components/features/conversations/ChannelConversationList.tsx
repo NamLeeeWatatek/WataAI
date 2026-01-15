@@ -3,8 +3,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Facebook, Instagram, Mail, MessageCircle } from 'lucide-react';
-import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
+import { MessageSquare, Facebook, Instagram, Mail, MessageCircle, Phone, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { JSX } from 'react';
 
@@ -61,10 +60,10 @@ const formatRelativeTime = (dateString: string): string => {
 const getChannelIcon = (type: string) => {
   const icons: Record<string, JSX.Element> = {
     facebook: <Facebook className="w-4 h-4" />,
-    messenger: <FaFacebookMessenger className="w-4 h-4" />,
+    messenger: <MessageCircle className="w-4 h-4" />,
     instagram: <Instagram className="w-4 h-4" />,
-    whatsapp: <FaWhatsapp className="w-4 h-4" />,
-    telegram: <FaTelegram className="w-4 h-4" />,
+    whatsapp: <Phone className="w-4 h-4" />,
+    telegram: <Send className="w-4 h-4" />,
     email: <Mail className="w-4 h-4" />,
     webchat: <MessageCircle className="w-4 h-4" />,
   };

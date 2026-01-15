@@ -12,8 +12,8 @@ import { useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FaGoogle, FaFacebook } from 'react-icons/fa6'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+// Removed react-icons
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import { authApi } from '@/lib/api/auth'
 import Link from 'next/link'
 

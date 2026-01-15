@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { FiFolder, FiTrash2, FiChevronRight, FiChevronDown } from 'react-icons/fi'
+import { Folder, Trash2, ChevronRight, ChevronDown } from "lucide-react"
 import type { KBFolder } from '@/lib/types/knowledge-base'
 
 interface KBFolderTreeProps {
@@ -50,14 +50,14 @@ export function KBFolderTree({ folders, onNavigate, onDelete, level = 0 }: KBFol
                                             className="p-0 h-6 w-6 hover:bg-accent rounded-sm"
                                         >
                                             {isExpanded ? (
-                                                <FiChevronDown className="w-4 h-4" />
+                                                <ChevronDown className="w-4 h-4" />
                                             ) : (
-                                                <FiChevronRight className="w-4 h-4" />
+                                                <ChevronRight className="w-4 h-4" />
                                             )}
                                         </Button>
                                     )}
                                     <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                        <FiFolder className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                        <Folder className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-medium truncate">{folder.name}</h4>
@@ -78,9 +78,9 @@ export function KBFolderTree({ folders, onNavigate, onDelete, level = 0 }: KBFol
                                             onDelete(folder.id)
                                         }}
                                     >
-                                        <FiTrash2 className="w-4 h-4" />
+                                        <Trash2 className="w-4 h-4" />
                                     </Button>
-                                    <FiChevronRight className="w-5 h-5 text-muted-foreground" />
+                                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                                 </div>
                             </div>
                         </Card>

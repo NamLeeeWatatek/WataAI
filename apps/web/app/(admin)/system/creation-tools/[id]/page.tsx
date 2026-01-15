@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { IconPicker } from '@/components/ui/IconPicker';
+import { IconPicker } from '@/components/shared/IconPicker';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -43,7 +43,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { cn, slugify } from '@/lib/utils';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { Badge } from '@/components/ui/Badge';
 
 

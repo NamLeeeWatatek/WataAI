@@ -8,8 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import * as Icons from 'react-icons/fi';
-import { FiFolder } from 'react-icons/fi';
+import * as Icons from 'lucide-react';
+import { Folder } from 'lucide-react';
 import { Category, CategorySelectorProps } from '@/lib/types';
 import { metadataApi } from '@/lib/api/metadata';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -58,7 +58,7 @@ export function CategorySelector({
               {(() => {
                 const IconComponent = selectedCategory.icon
                   ? (Icons as any)[selectedCategory.icon]
-                  : FiFolder;
+                  : Folder;
                 return (
                   <IconComponent
                     className="size-4"
@@ -76,7 +76,7 @@ export function CategorySelector({
         {categories.map((category) => {
           const IconComponent = category.icon
             ? (Icons as any)[category.icon]
-            : FiFolder;
+            : Folder;
 
           return (
             <SelectItem key={category.id} value={category.id.toString()}>

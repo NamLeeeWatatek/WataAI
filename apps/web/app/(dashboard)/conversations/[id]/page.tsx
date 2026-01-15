@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
-import { PageLoading } from '@/components/ui/PageLoading';
+import { PageLoading } from '@/components/shared/PageLoading';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/DropdownMenu';
 import { Badge } from '@/components/ui/Badge';
 import { MessageRole, ConversationStatus, BotConversation } from '@/lib/types/conversations';

@@ -20,7 +20,7 @@ const TableHeader = React.forwardRef<HTMLTableSectionElement, React.ComponentPro
         <thead
             ref={ref}
             data-slot="table-header"
-            className={cn("[&_tr]:border-b", className)}
+            className={cn("[&_tr]:border-b bg-background/50 backdrop-blur-sm supports-[backdrop-filter]:bg-background/30", className)}
             {...props}
         />
     )

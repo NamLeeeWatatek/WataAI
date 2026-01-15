@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useBotForm } from '@/lib/hooks/useBotForm'
-import { AvatarUpload } from '@/components/ui/AvatarUpload'
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 
 interface Bot {
     id: string

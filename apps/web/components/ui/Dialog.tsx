@@ -22,7 +22,7 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     data-slot="dialog-overlay"
     className={cn(
-      "bg-background/80 fixed inset-0 z-50 backdrop-blur-sm",
+      "glass-overlay fixed inset-0 z-50",
       className
     )}
     {...props}
@@ -40,7 +40,7 @@ const DialogContent = React.forwardRef<
       ref={ref}
       data-slot="dialog-content"
       className={cn(
-        "bg-background fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-md border p-6 shadow-lg sm:max-w-lg",
+        "glass-modal fixed left-[50%] top-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-3xl p-6 sm:max-w-lg",
         className
       )}
       {...props}

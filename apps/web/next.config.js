@@ -30,7 +30,7 @@ const nextConfig = {
   },
   typedRoutes: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', '@tanstack/react-query'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@tanstack/react-query'],
   },
   output: 'standalone',
 }

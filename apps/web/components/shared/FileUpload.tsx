@@ -2,11 +2,11 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, X, File, Image as ImageIcon, Video, Music } from 'lucide-react';
-import { Button } from './Button';
-import { Progress } from './Progress';
+
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/lib/hooks/use-file-upload';
-import { type FileUploadOptions } from '@/lib/api/files';
+import { Button } from '../ui/Button';
+import { Progress } from '../ui/Progress';
 
 // Re-export specific components
 export { CoverUpload } from './CoverUpload';
@@ -165,7 +165,7 @@ export function FileUpload({
             (preview.type === 'image' || preview.type === 'video') && (
               <div key={idx} className="relative group rounded-md overflow-hidden border bg-background/50 aspect-square shadow-sm hover:shadow-md transition-all">
                 {preview.type === 'image' && (
-                   
+
                   <img src={preview.url} alt="Preview" className="w-full h-full object-cover" />
                 )}
                 {preview.type === 'video' && (

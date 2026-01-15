@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/Popover"
 import { ScrollArea } from "@/components/ui/ScrollArea"
 import { type LucideIcon, Folder } from 'lucide-react'
-import { Search } from "@/components/ui/Search"
+import { Search } from "@/components/shared/Search"
 import { cn } from "@/lib/utils"
 import { commonIcons } from "@/lib/constants/icons"
 import { iconMap } from "@/lib/icon-map"
@@ -42,7 +42,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-start h-12 pl-4 font-medium hover:bg-accent transition-all rounded-md", className)}
+                    className={cn("w-full justify-start h-10 pl-3 md:text-sm font-medium hover:bg-accent transition-all rounded-lg", className)}
                 >
                     <div className="p-2 rounded bg-primary/10 text-primary mr-3">
                         <SelectedIcon className="w-4 h-4" />

@@ -16,7 +16,7 @@ import { authApi } from '@/lib/api/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fileUploadService } from '@/lib/api/files';
 import { toast } from 'sonner';
-import { AvatarUpload } from '@/components/ui/AvatarUpload';
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -349,7 +349,8 @@ export function AccountTab() {
             <Button
               type="submit"
               disabled={updateProfileMutation.isPending || !form.formState.isDirty}
-              className="px-10 h-12 font-black transition-all"
+              size="xl"
+              className="px-10 font-black transition-all"
             >
               {updateProfileMutation.isPending && (
                 <Loader2 className="mr-3 h-5 w-5 animate-spin" />

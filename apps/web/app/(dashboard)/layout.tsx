@@ -3,20 +3,18 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
-import { ProgressOverlay } from '@/components/ui/ProgressOverlay'
-import toast from '@/lib/toast'
 
 import { useTranslation } from 'react-i18next'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { CreationJobsProvider } from '@/components/providers/CreationJobsProvider'
-import { QueryProvider } from '@/components/providers/QueryProvider'
 import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget'
 import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitializer'
 import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
+import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
 
 export default function DashboardLayout({
     children,
@@ -36,16 +34,11 @@ export default function DashboardLayout({
     const router = useRouter()
     const { t } = useTranslation()
 
-    // Handle session errors and redirects
-    // We keep this for client-side protection fallback, but we don't block rendering
     useEffect(() => {
         if (!isLoading && (!isAuthenticated || !accessToken)) {
-            // Optional: Force redirect if needed, but Middleware usually handles this
-            // router.push('/login')
         }
     }, [isLoading, isAuthenticated, accessToken, router])
 
-    // While performing logout, show global loading screen
     if (isLoggingOut) {
         return (
             <div className="h-screen flex items-center justify-center bg-background">
@@ -54,11 +47,6 @@ export default function DashboardLayout({
         )
     }
 
-    // REMOVED: Blocking loading screen logic
-    // We now allow partial rendering (skeleton or initial UI) instead of white screen.
-    // Ideally, the parent Server Component has already validated the session.
-
-    // Layout action handlers
     const toggleSection = (sectionName: string) => {
         setExpandedSections(prev =>
             prev.includes(sectionName)
@@ -83,7 +71,12 @@ export default function DashboardLayout({
     }
 
     const isEditMode = pathname.includes('mode=edit')
-    const isSpecialPage = isEditMode
+    const isCreationToolDetail = pathname.startsWith('/creation-tools/') && pathname.split('/').length > 2;
+    const isWorkflowDetail = pathname.startsWith('/workflows/') && pathname.split('/').length > 2;
+    const isSettingsPage = pathname.startsWith('/settings');
+    const isChatPage = pathname.startsWith('/chat');
+
+
 
     return (
         <ThemeProviderWrapper>
@@ -132,7 +125,7 @@ export default function DashboardLayout({
 
                         {/* Content area with conditional container classes */}
                         <div className="flex-1 overflow-hidden relative min-h-0">
-                            <div className={`h-full ${isSpecialPage ? 'overflow-auto' : 'page-container overflow-auto'}`}>
+                            <div className="h-full w-full overflow-auto">
                                 <ErrorBoundary>
                                     {children}
                                 </ErrorBoundary>

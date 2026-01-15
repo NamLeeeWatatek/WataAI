@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { DataTable } from '@/components/ui/DataTable';
-import { Pagination } from '@/components/ui/Pagination';
+import { DataTable } from '@/components/shared/DataTable';
+import { Pagination } from '@/components/shared/Pagination';
 import { Badge } from '@/components/ui/Badge';
 import {
   LayoutGrid,
@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import { formatDate } from '@/lib/utils/date';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import type { Channel } from '@/lib/types/channel';
 import { ColumnDef } from '@tanstack/react-table';
 

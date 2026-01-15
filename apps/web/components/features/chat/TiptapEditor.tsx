@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { LinkDialog } from '@/components/ui/LinkDialog';
+import { LinkDialog } from '@/components/shared/LinkDialog';
 
 interface TiptapEditorProps {
     onSend: (content: string) => Promise<void> | void;

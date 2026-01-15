@@ -3,7 +3,7 @@
 import React from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { FiAlertTriangle, FiRefreshCw, FiHome } from 'react-icons/fi'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 interface AsyncErrorBoundaryState {
   hasError: boolean
@@ -152,7 +152,7 @@ function AsyncErrorFallback({
     <div className="flex items-center justify-center p-6 bg-muted/20 border border-destructive/20 rounded-lg">
       <Card className="max-w-md w-full p-6 text-center border-destructive/30">
         <div className="flex justify-center mb-4">
-          <FiAlertTriangle className="w-10 h-10 text-destructive" />
+          <AlertTriangle className="w-10 h-10 text-destructive" />
         </div>
 
         <h3 className="text-lg font-semibold mb-2 text-foreground">
@@ -174,7 +174,7 @@ function AsyncErrorFallback({
 
         <div className="flex gap-3 justify-center">
           <Button onClick={retry} size="sm" className="flex items-center gap-2">
-            <FiRefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" />
             Thử lại
           </Button>
 
@@ -184,7 +184,7 @@ function AsyncErrorFallback({
             onClick={() => window.location.reload()}
             className="flex items-center gap-2"
           >
-            <FiHome className="w-4 h-4" />
+            <Home className="w-4 h-4" />
             Tải lại trang
           </Button>
         </div>

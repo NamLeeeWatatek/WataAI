@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/Form'
 import { Input } from '@/components/ui/Input'
 import { Switch } from '@/components/ui/Switch'
-import { FiGlobe, FiAlertCircle } from 'react-icons/fi'
+import { Globe, AlertCircle } from "lucide-react"
 import { toast } from 'sonner'
 import axiosClient from '@/lib/axios-client'
 
@@ -181,7 +181,7 @@ export function KBCrawlerDialog({
                         />
 
                         <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                            <FiAlertCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                            <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
                             <p className="text-xs text-muted-foreground">
                                 The crawler will start from the URL and follow links within the same domain.
                                 This may take several minutes depending on the number of pages.

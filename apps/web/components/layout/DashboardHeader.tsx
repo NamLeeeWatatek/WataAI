@@ -5,12 +5,12 @@ import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/Button'
 import { DashboardBreadcrumb } from './DashboardBreadcrumb'
 import { DashboardNotifications } from './DashboardNotifications'
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher'
 import { GlobalActivityCenter } from '@/components/features/activity/GlobalActivityCenter'
-import { Sun, Moon, Menu, ShieldAlert } from 'lucide-react'
+import { Sun, Moon, Menu, ShieldAlert, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { usePermissions } from '@/lib/hooks/usePermissions'
-import { GrSystem } from "react-icons/gr";
+// Removed react-icons
 import { useTranslation } from 'react-i18next'
 
 import { usePathname } from 'next/navigation'
@@ -35,7 +35,7 @@ const AdminLink = () => {
             asChild
         >
             <Link href={paths.system.root as any}>
-                <GrSystem className="w-3.5 h-3.5" />
+                <Settings className="w-3.5 h-3.5" />
                 <span>{t('navigation.adminSystem')}</span>
             </Link>
         </Button>
@@ -62,7 +62,7 @@ export const DashboardHeader = React.memo<DashboardHeaderProps>(({
 
 
     return (
-        <header className="h-16 flex items-center justify-between px-6 flex-shrink-0 bg-background/50 backdrop-blur-xl border-b border-border/10 sticky top-0 z-40 transition-all duration-200">
+        <header className="glass-floating border-x-0 border-t-0 rounded-none h-16 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-40 transition-all duration-200">
             <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"

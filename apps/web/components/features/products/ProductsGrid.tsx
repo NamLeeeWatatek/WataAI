@@ -1,8 +1,8 @@
 import { CreationJob } from '@/lib/types/creation-job';
 import { ProductCard } from './ProductCard';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { Package } from 'lucide-react';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 interface ProductsGridProps {
     jobs: CreationJob[];

@@ -1,6 +1,6 @@
 'use client';
 
-import { Media } from '@/components/ui/Media';
+import { Media } from '@/components/shared/Media';
 import { cn } from '@/lib/utils';
 import { Image, icons } from 'lucide-react';
 import { useState } from 'react';

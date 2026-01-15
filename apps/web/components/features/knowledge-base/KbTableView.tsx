@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { DataTable } from '@/components/ui/DataTable';
+import { DataTable } from '@/components/shared/DataTable';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -9,8 +9,8 @@ import { Edit2, Trash2, Eye, Download, MoreVertical } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
 import { KbFileIcon } from './KbFileIcon';
-import type { SortDirection } from '@/components/ui/DataTable';
-import type { PaginationInfo } from '@/components/ui/Pagination';
+import type { SortDirection } from '@/components/shared/DataTable';
+import type { PaginationInfo } from '@/components/shared/Pagination';
 import { ColumnDef } from '@tanstack/react-table';
 
 interface KbItem {

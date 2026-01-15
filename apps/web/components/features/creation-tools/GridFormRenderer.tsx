@@ -179,7 +179,7 @@ export function GridFormRenderer({
     const renderZone = (zone: ZoneConfig) => (
         <div className="flex flex-col gap-4">
             {zone.title && !['Main Content', 'New Zone', 'Untitled Zone'].includes(zone.title) && (
-                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{zone.title}</h3>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">{zone.title}</h3>
             )}
             {zone.fieldRows.map(fRow => <div key={fRow.id}>{renderFieldRow(fRow)}</div>)}
         </div>
@@ -215,10 +215,10 @@ export function GridFormRenderer({
             )
         }
         return (
-            <div className="space-y-10">
+            <div className="space-y-8">
                 {currentStepConfig.description && <p className="text-sm text-muted-foreground/60">{currentStepConfig.description}</p>}
                 {currentStepConfig.layout.rows.map(row => (
-                    <div key={row.id} className="flex flex-col md:flex-row gap-8 w-full">
+                    <div key={row.id} className="flex flex-col md:flex-row gap-6 w-full">
                         {row.zones.map(zone => <div key={zone.id} className="flex-1 min-w-0">{renderZone(zone)}</div>)}
                     </div>
                 ))}
@@ -229,17 +229,17 @@ export function GridFormRenderer({
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onFormSubmit)} className="w-full">
-                <div className="min-h-[450px] bg-card/30 backdrop-blur-sm border border-border/40 p-10 rounded-[2.5rem] shadow-2xl shadow-primary/5">
+                <div className="w-full">
                     {renderStepContent()}
                 </div>
 
-                <div className="flex gap-4 mt-8">
+                <div className="flex gap-4 mt-8 pt-6 border-t border-border/40">
                     {currentStepIndex > 0 && (
                         <Button
                             type="button"
                             variant="outline"
                             onClick={handleBack}
-                            className="flex-1 h-16 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all hover:bg-muted/50"
+                            className="flex-1 h-12 rounded-xl font-bold uppercase tracking-wide text-xs transition-all hover:bg-muted/50"
                         >
                             Back
                         </Button>
@@ -249,7 +249,7 @@ export function GridFormRenderer({
                             type="button"
                             onClick={handleNext}
                             disabled={isPreviewing}
-                            className="flex-[2] h-16 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/10 hover:shadow-primary/20 bg-primary text-primary-foreground"
+                            className="flex-[2] h-12 rounded-xl font-bold uppercase tracking-wide text-xs bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25"
                         >
                             {isPreviewing ? 'Processing Preview...' : 'Continue'}
                         </Button>
@@ -257,7 +257,7 @@ export function GridFormRenderer({
                         <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-[2] h-16 rounded-2xl font-bold uppercase tracking-widest text-xs shadow-2xl shadow-primary/20 hover:shadow-primary/30 bg-primary text-primary-foreground transition-all active:scale-[0.98]"
+                            className="flex-[2] h-12 rounded-xl font-bold uppercase tracking-wide text-xs bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all active:scale-[0.98]"
                         >
                             {isSubmitting ? 'Processing...' : (config.submitLabel || 'Generate Now')}
                         </Button>

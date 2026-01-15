@@ -4,7 +4,7 @@ import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, Maximize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Media } from "@/components/ui/Media"
+import { Media } from "@/components/shared/Media"
 
 interface ImagePreviewProps {
     src: string

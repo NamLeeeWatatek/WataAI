@@ -1,4 +1,4 @@
-import { AiEnhancedTextarea } from "../AiEnhancedTextarea"
+import { AiEnhancedTextarea } from "@/components/shared/AiEnhancedTextarea";
 import { DynamicFormFieldProps } from "./types"
 
 export function FieldTextarea({ field, value, onChange }: DynamicFormFieldProps) {

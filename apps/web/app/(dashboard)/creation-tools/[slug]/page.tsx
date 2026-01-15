@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, use } from 'react';
+import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
@@ -10,19 +11,14 @@ import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { Template } from '@/lib/types/template';
 import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Stepper } from '@/components/ui/Stepper';
 import { GridFormRenderer } from '@/components/features/creation-tools/GridFormRenderer';
 import { useForm } from 'react-hook-form';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
 import { useToast } from '@/lib/hooks/use-toast';
-import {
-    showProgressOverlay,
-    updateProgressOverlay,
-    completeProgressOverlay,
-    failProgressOverlay
-} from '@/components/ui/ProgressOverlay';
+
 import { generateZodSchema } from '@/lib/utils/schema-generator';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { completeProgressOverlay, failProgressOverlay, showProgressOverlay } from '@/components/shared/ProgressOverlay';
 
 export default function CreationToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const resolvedParams = use(params);
@@ -154,42 +150,97 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         }
     };
 
+    // Helper to determine the best title for a step
+    const getStepTitle = (step: any, index: number) => {
+        // Priority 1: Zone Title (User request: "lấy từ tên các zone trong 1 step")
+        const firstZoneTitle = step.layout?.rows?.[0]?.zones?.[0]?.title;
+        if (firstZoneTitle && firstZoneTitle !== 'Main Zone') return firstZoneTitle;
+
+        // Priority 2: Step Title (if not generic "Step X")
+        if (step.title && !step.title.startsWith('Step ')) return step.title;
+
+        // Priority 3: Default "Step X"
+        return `Step ${index + 1}`;
+    };
+
     return (
-        <div className="space-y-8 min-h-screen pb-20 px-4 md:px-8 max-w-[100vw] overflow-x-hidden">
-            <div className="pb-8 border-b border-border/40 space-y-10">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="h-12 w-12 border border-border/40 rounded-2xl shrink-0" onClick={() => router.back()}>
-                        <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">{tool.name}</h1>
-                        {tool.description && <p className="text-sm text-muted-foreground">{tool.description}</p>}
+        <div className="h-full w-full overflow-hidden bg-background">
+            {/* Sidebar & Content Layout - Full Height of Parent */}
+            <div className="flex h-full">
+                {/* Left Sidebar Navigation */}
+                {tool.formConfig?.steps && tool.formConfig.steps.length > 1 ? (
+                    <div className="w-[280px] shrink-0 border-r border-border/40 bg-card backdrop-blur-xl flex flex-col h-full overflow-hidden transition-colors duration-300">
+                        <div className="p-5 flex items-center gap-3 border-b border-border/40 shrink-0">
+                            <Button variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8 -ml-2 rounded-full hover:bg-muted/50">
+                                <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                            <span className="font-bold text-sm tracking-tight text-foreground/80">Configuration</span>
+                        </div>
+                        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                            {tool.formConfig.steps.map((step, index) => {
+                                const isActive = activeStep === index;
+                                const isCompleted = activeStep > index;
+                                const stepTitle = getStepTitle(step, index);
+
+                                return (
+                                    <button
+                                        key={step.id || index}
+                                        onClick={() => setActiveStep(index)}
+                                        disabled={!isCompleted && !isActive}
+                                        className={cn(
+                                            "w-full flex items-center gap-3 px-3 py-3.5 rounded-xl text-left transition-all duration-300 group relative",
+                                            isActive
+                                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]"
+                                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                                            (!isCompleted && !isActive) && "opacity-50 cursor-not-allowed grayscale"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "w-6 h-6 rounded-full flex items-center justify-center border-2 transition-colors shrink-0 font-mono text-[10px] font-bold",
+                                            isActive
+                                                ? "border-primary-foreground text-primary-foreground bg-transparent"
+                                                : isCompleted
+                                                    ? "bg-muted text-foreground border-transparent"
+                                                    : "border-muted-foreground/30 text-muted-foreground/50",
+                                        )}>
+                                            {index + 1}
+                                        </div>
+
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-sm font-semibold truncate leading-tight">{stepTitle}</span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ) : null}
+
+                {/* Main Content Area */}
+                <div className="flex-1 h-full overflow-hidden flex flex-col relative bg-background">
+                    {/* Background Pattern */}
+                    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03]"
+                        style={{
+                            backgroundImage: `radial-gradient(#888 1px, transparent 1px)`,
+                            backgroundSize: '24px 24px'
+                        }}
+                    />
+
+                    <div className="flex-1 overflow-y-auto p-6 lg:p-12 relative z-10">
+                        {/* Constrain width to 7xl to prevent 'ugly wide' look on large screens, while keeping it responsive */}
+                        <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in-10 slide-in-from-bottom-2 duration-500">
+                            <GridFormRenderer
+                                config={tool.formConfig}
+                                onSubmit={onFormSubmit}
+                                isSubmitting={submitting}
+                                form={form}
+                                activeStep={activeStep}
+                                onStepChange={setActiveStep}
+                                toolId={tool.id}
+                            />
+                        </div>
                     </div>
                 </div>
-
-                {tool.formConfig?.steps && tool.formConfig.steps.length > 1 && (
-                    <div className="w-full px-2">
-                        <Stepper
-                            steps={tool.formConfig.steps.map((s, i) => ({
-                                id: s.id || String(i),
-                                title: s.title || `Step ${i + 1}`
-                            }))}
-                            currentStep={activeStep}
-                        />
-                    </div>
-                )}
-            </div>
-
-            <div className="w-full text-foreground">
-                <GridFormRenderer
-                    config={tool.formConfig}
-                    onSubmit={onFormSubmit}
-                    isSubmitting={submitting}
-                    form={form}
-                    activeStep={activeStep}
-                    onStepChange={setActiveStep}
-                    toolId={tool.id}
-                />
             </div>
         </div>
     );
