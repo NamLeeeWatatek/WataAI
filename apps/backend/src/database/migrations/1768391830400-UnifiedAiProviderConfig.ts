@@ -19,6 +19,26 @@ export class UnifiedAiProviderConfig1768391830400
     await queryRunner.query(
       `DROP INDEX IF EXISTS "public"."IDX_ai_models_owner_type"`,
     );
+    // 0. Ensure table exists (Fix for missing table error)
+    await queryRunner.query(
+      `CREATE TABLE IF NOT EXISTS "ai_models" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "name" character varying NOT NULL,
+        "display_name" character varying,
+        "type" character varying NOT NULL DEFAULT 'chat',
+        "provider_id" uuid NOT NULL,
+        "owner_type" character varying NOT NULL,
+        "owner_id" uuid NOT NULL,
+        "config_id" uuid,
+        "metadata" jsonb NOT NULL DEFAULT '{}',
+        "is_active" boolean NOT NULL DEFAULT true,
+        "created_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        CONSTRAINT "PK_ai_models_id" PRIMARY KEY ("id")
+      )`,
+    );
+
+    // 1. Drop old indices
     await queryRunner.query(
       `DROP INDEX IF EXISTS "public"."IDX_8ae166c823e535eb731f333522"`,
     ); // ai_provider_id
@@ -151,6 +171,8 @@ export class UnifiedAiProviderConfig1768391830400
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE IF EXISTS "ai_models"`);
+
     await queryRunner.query(
       `ALTER TABLE "ai_models" DROP CONSTRAINT "FK_959da1d5b224333f044c958feb5"`,
     );
