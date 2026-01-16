@@ -10,7 +10,7 @@ const pageHeaderVariants = cva(
         variants: {
             variant: {
                 default: "pb-6 border-b border-border/10 mb-6", // Standardize: Always have a separator for consistency
-                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md px-6 py-4 border-b border-border/10 w-full mb-6",
+                sticky: "sticky top-0 z-40 glass-floating px-6 py-4 w-full mb-6",
                 dashboard: "p-0 mb-6",
                 clean: "pb-4 mb-4", // New variant for no-border headers
             },

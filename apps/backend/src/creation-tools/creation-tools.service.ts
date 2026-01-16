@@ -25,7 +25,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {
@@ -158,6 +158,10 @@ export class CreationToolsService {
     const persistencePayload: any = { ...updatePayload };
     if (categoryIds) {
       persistencePayload.categories = categoryIds.map((id) => ({ id }));
+    }
+
+    if (persistencePayload.knowledgeBaseId === '') {
+      persistencePayload.knowledgeBaseId = null;
     }
 
     const tool = await this.repository.update(id, persistencePayload);
