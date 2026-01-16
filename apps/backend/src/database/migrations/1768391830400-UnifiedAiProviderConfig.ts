@@ -1,21 +1,29 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class UnifiedAiProviderConfig1768391830400
-  implements MigrationInterface
-{
+  implements MigrationInterface {
   name = 'UnifiedAiProviderConfig1768391830400';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1. Drop old indices
-    await queryRunner.query(`DROP INDEX "public"."IDX_ai_models_provider_id"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_ai_models_owner_id"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_ai_models_config_id"`);
-    await queryRunner.query(`DROP INDEX "public"."IDX_ai_models_owner_type"`);
+    // 1. Drop old indices
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_8ae166c823e535eb731f333522"`,
+      `DROP INDEX IF EXISTS "public"."IDX_ai_models_provider_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_ai_models_owner_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_ai_models_config_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_ai_models_owner_type"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "public"."IDX_8ae166c823e535eb731f333522"`,
     ); // ai_provider_id
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_6c16f10dd8e41dfcee3c7eb3f8"`,
+      `DROP INDEX IF EXISTS "public"."IDX_6c16f10dd8e41dfcee3c7eb3f8"`,
     ); // embedding_provider_id
 
     // 2. Add new columns
