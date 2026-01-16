@@ -62,6 +62,9 @@ export class UnifiedAiProviderConfig1768391830400
     await queryRunner.query(
       `ALTER TABLE "knowledge_base" ADD "embedding_config_id" uuid`,
     );
+    await queryRunner.query(
+      `ALTER TABLE "bot" ADD "ai_config_id" uuid`,
+    );
 
     // 3. Migrate Data (Old columns -> New JSONB config)
     // We construct the JSON object from existing columns.
@@ -86,6 +89,9 @@ export class UnifiedAiProviderConfig1768391830400
     await queryRunner.query(`
       UPDATE "knowledge_base" SET "embedding_config_id" = "embedding_provider_id"
     `);
+    await queryRunner.query(`
+      UPDATE "bot" SET "ai_config_id" = "ai_provider_id"
+    `);
 
     // Remove default on method before dropping? No, config is nullable or default?
     // We set default '{}' above to avoid not-null errors initially,
@@ -99,6 +105,14 @@ export class UnifiedAiProviderConfig1768391830400
     );
 
     // 4. Drop old columns
+    // Drop constraints first to be safe
+    await queryRunner.query(
+      `ALTER TABLE "bot" DROP CONSTRAINT IF EXISTS "FK_58487db73d419a07163400cd26b"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" DROP CONSTRAINT IF EXISTS "FK_8ae166c823e535eb731f333522"`,
+    ); // ai_provider_id
+
     await queryRunner.query(
       `ALTER TABLE "ai_provider_configs" DROP COLUMN "timeout"`,
     );
@@ -123,6 +137,9 @@ export class UnifiedAiProviderConfig1768391830400
     );
     await queryRunner.query(
       `ALTER TABLE "knowledge_base" DROP COLUMN "embedding_provider_id"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bot" DROP COLUMN "ai_provider_id"`,
     );
 
     // 5. Other Alterations
@@ -155,6 +172,9 @@ export class UnifiedAiProviderConfig1768391830400
     await queryRunner.query(
       `CREATE INDEX "IDX_579da2ba9875c11b6758ea92f7" ON "knowledge_base" ("embedding_config_id") `,
     );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_bot_ai_config_id" ON "bot" ("ai_config_id") `,
+    );
 
     // 7. Add Constraints
     // Clean up orphaned models first
@@ -167,6 +187,15 @@ export class UnifiedAiProviderConfig1768391830400
     );
     await queryRunner.query(
       `ALTER TABLE "ai_models" ADD CONSTRAINT "FK_959da1d5b224333f044c958feb5" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_kb_ai_config" FOREIGN KEY ("ai_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_kb_embedding_config" FOREIGN KEY ("embedding_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bot" ADD CONSTRAINT "FK_bot_ai_config" FOREIGN KEY ("ai_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
   }
 
@@ -262,6 +291,12 @@ export class UnifiedAiProviderConfig1768391830400
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_ai_models_provider_id" ON "ai_models" ("provider_id") `,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_8ae166c823e535eb731f333522" FOREIGN KEY ("ai_provider_id") REFERENCES "ai_providers"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bot" ADD CONSTRAINT "FK_58487db73d419a07163400cd26b" FOREIGN KEY ("ai_provider_id") REFERENCES "ai_providers"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
   }
 }
