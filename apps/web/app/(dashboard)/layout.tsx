@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { CreationJobsProvider } from '@/components/providers/CreationJobsProvider'
-import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget'
 import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitializer'
 
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
@@ -128,7 +127,6 @@ export default function DashboardLayout({
                             </ErrorBoundary>
                         </div>
                     </div>
-                    <ActiveJobsWidget />
                 </CreationJobsProvider>
             </main >
 

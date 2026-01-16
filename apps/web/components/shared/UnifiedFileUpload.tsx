@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/Progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { AspectRatio } from '@/components/ui/AspectRatio';
+import { ImagePreview } from './FilePreview';
 
 export type FileUploadVariant = 'default' | 'avatar' | 'cover' | 'zone';
 
@@ -202,11 +203,22 @@ export function UnifiedFileUpload({
                             )}
 
                             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <ImagePreview src={coverUrl} alt="Cover Preview">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="icon"
+                                        className="h-8 w-8 backdrop-blur-md bg-background/80 hover:bg-primary hover:text-white transition-all border border-white/20"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                    </Button>
+                                </ImagePreview>
                                 <Button
                                     type="button"
                                     variant="secondary"
                                     size="sm"
-                                    className="h-8 text-xs backdrop-blur-md bg-background/80 hover:bg-background"
+                                    className="h-8 text-xs backdrop-blur-md bg-background/80 hover:bg-background border border-white/20"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     Change
@@ -215,7 +227,7 @@ export function UnifiedFileUpload({
                                     type="button"
                                     variant="destructive"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-8 w-8 border border-white/20"
                                     onClick={(e) => { e.stopPropagation(); handleRemove(coverUrl); }}
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -265,9 +277,9 @@ export function UnifiedFileUpload({
             {(!maxFiles || currentFiles.length < maxFiles) && (
                 <div
                     className={cn(
-                        "relative flex flex-col items-center justify-center w-full rounded-2xl border-2 border-dashed border-muted-foreground/10 bg-muted/5 transition-all text-center px-8 py-16 cursor-pointer",
-                        "hover:border-primary/40 hover:bg-primary/[0.02] hover:shadow-inner",
-                        dragActive && "border-primary bg-primary/5 ring-4 ring-primary/5",
+                        "relative flex flex-col items-center justify-center w-full rounded-3xl border-2 border-dashed border-muted-foreground/10 bg-muted/5 transition-all duration-500 text-center px-8 py-12 cursor-pointer group/zone",
+                        "hover:border-primary/30 hover:bg-primary/[0.01] hover:shadow-[0_0_30px_rgba(var(--primary),0.02)]",
+                        dragActive && "border-primary bg-primary/5 ring-8 ring-primary/5 scale-[0.99]",
                         disabled && "opacity-50 cursor-not-allowed",
                         uploading && "pointer-events-none opacity-80"
                     )}
@@ -288,30 +300,39 @@ export function UnifiedFileUpload({
                     />
 
                     {uploading ? (
-                        <div className="w-full max-w-sm space-y-6">
+                        <div className="w-full max-w-sm space-y-6 animate-in fade-in zoom-in-95">
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative">
-                                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                    <div className="absolute inset-x-[-10px] inset-y-[-10px] rounded-full bg-primary/10 animate-ping opacity-20" />
+                                    <Loader2 className="w-10 h-10 animate-spin text-primary relative z-10" />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <span className="text-[10px] font-bold">{progress}%</span>
                                     </div>
                                 </div>
-                                <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Uploading Assets...</span>
+                                <div className="space-y-1 text-center">
+                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-primary block">Uploading Assets</span>
+                                    <p className="text-[10px] text-muted-foreground animate-pulse">Processing file chunk...</p>
+                                </div>
                             </div>
-                            <Progress value={progress} className="h-1 bg-primary/10" />
+                            <Progress value={progress} className="h-1 bg-primary/10 shadow-inner" indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-600 shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                         </div>
                     ) : (
-                        <div className="space-y-5 group/upload">
-                            <div className="mx-auto w-14 h-14 flex items-center justify-center rounded-2xl bg-background border border-border shadow-sm group-hover/upload:scale-110 group-hover/upload:border-primary/50 group-hover/upload:shadow-lg transition-all duration-300">
-                                <ArrowUpFromLine className="w-6 h-6 text-primary/60 group-hover/upload:text-primary transition-colors" />
+                        <div className="space-y-6 group/upload">
+                            <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-[2rem] bg-background border border-border shadow-sm group-hover/zone:scale-110 group-hover/zone:border-primary/50 group-hover/zone:shadow-xl transition-all duration-500 group-hover/zone:rotate-6">
+                                <ArrowUpFromLine className="w-7 h-7 text-primary/40 group-hover/zone:text-primary transition-colors" />
                             </div>
                             <div className="space-y-2">
-                                <h4 className="text-sm font-bold text-foreground">Click or Drag assets to Upload</h4>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-muted/50 inline-block px-3 py-1 rounded-full">
-                                    AI-Driven Context Extraction Enabled
-                                </p>
+                                <h4 className="text-sm font-black text-foreground tracking-tight">Click or Drag assets to Upload</h4>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    <p className="text-[9px] text-primary font-black uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full border border-primary/10">
+                                        AI-Driven Extraction
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground font-black uppercase tracking-widest bg-muted/50 px-3 py-1 rounded-full">
+                                        High Quality
+                                    </p>
+                                </div>
                             </div>
-                            <p className="text-[11px] text-muted-foreground/50 font-medium">
+                            <p className="text-[11px] text-muted-foreground/40 font-medium italic">
                                 {description || `Supports any file up to ${Math.round(maxSize / 1024 / 1024)}MB`}
                             </p>
                         </div>
@@ -327,53 +348,56 @@ export function UnifiedFileUpload({
                         const isImage = url.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i);
 
                         return (
-                            <div key={`${url}-${idx}`} className="group relative aspect-square rounded-lg border bg-background overflow-hidden shadow-sm">
+                            <div key={`${url}-${idx}`} className="group relative aspect-square rounded-2xl border border-border/20 bg-card/40 backdrop-blur-sm overflow-hidden shadow-sm hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300">
                                 {isImage ? (
                                     <div className="relative w-full h-full">
                                         <Image
                                             src={url}
                                             alt="Uploaded file"
                                             fill
-                                            className="object-cover"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
                                     </div>
                                 ) : isVideo ? (
-                                    <video src={url} className="w-full h-full object-cover" />
+                                    <video src={url} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-muted/10 p-4">
-                                        <File className="w-8 h-8 text-muted-foreground mb-2" />
-                                        <span className="text-xs text-muted-foreground truncate w-full text-center">
+                                    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                            <File className="w-6 h-6 text-primary/60" />
+                                        </div>
+                                        <span className="text-[10px] font-bold text-muted-foreground/60 truncate w-full text-center px-2">
                                             {url.split('/').pop()}
                                         </span>
                                     </div>
                                 )}
 
-                                {!disabled && (
-                                    <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                window.open(url, '_blank');
-                                            }}
-                                            className="p-1.5 rounded-full bg-background/90 text-foreground shadow-sm hover:bg-primary hover:text-white transition-all"
-                                            title="Preview"
-                                        >
-                                            <Eye className="w-3.5 h-3.5" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRemove(url);
-                                            }}
-                                            className="p-1.5 rounded-full bg-background/90 text-foreground shadow-sm hover:bg-destructive hover:text-white transition-all"
-                                            title="Remove"
-                                        >
-                                            <X className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                )}
+                                {/* Overlay for actions with glass effect */}
+                                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+                                    {!disabled && (
+                                        <div className="flex gap-2 pointer-events-auto">
+                                            <ImagePreview src={url} alt="Preview">
+                                                <button
+                                                    type="button"
+                                                    className="p-2 rounded-full bg-background/80 backdrop-blur-md text-foreground shadow-lg hover:bg-primary hover:text-white transition-all hover:scale-110 active:scale-90 border border-white/20"
+                                                    title="Preview"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                            </ImagePreview>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleRemove(url);
+                                                }}
+                                                className="p-2 rounded-full bg-background/80 backdrop-blur-md text-foreground shadow-lg hover:bg-destructive hover:text-white transition-all hover:scale-110 active:scale-90 border border-white/20"
+                                                title="Remove"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}

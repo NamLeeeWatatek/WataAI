@@ -467,10 +467,15 @@ const knowledgeBaseSlice = createSlice({
       })
 
     builder
+      .addCase(uploadDocument.pending, (state) => {
+        state.loading = true
+      })
       .addCase(uploadDocument.fulfilled, (state, action) => {
+        state.loading = false
         state.documents.push(action.payload)
       })
       .addCase(uploadDocument.rejected, (state, action) => {
+        state.loading = false
         state.error = action.error.message || 'Failed to upload document'
       })
 
@@ -491,28 +496,42 @@ const knowledgeBaseSlice = createSlice({
       })
 
     builder
+      .addCase(removeFolder.pending, (state) => {
+        state.loading = true
+      })
       .addCase(removeFolder.fulfilled, (state, action) => {
+        state.loading = false
         const id = action.payload
         state.folders = state.folders.filter(f => f.id !== id)
         state.allFolders = state.allFolders.filter(f => f.id !== id)
         state.selectedIds = state.selectedIds.filter(_id => _id !== id)
       })
       .addCase(removeFolder.rejected, (state, action) => {
+        state.loading = false
         state.error = action.error.message || 'Failed to delete folder'
       })
 
     builder
+      .addCase(removeDocument.pending, (state) => {
+        state.loading = true
+      })
       .addCase(removeDocument.fulfilled, (state, action) => {
+        state.loading = false
         const id = action.payload
         state.documents = state.documents.filter(d => d.id !== id)
         state.selectedIds = state.selectedIds.filter(_id => _id !== id)
       })
       .addCase(removeDocument.rejected, (state, action) => {
+        state.loading = false
         state.error = action.error.message || 'Failed to delete document'
       })
 
     builder
+      .addCase(removeBatchItems.pending, (state) => {
+        state.loading = true
+      })
       .addCase(removeBatchItems.fulfilled, (state, action) => {
+        state.loading = false
         const { folderIds, documentIds } = action.payload
         const removedIds = new Set([...folderIds, ...documentIds])
 
@@ -522,6 +541,7 @@ const knowledgeBaseSlice = createSlice({
         state.selectedIds = state.selectedIds.filter(id => !removedIds.has(id))
       })
       .addCase(removeBatchItems.rejected, (state, action) => {
+        state.loading = false
         state.error = action.error.message || 'Failed to batch delete items'
       })
 

@@ -370,14 +370,6 @@ function DataTableInner<TData, TValue>({
                         })}
                       </TableRow>
                     ))}
-                    {/* Feedback Overlay for Subsequent Loads */}
-                    {loading && data.length > 0 && (
-                      <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-10 animate-in fade-in duration-300">
-                        <div className="bg-background/80 p-3 rounded-full shadow-lg border border-border/50">
-                          <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                        </div>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <TableRow>
@@ -388,6 +380,14 @@ function DataTableInner<TData, TValue>({
                 )}
               </TableBody>
             </Table>
+            {/* Feedback Overlay for Subsequent Loads - Moved outside TableBody for valid HTML */}
+            {loading && data.length > 0 && (
+              <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-10 animate-in fade-in duration-300">
+                <div className="bg-background/80 p-3 rounded-full shadow-lg border border-border/50">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={cn("p-6 grid gap-6", gridClassName)}>

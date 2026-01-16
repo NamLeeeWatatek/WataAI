@@ -312,7 +312,7 @@ export class AiProvidersService {
     }
 
     // Fallback/Legacy
-    if (!providerKey && finalsApiKey && providerConfigId) {
+    if (!providerKey && providerConfigId) {
       const validKeys = [
         'openai',
         'anthropic',
@@ -433,7 +433,7 @@ export class AiProvidersService {
     }
 
     // Fallback if apiKey is explicitly provided but no config (Ad-hoc)
-    if (!providerKey && finalsApiKey && providerConfigId) {
+    if (!providerKey && providerConfigId) {
       // If providerConfigId is actually a provider TYPE name (legacy support?)
       // The user said REMOVE full flow. So maybe we shouldn't support "openai" string as providerId.
       // But for safety let's allow "custom" or explicit types if provided matching our supported keys.
