@@ -30,7 +30,7 @@ export const store = configureStore({
           'knowledgeBase/toggleSelectAll',
           'knowledgeBase/uploadDocument',
         ],
-        ignoredActionPaths: ['payload.selectedIds'],
+        ignoredActionPaths: ['payload.selectedIds', 'meta.arg.file'],
         ignoredPaths: [
           'knowledgeBase.selectedIds',
         ],

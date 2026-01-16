@@ -269,10 +269,7 @@ export function KbTableView({
         onPageSizeChange={onPageSizeChange}
         emptyMessage="This collection is currently empty"
         onRowClick={onItemClick}
-        className="h-full border-none shadow-none bg-transparent"
         gridClassName="grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 p-6"
-        tableClassName="bg-transparent border-0"
-        noCard
         renderGridItem={renderGridItem}
         onRowDragStart={(e, row) => {
           if (onDragStart) onDragStart(row);

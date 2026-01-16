@@ -44,7 +44,7 @@ export class AiProvidersService {
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
     private readonly aiModelRepository: AiModelRepository,
-  ) { }
+  ) {}
 
   /**
    * Encrypt an API key
@@ -246,25 +246,41 @@ export class AiProvidersService {
     model: string,
     providerConfigId?: string,
     apiKey?: string,
-    baseUrl?: string
-  ): Promise<{ providerKey: string; apiKey: string; baseUrl?: string; modelName: string }> {
-    const { name: modelName, configId, ownerId, ownerType } =
-      await this.resolveModel(model);
+    baseUrl?: string,
+  ): Promise<{
+    providerKey: string;
+    apiKey: string;
+    baseUrl?: string;
+    modelName: string;
+  }> {
+    const {
+      name: modelName,
+      configId,
+      ownerId,
+      ownerType,
+    } = await this.resolveModel(model);
 
-    let finalConfigId = providerConfigId || configId;
-    let finalOwnerId = ownerId;
-    let finalOwnerType = ownerType;
+    const finalConfigId = providerConfigId || configId;
+    const finalOwnerId = ownerId;
+    const finalOwnerType = ownerType;
 
     let providerKey = '';
     let finalsApiKey = apiKey || '';
     let finalBaseUrl = baseUrl;
 
     if (finalConfigId && finalOwnerId && finalOwnerType) {
-      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null = null;
+      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null =
+        null;
       if (finalOwnerType === AiProviderOwnerType.USER) {
-        config = await this.aiConfigService.getUserConfig(finalOwnerId, finalConfigId);
+        config = await this.aiConfigService.getUserConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
       } else {
-        config = await this.aiConfigService.getWorkspaceConfig(finalOwnerId, finalConfigId);
+        config = await this.aiConfigService.getWorkspaceConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
       }
 
       if (config && config.provider) {
@@ -276,24 +292,41 @@ export class AiProvidersService {
 
     // Fallback/Legacy
     if (!providerKey && finalsApiKey && providerConfigId) {
-      const validKeys = ['openai', 'anthropic', 'google', 'ollama', 'azure', 'custom'];
+      const validKeys = [
+        'openai',
+        'anthropic',
+        'google',
+        'ollama',
+        'azure',
+        'custom',
+      ];
       if (validKeys.includes(providerConfigId.toLowerCase())) {
         providerKey = providerConfigId.toLowerCase();
       }
     }
 
     if (!providerKey) {
-      throw new BadRequestException(`Could not resolve AI Provider configuration for model ${modelName}.`);
+      throw new BadRequestException(
+        `Could not resolve AI Provider configuration for model ${modelName}.`,
+      );
     }
 
-    return { providerKey, apiKey: finalsApiKey, baseUrl: finalBaseUrl, modelName };
+    return {
+      providerKey,
+      apiKey: finalsApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    };
   }
 
-  // Removed heuristic resolveProviderKey. 
+  // Removed heuristic resolveProviderKey.
   // We now strictly rely on resolved model config or passed provider.
 
-  private getProviderKeyFromConfig(config: UserAiProviderConfig | WorkspaceAiProviderConfig): string {
-    if (!config.provider) throw new BadRequestException('Provider not loaded for config');
+  private getProviderKeyFromConfig(
+    config: UserAiProviderConfig | WorkspaceAiProviderConfig,
+  ): string {
+    if (!config.provider)
+      throw new BadRequestException('Provider not loaded for config');
     return config.provider.key.toLowerCase();
   }
 
@@ -303,13 +336,23 @@ export class AiProvidersService {
     return uuidRegex.test(val);
   }
 
-  async resolveModel(
-    modelIdOrName: string,
-  ): Promise<{ name: string; providerId?: string; configId?: string; ownerId?: string; ownerType?: string }> {
+  async resolveModel(modelIdOrName: string): Promise<{
+    name: string;
+    providerId?: string;
+    configId?: string;
+    ownerId?: string;
+    ownerType?: string;
+  }> {
     if (this.isUuid(modelIdOrName)) {
       const model = await this.aiModelRepository.findById(modelIdOrName);
       if (model) {
-        return { name: model.name, providerId: model.providerId, configId: model.configId as string | undefined, ownerId: model.ownerId, ownerType: model.ownerType };
+        return {
+          name: model.name,
+          providerId: model.providerId,
+          configId: model.configId as string | undefined,
+          ownerId: model.ownerId,
+          ownerType: model.ownerType,
+        };
       }
     }
     return { name: modelIdOrName };
@@ -324,17 +367,21 @@ export class AiProvidersService {
     baseUrl?: string, // Legacy/Override
     useTools?: boolean,
   ): Promise<string> {
-    const { name: modelName, configId, ownerId, ownerType } =
-      await this.resolveModel(model);
+    const {
+      name: modelName,
+      configId,
+      ownerId,
+      ownerType,
+    } = await this.resolveModel(model);
 
-    let finalConfigId = providerConfigId || configId;
-    let finalOwnerId = ownerId;
-    let finalOwnerType = ownerType;
+    const finalConfigId = providerConfigId || configId;
+    const finalOwnerId = ownerId;
+    const finalOwnerType = ownerType;
 
     // specific override if providerConfigId is passed but owner info is missing (ad-hoc config usage?)
-    // This part is tricky without owner info. 
-    // If providerConfigId is passed, we might assume it's same scope as the caller? 
-    // But chat() doesn't have caller scope. 
+    // This part is tricky without owner info.
+    // If providerConfigId is passed, we might assume it's same scope as the caller?
+    // But chat() doesn't have caller scope.
     // For now, let's assume if providerConfigId is passed, it might be a User config if we can't determine.
     // However, best to rely on model resolution.
 
@@ -343,11 +390,18 @@ export class AiProvidersService {
     let finalBaseUrl = baseUrl;
 
     if (finalConfigId && finalOwnerId && finalOwnerType) {
-      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null = null;
+      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null =
+        null;
       if (finalOwnerType === AiProviderOwnerType.USER) {
-        config = await this.aiConfigService.getUserConfig(finalOwnerId, finalConfigId);
+        config = await this.aiConfigService.getUserConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
       } else {
-        config = await this.aiConfigService.getWorkspaceConfig(finalOwnerId, finalConfigId);
+        config = await this.aiConfigService.getWorkspaceConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
       }
 
       if (config && config.provider) {
@@ -362,14 +416,23 @@ export class AiProvidersService {
       // If providerConfigId is actually a provider TYPE name (legacy support?)
       // The user said REMOVE full flow. So maybe we shouldn't support "openai" string as providerId.
       // But for safety let's allow "custom" or explicit types if provided matching our supported keys.
-      const validKeys = ['openai', 'anthropic', 'google', 'ollama', 'azure', 'custom'];
+      const validKeys = [
+        'openai',
+        'anthropic',
+        'google',
+        'ollama',
+        'azure',
+        'custom',
+      ];
       if (validKeys.includes(providerConfigId.toLowerCase())) {
         providerKey = providerConfigId.toLowerCase();
       }
     }
 
     if (!providerKey) {
-      throw new BadRequestException('Could not resolve AI Provider configuration for this model.');
+      throw new BadRequestException(
+        'Could not resolve AI Provider configuration for this model.',
+      );
     }
 
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
@@ -391,8 +454,17 @@ export class AiProvidersService {
     apiKey?: string,
     options?: { baseUrl?: string },
   ): Promise<number[]> {
-    const { providerKey, apiKey: finalApiKey, baseUrl: finalBaseUrl, modelName } =
-      await this.resolveConfigParams(model, providerConfigId, apiKey, options?.baseUrl);
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      options?.baseUrl,
+    );
 
     return this.aiModelService.generateEmbedding(
       text,
@@ -450,10 +522,54 @@ export class AiProvidersService {
     apiKey?: string,
     baseUrl?: string,
   ): Promise<string> {
-    const { providerKey, apiKey: finalApiKey, baseUrl: finalBaseUrl, modelName } =
-      await this.resolveConfigParams(model, providerConfigId, apiKey, baseUrl);
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
 
-    return this.dispatchChat(providerKey, messages, modelName, finalApiKey, finalBaseUrl);
+    return this.dispatchChat(
+      providerKey,
+      messages,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
+    );
+  }
+
+  async analyzeImage(
+    imageBuffer: Buffer,
+    mimeType: string,
+    model: string,
+    providerConfigId?: string,
+    apiKey?: string,
+    prompt?: string,
+  ): Promise<string> {
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      modelName,
+    } = await this.resolveConfigParams(model, providerConfigId, apiKey);
+
+    if (providerKey === 'google') {
+      return this.aiModelService.analyzeImageWithGoogle(
+        imageBuffer,
+        mimeType,
+        modelName,
+        finalApiKey,
+        prompt,
+      );
+    }
+
+    throw new BadRequestException(
+      `Vision not supported for provider ${providerKey}`,
+    );
   }
 
   async chatWithHistoryUsingProvider(
@@ -562,8 +678,17 @@ export class AiProvidersService {
     baseUrl?: string,
     useTools?: boolean,
   ): Promise<AsyncGenerator<string>> {
-    const { providerKey, apiKey: finalApiKey, baseUrl: finalBaseUrl, modelName } =
-      await this.resolveConfigParams(model, providerConfigId, apiKey, baseUrl);
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
 
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
 
@@ -584,10 +709,25 @@ export class AiProvidersService {
     apiKey?: string,
     baseUrl?: string,
   ): Promise<AsyncGenerator<string>> {
-    const { providerKey, apiKey: finalApiKey, baseUrl: finalBaseUrl, modelName } =
-      await this.resolveConfigParams(model, providerConfigId, apiKey, baseUrl);
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
 
-    return this.dispatchChatStream(providerKey, messages, modelName, finalApiKey, finalBaseUrl);
+    return this.dispatchChatStream(
+      providerKey,
+      messages,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
+    );
   }
 
   async chatWithHistoryUsingProviderStream(

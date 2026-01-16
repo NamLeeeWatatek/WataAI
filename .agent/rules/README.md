@@ -114,6 +114,9 @@ related_rules:
 | [nextjs-design.md](nextjs-design.md) | Technical | 2.0.2026 | 2026-01-08 |
 | [senior-fullstack.md](senior-fullstack.md) | Integration | 2.0.2026 | 2026-01-08 |
 | [ui-components.md](ui-components.md) | Integration | 2.0.2026 | 2026-01-08 |
+| [ux-design-principles.md](ux-design-principles.md) | Integration | 2.0.2026 | 2026-01-08 |
+| [glassmorphism.md](glassmorphism.md) | Integration | 2.0.2026 | 2026-01-15 |
+| [speckit-docs.md](speckit-docs.md) | Technical | 2.0.2026 | 2026-01-08 |
 
 ## Quick Reference
 

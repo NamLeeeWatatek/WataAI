@@ -4,6 +4,7 @@ import { MarkdownProcessorUtil } from '../utils/markdown-processor.util';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 import PDFParser from 'pdf2json';
+import { AiProvidersService } from '../../ai-providers/ai-providers.service';
 
 interface PDFPageRun {
   T: string;
@@ -39,37 +40,81 @@ interface PDFTextItem {
 export class KBTextExtractorService {
   private readonly logger = new Logger(KBTextExtractorService.name);
 
-  async extractText(buffer: Buffer, mimeType: string): Promise<string> {
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
+
+  async extractText(
+    buffer: Buffer,
+    mimeType: string,
+    context?: { workspaceId?: string; userId?: string; model?: string },
+  ): Promise<string> {
     try {
       this.logger.log(`📄 Extracting text from ${mimeType}`);
 
+      let text = '';
       switch (mimeType) {
         case 'application/pdf':
-          return await this.extractFromPDF(buffer);
+          text = await this.extractFromPDF(buffer);
+          break;
 
         case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         case 'application/msword':
-          return await this.extractFromDOCX(buffer);
+          text = await this.extractFromDOCX(buffer);
+          break;
 
         case 'text/html':
-          return this.processText(
+          text = this.processText(
             MarkdownProcessorUtil.htmlToMarkdown(buffer.toString('utf-8'))
               .content,
           );
+          break;
 
         case 'text/plain':
         case 'text/markdown':
         case 'application/json':
-          return this.processText(buffer.toString('utf-8'));
+          text = this.processText(buffer.toString('utf-8'));
+          break;
 
         default:
+          if (
+            mimeType.startsWith('image/') ||
+            mimeType.startsWith('video/') ||
+            mimeType.startsWith('audio/')
+          ) {
+            // Support Gemini Vision for Images
+            if (mimeType.startsWith('image/') && context) {
+              this.logger.log(`👁️ Using Vision to analyze ${mimeType}`);
+              try {
+                return await this.aiProvidersService.analyzeImage(
+                  buffer,
+                  mimeType,
+                  context.model || 'gemini-1.5-flash',
+                  undefined, // let it resolve from workspace/user
+                  undefined, // apiKey resolved by AiProvidersService
+                  'Describe this image for a Knowledge Base. Focus on: 1. Main subject 2. Visual Style (Cartoon, Realistic, Minimalist, etc.) 3. Predominant Colors 4. Brand elements or Logos 5. Text content if any.',
+                );
+              } catch (visionError) {
+                this.logger.error(
+                  `❌ Vision extraction failed: ${visionError.message}`,
+                );
+                // Fallback to empty or throw? Usually better to return empty to avoid breaking the whole import
+                return '';
+              }
+            }
+
+            this.logger.warn(
+              `⚠️ Binary file type ${mimeType} not supported for text extraction yet`,
+            );
+            return '';
+          }
           this.logger.warn(`⚠️ Unknown mime type ${mimeType}, trying as text`);
-          return this.processText(buffer.toString('utf-8'));
+          text = this.processText(buffer.toString('utf-8'));
       }
+
+      return sanitizeText(text);
     } catch (error) {
       this.logger.error(`❌ Failed to extract text: ${error.message}`);
       throw new Error(
-        `Failed to extract text from ${mimeType}: ${error.message}`,
+        `Failed to extract text from ${mimeType}: ${sanitizeText(error.message)}`,
       );
     }
   }
@@ -122,8 +167,8 @@ export class KBTextExtractorService {
                     }
                   }
                 }
-                text += '\n';
               }
+              text += '\n';
             }
           }
 
@@ -357,12 +402,27 @@ export class KBTextExtractorService {
       'text/markdown',
       'text/html',
       'application/json',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
     ];
 
     return supported.includes(mimeType);
   }
 
   getSupportedExtensions(): string[] {
-    return ['.pdf', '.docx', '.doc', '.txt', '.md', '.html', '.json'];
+    return [
+      '.pdf',
+      '.docx',
+      '.doc',
+      '.txt',
+      '.md',
+      '.html',
+      '.json',
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.webp',
+    ];
   }
 }

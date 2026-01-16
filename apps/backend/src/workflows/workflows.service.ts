@@ -12,7 +12,7 @@ export class WorkflowsService {
   constructor(
     @InjectRepository(Workflow)
     private workflowsRepository: Repository<Workflow>,
-  ) { }
+  ) {}
 
   create(createWorkflowDto: CreateWorkflowDto, user?: User) {
     const workflow = this.workflowsRepository.create({

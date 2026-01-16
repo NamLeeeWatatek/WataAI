@@ -7,7 +7,7 @@ export interface ProcessingJob {
   id: string;
   documentId: string;
   knowledgeBaseId: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';
   progress: number;
   totalChunks: number;
   processedChunks: number;
@@ -79,6 +79,33 @@ export class KBProcessingQueueService {
     return internalJobId;
   }
 
+  async cancelJob(internalJobId: string): Promise<boolean> {
+    const job = this.jobs.get(internalJobId);
+    if (!job) return false;
+
+    // 1. Update internal state
+    job.status = 'cancelled';
+    job.error = 'Cancelled by user';
+    job.completedAt = new Date();
+
+    // 2. Try to remove from BullMQ
+    try {
+      const bullJob = await this.kbQueue.getJob(internalJobId);
+      if (bullJob) {
+        // If it's active, we can't easily "stop" the thread immediately without checking status in worker
+        // but removing it prevents it from being retried or identifies it as removed
+        await bullJob.remove();
+        this.logger.log(`🛑 Job ${internalJobId} removed from BullMQ`);
+      }
+    } catch (err) {
+      this.logger.error(`Error removing job from BullMQ: ${err.message}`);
+    }
+
+    this.logger.log(`🛑 Job ${internalJobId} cancelled`);
+    this.emitJobUpdate(job);
+    return true;
+  }
+
   updateJobProgress(
     internalJobId: string,
     processedChunks: number,
@@ -86,6 +113,9 @@ export class KBProcessingQueueService {
   ) {
     const job = this.jobs.get(internalJobId);
     if (!job) return;
+
+    // Don't update if already completed, failed or cancelled
+    if (job.status !== 'processing' && job.status !== 'queued') return;
 
     job.processedChunks = processedChunks;
     job.totalChunks = totalChunks;
@@ -98,6 +128,14 @@ export class KBProcessingQueueService {
     const job = this.jobs.get(internalJobId);
     if (!job) return;
 
+    // Don't start if already cancelled
+    if (job.status === 'cancelled') {
+      this.logger.warn(
+        `Attempted to start already cancelled job ${internalJobId}`,
+      );
+      return;
+    }
+
     job.status = 'processing';
     job.startedAt = new Date();
 
@@ -108,6 +146,9 @@ export class KBProcessingQueueService {
   completeJob(internalJobId: string) {
     const job = this.jobs.get(internalJobId);
     if (!job) return;
+
+    // Don't complete if cancelled
+    if (job.status === 'cancelled') return;
 
     job.status = 'completed';
     job.progress = 100;
@@ -120,6 +161,9 @@ export class KBProcessingQueueService {
   failJob(internalJobId: string, error: string) {
     const job = this.jobs.get(internalJobId);
     if (!job) return;
+
+    // Don't fail if already cancelled
+    if (job.status === 'cancelled') return;
 
     job.status = 'failed';
     job.error = error;

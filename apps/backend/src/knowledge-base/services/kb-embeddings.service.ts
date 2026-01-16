@@ -11,6 +11,7 @@ import { Cache } from 'cache-manager';
 import { Inject } from '@nestjs/common';
 import { RecursiveCharacterTextSplitter } from '../utils/recursive-text-splitter';
 import { isUUID } from '../../utils/is-uuid';
+import { sanitizeText } from '../utils/text-sanitizer';
 
 export interface TextChunk {
   content: string;
@@ -31,7 +32,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async chunkText(
     text: string,
@@ -283,7 +284,7 @@ export class KBEmbeddingsService {
             return true; // Success
           } catch (error) {
             chunk.embeddingStatus = KbProcessingStatus.FAILED;
-            chunk.embeddingError = error.message;
+            chunk.embeddingError = sanitizeText(error.message);
             await this.chunkRepository.save(chunk);
             this.logger.error(
               `❌ Failed to embed chunk ${chunk.id}: ${error.message}`,

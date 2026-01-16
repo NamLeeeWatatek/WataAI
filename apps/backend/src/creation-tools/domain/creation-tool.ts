@@ -196,6 +196,9 @@ export class CreationTool {
   @ApiPropertyOptional({ type: String })
   workspaceId?: string;
 
+  @ApiPropertyOptional({ type: String })
+  knowledgeBaseId?: string;
+
   @ApiProperty({ type: Number, default: 0 })
   sortOrder: number;
 

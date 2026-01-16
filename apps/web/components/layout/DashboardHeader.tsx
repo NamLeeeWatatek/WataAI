@@ -62,52 +62,54 @@ export const DashboardHeader = React.memo<DashboardHeaderProps>(({
 
 
     return (
-        <header className="glass-floating border-x-0 border-t-0 rounded-none h-16 flex items-center justify-between px-6 flex-shrink-0 sticky top-0 z-40 transition-all duration-200">
-            <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onToggleSidebar}
-                    className="lg:hidden hover:bg-primary/5"
-                >
-                    <Menu className="w-5 h-5" />
-                </Button>
+        <header className="glass-floating border-x-0 border-t-0 rounded-none h-16 flex-shrink-0 sticky top-0 z-40 transition-all duration-200">
+            <div className="mx-auto w-full max-w-[1700px] px-6 md:px-10 lg:px-12 h-full flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onToggleSidebar}
+                        className="lg:hidden hover:bg-primary/5"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </Button>
 
-                <DashboardBreadcrumb />
-            </div>
+                    <DashboardBreadcrumb />
+                </div>
 
-            <div className="flex items-center gap-2">
-                {/* Admin Dashboard Link - Conditional */}
-                <AdminLink />
+                <div className="flex items-center gap-2">
+                    {/* Admin Dashboard Link - Conditional */}
+                    <AdminLink />
 
-                {/* Theme Toggle */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                    className="relative w-9 h-9 rounded-full hover:bg-primary/5"
-                    title="Toggle theme"
-                >
-                    {!mounted ? (
-                        <div className="w-4 h-4" />
-                    ) : resolvedTheme === 'dark' ? (
-                        <Sun className="w-4 h-4" />
-                    ) : (
-                        <Moon className="w-4 h-4" />
-                    )}
-                </Button>
+                    {/* Theme Toggle */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                        className="relative w-9 h-9 rounded-full hover:bg-primary/5"
+                        title="Toggle theme"
+                    >
+                        {!mounted ? (
+                            <div className="w-4 h-4" />
+                        ) : resolvedTheme === 'dark' ? (
+                            <Sun className="w-4 h-4" />
+                        ) : (
+                            <Moon className="w-4 h-4" />
+                        )}
+                    </Button>
 
-                {/* Language Switcher */}
-                <LanguageSwitcher />
+                    {/* Language Switcher */}
+                    <LanguageSwitcher />
 
-                {/* Activity Center */}
-                <GlobalActivityCenter />
+                    {/* Activity Center */}
+                    <GlobalActivityCenter />
 
-                {/* Notifications */}
-                <DashboardNotifications
-                    showNotifications={showNotifications}
-                    onToggle={onToggleNotifications}
-                />
+                    {/* Notifications */}
+                    <DashboardNotifications
+                        showNotifications={showNotifications}
+                        onToggle={onToggleNotifications}
+                    />
+                </div>
             </div>
         </header>
     )

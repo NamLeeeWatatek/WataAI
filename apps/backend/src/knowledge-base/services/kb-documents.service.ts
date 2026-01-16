@@ -92,17 +92,15 @@ export class KBDocumentsService {
         throw new BadRequestException('Failed to generate upload URL');
       }
 
-      const fetch = (await import('node-fetch')).default;
-      const uploadResponse = await fetch(result.uploadSignedUrl, {
-        method: 'PUT',
-        body: buffer,
+      const axios = (await import('axios')).default;
+      const uploadResponse = await axios.put(result.uploadSignedUrl, buffer, {
         headers: {
           'Content-Type': mimeType,
           'Content-Length': buffer.length.toString(),
         },
       });
 
-      if (!uploadResponse.ok) {
+      if (uploadResponse.status >= 400) {
         throw new BadRequestException(
           `Upload failed with status ${uploadResponse.status}`,
         );

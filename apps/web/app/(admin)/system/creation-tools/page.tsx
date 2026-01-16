@@ -208,6 +208,41 @@ export default function CreationToolsPage() {
         <PageShell
             title="Creation Tools"
             description="Configure and manage your AI creation tools"
+            actions={
+                <div className="flex items-center gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImport}
+                        accept=".json"
+                        className="hidden"
+                    />
+                    <Button
+                        variant="default"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isMutating}
+                        className="shadow-primary/20 shadow-lg"
+                    >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Import
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => handleExport()}
+                        disabled={isMutating}
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export All
+                    </Button>
+                    <Button
+                        onClick={() => router.push('/system/creation-tools/new')}
+                        className="shadow-sm"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Tool
+                    </Button>
+                </div>
+            }
         >
             <div className="space-y-6">
                 {/* Unified Toolbar */}
@@ -236,39 +271,6 @@ export default function CreationToolsPage() {
                                         <AdminCategoryItems />
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            <div className="flex items-center gap-2 ml-auto">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImport}
-                                    accept=".json"
-                                    className="hidden"
-                                />
-                                <Button
-                                    variant="default"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={isMutating}
-                                    className="shadow-primary/20 shadow-lg"
-                                >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Import
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => handleExport()}
-                                    disabled={isMutating}
-                                >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Export All
-                                </Button>
-                                <Button
-                                    onClick={() => router.push('/system/creation-tools/new')}
-                                    className="shadow-sm"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    New Tool
-                                </Button>
                             </div>
                         </div>
                     </CardHeader>

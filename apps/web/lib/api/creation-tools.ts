@@ -14,6 +14,7 @@ export interface CreationTool {
     executionFlow: ExecutionFlow;
     isActive: boolean;
     workspaceId?: string;
+    knowledgeBaseId?: string;
     sortOrder: number;
     createdAt: string;
     updatedAt: string;

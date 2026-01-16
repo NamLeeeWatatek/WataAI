@@ -15,7 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { useEffect } from 'react';
 import { IconPicker } from '@/components/shared/IconPicker';
-import { CoverUpload } from '@/components/shared/CoverUpload';
+import { UnifiedCoverUpload } from '@/components/shared/UnifiedFileUpload';
 
 // Reusing constant from original file or moving to constants
 const ACCEPTED_FILE_TYPES = ['image/*', 'video/*'];
@@ -144,15 +144,11 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                             {/* Upload Area - Spans 3 cols */}
                             <div className="sm:col-span-3">
-                                <CoverUpload
+                                <UnifiedCoverUpload
                                     value={previewUrl || ''}
-                                    onUpload={(url, file) => {
-                                        setValue('thumbnailUrl', url, { shouldDirty: true });
+                                    onChange={(url) => {
+                                        setValue('thumbnailUrl', (url as string), { shouldDirty: true });
                                     }}
-                                    onDelete={() => {
-                                        setValue('thumbnailUrl', '', { shouldDirty: true });
-                                    }}
-                                    aspectRatio={16 / 9}
                                     description="Images (JPG, PNG, GIF, JFIF...) & Videos (MP4...)"
                                     accept={ACCEPTED_FILE_TYPES.join(',')}
                                 />

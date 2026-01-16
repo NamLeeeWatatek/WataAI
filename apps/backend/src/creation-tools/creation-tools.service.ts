@@ -104,6 +104,7 @@ export class CreationToolsService {
       executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
       workspaceId: createDto.workspaceId,
+      knowledgeBaseId: createDto.knowledgeBaseId,
       sortOrder: createDto.sortOrder ?? 0,
     });
 

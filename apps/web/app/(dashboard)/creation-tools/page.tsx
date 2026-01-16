@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
 import { Search } from '@/components/shared/Search';
 import { PageLoading } from '@/components/shared/PageLoading';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 function CategoryItems() {
     const { data: categories = [] } = useCategories('creation-tool');
@@ -206,12 +207,12 @@ export default function CreationToolsPage() {
             )}
 
             {items.length === 0 && !isLoading && (
-                <div className="text-center py-20 bg-muted/5 rounded-3xl border border-dashed border-border/60">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Sparkles className="w-8 h-8 text-muted-foreground opacity-20" />
-                    </div>
-                    <h3 className="text-lg font-bold mb-1">No creation tools available</h3>
-                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">We couldn't find any active creation tools in this workspace. Check back later.</p>
+                <div className="py-20">
+                    <EmptyState
+                        icon={<Sparkles className="w-12 h-12 text-muted-foreground/50" />}
+                        title="No creation tools available"
+                        description="We couldn't find any active creation tools in this workspace. Check back later."
+                    />
                 </div>
             )}
         </div>

@@ -58,6 +58,10 @@ export class CreationToolEntity extends EntityRelationalHelper {
   @Index()
   workspaceId?: string;
 
+  @Column({ name: 'knowledge_base_id', type: 'uuid', nullable: true })
+  @Index()
+  knowledgeBaseId?: string;
+
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
 

@@ -4,6 +4,7 @@ export enum KbProcessingStatus {
   COMPLETED = 'completed',
   FAILED = 'failed',
   SKIPPED = 'skipped',
+  CANCELLED = 'cancelled',
 }
 
 export enum KbSourceType {

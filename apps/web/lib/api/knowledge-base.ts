@@ -341,3 +341,38 @@ export async function clearAllVectors(): Promise<{
     deleted: string[]
   }>
 }
+/**
+ * Get processing status for knowledge base
+ */
+export async function getKBProcessingStatus(kbId: string): Promise<{
+  jobs: Array<{
+    jobId: string
+    documentId: string
+    documentName?: string
+    status: string
+    progress: number
+    processedChunks: number
+    totalChunks: number
+    error?: string
+  }>
+}> {
+  return axiosClient.get(`/knowledge-bases/${kbId}/processing-status`) as unknown as Promise<{
+    jobs: Array<{
+      jobId: string
+      documentId: string
+      documentName?: string
+      status: string
+      progress: number
+      processedChunks: number
+      totalChunks: number
+      error?: string
+    }>
+  }>
+}
+
+/**
+ * Cancel a processing job
+ */
+export async function cancelKBJob(jobId: string): Promise<{ success: boolean }> {
+  return axiosClient.post(`/knowledge-bases/processing/${jobId}/cancel`) as unknown as Promise<{ success: boolean }>
+}

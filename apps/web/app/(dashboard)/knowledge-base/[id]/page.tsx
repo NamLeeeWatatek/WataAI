@@ -435,6 +435,7 @@ export default function KnowledgeBaseDetailPage() {
                 ref={fileInputRef}
                 className="hidden"
                 multiple
+                accept=".pdf,.docx,.doc,.txt,.md,.html,.json,.jpg,.jpeg,.png,.webp"
                 onChange={handleFileSelect}
             />
         </div>

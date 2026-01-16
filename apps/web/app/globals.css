@@ -273,17 +273,25 @@
     @apply text-xl md:text-2xl lg:text-3xl font-display font-bold;
   }
 
-  /* Reset standard headings to inherit size or use standard values if needed, 
-     but avoid aggressive global overrides that affect dashboard */
-  /* Reset standard headings to inherit size or use standard values if needed, 
-     but avoid aggressive global overrides that affect dashboard */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply text-foreground font-semibold;
+  /* Global Typography Standard */
+  h1 {
+    @apply text-3xl md:text-4xl font-black tracking-tighter leading-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl font-bold tracking-tight leading-tight text-foreground;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl font-semibold tracking-tight leading-snug text-foreground;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl font-semibold leading-snug text-foreground;
+  }
+
+  p {
+    @apply leading-relaxed text-muted-foreground;
   }
 
   button,
@@ -311,7 +319,7 @@
 
   /* Layout Standards */
   .page-container {
-    @apply w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+    @apply w-full max-w-[1700px] mx-auto px-6 md:px-10 lg:px-12 py-8;
   }
 
   .page-container-full {

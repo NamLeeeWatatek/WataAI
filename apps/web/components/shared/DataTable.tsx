@@ -2,10 +2,6 @@
 
 import * as React from 'react'
 import {
-  ChevronDown,
-  ChevronRight,
-  SortAsc,
-  SortDesc,
   ArrowUpDown,
   LayoutGrid,
   List,
@@ -25,7 +21,6 @@ import {
 import { cn } from "@/lib/utils"
 import { Pagination, type PaginationInfo } from "./Pagination"
 import { Search as SearchInput } from "./Search"
-import { Checkbox } from "@/components/ui/Checkbox"
 import { Skeleton } from "@/components/ui/Skeleton"
 
 import {
@@ -292,7 +287,7 @@ function DataTableInner<TData, TValue>({
         {viewMode === 'table' ? (
           <div className={cn("relative overflow-hidden", tableClassName)}>
             <Table className={fixed ? "table-fixed w-full" : "w-full"}>
-              <TableHeader className="bg-muted/30">
+              <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="hover:bg-transparent border-b">
                     {headerGroup.headers.map((header) => {

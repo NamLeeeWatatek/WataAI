@@ -31,7 +31,7 @@ export class AiConfigService {
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelRepository: AiModelRepository,
-  ) { }
+  ) {}
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -324,7 +324,9 @@ export class AiConfigService {
 
     // Ensure provider is populated if missing from repo relations (fallback)
     if (!config.provider) {
-      const provider = await this.aiProviderConfigRepository.findProviderById(config.providerId);
+      const provider = await this.aiProviderConfigRepository.findProviderById(
+        config.providerId,
+      );
       if (provider) config.provider = provider;
     }
 
@@ -335,7 +337,7 @@ export class AiConfigService {
   async getConfigDetails(
     configId: string,
     userId: string,
-    workspaceId?: string
+    workspaceId?: string,
   ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
     // 1. Try User Config
     const userConfig = await this.getUserConfig(userId, configId);
@@ -343,12 +345,16 @@ export class AiConfigService {
 
     // 2. Try Workspace Config
     if (workspaceId) {
-      const workspaceConfig = await this.getWorkspaceConfig(workspaceId, configId);
+      const workspaceConfig = await this.getWorkspaceConfig(
+        workspaceId,
+        configId,
+      );
       if (workspaceConfig) return workspaceConfig;
     }
 
     // 3. Last Resort: Try Generic Config ID (e.g., System or Shared)
-    const genericConfig = await this.aiProviderConfigRepository.getConfigById(configId);
+    const genericConfig =
+      await this.aiProviderConfigRepository.getConfigById(configId);
     if (genericConfig) return genericConfig;
 
     return null;

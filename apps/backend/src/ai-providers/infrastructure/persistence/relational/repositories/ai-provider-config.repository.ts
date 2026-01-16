@@ -23,7 +23,8 @@ import {
 
 @Injectable()
 export class AiProviderConfigRelationalRepository
-  implements AiProviderConfigRepository {
+  implements AiProviderConfigRepository
+{
   constructor(
     @InjectRepository(AiProviderEntity)
     private readonly aiProviderRepository: Repository<AiProviderEntity>,
@@ -31,7 +32,7 @@ export class AiProviderConfigRelationalRepository
     private readonly configRepository: Repository<AiProviderConfigEntity>,
     @InjectRepository(AiUsageLogEntity)
     private readonly usageLogRepository: Repository<AiUsageLogEntity>,
-  ) { }
+  ) {}
 
   // AiProvider operations
   async findAvailableProviders(): Promise<AiProvider[]> {

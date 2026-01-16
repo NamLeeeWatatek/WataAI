@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
+import { cn } from '@/lib/utils'
 
 import { useTranslation } from 'react-i18next'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
@@ -124,8 +125,11 @@ export default function DashboardLayout({
                         />
 
                         {/* Content area with conditional container classes */}
-                        <div className="flex-1 overflow-hidden relative min-h-0">
-                            <div className="h-full w-full overflow-auto">
+                        <div className="flex-1 overflow-hidden relative min-h-0 bg-secondary/5">
+                            <div className={cn(
+                                "h-full w-full overflow-auto",
+                                !isChatPage && !isEditMode && "page-container min-h-full"
+                            )}>
                                 <ErrorBoundary>
                                     {children}
                                 </ErrorBoundary>

@@ -31,7 +31,7 @@ export class KBManagementService {
     @InjectRepository(KnowledgeBaseDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
     private readonly kbDocumentsService: KBDocumentsService,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateKnowledgeBaseDto) {
     const kb = this.kbRepository.create({

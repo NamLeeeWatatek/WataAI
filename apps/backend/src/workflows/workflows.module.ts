@@ -10,4 +10,4 @@ import { Workflow } from './entities/workflow.entity';
   providers: [WorkflowsService],
   exports: [WorkflowsService],
 })
-export class WorkflowsModule { }
+export class WorkflowsModule {}

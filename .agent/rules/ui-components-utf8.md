@@ -28,21 +28,7 @@ When creating or refactoring components in apps/web/components/ui, follow these 
 - Use Radix UI Primitives as the foundation for complex components.
 - Ensure aria-invalid styles are handled.
 
-## 5. Standardized Patterns (2026)
-- **Buttons**:
-    - `primary`: Use for "Create" or "Main Action" (Blue-Purple gradient, hover glow).
-    - `glass`: Use for high-end floating elements (Transparent with border and backdrop blur).
-    - `edit`: Use for secondary "Ghost" actions that need a border on hover.
-    - `destructive`: Use for "Delete" or "Danger" actions (Red with shadow glow).
-- **AI Agents**:
-    - Use `AgentCard` component for consistent representation of AI personas.
-    - Must include hover scale and glassmorphism styling.
-- **RAG & Specify**:
-    - Use `SpecifyBadge` for RAG, AI, or Code system indicators.
-    - Avoid manual badges for these semantic categories.
-
-## 6. Prohibitions
+## 5. Prohibitions
 - DO NOT use ad-hoc custom CSS in component files.
 - DO NOT create components without standardized variants (if they require variants, use cva).
 - DO NOT use rounded-lg if a standard var(--radius) or rounded-md is available.
-- DO NOT use hardcoded colors for buttons (e.g., bg-blue-500) except for semantic gradients.

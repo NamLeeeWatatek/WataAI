@@ -105,6 +105,11 @@ export class CreateCreationToolDto {
   @IsString()
   workspaceId?: string;
 
+  @ApiPropertyOptional({ example: 'kb-uuid-123' })
+  @IsOptional()
+  @IsString()
+  knowledgeBaseId?: string;
+
   @ApiPropertyOptional({ type: Number, default: 0 })
   @IsOptional()
   @IsNumber()

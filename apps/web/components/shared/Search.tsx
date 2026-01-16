@@ -24,8 +24,9 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
             <div className={cn("relative flex w-full items-center", className)} data-slot="search-root">
                 <Input
                     ref={ref}
+                    variant="default"
                     className={cn(
-                        "pl-8",
+                        "pl-8 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 focus-visible:ring-primary/20",
                         inputClassName
                     )}
                     value={value}

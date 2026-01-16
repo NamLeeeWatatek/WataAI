@@ -909,4 +909,38 @@ export class AiModelService {
       // Invalid URL format
     }
   }
+
+  /**
+   * Analyze an image using Google Gemini Vision (Imagen support can be added later)
+   */
+  async analyzeImageWithGoogle(
+    imageBuffer: Buffer,
+    mimeType: string,
+    model: string,
+    apiKey: string,
+    prompt: string = 'Describe this image in detail, focusing on visual style, colors, typography, and brand elements. If there is text, transcribe it.',
+  ): Promise<string> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const visionModel = genAI.getGenerativeModel({
+      model: model || 'gemini-1.5-flash',
+    });
+
+    try {
+      const result = await visionModel.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: imageBuffer.toString('base64'),
+            mimeType,
+          },
+        },
+      ]);
+      return result.response.text();
+    } catch (error) {
+      this.logger.error(`Google Vision Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        `Google Vision Error: ${error.message}`,
+      );
+    }
+  }
 }

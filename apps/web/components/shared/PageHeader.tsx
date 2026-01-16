@@ -9,9 +9,10 @@ const pageHeaderVariants = cva(
     {
         variants: {
             variant: {
-                default: "pb-8", // Internal padding instead of external margin
-                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md px-4 py-4 border-b border-border/10 w-full",
-                dashboard: "p-0",
+                default: "pb-6 border-b border-border/10 mb-6", // Standardize: Always have a separator for consistency
+                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md px-6 py-4 border-b border-border/10 w-full mb-6",
+                dashboard: "p-0 mb-6",
+                clean: "pb-4 mb-4", // New variant for no-border headers
             },
         },
         defaultVariants: {
@@ -46,13 +47,12 @@ export function PageHeader({
                 <div className="flex items-center gap-5 w-full md:w-auto">
                     <div className="space-y-1.5 flex-1 min-w-0">
                         <h1 className={cn(
-                            "text-3xl md:text-4xl font-black tracking-tight truncate",
                             premium && "bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent"
                         )}>
                             {title}
                         </h1>
                         {description && (
-                            <p className="text-muted-foreground font-medium text-sm md:text-base line-clamp-1">
+                            <p className="line-clamp-1">
                                 {description}
                             </p>
                         )}
@@ -62,9 +62,9 @@ export function PageHeader({
                 <div className="flex items-center gap-3 w-full md:w-auto justify-end">
                     {onRefresh && (
                         <Button
-                            variant="outline"
+                            variant="glass"
                             size="icon"
-                            className="h-10 w-10 shrink-0 border-border/40 hover:bg-muted/50 transition-all duration-500 rounded-md"
+                            className="h-10 w-10 shrink-0"
                             onClick={onRefresh}
                             disabled={refreshing}
                         >

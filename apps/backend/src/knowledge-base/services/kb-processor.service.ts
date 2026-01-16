@@ -70,102 +70,72 @@ export class KBProcessor extends WorkerHost {
 
       let content = document.content;
 
+      // Check for cancellation
+      await this.checkCancellation(internalJobId);
+
       // If document has no content but has a file URL, we need to extract it now
       if ((!content || content.length === 0) && document.fileUrl) {
         this.logger.log(
           `📥 Downloading file for extraction: ${document.fileUrl}`,
         );
 
-        try {
-          // 1. Get download URL (could be S3 signed URL or local)
-          // In current Files implementation, fileUrl in DB is mostly the signed URL or identifier
-          // We can use filesService.generateDownloadUrl logic in reverse or just use what we have if it's http
+        let buffer: Buffer;
 
-          let buffer: Buffer;
+        if (document.fileUrl.startsWith('http')) {
+          const axios = (await import('axios')).default;
+          const response = await axios.get(document.fileUrl, {
+            responseType: 'arraybuffer',
+            validateStatus: () => true,
+          });
 
-          if (document.fileUrl.startsWith('http')) {
-            const response = await (
-              await import('axios')
-            ).default.get(document.fileUrl, {
-              responseType: 'arraybuffer',
-              validateStatus: () => true, // Don't throw on error status yet so we can log it
-            });
-
-            this.logger.log(
-              `📥 Download status: ${response.status} ${response.statusText}`,
-            );
-            this.logger.log(
-              `📥 Content-Type: ${response.headers['content-type']}`,
-            );
-
-            if (response.status >= 400) {
-              this.logger.error(
-                `❌ Failed to download file. Status: ${response.status}`,
-              );
-              // Accessing data from arraybuffer might be tricky if it's text, but Buffer.from handles it
-              const errorBody = Buffer.from(response.data)
-                .toString('utf8')
-                .slice(0, 200);
-              this.logger.error(`❌ Response body preview: ${errorBody}`);
-              throw new Error(
-                `Failed to download file: Server returned ${response.status}`,
-              );
-            }
-
-            buffer = Buffer.from(response.data);
-
-            // Debug: Check if it looks like a PDF
-            const preview = buffer.toString('utf8', 0, 50);
-            this.logger.log(
-              `📥 File header preview (hex): ${buffer.toString('hex', 0, 20)}`,
-            );
-            this.logger.log(`📥 File header preview (text): ${preview}`);
-          } else {
-            // Fallback for non-http paths (e.g. local or just key)
-            // This might need adjustment based on how FilesService stores paths
+          if (response.status >= 400) {
             throw new Error(
-              `Cannot download file with URL: ${document.fileUrl}`,
+              `Failed to download file: Server returned ${response.status}`,
             );
           }
 
-          // 2. Extract Text
-          const ext = document.name.split('.').pop()?.toLowerCase();
-          // Simple mime inference if missing (though usually saved in mimeType)
-          let mimeType = document.mimeType || 'application/octet-stream';
-          if (!document.mimeType) {
-            if (ext === 'pdf') mimeType = 'application/pdf';
-            else if (ext === 'docx')
-              mimeType =
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            else if (ext === 'txt') mimeType = 'text/plain';
-          }
-
-          this.logger.log(
-            `📄 Extracting text from downloaded file (${buffer.length} bytes, ${mimeType})`,
-          );
-          content = await this.textExtractorService.extractText(
-            buffer,
-            mimeType,
-          );
-
-          // Update document with extracted content
-          document.content = content;
-          document.metadata = {
-            ...document.metadata,
-            extractedAt: new Date().toISOString(),
-            extractedLength: content.length,
-          };
-          await this.documentRepository.save(document);
-          this.logger.log(
-            `✅ Text extracted and saved to DB (${content.length} chars)`,
-          );
-        } catch (extractError) {
-          this.logger.error(
-            `❌ Background extraction failed: ${extractError.message}`,
-          );
-          throw extractError;
+          buffer = Buffer.from(response.data);
+        } else {
+          throw new Error(`Cannot download file with URL: ${document.fileUrl}`);
         }
+
+        // Check for cancellation after download
+        await this.checkCancellation(internalJobId);
+
+        // 2. Extract Text
+        const ext = document.name.split('.').pop()?.toLowerCase();
+        let mimeType = document.mimeType || 'application/octet-stream';
+        if (!document.mimeType) {
+          if (ext === 'pdf') mimeType = 'application/pdf';
+          else if (ext === 'docx')
+            mimeType =
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          else if (ext === 'txt') mimeType = 'text/plain';
+        }
+
+        content = await this.textExtractorService.extractText(
+          buffer,
+          mimeType,
+          {
+            workspaceId: kb.workspaceId,
+            userId: userId,
+            model: kb.ragModel || 'gemini-1.5-flash',
+          },
+        );
+
+        // Update document local state, save once later or now if needed for status
+        document.content = content;
+        document.metadata = {
+          ...document.metadata,
+          extractedAt: new Date().toISOString(),
+          extractedLength: content.length,
+        };
+        // Status remains PROCESSING, just saving the content
+        await this.documentRepository.save(document);
       }
+
+      // Check for cancellation before chunking
+      await this.checkCancellation(internalJobId);
 
       if (!content || content.length === 0) {
         throw new Error('Document content is empty');
@@ -187,6 +157,9 @@ export class KBProcessor extends WorkerHost {
       const chunkEntities: KBChunkEntity[] = [];
 
       for (let i = 0; i < chunks.length; i += batchSize) {
+        // Check for cancellation periodically during chunk saving
+        await this.checkCancellation(internalJobId);
+
         const batch = chunks.slice(i, i + batchSize);
         const entities = batch.map((chunk, index) => {
           return this.chunkRepository.create({
@@ -220,6 +193,9 @@ export class KBProcessor extends WorkerHost {
           chunkEntities,
           kb.embeddingModel || undefined,
           async (processed, total) => {
+            // Check for cancellation during embedding generation
+            await this.checkCancellation(internalJobId);
+
             this.processingQueue.updateJobProgress(
               internalJobId,
               processed,
@@ -251,19 +227,39 @@ export class KBProcessor extends WorkerHost {
 
       return { success: true, chunksCount: chunks.length };
     } catch (error) {
-      this.logger.error(`❌ Job ${job.id} failed: ${error.message}`);
-
       const document = await this.documentRepository.findOne({
         where: { id: documentId },
       });
+
+      if (error.message === 'Job cancelled by user') {
+        this.logger.warn(`Job ${job.id} was cancelled.`);
+
+        if (document) {
+          document.processingStatus = KbProcessingStatus.CANCELLED;
+          document.processingError = 'Cancelled by user';
+          await this.documentRepository.save(document);
+        }
+
+        return { cancelled: true };
+      }
+
+      this.logger.error(`❌ Job ${job.id} failed: ${error.message}`);
+
       if (document) {
         document.processingStatus = KbProcessingStatus.FAILED;
-        document.processingError = error.message;
+        document.processingError = sanitizeText(error.message);
         await this.documentRepository.save(document);
       }
 
-      this.processingQueue.failJob(internalJobId, error.message);
+      this.processingQueue.failJob(internalJobId, sanitizeText(error.message));
       throw error;
+    }
+  }
+
+  private async checkCancellation(internalJobId: string) {
+    const status = this.processingQueue.getJob(internalJobId)?.status;
+    if (status === 'cancelled') {
+      throw new Error('Job cancelled by user');
     }
   }
 
@@ -275,6 +271,7 @@ export class KBProcessor extends WorkerHost {
         `🕷️ Starting crawl for job ${internalJobId} (Doc: ${documentId})`,
       );
       this.processingQueue.startJob(internalJobId);
+      await this.checkCancellation(internalJobId);
 
       const document = await this.documentRepository.findOne({
         where: { id: documentId },
@@ -333,6 +330,8 @@ export class KBProcessor extends WorkerHost {
         `✅ Crawled ${content.length} chars. Updating document...`,
       );
 
+      await this.checkCancellation(internalJobId);
+
       document.content = content;
       document.metadata = {
         ...document.metadata,
@@ -349,8 +348,20 @@ export class KBProcessor extends WorkerHost {
       // Chain to standard processing (Chunking -> Embedding)
       return this.handleProcessDocument(job);
     } catch (error) {
+      if (error.message === 'Job cancelled by user') {
+        this.logger.warn(`Crawl job for ${documentId} was cancelled.`);
+        const document = await this.documentRepository.findOne({
+          where: { id: documentId },
+        });
+        if (document) {
+          document.processingStatus = KbProcessingStatus.CANCELLED;
+          document.processingError = 'Cancelled by user';
+          await this.documentRepository.save(document);
+        }
+        return { cancelled: true };
+      }
       this.logger.error(`❌ Crawl failed: ${error.message}`);
-      this.processingQueue.failJob(internalJobId, error.message);
+      this.processingQueue.failJob(internalJobId, sanitizeText(error.message));
 
       // Update document status
       const document = await this.documentRepository.findOne({
@@ -358,7 +369,9 @@ export class KBProcessor extends WorkerHost {
       });
       if (document) {
         document.processingStatus = KbProcessingStatus.FAILED;
-        document.processingError = `Crawl failed: ${error.message}`;
+        document.processingError = sanitizeText(
+          `Crawl failed: ${error.message}`,
+        );
         await this.documentRepository.save(document);
       }
 

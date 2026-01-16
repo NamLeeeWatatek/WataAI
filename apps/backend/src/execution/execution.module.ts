@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ExecutionQueueModule } from './queue/execution-queue.module';
 import { HttpExecutionStrategy } from './strategies/http-execution.strategy';
 import { JobProcessor } from './queue/job.processor';
@@ -12,6 +12,7 @@ import { TemplatesModule } from '../templates/templates.module';
 import { AiExecutionStrategy } from './strategies/ai-execution.strategy';
 import { WorkflowExecutionStrategy } from './strategies/workflow-execution.strategy';
 import { ExecutionStrategyResolver } from './execution-strategy.resolver';
+import { KnowledgeBaseModule } from '../knowledge-base/knowledge-base.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ExecutionStrategyResolver } from './execution-strategy.resolver';
     CreationJobsModule,
     AiProvidersModule,
     TemplatesModule,
+    forwardRef(() => KnowledgeBaseModule),
   ],
   providers: [
     HttpExecutionStrategy,

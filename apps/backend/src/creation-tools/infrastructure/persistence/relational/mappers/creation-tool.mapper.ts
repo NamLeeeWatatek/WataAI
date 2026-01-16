@@ -20,6 +20,7 @@ export class CreationToolMapper {
     domainEntity.executionFlow = raw.executionFlow;
     domainEntity.isActive = raw.isActive;
     domainEntity.workspaceId = raw.workspaceId;
+    domainEntity.knowledgeBaseId = raw.knowledgeBaseId;
     domainEntity.sortOrder = raw.sortOrder;
     domainEntity.createdAt = raw.createdAt;
     domainEntity.updatedAt = raw.updatedAt;
@@ -47,6 +48,7 @@ export class CreationToolMapper {
     persistenceEntity.executionFlow = domainEntity.executionFlow;
     persistenceEntity.isActive = domainEntity.isActive;
     persistenceEntity.workspaceId = domainEntity.workspaceId;
+    persistenceEntity.knowledgeBaseId = domainEntity.knowledgeBaseId;
     persistenceEntity.sortOrder = domainEntity.sortOrder;
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;

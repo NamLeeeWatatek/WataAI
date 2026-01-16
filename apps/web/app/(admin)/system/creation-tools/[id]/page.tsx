@@ -10,6 +10,8 @@ import { creationToolsApi, CreationTool, FormConfig, ExecutionFlow } from '@/lib
 import { useCategories } from '@/lib/hooks/useCategories';
 import { handleApiError } from '@/lib/utils/api-error';
 import { toast } from 'sonner';
+import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +19,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { IconPicker } from '@/components/shared/IconPicker';
+import { UnifiedFileUpload } from '@/components/shared/UnifiedFileUpload';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -53,11 +56,13 @@ const toolFormSchema = z.object({
     slug: z.string().min(1, 'Slug is required'),
     description: z.string().optional(),
     icon: z.string().optional(),
+    coverImage: z.string().optional(),
     categoryIds: z.array(z.string()),
     isActive: z.boolean(),
     formConfig: z.custom<FormConfig>((data) => {
         return data && typeof data === 'object' && Array.isArray((data as any).fields);
     }),
+    knowledgeBaseId: z.string().optional(),
     executionFlow: z.custom<ExecutionFlow>((data) => {
         return data && typeof data === 'object' && 'type' in data;
     }),
@@ -85,6 +90,9 @@ export default function EditCreationToolPage() {
     // Fetch Categories
     const { data: categories = [] } = useCategories('creation-tool');
 
+    // Fetch Knowledge Bases
+    const { knowledgeBases = [] } = useKnowledgeBases(tool?.workspaceId);
+
     // Form Setup
     const form = useForm<ToolFormValues>({
         resolver: zodResolver(toolFormSchema),
@@ -93,10 +101,12 @@ export default function EditCreationToolPage() {
             slug: '',
             description: '',
             icon: '',
+            coverImage: '',
             categoryIds: [],
             isActive: true,
             formConfig: { fields: [], submitLabel: 'Generate' },
             executionFlow: { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' },
+            knowledgeBaseId: '',
         },
     });
 
@@ -131,10 +141,12 @@ export default function EditCreationToolPage() {
                 slug: tool.slug || '',
                 description: tool.description || '',
                 icon: tool.icon || '',
+                coverImage: tool.coverImage || '',
                 categoryIds: cats,
                 isActive: tool.isActive ?? true,
                 formConfig: tool.formConfig || { fields: [], submitLabel: 'Generate' },
                 executionFlow: tool.executionFlow || { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' },
+                knowledgeBaseId: tool.knowledgeBaseId || '',
             });
         }
     }, [isNew, tool, reset]);
@@ -227,6 +239,25 @@ export default function EditCreationToolPage() {
                         <TabsContent value="general">
                             <Card>
                                 <CardContent className="pt-6 space-y-6">
+                                    <FormField
+                                        control={control}
+                                        name="coverImage"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Cover Image</FormLabel>
+                                                <FormControl>
+                                                    <UnifiedFileUpload
+                                                        variant="cover"
+                                                        value={field.value}
+                                                        onChange={(url) => field.onChange(url)}
+                                                        className="aspect-[21/9]"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <FormField
                                             control={control}
@@ -366,6 +397,38 @@ export default function EditCreationToolPage() {
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <FormField
+                                                control={control}
+                                                name="knowledgeBaseId"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Knowledge Base Link (Context Injection)</FormLabel>
+                                                        <Select
+                                                            onValueChange={(val) => field.onChange(val === 'none' ? '' : val)}
+                                                            value={field.value || 'none'}
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a Knowledge Base" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="none">No Knowledge Base</SelectItem>
+                                                                {knowledgeBases.map((kb: any) => (
+                                                                    <SelectItem key={kb.id} value={kb.id}>
+                                                                        {kb.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <p className="text-sm text-muted-foreground mt-2">
+                                                            Linking a KB will automatically perform RAG search and inject context as <code>kb_context</code>.
+                                                        </p>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                         </div>
                                     </div>
                                 </CardContent>
@@ -427,6 +490,6 @@ export default function EditCreationToolPage() {
                     </Tabs>
                 </div>
             </FormProvider>
-        </PageShell>
+        </PageShell >
     );
 }

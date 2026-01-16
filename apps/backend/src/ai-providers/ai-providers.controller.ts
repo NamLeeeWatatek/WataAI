@@ -57,7 +57,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 })
 @ApiExtraModels(AiModel)
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   @Permissions('ai:Get')
   @Get('unified-config/:id/details')

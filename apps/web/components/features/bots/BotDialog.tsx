@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useBotForm } from '@/lib/hooks/useBotForm'
-import { AvatarUpload } from '@/components/shared/AvatarUpload';
+import { UnifiedAvatarUpload } from '@/components/shared/UnifiedFileUpload';
 
 interface Bot {
     id: string
@@ -60,11 +60,10 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                             render={({ field }) => (
                                 <FormItem className="flex flex-col items-center justify-center mb-6">
                                     <div className="w-32 h-32">
-                                        <AvatarUpload
+                                        <UnifiedAvatarUpload
                                             value={field.value}
-                                            onChange={(url) => field.onChange(url)}
-                                            size="xl"
-                                            fallback={form.getValues('name') || 'Bot'}
+                                            onChange={(url) => field.onChange(url as string)}
+                                            className="w-full h-full"
                                         />
                                     </div>
                                     <FormMessage />

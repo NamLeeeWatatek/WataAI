@@ -27,7 +27,7 @@ import { RolesGuard } from '../roles/roles.guard';
   version: '1',
 })
 export class WorkflowsController {
-  constructor(private readonly workflowsService: WorkflowsService) { }
+  constructor(private readonly workflowsService: WorkflowsService) {}
 
   @Post()
   create(@Body() createWorkflowDto: CreateWorkflowDto, @Req() req: any) {
