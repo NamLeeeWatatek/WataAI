@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
     const roles = Array.isArray(rolesData) ? rolesData : [];
 
     // Users Query
-    const { data: usersResponse, isLoading, refetch } = useQuery({
+    const { data: usersResponse, isLoading, refetch, isFetching } = useQuery({
         queryKey: ['users', page, limit, debouncedSearch],
         queryFn: () => adminApi.getUsers({
             page,
@@ -257,7 +257,7 @@ export default function AdminUsersPage() {
             <DataTable
                 data={data}
                 columns={columns}
-                loading={isLoading}
+                loading={isLoading || isFetching}
                 searchable={true}
                 searchValue={search}
                 onSearch={setSearch}

@@ -13,7 +13,7 @@ export class AiModelRelationalRepository implements AiModelRepository {
   constructor(
     @InjectRepository(AiModelEntity)
     private readonly repository: Repository<AiModelEntity>,
-  ) {}
+  ) { }
 
   async save(data: AiModel): Promise<AiModel> {
     const persistenceModel = AiModelMapper.toPersistence(data);
@@ -66,5 +66,63 @@ export class AiModelRelationalRepository implements AiModelRepository {
     ownerType: AiProviderOwnerType,
   ): Promise<void> {
     await this.repository.update({ configId, ownerType }, { isActive: false });
+  }
+
+  async findManyWithPagination({
+    filterOptions,
+    sortOptions,
+    paginationOptions,
+  }: {
+    filterOptions?: any;
+    sortOptions?: any[] | null;
+    paginationOptions: { page: number; limit: number };
+  }): Promise<AiModel[]> {
+    const where: any = {};
+    if (filterOptions?.providerId) {
+      where.providerId = filterOptions.providerId;
+    }
+    if (filterOptions?.configId) {
+      where.configId = filterOptions.configId;
+    }
+    if (filterOptions?.ownerId) {
+      where.ownerId = filterOptions.ownerId;
+    }
+    if (filterOptions?.ownerType) {
+      where.ownerType = filterOptions.ownerType;
+    }
+    if (filterOptions?.type) {
+      where.type = filterOptions.type;
+    }
+
+    const query = this.repository.createQueryBuilder('model');
+    query.where(where);
+
+    if (filterOptions?.search) {
+      query.andWhere(
+        '(model.name ILIKE :search OR model.displayName ILIKE :search)',
+        { search: `%${filterOptions.search}%` },
+      );
+    }
+
+    if (filterOptions?.onlyStable) {
+      query.andWhere(
+        "NOT (model.name ~ '.*-[0-9]{8}.*' OR model.name ~ '.*:[0-9]{8}.*')",
+      );
+    }
+
+    if (sortOptions?.length) {
+      sortOptions.forEach((sort) => {
+        query.addOrderBy(`model.${sort.orderBy}`, sort.order);
+      });
+    } else {
+      query.addOrderBy('model.createdAt', 'DESC');
+    }
+
+    query
+      .skip((paginationOptions.page - 1) * paginationOptions.limit)
+      .take(paginationOptions.limit);
+
+    const entities = await query.getMany();
+    return entities.map(AiModelMapper.toDomain);
   }
 }

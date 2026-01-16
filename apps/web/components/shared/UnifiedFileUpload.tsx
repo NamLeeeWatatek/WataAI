@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import Image from 'next/image';
-import { Upload, X, File, Image as ImageIcon, Video, Camera, Loader2, Trash2, ArrowUpFromLine } from 'lucide-react';
+import { Upload, X, Eye, File, Image as ImageIcon, Video, Camera, Loader2, Trash2, ArrowUpFromLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFileUpload } from '@/lib/hooks/use-file-upload';
 import { Button } from '@/components/ui/Button';
@@ -265,9 +265,9 @@ export function UnifiedFileUpload({
             {(!maxFiles || currentFiles.length < maxFiles) && (
                 <div
                     className={cn(
-                        "relative flex flex-col items-center justify-center w-full rounded-lg border-2 border-dashed border-muted-foreground/20 bg-muted/5 transition-all text-center px-6 py-8 cursor-pointer",
-                        "hover:border-primary/50 hover:bg-muted/10",
-                        dragActive && "border-primary bg-primary/5",
+                        "relative flex flex-col items-center justify-center w-full rounded-2xl border-2 border-dashed border-muted-foreground/10 bg-muted/5 transition-all text-center px-8 py-16 cursor-pointer",
+                        "hover:border-primary/40 hover:bg-primary/[0.02] hover:shadow-inner",
+                        dragActive && "border-primary bg-primary/5 ring-4 ring-primary/5",
                         disabled && "opacity-50 cursor-not-allowed",
                         uploading && "pointer-events-none opacity-80"
                     )}
@@ -288,24 +288,31 @@ export function UnifiedFileUpload({
                     />
 
                     {uploading ? (
-                        <div className="w-full max-w-xs space-y-4">
-                            <div className="flex items-center justify-center gap-2">
-                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                <span className="text-sm font-medium">Uploading... {progress}%</span>
+                        <div className="w-full max-w-sm space-y-6">
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="relative">
+                                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="text-[10px] font-bold">{progress}%</span>
+                                    </div>
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Uploading Assets...</span>
                             </div>
-                            <Progress value={progress} className="h-1" />
+                            <Progress value={progress} className="h-1 bg-primary/10" />
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            <div className="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-background border shadow-sm group-hover:scale-110 transition-transform">
-                                <ArrowUpFromLine className="w-5 h-5 text-muted-foreground" />
+                        <div className="space-y-5 group/upload">
+                            <div className="mx-auto w-14 h-14 flex items-center justify-center rounded-2xl bg-background border border-border shadow-sm group-hover/upload:scale-110 group-hover/upload:border-primary/50 group-hover/upload:shadow-lg transition-all duration-300">
+                                <ArrowUpFromLine className="w-6 h-6 text-primary/60 group-hover/upload:text-primary transition-colors" />
                             </div>
-                            <div className="text-sm">
-                                <span className="font-medium text-primary">Click to upload</span>
-                                <span className="text-muted-foreground"> or drag and drop</span>
+                            <div className="space-y-2">
+                                <h4 className="text-sm font-bold text-foreground">Click or Drag assets to Upload</h4>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest bg-muted/50 inline-block px-3 py-1 rounded-full">
+                                    AI-Driven Context Extraction Enabled
+                                </p>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                {description || `Max file size ${Math.round(maxSize / 1024 / 1024)}MB`}
+                            <p className="text-[11px] text-muted-foreground/50 font-medium">
+                                {description || `Supports any file up to ${Math.round(maxSize / 1024 / 1024)}MB`}
                             </p>
                         </div>
                     )}
@@ -342,16 +349,30 @@ export function UnifiedFileUpload({
                                 )}
 
                                 {!disabled && (
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRemove(url);
-                                        }}
-                                        className="absolute top-1 right-1 p-1 rounded-full bg-background/80 text-foreground shadow-sm opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all z-10"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
+                                    <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.open(url, '_blank');
+                                            }}
+                                            className="p-1.5 rounded-full bg-background/90 text-foreground shadow-sm hover:bg-primary hover:text-white transition-all"
+                                            title="Preview"
+                                        >
+                                            <Eye className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemove(url);
+                                            }}
+                                            className="p-1.5 rounded-full bg-background/90 text-foreground shadow-sm hover:bg-destructive hover:text-white transition-all"
+                                            title="Remove"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         );

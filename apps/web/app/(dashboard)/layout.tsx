@@ -13,7 +13,7 @@ import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { CreationJobsProvider } from '@/components/providers/CreationJobsProvider'
 import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget'
 import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitializer'
-import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
+
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
 
@@ -39,14 +39,6 @@ export default function DashboardLayout({
         if (!isLoading && (!isAuthenticated || !accessToken)) {
         }
     }, [isLoading, isAuthenticated, accessToken, router])
-
-    if (isLoggingOut) {
-        return (
-            <div className="h-screen flex items-center justify-center bg-background">
-                <LoadingLogo size="lg" text={t('dashboard.confirm.signingOut')} />
-            </div>
-        )
-    }
 
     const toggleSection = (sectionName: string) => {
         setExpandedSections(prev =>
@@ -80,68 +72,68 @@ export default function DashboardLayout({
 
 
     return (
-        <ThemeProviderWrapper>
-            <div className="h-screen flex bg-background overflow-hidden">
-                <WorkspaceInitializer />
-                {/* Mobile Sheet Navigation */}
-                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                    <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
-                        <SheetHeader className="sr-only">
-                            <SheetTitle>Navigation Menu</SheetTitle>
-                        </SheetHeader>
-                        <DashboardSidebar
-                            expandedSections={expandedSections}
-                            onToggleSection={toggleSection}
-                            onSignOutConfirm={() => {
-                                setSidebarOpen(false);
-                                handleSignOut();
-                            }}
-                            sidebarOpen={true}
-                            onCloseSidebar={() => setSidebarOpen(false)}
-                            user={user} // Pass user data
-                        />
-                    </SheetContent>
-                </Sheet>
-
-                {/* Desktop Sidebar (hidden on mobile) */}
-                <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
+        <div className="h-screen flex bg-background overflow-hidden">
+            <WorkspaceInitializer />
+            {/* Mobile Sheet Navigation */}
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>Navigation Menu</SheetTitle>
+                    </SheetHeader>
                     <DashboardSidebar
                         expandedSections={expandedSections}
                         onToggleSection={toggleSection}
-                        onSignOutConfirm={handleSignOut}
+                        onSignOutConfirm={() => {
+                            setSidebarOpen(false);
+                            handleSignOut();
+                        }}
                         sidebarOpen={true}
+                        onCloseSidebar={() => setSidebarOpen(false)}
                         user={user} // Pass user data
+                        isLoggingOut={isLoggingOut}
                     />
-                </div>
+                </SheetContent>
+            </Sheet>
 
-                {/* Main content area */}
-                <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
-                    <CreationJobsProvider>
-                        {/* Header with Redux-managed features */}
-                        <DashboardHeader
-                            showNotifications={showNotifications}
-                            onToggleNotifications={handleToggleNotifications}
-                            onToggleSidebar={handleToggleSidebar}
-                        />
+            {/* Desktop Sidebar (hidden on mobile) */}
+            <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
+                <DashboardSidebar
+                    expandedSections={expandedSections}
+                    onToggleSection={toggleSection}
+                    onSignOutConfirm={handleSignOut}
+                    sidebarOpen={true}
+                    user={user} // Pass user data
+                    isLoggingOut={isLoggingOut}
+                />
+            </div>
 
-                        {/* Content area with conditional container classes */}
-                        <div className="flex-1 overflow-hidden relative min-h-0 bg-secondary/5">
-                            <div className={cn(
-                                "h-full w-full overflow-auto",
-                                !isChatPage && !isEditMode && "page-container min-h-full"
-                            )}>
-                                <ErrorBoundary>
-                                    {children}
-                                </ErrorBoundary>
-                            </div>
+            {/* Main content area */}
+            <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
+                <CreationJobsProvider>
+                    {/* Header with Redux-managed features */}
+                    <DashboardHeader
+                        showNotifications={showNotifications}
+                        onToggleNotifications={handleToggleNotifications}
+                        onToggleSidebar={handleToggleSidebar}
+                    />
+
+                    {/* Content area with conditional container classes */}
+                    <div className="flex-1 overflow-hidden relative min-h-0 bg-secondary/5">
+                        <div className={cn(
+                            "h-full w-full overflow-auto",
+                            !isChatPage && !isEditMode && "page-container min-h-full"
+                        )}>
+                            <ErrorBoundary>
+                                {children}
+                            </ErrorBoundary>
                         </div>
-                        <ActiveJobsWidget />
-                    </CreationJobsProvider>
-                </main >
+                    </div>
+                    <ActiveJobsWidget />
+                </CreationJobsProvider>
+            </main >
 
-                {/* Progress Overlay for async operations */}
-                < ProgressOverlay />
-            </div >
-        </ThemeProviderWrapper>
+            {/* Progress Overlay for async operations */}
+            < ProgressOverlay />
+        </div >
     )
 }

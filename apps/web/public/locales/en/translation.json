@@ -15,8 +15,8 @@
     "documentation": "Documentation",
     "login": "Login",
     "start": "Start",
-    "creationTools": "Creation Tools",
-    "myProducts": "My Products",
+    "creationTools": "Generator Studio",
+    "assetLibrary": "Asset Library",
     "users": "Users",
     "rolesPermissions": "Roles & Permissions",
     "categories": "Categories",
@@ -31,18 +31,18 @@
     "contactSales": "Contact sales"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "Analytics Dashboard",
     "welcomeBack": "Welcome back! Here's your overview.",
     "downloadReport": "Download Report",
     "ugcFactory": "UGC Factory",
-    "conversations": "Conversations",
+    "conversations": "Interaction Logs",
     "workflows": "Workflows",
     "allWorkflows": "All Workflows",
     "createNew": "Create New",
-    "channels": "Channels",
-    "knowledgeBase": "Knowledge Base",
-    "bots": "Bots",
-    "chatAI": "Chat AI",
+    "channels": "Channel Gateway",
+    "knowledgeBase": "Knowledge Hub",
+    "bots": "AI Agents",
+    "chatAI": "Live Chat",
     "signOut": "Sign Out",
     "confirm": {
       "signOut": "Are you sure you want to sign out?",
@@ -100,6 +100,15 @@
       "inactive": "Inactive",
       "activity": "Activity",
       "users": "Users"
+    }
+  },
+  "sidebar": {
+    "groups": {
+      "overview": "Overview",
+      "studio": "Studio",
+      "intelligence": "Intelligence",
+      "knowledge": "Knowledge",
+      "system": "System"
     }
   },
   "features": {

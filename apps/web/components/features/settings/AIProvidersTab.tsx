@@ -11,6 +11,7 @@ import { Pagination } from '@/components/shared/Pagination';
 import { AIProviderDialog } from './AIProviderDialog';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { Search } from '@/components/shared/Search';
+import { CardGridSkeleton } from '@/components/shared/Skeletons';
 import { useAiProviders, type EnhancedUserConfig } from '@/lib/hooks/features/useAiProviders';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -132,7 +133,7 @@ export function AIProvidersTab() {
     }
   ], []);
 
-  if (isLoading) return <div className="p-20 text-center text-muted-foreground animate-pulse">Loading providers...</div>;
+  if (isLoading) return <CardGridSkeleton />;
 
   return (
     <div className="space-y-8">

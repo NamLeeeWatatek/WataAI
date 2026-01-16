@@ -2,11 +2,11 @@
  * Icon Resolver - Resolves icon names to React components
  * This avoids storing React components in Redux state (which can't be serialized)
  */
-import * as LucideIcons from 'lucide-react'
 import { Circle } from 'lucide-react'
+import { iconMap as centralizedIconMap } from '@/lib/icon-map'
 
 const iconMap: Record<string, any> = {
-  ...LucideIcons
+  ...centralizedIconMap
 }
 
 /**

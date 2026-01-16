@@ -14,8 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Pagination } from '@/components/shared/Pagination';
 import { Search } from '@/components/shared/Search';
-import { PageLoading } from '@/components/shared/PageLoading';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ToolCardSkeleton } from '@/components/shared/Skeletons';
+
 
 function CategoryItems() {
     const { data: categories = [] } = useCategories('creation-tool');
@@ -65,14 +66,6 @@ export default function CreationToolsPage() {
         refetch();
     };
 
-    if (isLoading && items.length === 0) {
-        return (
-            <div className="page-container">
-                <PageLoading message="Loading tools..." />
-            </div>
-        );
-    }
-
     return (
         <div className="page-container space-y-6">
             <PageHeader
@@ -90,8 +83,7 @@ export default function CreationToolsPage() {
                         value={searchQuery}
                         onChange={(e: any) => setSearchQuery(e.target.value)}
                         onClear={() => setSearchQuery('')}
-                    // Assuming Search component accepts className for customization, if not we wrap it or styled it globally, 
-                    // but here we rely on existing props. If Search is rigid, we might need to adjust it later.
+                        loading={isFetching && searchQuery !== debouncedSearch}
                     />
                 </div>
                 <div className="w-full md:w-[240px]">
@@ -109,81 +101,119 @@ export default function CreationToolsPage() {
 
             {/* Premium Grid Layout */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {items.map((tool) => (
-                    <Card
-                        key={tool.id}
-                        className="group relative overflow-hidden cursor-pointer border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300"
-                        onClick={() => router.push(`/creation-tools/${tool.slug}`)}
-                    >
-                        {/* Image Container */}
-                        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-border/50 bg-muted/20">
-                            {tool.coverImage ? (
-                                <img
-                                    src={tool.coverImage}
-                                    alt={tool.name}
-                                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/10 group-hover:from-primary/5 group-hover:to-primary/10 transition-colors duration-500">
-                                    <div className="p-4 rounded-2xl bg-background/50 backdrop-blur-sm shadow-sm border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                                        {tool.icon && (icons as any)[tool.icon] ? (
-                                            (() => {
-                                                const ToolIcon = (icons as any)[tool.icon];
-                                                return <ToolIcon className="w-8 h-8 text-muted-foreground/60 group-hover:text-primary transition-colors duration-500" />;
-                                            })()
-                                        ) : (
-                                            <Sparkles className="w-8 h-8 text-muted-foreground/60 group-hover:text-primary transition-colors duration-500" />
-                                        )}
+                {isLoading && items.length === 0 ? (
+                    Array.from({ length: 12 }).map((_, i) => <ToolCardSkeleton key={i} />)
+                ) : (
+                    items.map((tool) => {
+                        const analysis = (() => {
+                            const fields = tool.formConfig?.fields || [];
+                            const hasFiles = fields.some(f => ['file', 'files', 'image', 'video'].includes(f.type));
+                            const hasTemplate = fields.some(f => f.type === 'template-selector');
+
+                            const name = tool.name.toLowerCase();
+                            const slug = tool.slug.toLowerCase();
+
+                            const isVideo = name.includes('video') || slug.includes('video');
+                            const isImage = !isVideo && (name.includes('hình ảnh') || name.includes('image') || slug.includes('image'));
+
+                            const input = tool.metadata?.inputLabel || (hasFiles ? "Assets" : (hasTemplate ? "Template" : "Input"));
+                            const output = tool.metadata?.outputLabel || (isVideo ? "Video" : (isImage ? "Image" : "Result"));
+                            const cta = tool.formConfig?.submitLabel || tool.metadata?.actionLabel || (isVideo ? "Create Video" : (isImage ? "Generate Image" : "Open Tool"));
+
+                            let description = tool.description;
+                            if (!description || description.includes("Specialized AI agent")) {
+                                if (isVideo) description = "Transform assets into high-energy UGC videos.";
+                                else if (isImage) description = "Generate marketing visuals from templates or text.";
+                                else description = "Accelerate creation with high-performance AI.";
+                            }
+
+                            return { input, output, cta, description, type: isVideo ? 'video' : (isImage ? 'image' : 'text') };
+                        })();
+
+                        return (
+                            <Card
+                                key={tool.id}
+                                className="group flex flex-col h-full cursor-pointer bg-card border border-border/40 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20"
+                                onClick={() => router.push(`/creation-tools/${tool.slug}`)}
+                            >
+                                {/* Visual Header - Image remains the Hero */}
+                                <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5 dark:bg-white/5">
+                                    {tool.coverImage ? (
+                                        <>
+                                            <img
+                                                src={tool.coverImage}
+                                                alt={tool.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-60" />
+                                        </>
+                                    ) : (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-muted/10 group-hover:from-primary/10 transition-colors duration-500" />
+                                    )}
+
+                                    {/* Subtle Floating Glass Icon - Moved to side to show more image */}
+                                    <div className="absolute bottom-4 right-4 z-10">
+                                        <div className="p-3 rounded-2xl bg-background/60 backdrop-blur-xl border border-white/20 shadow-lg group-hover:bg-primary group-hover:border-primary transition-all duration-300">
+                                            {tool.icon && (icons as any)[tool.icon] ? (
+                                                (() => {
+                                                    const ToolIcon = (icons as any)[tool.icon];
+                                                    return <ToolIcon className="w-5 h-5 text-foreground group-hover:text-white transition-colors" />;
+                                                })()
+                                            ) : (
+                                                <icons.Sparkles className="w-5 h-5 text-foreground" />
+                                            )}
+                                        </div>
+
+                                        {/* Small Type Label */}
+                                        <div className="absolute -top-2 -right-2 p-1.5 rounded-lg bg-primary text-white shadow-lg scale-90">
+                                            {analysis.type === 'video' ? <icons.Play className="w-2.5 h-2.5 fill-current" /> : (analysis.type === 'image' ? <icons.Camera className="w-2.5 h-2.5" /> : <icons.FileText className="w-2.5 h-2.5" />)}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
 
-                            {/* Cinematic Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
-
-                            {/* Hover Overlay - Primary Tint */}
-                            <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 mix-blend-overlay" />
-
-                            {/* Top Badges */}
-                            <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                                <div className="flex flex-wrap gap-2 max-w-[70%]">
-                                    {(tool.categories || [])
-                                        .slice(0, 2)
-                                        .map((cat) => (
-                                            <Badge
-                                                key={cat.id}
-                                                variant="secondary"
-                                                className="h-6 px-2.5 text-[10px] font-bold uppercase tracking-wider bg-black/40 backdrop-blur-md text-white border border-white/10 shadow-lg"
-                                            >
+                                    {/* Status Badge */}
+                                    <div className="absolute top-4 left-4 z-20">
+                                        {(tool.categories || []).slice(0, 1).map((cat) => (
+                                            <Badge key={cat.id} className="bg-background/40 backdrop-blur-md border border-white/10 text-[9px] text-foreground font-bold uppercase tracking-wider h-6">
                                                 {cat.name}
                                             </Badge>
                                         ))}
+                                    </div>
                                 </div>
 
-                                <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 delay-75">
-                                    <ArrowRight className="w-4 h-4 text-white" />
-                                </div>
-                            </div>
+                                {/* Refined Content Area - Clean & Airy */}
+                                <div className="flex flex-col flex-1 p-6 pt-7">
+                                    <div className="mb-6">
+                                        <h3 className="text-lg font-bold tracking-tight text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                                            {tool.name}
+                                        </h3>
+                                        <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-2 h-10 font-medium">
+                                            {analysis.description}
+                                        </p>
+                                    </div>
 
-                            {/* Bottom Content (Inside Image) */}
-                            <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                                <h3 className="text-xl font-bold tracking-tight text-white mb-2 line-clamp-1 drop-shadow-md">
-                                    {tool.name}
-                                </h3>
-                                <p className="text-sm text-white/80 font-medium line-clamp-2 leading-relaxed mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75 h-0 group-hover:h-auto">
-                                    {tool.description || "Create amazing content with AI."}
-                                </p>
+                                    {/* Logic Data - Compact & Minimal */}
+                                    <div className="mb-8 flex items-center gap-3">
+                                        <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-muted/30 border border-border/40">
+                                            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase">In</span>
+                                            <span className="text-[10px] font-bold text-foreground/70">{analysis.input}</span>
+                                        </div>
+                                        <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-primary/5 border border-primary/10">
+                                            <span className="text-[9px] font-bold text-primary/40 uppercase">Out</span>
+                                            <span className="text-[10px] font-bold text-primary/70">{analysis.output}</span>
+                                        </div>
+                                    </div>
 
-                                {/* Action Button */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 delay-100">
-                                    <Button size="sm" className="w-full rounded-xl font-bold bg-white text-black hover:bg-white/90 border-0 shadow-xl">
-                                        Open Tool
+                                    {/* Standardized CTA */}
+                                    <Button
+                                        className="w-full h-11 rounded-2xl font-bold uppercase tracking-[0.1em] text-[10px] bg-secondary hover:bg-primary hover:text-white transition-all duration-300"
+                                    >
+                                        {analysis.cta}
                                     </Button>
                                 </div>
-                            </div>
-                        </div>
-                    </Card>
-                ))}
+                            </Card>
+                        );
+                    })
+                )}
             </div>
 
             {totalItems > 0 && (

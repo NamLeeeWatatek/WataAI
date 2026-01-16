@@ -31,7 +31,7 @@ export class AiConfigService {
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelRepository: AiModelRepository,
-  ) {}
+  ) { }
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -95,24 +95,39 @@ export class AiConfigService {
         // Create new
         const m = new AiModel();
         m.name = name;
-        m.displayName = name; // Default display name = name
 
         const lower = name.toLowerCase();
-        // Improve heuristic for Ollama (nomic-embed-text) and others
+
+        // 1. Determine Type
         const isEmbedding =
           lower.includes('embed') ||
           lower.includes('bert') ||
           lower.includes('ada-002') ||
           lower.includes('text-embedding');
-
         m.type = isEmbedding ? AiModelType.EMBEDDING : AiModelType.CHAT;
+
+        // 2. Metadata: Snapshot vs Latest vs Preview
+        const isSnapshot = /-[0-9]{8}/.test(name) || /:[0-9]{8}/.test(name);
+        const isPreview =
+          lower.includes('preview') || lower.includes('experimental') || lower.includes('beta');
+
+        m.metadata = {
+          isSnapshot,
+          isPreview,
+          isLatest: !isSnapshot && !isPreview,
+        };
+
+        // 3. Display Name cleanup (e.g. gpt-4o-mini -> Gpt 4o Mini)
+        m.displayName = name
+          .split(/[-:]/)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
 
         m.providerId = providerId;
         m.ownerType = ownerType;
         m.ownerId = ownerId;
         m.configId = configId;
         m.isActive = true;
-        m.metadata = {};
         modelsToSave.push(m);
       }
     }

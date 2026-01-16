@@ -6,6 +6,7 @@ import { memo } from 'react'
 import { Label } from './Label'
 import { cn } from '@/lib/utils'
 import { RadioGroup, RadioGroupItem } from './RadioGroup'
+import { Badge } from './Badge'
 
 // Sub-components
 import { DynamicFormFieldProps, NodeProperty } from './form-fields/types'
@@ -163,35 +164,44 @@ export const DynamicFormField = memo(function DynamicFormField(props: DynamicFor
     const FieldComponent = fieldRegistry[field.type]
 
     return (
-        <div className={cn('mb-5', className)}>
-            <div className="flex items-center justify-between mb-1.5">
-                <Label htmlFor={fieldId} className="text-sm font-medium">
-                    {field.displayName || field.label}
-                    {(field.required || field.validation?.required) && <span className="text-destructive ml-0.5">*</span>}
-                </Label>
-                {field.hint && (
-                    <span className="text-[10px] text-muted-foreground/80 uppercase tracking-widest font-semibold bg-muted/50 px-1.5 py-0.5 rounded">
-                        {field.hint}
-                    </span>
+        <div className={cn('mb-10 last:mb-0', className)}>
+            <div className="flex items-center justify-between mb-4">
+                <div className="space-y-1">
+                    <Label htmlFor={fieldId} className="text-[11px] font-bold uppercase tracking-[0.25em] text-foreground/50 transition-colors group-hover:text-primary/70">
+                        {field.displayName || field.label}
+                        {(field.required || field.validation?.required) && <span className="text-primary ml-1.5">*</span>}
+                    </Label>
+                    {field.hint && (
+                        <p className="text-[10px] text-muted-foreground/60 font-medium">
+                            {field.hint}
+                        </p>
+                    )}
+                </div>
+                {field.type === 'template-selector' && (
+                    <Badge variant="outline" className="text-[9px] uppercase tracking-tighter font-bold bg-primary/5 border-primary/20 text-primary">
+                        Template Required
+                    </Badge>
                 )}
             </div>
 
-            {FieldComponent ? (
-                <FieldComponent {...props} />
-            ) : (
-                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                    Unsupported field type: {field.type}
-                </div>
-            )}
+            <div className="relative group/field">
+                {FieldComponent ? (
+                    <FieldComponent {...props} />
+                ) : (
+                    <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-xl border border-destructive/20 mt-2">
+                        Unsupported field type: {field.type}
+                    </div>
+                )}
+            </div>
 
             {props.error && (
-                <p className="text-[0.8rem] font-medium text-destructive mt-1.5 animate-in slide-in-from-top-1">
+                <p className="text-[0.8rem] font-semibold text-destructive mt-2.5 animate-in slide-in-from-top-1">
                     {props.error}
                 </p>
             )}
 
             {(field.helpText || field.description) && (
-                <p className="text-[0.8rem] text-muted-foreground mt-1.5 leading-relaxed">
+                <p className="text-[0.85rem] text-muted-foreground/70 mt-3 leading-relaxed font-normal italic">
                     {field.helpText || field.description}
                 </p>
             )}

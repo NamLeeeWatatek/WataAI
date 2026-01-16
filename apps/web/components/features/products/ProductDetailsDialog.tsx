@@ -1,4 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { LoadingLogo } from '@/components/shared/LoadingLogo';
+
+
 import { cn } from '@/lib/utils';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { format } from 'date-fns';
@@ -62,7 +65,13 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
 
 
     const renderOutput = () => {
-        if (!job.outputData) return <div className="text-muted-foreground italic text-sm py-4">Generating your product, please wait...</div>;
+        if (!job.outputData) {
+            return (
+                <div className="py-12 flex items-center justify-center">
+                    <LoadingLogo size="md" text="Generating your product..." showGlow />
+                </div>
+            );
+        }
 
         const data = job.outputData as any;
         const resultText = data.result || (typeof data === 'string' ? data : null);

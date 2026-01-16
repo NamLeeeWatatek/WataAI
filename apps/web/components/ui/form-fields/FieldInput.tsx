@@ -16,7 +16,7 @@ export function FieldInput({ field, value, onChange }: DynamicFormFieldProps) {
             min={field.min}
             max={field.max}
             step={field.step}
-            className="bg-card/50"
+            className="bg-muted/10 border-muted-foreground/10 focus:border-primary/30 h-12 text-base px-5 rounded-xl transition-all hover:bg-muted/20 focus:bg-background"
         />
     )
 }

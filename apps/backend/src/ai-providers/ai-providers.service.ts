@@ -14,7 +14,10 @@ import {
   CreateWorkspaceAiProviderConfigDto,
   UpdateWorkspaceAiProviderConfigDto,
   UpdateSystemAiSettingsDto,
+  QueryAiModelDto,
 } from './dto/ai-provider.dto';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import {
   AiProvider,
   UserAiProviderConfig,
@@ -44,7 +47,7 @@ export class AiProvidersService {
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
     private readonly aiModelRepository: AiModelRepository,
-  ) {}
+  ) { }
 
   /**
    * Encrypt an API key
@@ -219,6 +222,24 @@ export class AiProvidersService {
     workspaceId?: string,
   ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
     return this.aiConfigService.getConfigDetails(configId, userId, workspaceId);
+  }
+
+  async findModelsWithPagination(
+    query: QueryAiModelDto,
+  ): Promise<InfinityPaginationResponseDto<AiModel>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    const data = await this.aiModelRepository.findManyWithPagination({
+      filterOptions: query.filters,
+      sortOptions: query.sort,
+      paginationOptions: {
+        page,
+        limit,
+      },
+    });
+
+    return infinityPagination(data, { page, limit });
   }
 
   async getUsageLogs(

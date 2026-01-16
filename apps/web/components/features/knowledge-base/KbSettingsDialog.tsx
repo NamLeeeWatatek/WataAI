@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/Sheet'
 import type { KnowledgeBase } from '@/lib/types/knowledge-base'
 import { KbSettingsForm, type KbFormValues } from './KbSettingsForm'
 
@@ -16,22 +16,29 @@ export function KBSettingsDialog({ open, onOpenChange, knowledgeBase, workspaceI
         onOpenChange(false)
     }
 
+    const isEditing = !!knowledgeBase
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader className="pb-4 border-b">
-                    <DialogTitle className="text-xl font-bold">Knowledge Base Settings</DialogTitle>
-                </DialogHeader>
-                <div className="pt-6">
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="w-[400px] sm:w-[540px] sm:max-w-[540px] p-0 flex flex-col gap-0 bg-background border-l border-border/40 shadow-2xl">
+                <SheetHeader className="px-6 py-5 border-b border-border/40 bg-muted/10">
+                    <SheetTitle className="text-xl font-bold tracking-tight">
+                        {isEditing ? 'Edit Knowledge Base' : 'Create Knowledge Base'}
+                    </SheetTitle>
+                    <SheetDescription className="text-xs text-muted-foreground/80 font-medium uppercase tracking-wider">
+                        Configure your AI intelligence engine
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 overflow-hidden">
                     <KbSettingsForm
                         initialData={knowledgeBase}
                         workspaceId={workspaceId}
                         onSubmit={handleSubmit}
                         onCancel={() => onOpenChange(false)}
-                        submitLabel="Save Changes"
+                        submitLabel={isEditing ? "Save Changes" : "Create Engine"}
                     />
                 </div>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     )
 }

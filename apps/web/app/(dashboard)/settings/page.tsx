@@ -12,6 +12,7 @@ import { BillingTab } from '@/components/features/settings/BillingTab';
 import { QuestionsTab } from '@/components/features/settings/QuestionsTab';
 import { TeamTab } from '@/components/features/settings/TeamTab';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { WorkspaceTab } from '@/components/features/settings/WorkspaceTab';
 import {
   User,
   Settings,
@@ -20,13 +21,15 @@ import {
   Share2,
   CreditCard,
   HelpCircle,
-  Users
+  Users,
+  Briefcase
 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('account');
+  const [activeTab, setActiveTab] = useState('workspace');
 
   const tabs = [
+    { id: 'workspace', label: 'Workspace', icon: Briefcase },
     { id: 'account', label: 'Account', icon: User },
     { id: 'team', label: 'Team Members', icon: Users },
     { id: 'ai-settings', label: 'AI Settings', icon: Settings },
@@ -75,6 +78,10 @@ export default function SettingsPage() {
           {/* Content Area - Centered & Aligned */}
           <div className="flex-1 py-8">
             <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+              <TabsContent value="workspace" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <WorkspaceTab />
+              </TabsContent>
+
               <TabsContent value="ai-providers" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <AIProvidersTab />
               </TabsContent>
