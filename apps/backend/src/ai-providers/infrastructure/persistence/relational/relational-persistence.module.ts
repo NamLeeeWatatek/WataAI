@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AiProviderEntity,
-  UserAiProviderConfigEntity,
-  WorkspaceAiProviderConfigEntity,
+  AiProviderConfigEntity,
   AiUsageLogEntity,
 } from './entities/ai-provider.entity';
 import { AiProviderConfigRepository } from '../ai-provider-config.repository';
@@ -13,8 +12,7 @@ import { AiProviderConfigRelationalRepository } from './repositories/ai-provider
   imports: [
     TypeOrmModule.forFeature([
       AiProviderEntity,
-      UserAiProviderConfigEntity,
-      WorkspaceAiProviderConfigEntity,
+      AiProviderConfigEntity,
       AiUsageLogEntity,
     ]),
   ],

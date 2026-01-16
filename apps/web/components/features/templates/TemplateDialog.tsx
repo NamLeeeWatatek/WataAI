@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog'
-import { Media } from '@/components/ui/Media'
-import { FileDropzone } from '@/components/ui/FileUpload'
+import { Media } from '@/components/shared/Media'
+import { UnifiedFileUpload } from '@/components/shared/UnifiedFileUpload'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -196,60 +196,18 @@ export function TemplateDialog({
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <Label>Media Files</Label>
-                        <div className="rounded-md border p-6 bg-muted/20">
-                            <div className="space-y-4">
-                                <FileDropzone
-                                    onUploadComplete={(url) => {
-                                        setFormData(prev => ({
-                                            ...prev,
-                                            mediaFiles: [...prev.mediaFiles, url]
-                                        }))
-                                    }}
-                                    onUploadError={(error) => {
-                                        console.error('Upload failed:', error)
-                                        toast.error(`Upload failed: ${error.message}`)
-                                    }}
-                                    accept="image/*,video/*"
-                                />
-
-
-                                {formData.mediaFiles.length > 0 && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {formData.mediaFiles.map((url, index) => (
-                                            <div key={index} className="relative group rounded-xl overflow-hidden border bg-muted/20 aspect-video">
-                                                <Media
-                                                    src={url}
-                                                    alt={`Media ${index + 1}`}
-                                                    fill
-                                                    ambient
-                                                    objectFit="contain"
-                                                    controls
-                                                    playsInline
-                                                    className="transition-transform duration-500 group-hover:scale-[1.01]"
-                                                />
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const newFiles = [...formData.mediaFiles]
-                                                        newFiles.splice(index, 1)
-                                                        updateField('mediaFiles', newFiles)
-                                                    }}
-                                                    className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                Upload images or videos to be used in this template
-                            </p>
-                        </div>
+                        <UnifiedFileUpload
+                            value={formData.mediaFiles}
+                            onChange={(newFiles: any) => {
+                                updateField('mediaFiles', Array.isArray(newFiles) ? newFiles : [newFiles].filter(Boolean))
+                            }}
+                            accept="image/*,video/*"
+                            maxFiles={10}
+                            bucket="images"
+                            description="Upload images or videos to be used in this template"
+                        />
                     </div>
 
                     <div className="flex items-center justify-between rounded-lg border p-4">

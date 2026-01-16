@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/Dialog';
 import { FieldChannelSelector } from '@/components/ui/form-fields/FieldChannelSelector';
 import { toast } from 'sonner';
-import { Loader2, Share2 } from 'lucide-react';
+import { Loader2, Share2, Sparkles } from 'lucide-react';
+import { Textarea } from '@/components/ui/Textarea';
+import { Label } from '@/components/ui/Label';
 import axiosClient from '@/lib/axios-client';
 
 interface PostToChannelsDialogProps {
@@ -29,7 +31,26 @@ export function PostToChannelsDialog({
     productName
 }: PostToChannelsDialogProps) {
     const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+    const [message, setMessage] = useState('');
     const [isPosting, setIsPosting] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleGenerateContent = async () => {
+        setIsGenerating(true);
+        try {
+            // TODO: Replace with actual AI generation endpoint
+            // For now, we simulate a generation based on product name
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Art'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity`;
+            setMessage(generatedContent);
+            toast.success("Content generated!");
+        } catch (error) {
+            toast.error("Failed to generate content");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     const handlePost = async () => {
         if (!jobId) return;
@@ -42,6 +63,7 @@ export function PostToChannelsDialog({
         try {
             await axiosClient.post(`/creation-jobs/${jobId}/post`, {
                 channels: selectedChannels,
+                message,
                 // We'll support scheduling in the future, for now it's immediate
             });
 
@@ -67,12 +89,38 @@ export function PostToChannelsDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-4">
+                <div className="py-4 space-y-4">
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Caption / Message</Label>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs text-primary hover:text-primary/80"
+                                onClick={handleGenerateContent}
+                                disabled={isGenerating}
+                            >
+                                {isGenerating ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                )}
+                                Generate with AI
+                            </Button>
+                        </div>
+                        <Textarea
+                            placeholder="Write a caption for your post..."
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            rows={4}
+                            className="resize-none"
+                        />
+                    </div>
                     <FieldChannelSelector
                         field={{
                             name: 'channels',
                             type: 'channel-selector',
-                            label: 'Channels',
+                            label: 'Select Channels',
                             // The selector uses dynamic options internally based on type
                         } as any}
                         value={selectedChannels}

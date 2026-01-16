@@ -12,7 +12,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Loader2, Plus, Edit2, Trash2, Sparkles, Filter, icons, X, Folder } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { AssignToolDialog } from '@/components/features/creation-tools/AssignToolDialog';
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
 import toast from '@/lib/toast';
@@ -21,7 +21,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
     AlertDialog,
@@ -33,7 +33,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { TemplateCardMedia } from '@/components/features/templates/TemplateCardMedia';
 
 export default function TemplatesPage() {

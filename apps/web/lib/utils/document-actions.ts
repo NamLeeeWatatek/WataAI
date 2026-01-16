@@ -62,6 +62,12 @@ export function canPreviewDocument(mimeType?: string | null): boolean {
     'image/jpeg',
     'image/gif',
     'image/webp',
+    'video/mp4',
+    'video/webm',
+    'video/ogg',
+    'audio/mpeg',
+    'audio/wav',
+    'audio/ogg',
   ]
 
   return previewableMimeTypes.includes(mimeType)

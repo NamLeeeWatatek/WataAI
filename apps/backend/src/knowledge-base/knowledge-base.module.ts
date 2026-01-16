@@ -58,6 +58,10 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     ]),
     BullModule.registerQueue({
       name: 'kb-processing',
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
     }),
     forwardRef(() => BotsModule),
     AiProvidersModule,

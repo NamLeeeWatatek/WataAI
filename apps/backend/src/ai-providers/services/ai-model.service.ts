@@ -685,65 +685,76 @@ export class AiModelService {
       if (key === 'google') {
         if (!config.apiKey) return [];
 
-        try {
-          // Use the SDK to list models if available in future, currently REST API is reliable
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}`,
+        // Use the SDK to list models if available in future, currently REST API is reliable
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models?key=${config.apiKey}`,
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          this.logger.warn(
+            `Google Model Fetch Error: ${response.status} - ${errorText}`,
           );
+          throw new BadRequestException(
+            `Google API Error: ${response.statusText}`,
+          );
+        }
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            this.logger.warn(`Google Model Fetch Error: ${response.status} - ${errorText}`);
-            throw new Error(`Google API Info Error: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          const models = data.models
-            ?.filter((m: any) =>
-              m.supportedGenerationMethods?.includes('generateContent') &&
-              !m.name.includes('embedding')
+        const data = await response.json();
+        const models =
+          data.models
+            ?.filter(
+              (m: any) =>
+                m.supportedGenerationMethods?.includes('generateContent') &&
+                !m.name.includes('embedding'),
             )
             .map((m: any) => m.name.replace('models/', '')) || [];
 
-          return models;
-        } catch (e) {
-          this.logger.warn(`Failed to fetch Google models: ${e.message}`);
-          // Only fallback if strictly necessary, but prefer empty to indicate error in "Agent" mode
-          return [];
-        }
+        return models;
       }
 
       if (key === 'ollama') {
-        const url = config.baseUrl || 'http://127.0.0.1:11434';
-        const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-        const hasProtocol =
-          nativeBaseUrl.startsWith('http://') ||
-          nativeBaseUrl.startsWith('https://');
-        const validUrl = hasProtocol
-          ? nativeBaseUrl
-          : `http://${nativeBaseUrl}`;
-        const endpoint = `${validUrl}/api/tags`;
+        const url = (config.baseUrl as string) || 'http://127.0.0.1:11434';
 
-        let response;
-        try {
-          response = await fetch(endpoint);
-        } catch (error) {
-          if (validUrl.includes('localhost')) {
-            // Retry with 127.0.0.1
-            const altEndpoint = endpoint.replace('localhost', '127.0.0.1');
-            response = await fetch(altEndpoint);
-          } else {
-            throw error;
+        // Prepare candidate URLs for robustness (localhost -> IPv4 -> Docker Host)
+        const candidates: string[] = [url];
+        if (url.includes('localhost')) {
+          candidates.push(url.replace('localhost', '127.0.0.1'));
+          candidates.push(url.replace('localhost', 'host.docker.internal'));
+        }
+
+        let lastError: any = null;
+
+        for (const candidateUrl of candidates) {
+          try {
+            const nativeBaseUrl = candidateUrl.endsWith('/')
+              ? candidateUrl.slice(0, -1)
+              : candidateUrl;
+            const hasProtocol =
+              nativeBaseUrl.startsWith('http://') ||
+              nativeBaseUrl.startsWith('https://');
+            const validUrl = hasProtocol
+              ? nativeBaseUrl
+              : `http://${nativeBaseUrl}`;
+            const endpoint = `${validUrl}/api/tags`;
+
+            const response = await fetch(endpoint);
+            if (response.ok) {
+              const data = await response.json();
+              // Ollama returns { models: [{ name: 'llama2', details: { ... } }] }
+              // We just return names here. Type inference happens in AiConfigService
+              return data.models?.map((m: { name: string }) => m.name) || [];
+            }
+          } catch (error) {
+            lastError = error;
+            // Continue to next candidate
           }
         }
 
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch Ollama models: ${response.statusText}`,
-          );
+        if (lastError) {
+          throw lastError;
         }
-        const data = await response.json();
-        return data.models?.map((m: { name: string }) => m.name) || [];
+        throw new BadRequestException('Failed to connect to Ollama');
       }
 
       return [];
@@ -751,7 +762,8 @@ export class AiModelService {
       this.logger.warn(
         `Failed to fetch models for ${providerKey}: ${error.message}`,
       );
-      return [];
+      // RETHROW the error so frontend knows it failed
+      throw error;
     }
   }
 
@@ -763,141 +775,119 @@ export class AiModelService {
     baseUrl?: string,
   ): Promise<number[]> {
     const key = providerKey.toLowerCase();
+    const MAX_RETRIES = 3;
+
+    const executeWithRetry = async <T>(
+      operation: () => Promise<T>,
+    ): Promise<T> => {
+      let lastError;
+      for (let i = 0; i < MAX_RETRIES; i++) {
+        try {
+          return await operation();
+        } catch (error) {
+          lastError = error;
+          const isNetworkError =
+            error.message?.includes('fetch failed') ||
+            error.message?.includes('ECONNREFUSED') ||
+            error.message?.includes('ETIMEDOUT');
+
+          if (isNetworkError && i < MAX_RETRIES - 1) {
+            const delay = 500 * Math.pow(2, i); // Exponential backoff
+            this.logger.warn(
+              `[AiModelService] Network error for ${key}, retrying in ${delay}ms... (Attempt ${i + 1})`,
+            );
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+          }
+          throw error;
+        }
+      }
+      throw lastError;
+    };
 
     try {
       if (key === 'openai') {
-        const client = new OpenAI({ apiKey, baseURL: baseUrl });
-        const response = await client.embeddings.create({
-          model,
-          input: text,
-        });
-        return response.data[0].embedding;
-      }
-
-      if (key === 'google') {
-        const genAI = new GoogleGenerativeAI(apiKey || '');
-        const embedModel = genAI.getGenerativeModel({ model });
-        const result = await embedModel.embedContent(text);
-        return result.embedding.values;
-      }
-
-      if (key === 'ollama') {
-        const url = baseUrl || 'http://127.0.0.1:11434';
-
-        // Handle /v1 OpenAI compability mode
-        if (url.endsWith('/v1') || url.endsWith('/v1/')) {
-          const client = new OpenAI({
-            apiKey: apiKey || 'ollama',
-            baseURL: url,
-          });
+        return await executeWithRetry(async () => {
+          const client = new OpenAI({ apiKey, baseURL: baseUrl });
           const response = await client.embeddings.create({
             model,
             input: text,
           });
           return response.data[0].embedding;
+        });
+      }
+
+      if (key === 'google') {
+        return await executeWithRetry(async () => {
+          const genAI = new GoogleGenerativeAI(apiKey || '');
+          const embedModel = genAI.getGenerativeModel({ model });
+          const result = await embedModel.embedContent(text);
+          return result.embedding.values;
+        });
+      }
+
+      if (key === 'ollama') {
+        let url = baseUrl || 'http://127.0.0.1:11434';
+
+        // Robustness: Prefer IPv4 loopback to avoid Node 18+ IPv6 issues
+        if (url.includes('localhost')) {
+          url = url.replace('localhost', '127.0.0.1');
         }
 
-        // Sanitize URL
+        // Handle /v1 OpenAI compatibility mode
+        if (url.endsWith('/v1') || url.endsWith('/v1/')) {
+          return await executeWithRetry(async () => {
+            const client = new OpenAI({
+              apiKey: apiKey || 'ollama',
+              baseURL: url,
+            });
+            const response = await client.embeddings.create({
+              model,
+              input: text,
+            });
+            return response.data[0].embedding;
+          });
+        }
+
+        // Native Ollama API
         const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-        const hasProtocol =
-          nativeBaseUrl.startsWith('http://') ||
-          nativeBaseUrl.startsWith('https://');
-        const validUrl = hasProtocol
+        const validUrl = nativeBaseUrl.startsWith('http')
           ? nativeBaseUrl
           : `http://${nativeBaseUrl}`;
-
         const endpoint = `${validUrl}/api/embeddings`;
 
-        const makeRequest = async (ep: string) => {
-          return fetch(ep, {
+        return await executeWithRetry(async () => {
+          const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ model, prompt: text }),
           });
-        };
 
-        const response = await makeRequest(endpoint).catch(async (err) => {
-          if (validUrl.includes('localhost')) {
-            const altEndpoint = endpoint.replace('localhost', '127.0.0.1');
-            return await makeRequest(altEndpoint);
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+              `Ollama Embedding Error: ${response.status} ${response.statusText} - ${errorText}`,
+            );
           }
-          throw err;
+
+          const data = await response.json();
+          return data.embedding;
         });
-
-        if (!response.ok) {
-          throw new Error(
-            `Ollama Embedding Error: ${response.status} ${response.statusText} - ${await response.text()}`,
-          );
-        }
-
-        const data = await response.json();
-        return data.embedding;
       }
     } catch (error) {
+      // Enhanced Error Logging
+      const hint = error.message?.includes('fetch failed')
+        ? ' (Check if the service is running and accessible)'
+        : '';
+
       this.logger.error(
-        `Embedding generation failed for ${key}: ${error.message}`,
+        `Embedding generation failed for ${key}: ${error.message}${hint}`,
       );
       throw error;
     }
 
     this.logger.warn(`Embedding not supported for provider ${providerKey}`);
     return [];
-  }
-
-  async generateSystemPrompt(params: {
-    userId: string;
-    description: string;
-    template?: string;
-    providerConfigId?: string;
-    tone?: string;
-    style?: string;
-    additionalContext?: Record<string, unknown>;
-  }): Promise<{
-    prompt: string;
-    improvements: string[];
-    suggestions: string[];
-  }> {
-    this.logger.log(`Generating system prompt for user ${params.userId}`);
-
-    const toneString = params.tone
-      ? ` The response should be ${params.tone}.`
-      : '';
-    const styleString = params.style
-      ? ` Write in a ${params.style} style.`
-      : '';
-    const contextString = params.additionalContext
-      ? ` Additional Context: ${JSON.stringify(params.additionalContext)}`
-      : '';
-
-    // Heuristic-based prompt construction
-    const basePrompt =
-      params.template ||
-      `You are an AI assistant designed to: ${params.description}.${toneString}${styleString}${contextString}`;
-
-    const prompt = basePrompt.trim();
-
-    // Simulate AI improvements analysis
-    const improvements = [
-      'Refined goal clarity based on description',
-      params.tone
-        ? 'Integrated tone requirements'
-        : 'Standardized professional tone',
-      params.style
-        ? 'Applied specific writing style'
-        : 'Optimized for conversational flow',
-    ];
-
-    const suggestions = [
-      'Add more specific examples to the description for better grounding',
-      'Consider defining explicit constraints (what NOT to do)',
-      'Include a few-shot examples of ideal responses',
-    ];
-
-    return {
-      prompt,
-      improvements,
-      suggestions,
-    };
   }
 
   private validateBaseUrl(url: string): void {
@@ -917,6 +907,40 @@ export class AiModelService {
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
       // Invalid URL format
+    }
+  }
+
+  /**
+   * Analyze an image using Google Gemini Vision (Imagen support can be added later)
+   */
+  async analyzeImageWithGoogle(
+    imageBuffer: Buffer,
+    mimeType: string,
+    model: string,
+    apiKey: string,
+    prompt: string = 'Describe this image in detail, focusing on visual style, colors, typography, and brand elements. If there is text, transcribe it.',
+  ): Promise<string> {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const visionModel = genAI.getGenerativeModel({
+      model: model || 'gemini-1.5-flash',
+    });
+
+    try {
+      const result = await visionModel.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: imageBuffer.toString('base64'),
+            mimeType,
+          },
+        },
+      ]);
+      return result.response.text();
+    } catch (error) {
+      this.logger.error(`Google Vision Error: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        `Google Vision Error: ${error.message}`,
+      );
     }
   }
 }

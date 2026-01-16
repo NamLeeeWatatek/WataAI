@@ -8,11 +8,12 @@ import { AiModelService } from './services/ai-model.service';
 import {
   AiProviderEntity,
   AiProviderConfigEntity,
-  UserAiProviderConfigEntity,
-  WorkspaceAiProviderConfigEntity,
   AiUsageLogEntity,
   SystemAiSettingsEntity,
 } from './infrastructure/persistence/relational/entities/ai-provider.entity';
+import { AiModelEntity } from './infrastructure/persistence/relational/entities/ai-model.entity';
+import { AiModelRelationalRepository } from './infrastructure/persistence/relational/repositories/ai-model.repository';
+import { AiModelRepository } from './infrastructure/persistence/ai-model.repository';
 import { AiProviderConfigRelationalRepository } from './infrastructure/persistence/relational/repositories/ai-provider-config.repository';
 import { AiProviderConfigRepository } from './infrastructure/persistence/ai-provider-config.repository';
 import { SystemAiSettingsRepository } from './infrastructure/system/system-ai-settings.repository';
@@ -25,10 +26,9 @@ import { forwardRef } from '@nestjs/common';
     TypeOrmModule.forFeature([
       AiProviderEntity,
       AiProviderConfigEntity,
-      UserAiProviderConfigEntity,
-      WorkspaceAiProviderConfigEntity,
       AiUsageLogEntity,
       SystemAiSettingsEntity,
+      AiModelEntity,
     ]),
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
@@ -40,9 +40,14 @@ import { forwardRef } from '@nestjs/common';
     AiConfigService,
     AiModelService,
     SystemAiSettingsRepository,
+    AiModelRelationalRepository,
     {
       provide: AiProviderConfigRepository,
       useClass: AiProviderConfigRelationalRepository,
+    },
+    {
+      provide: AiModelRepository,
+      useClass: AiModelRelationalRepository,
     },
   ],
   exports: [AiProvidersService],

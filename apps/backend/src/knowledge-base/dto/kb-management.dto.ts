@@ -5,6 +5,7 @@
   IsInt,
   IsArray,
   Min,
+  IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -19,7 +20,7 @@ export class CreateKnowledgeBaseDto {
   description?: string;
 
   @ApiPropertyOptional()
-  @IsString()
+  @IsUUID()
   @IsOptional()
   workspaceId?: string;
 
@@ -38,17 +39,22 @@ export class CreateKnowledgeBaseDto {
   @IsOptional()
   isPublic?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
+  @IsUUID()
+  @IsOptional()
+  embeddingConfigId?: string;
+
+  @ApiPropertyOptional({ nullable: true })
   @IsString()
   @IsOptional()
   embeddingModel?: string;
 
-  @ApiPropertyOptional()
-  @IsString()
+  @ApiPropertyOptional({ nullable: true })
+  @IsUUID()
   @IsOptional()
-  aiProviderId?: string;
+  aiConfigId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
   @IsString()
   @IsOptional()
   ragModel?: string;
@@ -98,17 +104,22 @@ export class UpdateKnowledgeBaseDto {
   @IsOptional()
   isPublic?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
+  @IsUUID()
+  @IsOptional()
+  embeddingConfigId?: string;
+
+  @ApiPropertyOptional({ nullable: true })
   @IsString()
   @IsOptional()
   embeddingModel?: string;
 
-  @ApiPropertyOptional()
-  @IsString()
+  @ApiPropertyOptional({ nullable: true })
+  @IsUUID()
   @IsOptional()
-  aiProviderId?: string;
+  aiConfigId?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
   @IsString()
   @IsOptional()
   ragModel?: string;

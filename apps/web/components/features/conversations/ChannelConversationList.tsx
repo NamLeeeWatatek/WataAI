@@ -3,9 +3,9 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Facebook, Instagram, Mail, MessageCircle } from 'lucide-react';
-import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
+import { MessageSquare, Facebook, Instagram, Mail, MessageCircle, Phone, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { ChatListSkeleton } from '@/components/shared/Skeletons';
 import { JSX } from 'react';
 
 export interface ChannelConversation {
@@ -61,10 +61,10 @@ const formatRelativeTime = (dateString: string): string => {
 const getChannelIcon = (type: string) => {
   const icons: Record<string, JSX.Element> = {
     facebook: <Facebook className="w-4 h-4" />,
-    messenger: <FaFacebookMessenger className="w-4 h-4" />,
+    messenger: <MessageCircle className="w-4 h-4" />,
     instagram: <Instagram className="w-4 h-4" />,
-    whatsapp: <FaWhatsapp className="w-4 h-4" />,
-    telegram: <FaTelegram className="w-4 h-4" />,
+    whatsapp: <Phone className="w-4 h-4" />,
+    telegram: <Send className="w-4 h-4" />,
     email: <Mail className="w-4 h-4" />,
     webchat: <MessageCircle className="w-4 h-4" />,
   };
@@ -91,11 +91,7 @@ export function ChannelConversationList({
   loading = false
 }: ChannelConversationListProps) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <ChatListSkeleton count={10} />;
   }
 
   if (conversations.length === 0) {

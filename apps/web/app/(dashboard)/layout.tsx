@@ -3,20 +3,18 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { DashboardHeader } from '@/components/layout/DashboardHeader'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/Sheet'
-import { ProgressOverlay } from '@/components/ui/ProgressOverlay'
-import toast from '@/lib/toast'
+import { cn } from '@/lib/utils'
 
 import { useTranslation } from 'react-i18next'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { CreationJobsProvider } from '@/components/providers/CreationJobsProvider'
-import { QueryProvider } from '@/components/providers/QueryProvider'
-import { ActiveJobsWidget } from '@/components/features/creation-tools/ActiveJobsWidget'
 import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitializer'
-import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
+
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
+import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
 
 export default function DashboardLayout({
     children,
@@ -36,29 +34,11 @@ export default function DashboardLayout({
     const router = useRouter()
     const { t } = useTranslation()
 
-    // Handle session errors and redirects
-    // We keep this for client-side protection fallback, but we don't block rendering
     useEffect(() => {
         if (!isLoading && (!isAuthenticated || !accessToken)) {
-            // Optional: Force redirect if needed, but Middleware usually handles this
-            // router.push('/login')
         }
     }, [isLoading, isAuthenticated, accessToken, router])
 
-    // While performing logout, show global loading screen
-    if (isLoggingOut) {
-        return (
-            <div className="h-screen flex items-center justify-center bg-background">
-                <LoadingLogo size="lg" text={t('dashboard.confirm.signingOut')} />
-            </div>
-        )
-    }
-
-    // REMOVED: Blocking loading screen logic
-    // We now allow partial rendering (skeleton or initial UI) instead of white screen.
-    // Ideally, the parent Server Component has already validated the session.
-
-    // Layout action handlers
     const toggleSection = (sectionName: string) => {
         setExpandedSections(prev =>
             prev.includes(sectionName)
@@ -83,68 +63,75 @@ export default function DashboardLayout({
     }
 
     const isEditMode = pathname.includes('mode=edit')
-    const isSpecialPage = isEditMode
+    const isCreationToolDetail = pathname.startsWith('/creation-tools/') && pathname.split('/').length > 2;
+    const isWorkflowDetail = pathname.startsWith('/workflows/') && pathname.split('/').length > 2;
+    const isSettingsPage = pathname.startsWith('/settings');
+    const isChatPage = pathname.startsWith('/chat');
+
+
 
     return (
-        <ThemeProviderWrapper>
-            <div className="h-screen flex bg-background overflow-hidden">
-                <WorkspaceInitializer />
-                {/* Mobile Sheet Navigation */}
-                <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                    <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
-                        <SheetHeader className="sr-only">
-                            <SheetTitle>Navigation Menu</SheetTitle>
-                        </SheetHeader>
-                        <DashboardSidebar
-                            expandedSections={expandedSections}
-                            onToggleSection={toggleSection}
-                            onSignOutConfirm={() => {
-                                setSidebarOpen(false);
-                                handleSignOut();
-                            }}
-                            sidebarOpen={true}
-                            onCloseSidebar={() => setSidebarOpen(false)}
-                            user={user} // Pass user data
-                        />
-                    </SheetContent>
-                </Sheet>
-
-                {/* Desktop Sidebar (hidden on mobile) */}
-                <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
+        <div className="h-screen flex bg-background overflow-hidden">
+            <WorkspaceInitializer />
+            {/* Mobile Sheet Navigation */}
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>Navigation Menu</SheetTitle>
+                    </SheetHeader>
                     <DashboardSidebar
                         expandedSections={expandedSections}
                         onToggleSection={toggleSection}
-                        onSignOutConfirm={handleSignOut}
+                        onSignOutConfirm={() => {
+                            setSidebarOpen(false);
+                            handleSignOut();
+                        }}
                         sidebarOpen={true}
+                        onCloseSidebar={() => setSidebarOpen(false)}
                         user={user} // Pass user data
+                        isLoggingOut={isLoggingOut}
                     />
-                </div>
+                </SheetContent>
+            </Sheet>
 
-                {/* Main content area */}
-                <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
-                    <CreationJobsProvider>
-                        {/* Header with Redux-managed features */}
-                        <DashboardHeader
-                            showNotifications={showNotifications}
-                            onToggleNotifications={handleToggleNotifications}
-                            onToggleSidebar={handleToggleSidebar}
-                        />
+            {/* Desktop Sidebar (hidden on mobile) */}
+            <div className="hidden lg:flex w-64 flex-col fixed inset-y-0 z-50">
+                <DashboardSidebar
+                    expandedSections={expandedSections}
+                    onToggleSection={toggleSection}
+                    onSignOutConfirm={handleSignOut}
+                    sidebarOpen={true}
+                    user={user} // Pass user data
+                    isLoggingOut={isLoggingOut}
+                />
+            </div>
 
-                        {/* Content area with conditional container classes */}
-                        <div className="flex-1 overflow-hidden relative min-h-0">
-                            <div className={`h-full ${isSpecialPage ? 'overflow-auto' : 'page-container overflow-auto'}`}>
-                                <ErrorBoundary>
-                                    {children}
-                                </ErrorBoundary>
-                            </div>
+            {/* Main content area */}
+            <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
+                <CreationJobsProvider>
+                    {/* Header with Redux-managed features */}
+                    <DashboardHeader
+                        showNotifications={showNotifications}
+                        onToggleNotifications={handleToggleNotifications}
+                        onToggleSidebar={handleToggleSidebar}
+                    />
+
+                    {/* Content area with conditional container classes */}
+                    <div className="flex-1 overflow-hidden relative min-h-0 bg-secondary/5">
+                        <div className={cn(
+                            "h-full w-full overflow-auto",
+                            !isChatPage && !isEditMode && "page-container min-h-full"
+                        )}>
+                            <ErrorBoundary>
+                                {children}
+                            </ErrorBoundary>
                         </div>
-                        <ActiveJobsWidget />
-                    </CreationJobsProvider>
-                </main >
+                    </div>
+                </CreationJobsProvider>
+            </main >
 
-                {/* Progress Overlay for async operations */}
-                < ProgressOverlay />
-            </div >
-        </ThemeProviderWrapper>
+            {/* Progress Overlay for async operations */}
+            < ProgressOverlay />
+        </div >
     )
 }

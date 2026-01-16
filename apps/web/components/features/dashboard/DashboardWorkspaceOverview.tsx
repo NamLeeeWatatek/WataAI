@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card"
-import { FiUsers, FiZap, FiMessageSquare, FiTrendingUp, FiTrendingDown } from "react-icons/fi"
+import { Users, Zap, MessageSquare, TrendingUp, TrendingDown } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { DashboardStats } from "@/lib/types"
@@ -18,7 +18,7 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
                 "flex items-center text-xs font-bold px-2 py-1 rounded-full",
                 isPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
             )}>
-                {isPositive ? <FiTrendingUp className="w-3 h-3 mr-1" /> : <FiTrendingDown className="w-3 h-3 mr-1" />}
+                {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
                 <span>{isPositive ? '+' : ''}{rate.toFixed(1)}%</span>
             </div>
         )
@@ -42,9 +42,9 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
             <CardContent className="p-8">
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-3">
                     {[
-                        { label: t('dashboard.stats.activeWorkspaces'), value: stats?.workspaces?.active, icon: FiUsers, color: 'primary' },
-                        { label: t('dashboard.stats.totalBots'), value: stats?.bots?.total, icon: FiZap, color: 'success' },
-                        { label: t('dashboard.stats.totalConversations'), value: stats?.conversations?.total, icon: FiMessageSquare, color: 'info' }
+                        { label: t('dashboard.stats.activeWorkspaces'), value: stats?.workspaces?.active, icon: Users, color: 'primary' },
+                        { label: t('dashboard.stats.totalBots'), value: stats?.bots?.total, icon: Zap, color: 'success' },
+                        { label: t('dashboard.stats.totalConversations'), value: stats?.conversations?.total, icon: MessageSquare, color: 'info' }
                     ].map((item, idx) => (
                         <div key={idx} className="p-6 rounded-3xl bg-muted/10 flex flex-col items-center text-center group hover:bg-muted/20 transition-all duration-500 hover:-translate-y-1">
                             <div className={cn("p-4 rounded-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", `bg-${item.color}/10 text-${item.color}`)}>

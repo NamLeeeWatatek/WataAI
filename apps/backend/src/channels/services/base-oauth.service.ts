@@ -21,7 +21,7 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     protected readonly connectionRepository: Repository<ChannelConnectionEntity>,
     protected readonly credentialRepository: Repository<ChannelCredentialEntity>,
     protected readonly conversationRepository: Repository<ConversationEntity>,
-  ) { }
+  ) {}
 
   abstract getOAuthUrl(redirectUri: string, state?: string): string;
   abstract exchangeCodeForToken(
@@ -176,14 +176,14 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
       // ✅ FIX: Update conversations to set channelId to null using TypeORM repository
       // This prevents orphaned references safely without raw SQL
       await this.connectionRepository.manager.transaction(async (manager) => {
-        // We use the transaction manager to ensure consistency, 
+        // We use the transaction manager to ensure consistency,
         // but we can also use the injected repository if we aren't in a transaction block covering both.
         // Since we need to update conversations based on channel_id, and we want to be safe:
 
         // Option 1: Direct update via repository (Simpler, works for most cases)
         await this.conversationRepository.update(
           { channelId: connectionId },
-          { channelId: null, channelType: 'internal' } // or keep generic? The raw SQL set channel_type='internal'
+          { channelId: null, channelType: 'internal' }, // or keep generic? The raw SQL set channel_type='internal'
         );
 
         // Delete the connection

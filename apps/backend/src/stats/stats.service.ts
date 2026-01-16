@@ -49,7 +49,7 @@ export class StatsService {
     private readonly templateRepository: Repository<TemplateEntity>,
     @InjectRepository(GenerationJobEntity)
     private readonly generationJobRepository: Repository<GenerationJobEntity>,
-  ) { }
+  ) {}
 
   async getSystemStats(query: StatsQueryDto): Promise<any> {
     const { startDate, endDate } = this.getDateRange(query);
@@ -94,7 +94,10 @@ export class StatsService {
 
     // CPU Usage Calculation (Simple Average Load)
     const loadAvg = os.loadavg();
-    const cpuUsagePercent = Math.min(100, Math.round((loadAvg[0] / cpus.length) * 100));
+    const cpuUsagePercent = Math.min(
+      100,
+      Math.round((loadAvg[0] / cpus.length) * 100),
+    );
     const memUsagePercent = Math.round(((totalMem - freeMem) / totalMem) * 100);
 
     // Storage Usage (Real) using platform specific commands
@@ -102,7 +105,7 @@ export class StatsService {
     try {
       if (os.platform() === 'win32') {
         const { stdout } = await execAsync(
-          'powershell "Get-PSDrive C | Select-Object Used,Free | ConvertTo-Json"'
+          'powershell "Get-PSDrive C | Select-Object Used,Free | ConvertTo-Json"',
         );
         const diskData = JSON.parse(stdout);
         const data = Array.isArray(diskData) ? diskData[0] : diskData;
@@ -128,13 +131,25 @@ export class StatsService {
 
     try {
       await this.userRepository.query('SELECT 1');
-      services.push({ name: 'Database', status: 'operational', uptime: '99.99%' });
+      services.push({
+        name: 'Database',
+        status: 'operational',
+        uptime: '99.99%',
+      });
     } catch (e) {
       services.push({ name: 'Database', status: 'down', uptime: '0%' });
     }
 
-    services.push({ name: 'Cache (Redis)', status: 'operational', uptime: '100%' });
-    services.push({ name: 'AI Worker', status: 'operational', uptime: '98.5%' });
+    services.push({
+      name: 'Cache (Redis)',
+      status: 'operational',
+      uptime: '100%',
+    });
+    services.push({
+      name: 'AI Worker',
+      status: 'operational',
+      uptime: '98.5%',
+    });
 
     return {
       health: 'operational',
@@ -144,13 +159,13 @@ export class StatsService {
         memory: {
           total: totalMem,
           used: totalMem - freeMem,
-          percent: memUsagePercent
+          percent: memUsagePercent,
         },
         storage: {
-          percent: storagePercent
-        }
+          percent: storagePercent,
+        },
       },
-      services
+      services,
     };
   }
 

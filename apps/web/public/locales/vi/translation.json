@@ -15,8 +15,8 @@
     "documentation": "Tài liệu",
     "login": "Đăng nhập",
     "start": "Bắt đầu",
-    "creationTools": "Công cụ sáng tạo",
-    "myProducts": "Sản phẩm của tôi",
+    "creationTools": "Xưởng sáng tạo",
+    "assetLibrary": "Thư viện thành phẩm",
     "users": "Người dùng",
     "rolesPermissions": "Vai trò & Quyền",
     "categories": "Danh mục",
@@ -35,14 +35,14 @@
     "welcomeBack": "Chào mừng trở lại! Đây là tổng quan của bạn.",
     "downloadReport": "Tải báo cáo",
     "ugcFactory": "Nhà máy UGC",
-    "conversations": "Cuộc hội thoại",
+    "conversations": "Lịch sử tương tác",
     "workflows": "Workflow",
     "allWorkflows": "Tất cả workflow",
     "createNew": "Tạo mới",
-    "channels": "Kênh",
-    "knowledgeBase": "Cơ sở kiến thức",
-    "bots": "Bot",
-    "chatAI": "Chat AI",
+    "channels": "Cổng kết nối",
+    "knowledgeBase": "Trung tâm tri thức",
+    "bots": "Tác tử AI",
+    "chatAI": "Chat trực tiếp",
     "signOut": "Đăng xuất",
     "confirm": {
       "signOut": "Bạn có chắc chắn muốn đăng xuất?",
@@ -100,6 +100,15 @@
       "inactive": "Ngưng hoạt động",
       "activity": "Hoạt động",
       "users": "Người dùng"
+    }
+  },
+  "sidebar": {
+    "groups": {
+      "overview": "Tổng quan",
+      "studio": "Xưởng sáng tạo",
+      "intelligence": "Trí tuệ nhân tạo",
+      "knowledge": "Dữ liệu & Kết nối",
+      "system": "Hệ thống"
     }
   },
   "features": {

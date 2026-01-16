@@ -47,7 +47,7 @@ export function FieldSelect({ field, value, onChange, allValues }: DynamicFormFi
                 onValueChange={(value) => onChange(field.name, value)}
                 disabled={loadingOptions}
             >
-                <SelectTrigger className="w-full bg-card/50">
+                <SelectTrigger className="w-full bg-muted/10 border-muted-foreground/10 focus:border-primary/30 h-12 px-5 rounded-xl transition-all hover:bg-muted/20">
                     <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent>

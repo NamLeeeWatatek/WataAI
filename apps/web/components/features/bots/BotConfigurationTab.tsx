@@ -59,9 +59,9 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
           ...(userModels || []).map((p) => ({ ...p, source: 'user' }))
         ];
 
-        // Deduplicate by providerId to avoid showing duplicates in dropdown
+        // Deduplicate by configId to avoid showing duplicates in dropdown
         const uniqueProviders = combined.filter((provider, index, self) =>
-          index === self.findIndex((p) => p.providerId === provider.providerId)
+          index === self.findIndex((p) => p.configId === provider.configId)
         );
 
         setProviders(uniqueProviders);
@@ -75,8 +75,6 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
     loadProviders();
   }, [workspaceId]);
 
-  const selectedProviderData = providers.find(p => p.providerId === formData.aiProviderId);
-  const availableModels = selectedProviderData?.models || [];
   const isOnline = formData.status === 'active';
 
   return (
@@ -186,10 +184,10 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
               <div className="space-y-8">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">AI Provider</Label>
-                    <Select value={formData.aiProviderId || undefined} onValueChange={(value) => onChange({ aiProviderId: value, aiModelName: '' })}>
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">AI Provider Config</Label>
+                    <Select value={formData.aiProviderId || undefined} onValueChange={(value) => onChange({ aiProviderId: value })}>
                       <SelectTrigger className="h-11 bg-background/50">
-                        <SelectValue placeholder={loading ? "Loading..." : "Select provider"} />
+                        <SelectValue placeholder={loading ? "Loading..." : "Select provider config"} />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl shadow-2xl border-none">
                         {providers.length === 0 && !loading && (
@@ -198,14 +196,9 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                           </SelectItem>
                         )}
                         {providers.map((p) => {
-                          const isDuplicateName = p.providerName.toLowerCase() === (p.displayName || '').toLowerCase();
-                          const label = isDuplicateName
-                            ? p.providerName
-                            : `${p.providerName} ${p.displayName ? `(${p.displayName})` : ''}`;
-
                           return (
-                            <SelectItem key={`${p.providerId}-${p.source}`} value={p.providerId}>
-                              {label} {p.source === 'workspace' ? '(Workspace)' : ''}
+                            <SelectItem key={p.configId} value={p.configId}>
+                              {p.providerName} {p.source === 'workspace' ? '(Workspace)' : ''}
                             </SelectItem>
                           );
                         })}
@@ -218,25 +211,14 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                     )}
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model</Label>
-                    <Select value={formData.aiModelName} onValueChange={(value) => onChange({ aiModelName: value })}>
-                      <SelectTrigger className="h-11 bg-background/50">
-                        <SelectValue placeholder={!formData.aiProviderId ? "Select provider first" : "Select model"} />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl shadow-2xl border-none">
-                        {availableModels.map((model: string) => (
-                          <SelectItem key={model} value={model}>
-                            {model}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {formData.aiProviderId && availableModels.length === 0 && !loading && (
-                      <div className="flex items-center gap-2 mt-2 text-[10px] text-amber-500 font-medium bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
-                        <Info className="w-3 h-3 shrink-0" />
-                        <p>No models found. Check API Key in Integrations.</p>
-                      </div>
-                    )}
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model Name</Label>
+                    <Input
+                      value={formData.aiModelName || ''}
+                      onChange={(e) => onChange({ aiModelName: e.target.value })}
+                      placeholder="e.g. gpt-4o, claude-3-opus"
+                      className="h-11 bg-background/50 font-mono text-sm"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Enter the model name manually</p>
                   </div>
                 </div>
 

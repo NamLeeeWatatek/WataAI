@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -10,22 +10,13 @@ import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import type { Message } from '@/lib/types'
 import { MessageRole } from '@/lib/types/conversations'
-import { useAIModels } from '@/lib/hooks/useAIModels'
 
 export function AIFloatingButton() {
     const [isOpen, setIsOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [messages, setMessages] = useState<Message[]>([])
     const [loading, setLoading] = useState(false)
-    const { getDefaultModel, loading: modelsLoading } = useAIModels()
-    const [model, setModel] = useState('')
     const router = useRouter()
-
-    useEffect(() => {
-        if (!modelsLoading && !model) {
-            setModel(getDefaultModel())
-        }
-    }, [modelsLoading, getDefaultModel, model])
 
     const handleOpenFullChat = () => {
         router.push('/ai-assistant' as any)

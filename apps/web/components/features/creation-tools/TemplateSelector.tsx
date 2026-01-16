@@ -7,7 +7,7 @@ import { useDebounce } from '@/lib/hooks/useDebounce';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Search as SearchInput } from '@/components/ui/Search';
+import { Search as SearchInput } from '@/components/shared/Search';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Search, Check, Sparkles } from 'lucide-react';
 import { TemplateCardMedia } from '@/components/features/templates/TemplateCardMedia';

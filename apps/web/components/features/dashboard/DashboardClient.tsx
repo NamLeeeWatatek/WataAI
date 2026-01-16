@@ -2,18 +2,16 @@
 
 import { useTranslation } from 'react-i18next'
 import { Button } from "@/components/ui/Button"
-import { FiDownload } from "react-icons/fi"
-import { Spinner } from '@/components/ui/Spinner'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { Download } from "lucide-react"
 import { DashboardStatsCards } from '@/components/features/dashboard/DashboardStatsCards'
 import { DashboardTopBots } from '@/components/features/dashboard/DashboardTopBots'
 import { DashboardWorkspaceOverview } from '@/components/features/dashboard/DashboardWorkspaceOverview'
 import { useDashboardStats } from '@/lib/hooks/useDashboardStats'
 import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts'
-import { PageHeader } from '@/components/ui/PageHeader'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { useAuth } from '@/lib/hooks/useAuth'
 
-import { DateRangePicker } from "@/components/ui/DateRangePicker"
+import { DateRangePicker } from "@/components/shared/DateRangePicker"
 import { DateRange } from "react-day-picker"
 import { useState } from 'react'
 import { subDays } from 'date-fns'
@@ -47,18 +45,17 @@ export function DashboardClient() {
     }
     return (
         <div
-            className="w-full min-h-full pb-12 bg-grid-pattern"
+            className="page-container w-full min-h-full pb-12 bg-grid-pattern"
         >
             <div>
                 <PageHeader
                     title={t('dashboard.title')}
                     description={t('dashboard.welcomeBack', { name: user?.name || t('welcome') })}
-                    className="mb-10 px-2"
                 >
                     <div className="flex items-center gap-2">
                         <DateRangePicker date={dateRange} setDate={setDateRange} />
                         <Button className="shadow-lg shadow-primary/10">
-                            <FiDownload className="mr-2 h-4 w-4" />
+                            <Download className="mr-2 h-4 w-4" />
                             {t('dashboard.downloadReport')}
                         </Button>
                     </div>

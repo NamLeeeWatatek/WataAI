@@ -102,8 +102,8 @@ export function useAiProviders() {
     });
 
     const verifyModelsMutation = useMutation({
-        mutationFn: ({ providerId, config }: { providerId: string; config: AiProviderConfig }) =>
-            aiProvidersApi.verifyModels(providerId, config),
+        mutationFn: ({ providerId, config, configId }: { providerId: string; config: AiProviderConfig; configId?: string }) =>
+            aiProvidersApi.verifyModels(providerId, config, configId),
     });
 
     const updateSystemSettingsMutation = useMutation({

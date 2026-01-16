@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Card } from '@/components/ui/Card'
-import { Sparkles, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Sparkles, ArrowLeft, Loader2, AlertCircle, Eye, EyeOff, Facebook, Chrome } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
@@ -13,8 +13,8 @@ import { signIn, useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FaGoogle, FaFacebook } from 'react-icons/fa6'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+// Removed react-icons
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
 
@@ -61,13 +61,9 @@ function LoginPageContent() {
         }
     }, [searchParams, t])
 
-    if (status === 'loading' || isRedirecting) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-                <LoadingLogo size="lg" text={isRedirecting ? t('login.redirecting') : t('login.pleaseWait')} />
-            </div>
-        )
-    }
+
+
+    const isBusy = isLoading || isRedirecting || status === 'loading'
 
     const onSubmit = async (data: LoginFormValues) => {
         setIsLoading(true)
@@ -126,9 +122,9 @@ function LoginPageContent() {
                             variant="secondary"
                             className="h-12 bg-muted/20 hover:bg-muted/40 border-border/10 font-bold text-xs rounded-xl"
                             onClick={() => handleSocialLogin('google')}
-                            disabled={isLoading}
+                            disabled={isBusy}
                         >
-                            <FaGoogle className="mr-2 h-4 w-4" />
+                            <Chrome className="mr-2 h-4 w-4" />
                             Google
                         </Button>
                     </div>
@@ -154,7 +150,7 @@ function LoginPageContent() {
                                 placeholder={t('login.emailPlaceholder')}
                                 className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 font-bold"
                                 {...register('email')}
-                                disabled={isLoading}
+                                disabled={isBusy}
                             />
                             {errors.email && <p className="text-[10px] font-bold text-destructive ml-1">{errors.email.message}</p>}
                         </div>
@@ -175,16 +171,19 @@ function LoginPageContent() {
                                     type={showPassword ? "text" : "password"}
                                     className="h-12 bg-muted/20 border-border/10 rounded-xl focus:ring-primary/20 pr-12 font-bold"
                                     {...register('password')}
-                                    disabled={isLoading}
+                                    disabled={isBusy}
                                 />
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-3.5 text-muted-foreground hover:text-primary transition-colors"
+                                    className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-primary transition-colors hover:bg-transparent"
                                     tabIndex={-1}
+                                    disabled={isBusy}
                                 >
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
+                                </Button>
                             </div>
                             {errors.password && <p className="text-[10px] font-bold text-destructive ml-1">{errors.password.message}</p>}
                         </div>
@@ -200,10 +199,10 @@ function LoginPageContent() {
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-30 group-hover/btn:opacity-60 transition duration-500"></div>
                             <Button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isBusy}
                                 className="relative w-full h-12 font-bold shadow-lg transition-all active:scale-95 bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
-                                {isLoading ? (
+                                {isBusy ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 ) : null}
                                 {t('login.signIn')}

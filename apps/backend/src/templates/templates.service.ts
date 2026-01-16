@@ -206,4 +206,63 @@ export class TemplatesService {
       isActive: true,
     });
   }
+
+  async getTemplatesForExport(ids: string[]): Promise<Template[]> {
+    return this.templatesRepository.findByIds(ids);
+  }
+
+  async importTemplates(
+    templatesData: any[],
+    workspaceId: string,
+    userId: string,
+  ): Promise<Template[]> {
+    const imported: Template[] = [];
+
+    for (const raw of templatesData) {
+      // Clean up raw data to ensure it fits CreateTemplateDto
+      // We strip ID, dates, and ownership to treat as new copies
+      const {
+        id: _id_unused,
+        _id: _mongo_id_unused,
+        createdAt: _createdAt,
+        updatedAt: _updatedAt,
+        deletedAt: _deletedAt,
+        createdBy: _createdBy,
+        workspaceId: _wsId,
+        category: _category, // Relation needs special handling
+        ...rest
+      } = raw;
+
+      // Handle Category if present (try to match by name or ignore)
+      // For now, we'll strip category to avoid ID conflicts,
+      // users can re-assign categories later or we could try to look up generic ones.
+      // Or if category has just an ID, we assume it might not exist in this workspace.
+
+      const createDto: CreateTemplateDto = {
+        ...rest,
+        workspaceId,
+        name: `${rest.name} (Imported ${new Date().toLocaleTimeString()})`, // Avoid name collision
+        categoryId: undefined, // Reset category for safety
+      };
+
+      try {
+        const created = await this.create(createDto, userId);
+        imported.push(created);
+      } catch (error) {
+        // Log error but continue importing others?
+        // Or rethrow? For now, we'll try to append a unique suffix if name collision fails
+        if (error.response?.errors?.name) {
+          createDto.name = `${rest.name} (Copy ${Date.now()})`;
+          try {
+            const retry = await this.create(createDto, userId);
+            imported.push(retry);
+          } catch (e) {
+            console.error(`Failed to import template ${rest.name}:`, e);
+          }
+        }
+      }
+    }
+
+    return imported;
+  }
 }

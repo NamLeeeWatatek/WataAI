@@ -47,33 +47,32 @@ export class CreationToolsService {
       try {
         // Strip metadata to avoid collisions and ensure clean import
         const {
-          id,
-          createdAt,
-          updatedAt,
-          deletedAt,
-          categories, // Destructure categories to exclude it from toolData
-          ...toolData // The rest of the properties are now in toolData
+          id: _id,
+          createdAt: _createdAt,
+          updatedAt: _updatedAt,
+          deletedAt: _deletedAt,
+          categories: _categories,
+          ...toolData
         } = tool;
 
         const existing = await this.repository.findBySlug(toolData.slug);
 
-        // Map categories from the imported tool to categoryIds for DTOs
-        const categoryIds = categories?.map((c: any) => c.id);
-
         if (existing) {
           await this.update(existing.id, {
             ...toolData,
-            categoryIds, // Pass categoryIds to update
-          } as any); // Cast to any because toolData might not perfectly match UpdateCreationToolDto
+            categoryIds: undefined,
+          } as any);
         } else {
           await this.create({
             ...toolData,
-            categoryIds, // Pass categoryIds to create
-          } as any); // Cast to any because toolData might not perfectly match CreateCreationToolDto
+            categoryIds: undefined,
+          } as any);
         }
         success++;
       } catch (error) {
-        this.logger.error(`Failed to import tool ${tool.slug}: ${error.message}`);
+        this.logger.error(
+          `Failed to import tool ${tool.slug}: ${error.message}`,
+        );
         failed++;
       }
     }
@@ -105,6 +104,7 @@ export class CreationToolsService {
       executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
       workspaceId: createDto.workspaceId,
+      knowledgeBaseId: createDto.knowledgeBaseId,
       sortOrder: createDto.sortOrder ?? 0,
     });
 
@@ -158,6 +158,10 @@ export class CreationToolsService {
     const persistencePayload: any = { ...updatePayload };
     if (categoryIds) {
       persistencePayload.categories = categoryIds.map((id) => ({ id }));
+    }
+
+    if (persistencePayload.knowledgeBaseId === '') {
+      persistencePayload.knowledgeBaseId = null;
     }
 
     const tool = await this.repository.update(id, persistencePayload);

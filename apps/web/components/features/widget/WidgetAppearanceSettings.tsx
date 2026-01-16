@@ -90,7 +90,9 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
     };
 
     const updateSetting = (key: keyof WidgetAppearanceSettingsData, value: any) => {
-        setSettings(prev => ({ ...prev, [key]: value }));
+        const newSettings = { ...settings, [key]: value };
+        setSettings(newSettings);
+        onSave(newSettings);
     };
 
     return (
@@ -318,16 +320,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                             </div>
                         </ScrollArea>
 
-                        <div className="p-6 border-t border-border/10 bg-background/80 backdrop-blur-xl">
-                            <Button
-                                className="w-full h-12 rounded-2xl font-black shadow-xl shadow-primary/20 transition-all active:scale-[0.98]"
-                                onClick={handleSaveLocal}
-                                disabled={!hasChanges}
-                            >
-                                <Save className="w-4 h-4 mr-2" />
-                                Sync Visual Updates
-                            </Button>
-                        </div>
+
                     </Card>
                 </Tabs>
             </div>

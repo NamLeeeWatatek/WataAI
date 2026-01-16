@@ -9,7 +9,7 @@ const nextConfig = {
   images: {
     // Add domains if you load external images
     remotePatterns: [
-      // { protocol: 'https', hostname: 'example.com' }
+      { protocol: 'https', hostname: 'minio.aiwata.cloud' }
     ],
   },
   async headers() {
@@ -30,7 +30,7 @@ const nextConfig = {
   },
   typedRoutes: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'react-icons', 'framer-motion', '@tanstack/react-query'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@tanstack/react-query'],
   },
   output: 'standalone',
 }

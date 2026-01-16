@@ -14,12 +14,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/Dialog';
 import { Database, Plus, Trash2, BookOpen, Link as LinkIcon } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { toast } from 'sonner';
 import axiosClient from '@/lib/axios-client';
 import { cn } from '@/lib/utils';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
-import { DataTable } from '@/components/ui/DataTable';
+import { DataTable } from '@/components/shared/DataTable';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ColumnDef } from '@tanstack/react-table';
 

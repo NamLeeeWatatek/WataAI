@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import { Save, X, Loader2 } from 'lucide-react'
-import { useAIModels } from '@/lib/hooks/useAIModels'
+import { Input } from '@/components/ui/Input'
 
 interface AgentConfig {
     id?: number
@@ -51,21 +50,14 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
         system_prompt: 'You are a helpful AI assistant.',
         temperature: 0.7,
         max_tokens: 150,
-        model: ''
+        model: 'gpt-4o' // Default model
     })
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const { getModelOptions, getDefaultModel, loading: modelsLoading } = useAIModels()
 
     useEffect(() => {
         loadConfig()
     }, [flowId])
-
-    useEffect(() => {
-        if (!modelsLoading && !config.model) {
-            setConfig(prev => ({ ...prev, model: getDefaultModel() }))
-        }
-    }, [modelsLoading, config.model, getDefaultModel])
 
     const loadConfig = async () => {
         try {
@@ -105,7 +97,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
             <div className="fixed inset-0 bg-background/60 backdrop-blur-md z-50 flex items-center justify-center">
                 <Card className="p-10 flex flex-col items-center gap-4 border-none">
                     <Loader2 className="w-10 h-10 text-primary" />
-                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Synchronizing Intelligence...</p>
+                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Loading Configuration...</p>
                 </Card>
             </div>
         )
@@ -116,10 +108,10 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border-none shadow-2xl">
                 <div className="p-8 border-b border-border/10 flex items-center justify-between bg-muted/5">
                     <div>
-                        <h2 className="text-2xl font-black tracking-tight uppercase">Agent configuration</h2>
+                        <h2 className="text-2xl font-black tracking-tight uppercase">Agent Configuration</h2>
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mt-1 flex items-center gap-2">
                             <span className="w-8 h-px bg-primary/20" />
-                            Behavior & Personality matrix
+                            Behavior & Personality
                         </p>
                     </div>
                     <Button
@@ -135,7 +127,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                 { }
                 <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-none">
                     <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Identity handle</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Agent Name</label>
                         <input
                             type="text"
                             value={config.name}
@@ -145,9 +137,8 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                         />
                     </div>
 
-                    { }
                     <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-3 px-1">Personality architecture</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-3 px-1">Personality</label>
                         <div className="grid grid-cols-3 gap-4">
                             {personalities.map(p => (
                                 <button
@@ -169,7 +160,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
 
                     { }
                     <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-3 px-1">Tone selection</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-3 px-1">Tone</label>
                         <div className="flex gap-4">
                             {tones.map(t => (
                                 <button
@@ -190,7 +181,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
 
                     { }
                     <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">System instructions</label>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Instructions</label>
                         <textarea
                             value={config.system_prompt}
                             onChange={(e) => setConfig({ ...config, system_prompt: e.target.value })}
@@ -203,26 +194,18 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                     { }
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Intelligence model</label>
-                            <Select
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">AI Model</label>
+                            <Input
                                 value={config.model}
-                                onValueChange={(value) => setConfig({ ...config, model: value })}
-                            >
-                                <SelectTrigger className="w-full h-11 bg-muted/20 border-border/40 rounded-xl font-bold">
-                                    <SelectValue placeholder="Select model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {getModelOptions().map(m => (
-                                        <SelectItem key={m.value} value={m.value} className="font-bold cursor-pointer">
-                                            {m.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                onChange={(e) => setConfig({ ...config, model: e.target.value })}
+                                placeholder="e.g. gpt-4o, claude-3-opus"
+                                className="w-full h-11 bg-muted/20 border-border/40 rounded-xl font-mono text-sm"
+                            />
+                            <p className="text-[9px] text-muted-foreground mt-1 px-1">Enter the model name manually</p>
                         </div>
 
                         <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Linguistic profile</label>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">Language</label>
                             <input
                                 type="text"
                                 value={config.language}
@@ -236,7 +219,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                     <div className="grid grid-cols-2 gap-8">
                         <div>
                             <div className="flex justify-between items-center mb-4 px-1">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Creativity bias</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Creativity (Temperature)</label>
                                 <Badge variant="outline" className="text-[10px] font-black h-5 border-primary/20 bg-primary/5 text-primary">{config.temperature}</Badge>
                             </div>
                             <input
@@ -249,8 +232,8 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                                 className="w-full accent-primary h-1.5 rounded-full"
                             />
                             <div className="flex justify-between text-[8px] font-black uppercase tracking-tighter text-muted-foreground/50 mt-2">
-                                <span>Logic strict</span>
-                                <span>Neural creative</span>
+                                <span>Focused</span>
+                                <span>Creative</span>
                             </div>
                         </div>
 
@@ -287,7 +270,7 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
                         ) : (
                             <Save className="w-4 h-4 mr-2" />
                         )}
-                        Matrix initialization
+                        Save Configuration
                     </Button>
                 </div>
             </Card>

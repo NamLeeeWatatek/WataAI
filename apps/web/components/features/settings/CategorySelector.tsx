@@ -8,11 +8,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/Select';
-import * as Icons from 'react-icons/fi';
-import { FiFolder } from 'react-icons/fi';
+import {
+  Folder,
+  LayoutGrid,
+  Settings,
+  ShoppingCart,
+  Briefcase,
+  Book,
+  Cpu,
+  Database,
+  Globe,
+  Heart,
+  Image as ImageIcon,
+  Music,
+  Video,
+  Zap
+} from 'lucide-react';
 import { Category, CategorySelectorProps } from '@/lib/types';
 import { metadataApi } from '@/lib/api/metadata';
 import { Skeleton } from '@/components/ui/Skeleton';
+
+// Map of allowed icons to ensure tree-shaking
+const ICON_MAP: Record<string, any> = {
+  Folder,
+  LayoutGrid,
+  Settings,
+  ShoppingCart,
+  Briefcase,
+  Book,
+  Cpu,
+  Database,
+  Globe,
+  Heart,
+  Image: ImageIcon,
+  Music,
+  Video,
+  Zap
+};
 
 export function CategorySelector({
   entityType,
@@ -56,14 +88,13 @@ export function CategorySelector({
           {selectedCategory && (
             <div className="flex items-center gap-2">
               {(() => {
-                const IconComponent = selectedCategory.icon
-                  ? (Icons as any)[selectedCategory.icon]
-                  : FiFolder;
+                const IconComponent = (selectedCategory.icon && ICON_MAP[selectedCategory.icon])
+                  ? ICON_MAP[selectedCategory.icon]
+                  : Folder;
                 return (
                   <IconComponent
                     className="size-4"
                     style={{ color: selectedCategory.color }}
-                    aria-hidden="true"
                   />
                 );
               })()}
@@ -74,9 +105,9 @@ export function CategorySelector({
       </SelectTrigger>
       <SelectContent>
         {categories.map((category) => {
-          const IconComponent = category.icon
-            ? (Icons as any)[category.icon]
-            : FiFolder;
+          const IconComponent = (category.icon && ICON_MAP[category.icon])
+            ? ICON_MAP[category.icon]
+            : Folder;
 
           return (
             <SelectItem key={category.id} value={category.id.toString()}>

@@ -22,8 +22,8 @@ import {
     Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageHeader } from '@/components/ui/PageHeader';
-// import { PageShell } from '@/components/layout/PageShell';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { PageShell } from '@/components/layout/PageShell';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ManagePagesDialog } from '@/components/features/channels/ManagePagesDialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
@@ -35,7 +35,9 @@ import { useChannels } from '@/lib/hooks/features/useChannels';
 import { getOAuthUrl } from '@/lib/api/channels';
 import { useBots } from '@/lib/hooks/features/useBots';
 import { type Bot } from '@/lib/api/bots';
+import { AgentCard } from '@/components/shared/AgentCard';
 import type { Channel, ChannelPage, IntegrationConfig } from '@/lib/types/channel';
+
 
 export default function ChannelsPage() {
     const { currentWorkspace } = useWorkspace();
@@ -151,13 +153,6 @@ export default function ChannelsPage() {
     };
 
     const handleConnectFacebookPage = async (page: any) => {
-        console.log('[DEBUG] Connecting Facebook Page:', {
-            pageId: page.id,
-            pageName: page.name,
-            tokenExists: !!facebookTempToken,
-            tokenType: typeof facebookTempToken,
-            tokenPrefix: typeof facebookTempToken === 'string' ? facebookTempToken.substring(0, 10) : 'N/A'
-        });
         try {
             dispatch(setConnectingPage(page.id));
             await connectFacebook({
@@ -207,15 +202,11 @@ export default function ChannelsPage() {
     };
 
     return (
-        <div className="h-full flex flex-col space-y-8 p-8">
-            <div className="flex items-center justify-between space-y-2">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Channels</h2>
-                    <p className="text-muted-foreground">Manage your communication channels and integrations</p>
-                </div>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col">
+        <PageShell
+            title="Channels"
+            description="Manage your communication channels and integrations"
+        >
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col pt-2">
                 <TabsHeader>
                     <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
                         <TabsTrigger value="connected" variant="pills">
@@ -268,46 +259,24 @@ export default function ChannelsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20 overflow-y-auto">
                                 {facebookPages.map((page: ChannelPage) => (
-                                    <div
+                                    <AgentCard
                                         key={page.id}
-                                        className="group flex flex-col gap-4 p-5 rounded-xl border bg-card hover:border-primary/50 hover:bg-primary/[0.02] transition-all duration-200 shadow-sm"
+                                        name={page.name}
+                                        description={`ID: ${page.id}`}
+                                        icon={page.picture?.data?.url}
+                                        status="online"
+                                        tags={[page.category || 'Facebook Page']}
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-background shadow-md">
-                                                {page.picture?.data?.url ? (
-                                                    <img src={page.picture.data.url} alt={page.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <Facebook className="w-6 h-6 text-primary" />
-                                                )}
-                                            </div>
-                                            <Badge variant="outline" className="opacity-70">{page.category || 'Page'}</Badge>
-                                        </div>
-
-                                        <div className="flex-1 min-w-0 flex flex-col gap-1">
-                                            <h4 className="font-semibold text-base truncate" title={page.name}>
-                                                {page.name}
-                                            </h4>
-                                            <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
-                                                ID: {page.id}
-                                            </span>
-                                        </div>
-
                                         <Button
                                             onClick={() => handleConnectFacebookPage(page)}
                                             disabled={connectingPage === page.id}
-                                            className="w-full"
-                                            variant={connectingPage === page.id ? "secondary" : "default"}
+                                            loading={connectingPage === page.id}
+                                            className="w-full mt-4"
+                                            variant="primary"
                                         >
-                                            {connectingPage === page.id ? (
-                                                <>
-                                                    <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                                                    Connecting...
-                                                </>
-                                            ) : (
-                                                'Connect Page'
-                                            )}
+                                            Connect Page
                                         </Button>
-                                    </div>
+                                    </AgentCard>
                                 ))}
                             </div>
                         </div>
@@ -381,6 +350,6 @@ export default function ChannelsPage() {
                     refetch();
                 }}
             />
-        </div >
+        </PageShell>
     );
 }

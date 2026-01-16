@@ -1,4 +1,11 @@
-﻿import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
+﻿import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { KBProcessingQueueService } from './services/kb-processing-queue.service';
@@ -48,5 +55,12 @@ export class KnowledgeBaseProcessingController {
         error: job.error,
       })),
     };
+  }
+
+  @Post('processing/:jobId/cancel')
+  @ApiOperation({ summary: 'Cancel a processing job' })
+  async cancelJob(@Param('jobId') jobId: string, @Request() req) {
+    const success = await this.processingQueue.cancelJob(jobId);
+    return { success };
   }
 }

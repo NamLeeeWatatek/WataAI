@@ -23,7 +23,7 @@ export class SubscriptionsService {
     private quotaRepo: Repository<UsageQuotaEntity>,
     @InjectRepository(InvoiceEntity)
     private invoiceRepo: Repository<InvoiceEntity>,
-  ) { }
+  ) {}
 
   async getPlans() {
     return this.planRepo.find({ order: { priceMonthly: 'ASC' } });
@@ -247,7 +247,8 @@ export class SubscriptionsService {
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.invoiceRepo.createQueryBuilder('invoice')
+    const queryBuilder = this.invoiceRepo
+      .createQueryBuilder('invoice')
       .leftJoinAndSelect('invoice.subscription', 'subscription') // Ensure relations exist in entity
       // If subscription has relation to workspace/user, join them here too.
       // Assuming naive implementation for now:
@@ -256,11 +257,16 @@ export class SubscriptionsService {
       .take(limit);
 
     if (query.status && query.status !== 'all') {
-      queryBuilder.andWhere('invoice.status = :status', { status: query.status });
+      queryBuilder.andWhere('invoice.status = :status', {
+        status: query.status,
+      });
     }
 
     if (query.search) {
-      queryBuilder.andWhere('invoice.id LIKE :search OR invoice.providerInvoiceId LIKE :search', { search: `%${query.search}%` });
+      queryBuilder.andWhere(
+        'invoice.id LIKE :search OR invoice.providerInvoiceId LIKE :search',
+        { search: `%${query.search}%` },
+      );
     }
 
     const [data, total] = await queryBuilder.getManyAndCount();

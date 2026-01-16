@@ -1,14 +1,14 @@
 import { WorkspaceAiProviderConfig } from '../../../../domain/ai-provider';
-import { WorkspaceAiProviderConfigEntity } from '../entities/ai-provider.entity';
+import { AiProviderConfigEntity } from '../entities/ai-provider.entity';
 import { AiProviderMapper } from './ai-provider.mapper';
+import { AiModelMapper } from './ai-model.mapper';
+import { AiProviderOwnerType } from '../../../../ai-providers.enum';
 
 export class WorkspaceAiProviderConfigMapper {
-  static toDomain(
-    raw: WorkspaceAiProviderConfigEntity,
-  ): WorkspaceAiProviderConfig {
+  static toDomain(raw: AiProviderConfigEntity): WorkspaceAiProviderConfig {
     const domainEntity = new WorkspaceAiProviderConfig();
     domainEntity.id = raw.id;
-    domainEntity.workspaceId = raw.workspaceId;
+    domainEntity.workspaceId = raw.ownerId!;
     domainEntity.providerId = raw.providerId;
     domainEntity.displayName = raw.displayName;
     domainEntity.config = raw.config;
@@ -21,17 +21,22 @@ export class WorkspaceAiProviderConfigMapper {
       domainEntity.provider = AiProviderMapper.toDomain(raw.provider);
     }
 
+    if (raw.models) {
+      domainEntity.models = raw.models.map((m) => AiModelMapper.toDomain(m));
+    }
+
     return domainEntity;
   }
 
   static toPersistence(
     domainEntity: WorkspaceAiProviderConfig,
-  ): WorkspaceAiProviderConfigEntity {
-    const persistenceEntity = new WorkspaceAiProviderConfigEntity();
+  ): AiProviderConfigEntity {
+    const persistenceEntity = new AiProviderConfigEntity();
     if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;
     }
-    persistenceEntity.workspaceId = domainEntity.workspaceId;
+    persistenceEntity.ownerType = AiProviderOwnerType.WORKSPACE;
+    persistenceEntity.ownerId = domainEntity.workspaceId;
     persistenceEntity.providerId = domainEntity.providerId;
     persistenceEntity.displayName = domainEntity.displayName;
     persistenceEntity.config = domainEntity.config;

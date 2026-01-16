@@ -14,7 +14,13 @@ export interface CreationTool {
     executionFlow: ExecutionFlow;
     isActive: boolean;
     workspaceId?: string;
+    knowledgeBaseId?: string;
     sortOrder: number;
+    metadata?: {
+        inputLabel?: string;
+        outputLabel?: string;
+        actionLabel?: string;
+    };
     createdAt: string;
     updatedAt: string;
 }
@@ -98,6 +104,8 @@ export interface FormField {
         operator: 'equals' | 'not-equals' | 'contains';
         value: any;
     };
+    multiple?: boolean;
+    max?: number;
 }
 
 // Polymorphic Execution Types

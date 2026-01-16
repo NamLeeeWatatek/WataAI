@@ -24,7 +24,7 @@ import { StatsQueryDto } from './dto/stats-query.dto';
 @UseGuards(AuthGuard('jwt'))
 @Controller({ path: 'stats', version: '1' })
 export class StatsController {
-  constructor(private readonly statsService: StatsService) { }
+  constructor(private readonly statsService: StatsService) {}
 
   @Get('system')
   @HttpCode(HttpStatus.OK)

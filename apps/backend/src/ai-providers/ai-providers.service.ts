@@ -14,7 +14,10 @@ import {
   CreateWorkspaceAiProviderConfigDto,
   UpdateWorkspaceAiProviderConfigDto,
   UpdateSystemAiSettingsDto,
+  QueryAiModelDto,
 } from './dto/ai-provider.dto';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import {
   AiProvider,
   UserAiProviderConfig,
@@ -23,7 +26,11 @@ import {
   AiUsageStats,
   ChatMessage,
   SystemAiSettings,
+  AiModel,
+  AiModelType,
 } from './domain/ai-provider';
+import { AiProviderOwnerType } from './ai-providers.enum';
+import { AiModelRepository } from './infrastructure/persistence/ai-model.repository';
 
 export type { ChatMessage };
 import { AiConfigService } from './services/ai-config.service';
@@ -39,6 +46,7 @@ export class AiProvidersService {
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
+    private readonly aiModelRepository: AiModelRepository,
   ) { }
 
   /**
@@ -122,10 +130,10 @@ export class AiProvidersService {
       );
     } catch (error) {
       this.logger.warn(
-        `Verification failed for user ${userId} config ${id}: ${error instanceof Error ? error.message : String(error)}`,
+        `Verification failed for user ${userId} config ${id}: ${error instanceof Error ? error.message : String(error)} `,
       );
       throw new BadRequestException(
-        `Verification failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Verification failed: ${error instanceof Error ? error.message : String(error)} `,
       );
     }
 
@@ -196,6 +204,44 @@ export class AiProvidersService {
     }
   }
 
+  async getConfigByProviderId(
+    providerId: string,
+    scope: 'user' | 'workspace',
+    scopeId: string,
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    return this.aiConfigService.getConfigByProviderId(
+      providerId,
+      scope,
+      scopeId,
+    );
+  }
+
+  async getConfigDetails(
+    configId: string,
+    userId: string,
+    workspaceId?: string,
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
+    return this.aiConfigService.getConfigDetails(configId, userId, workspaceId);
+  }
+
+  async findModelsWithPagination(
+    query: QueryAiModelDto,
+  ): Promise<InfinityPaginationResponseDto<AiModel>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    const data = await this.aiModelRepository.findManyWithPagination({
+      filterOptions: query.filters,
+      sortOptions: query.sort,
+      paginationOptions: {
+        page,
+        limit,
+      },
+    });
+
+    return infinityPagination(data, { page, limit });
+  }
+
   async getUsageLogs(
     workspaceId: string,
     options?: {
@@ -217,93 +263,236 @@ export class AiProvidersService {
 
   // --- Chat & Generation Logic (Delegate to Model Service) ---
 
-  private resolveProviderKey(model: string, explicitProvider?: string): string {
-    if (explicitProvider && explicitProvider !== 'auto') {
-      const key = explicitProvider.toLowerCase();
-      // Normalize 'gemini' to 'google' for internal routing
-      if (key === 'gemini') return 'google';
-      return key;
+  private async resolveConfigParams(
+    model: string,
+    providerConfigId?: string,
+    apiKey?: string,
+    baseUrl?: string,
+  ): Promise<{
+    providerKey: string;
+    apiKey: string;
+    baseUrl?: string;
+    modelName: string;
+  }> {
+    const {
+      name: modelName,
+      configId,
+      ownerId,
+      ownerType,
+    } = await this.resolveModel(model);
+
+    const finalConfigId = providerConfigId || configId;
+    const finalOwnerId = ownerId;
+    const finalOwnerType = ownerType;
+
+    let providerKey = '';
+    let finalsApiKey = apiKey || '';
+    let finalBaseUrl = baseUrl;
+
+    if (finalConfigId && finalOwnerId && finalOwnerType) {
+      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null =
+        null;
+      if (finalOwnerType === AiProviderOwnerType.USER) {
+        config = await this.aiConfigService.getUserConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
+      } else {
+        config = await this.aiConfigService.getWorkspaceConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
+      }
+
+      if (config && config.provider) {
+        providerKey = config.provider.key.toLowerCase();
+        finalsApiKey = (config.config.apiKey as string) || finalsApiKey;
+        finalBaseUrl = (config.config.baseUrl as string) || finalBaseUrl;
+      }
     }
 
-    // Heuristics for auto-detection based on common model name prefixes
-    const modelLower = model.toLowerCase();
-
-    // Anthropic Claude
-    if (
-      modelLower.startsWith('claude') ||
-      modelLower.includes('haiku') ||
-      modelLower.includes('sonnet') ||
-      modelLower.includes('opus')
-    ) {
-      return 'anthropic';
+    // Fallback/Legacy
+    if (!providerKey && providerConfigId) {
+      const validKeys = [
+        'openai',
+        'anthropic',
+        'google',
+        'ollama',
+        'azure',
+        'custom',
+      ];
+      if (validKeys.includes(providerConfigId.toLowerCase())) {
+        providerKey = providerConfigId.toLowerCase();
+      }
     }
 
-    // OpenAI GPT and o1
-    if (
-      modelLower.startsWith('gpt') ||
-      modelLower.startsWith('o1-') ||
-      modelLower.includes('dall-e')
-    ) {
-      return 'openai';
+    if (!providerKey) {
+      throw new BadRequestException(
+        `Could not resolve AI Provider configuration for model ${modelName}.`,
+      );
     }
 
-    // Google Gemini
-    if (modelLower.includes('gemini') || modelLower.includes('palm')) {
-      return 'google';
-    }
+    return {
+      providerKey,
+      apiKey: finalsApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    };
+  }
 
-    // Ollama / Local / Common open source
-    if (
-      modelLower.includes('llama') ||
-      modelLower.includes('mistral') ||
-      modelLower.includes('mixtral') ||
-      modelLower.includes('qwen') ||
-      modelLower.includes('deepseek') ||
-      modelLower.includes('phi')
-    ) {
-      return 'ollama';
-    }
+  // Removed heuristic resolveProviderKey.
+  // We now strictly rely on resolved model config or passed provider.
 
-    // Default fallback (Google is used as the system default)
-    return 'google';
+  private getProviderKeyFromConfig(
+    config: UserAiProviderConfig | WorkspaceAiProviderConfig,
+  ): string {
+    if (!config.provider)
+      throw new BadRequestException('Provider not loaded for config');
+    return config.provider.key.toLowerCase();
+  }
+
+  private isUuid(val: string): boolean {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(val);
+  }
+
+  async resolveModel(modelIdOrName: string): Promise<{
+    name: string;
+    providerId?: string;
+    configId?: string;
+    ownerId?: string;
+    ownerType?: string;
+  }> {
+    if (this.isUuid(modelIdOrName)) {
+      const model = await this.aiModelRepository.findById(modelIdOrName);
+      if (model) {
+        return {
+          name: model.name,
+          providerId: model.providerId,
+          configId: model.configId as string | undefined,
+          ownerId: model.ownerId,
+          ownerType: model.ownerType,
+        };
+      }
+    }
+    return { name: modelIdOrName };
   }
 
   async chat(
     prompt: string,
     model: string,
-    provider?: string,
-    apiKey?: string,
-    workspaceId?: string,
-    baseUrl?: string,
+    providerConfigId?: string,
+    apiKey?: string, // Legacy/Override
+    workspaceId?: string, // Legacy/Override
+    baseUrl?: string, // Legacy/Override
     useTools?: boolean,
   ): Promise<string> {
-    const providerKey = this.resolveProviderKey(model, provider);
-    const key = apiKey || (await this.getApiKey(providerKey));
+    const {
+      name: modelName,
+      configId,
+      ownerId,
+      ownerType,
+    } = await this.resolveModel(model);
+
+    const finalConfigId = providerConfigId || configId;
+    const finalOwnerId = ownerId;
+    const finalOwnerType = ownerType;
+
+    // specific override if providerConfigId is passed but owner info is missing (ad-hoc config usage?)
+    // This part is tricky without owner info.
+    // If providerConfigId is passed, we might assume it's same scope as the caller?
+    // But chat() doesn't have caller scope.
+    // For now, let's assume if providerConfigId is passed, it might be a User config if we can't determine.
+    // However, best to rely on model resolution.
+
+    let providerKey = '';
+    let finalsApiKey = apiKey || '';
+    let finalBaseUrl = baseUrl;
+
+    if (finalConfigId && finalOwnerId && finalOwnerType) {
+      let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null =
+        null;
+      if (finalOwnerType === AiProviderOwnerType.USER) {
+        config = await this.aiConfigService.getUserConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
+      } else {
+        config = await this.aiConfigService.getWorkspaceConfig(
+          finalOwnerId,
+          finalConfigId,
+        );
+      }
+
+      if (config && config.provider) {
+        providerKey = config.provider.key.toLowerCase(); // e.g. 'openai'
+        finalsApiKey = (config.config.apiKey as string) || finalsApiKey;
+        finalBaseUrl = (config.config.baseUrl as string) || finalBaseUrl;
+      }
+    }
+
+    // Fallback if apiKey is explicitly provided but no config (Ad-hoc)
+    if (!providerKey && providerConfigId) {
+      // If providerConfigId is actually a provider TYPE name (legacy support?)
+      // The user said REMOVE full flow. So maybe we shouldn't support "openai" string as providerId.
+      // But for safety let's allow "custom" or explicit types if provided matching our supported keys.
+      const validKeys = [
+        'openai',
+        'anthropic',
+        'google',
+        'ollama',
+        'azure',
+        'custom',
+      ];
+      if (validKeys.includes(providerConfigId.toLowerCase())) {
+        providerKey = providerConfigId.toLowerCase();
+      }
+    }
+
+    if (!providerKey) {
+      throw new BadRequestException(
+        'Could not resolve AI Provider configuration for this model.',
+      );
+    }
+
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
 
     return this.dispatchChat(
       providerKey,
       messages,
-      model,
-      key,
-      baseUrl,
+      modelName,
+      finalsApiKey,
+      finalBaseUrl,
       useTools,
     );
   }
 
   async generateEmbedding(
     text: string,
-    provider: string,
     model: string,
+    providerConfigId?: string,
     apiKey?: string,
     options?: { baseUrl?: string },
   ): Promise<number[]> {
-    return this.aiModelService.generateEmbedding(
-      text,
-      provider,
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
       model,
+      providerConfigId,
       apiKey,
       options?.baseUrl,
+    );
+
+    return this.aiModelService.generateEmbedding(
+      text,
+      providerKey,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
     );
   }
 
@@ -336,10 +525,12 @@ export class AiProvidersService {
     const apiKey = config.config.apiKey as string;
     const baseUrl = config.config.baseUrl as string | undefined;
 
+    const { name: modelName } = await this.resolveModel(model);
+
     return this.aiModelService.generateEmbedding(
       text,
       config.provider.key.toLowerCase(),
-      model,
+      modelName,
       apiKey,
       baseUrl,
     );
@@ -348,13 +539,58 @@ export class AiProvidersService {
   async chatWithHistory(
     messages: ChatMessage[],
     model: string,
+    providerConfigId?: string,
     apiKey?: string,
     baseUrl?: string,
   ): Promise<string> {
-    const providerKey = this.resolveProviderKey(model);
-    const key = apiKey || (await this.getApiKey(providerKey));
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
 
-    return this.dispatchChat(providerKey, messages, model, key, baseUrl);
+    return this.dispatchChat(
+      providerKey,
+      messages,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
+    );
+  }
+
+  async analyzeImage(
+    imageBuffer: Buffer,
+    mimeType: string,
+    model: string,
+    providerConfigId?: string,
+    apiKey?: string,
+    prompt?: string,
+  ): Promise<string> {
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      modelName,
+    } = await this.resolveConfigParams(model, providerConfigId, apiKey);
+
+    if (providerKey === 'google') {
+      return this.aiModelService.analyzeImageWithGoogle(
+        imageBuffer,
+        mimeType,
+        modelName,
+        finalApiKey,
+        prompt,
+      );
+    }
+
+    throw new BadRequestException(
+      `Vision not supported for provider ${providerKey}`,
+    );
   }
 
   async chatWithHistoryUsingProvider(
@@ -401,7 +637,8 @@ export class AiProvidersService {
     baseUrl?: string,
     useTools?: boolean,
   ): Promise<string> {
-    if (providerKey === 'google') { // 'gemini' is normalized to 'google' by resolveProviderKey
+    if (providerKey === 'google') {
+      // 'gemini' is normalized to 'google' by resolveProviderKey
       return this.aiModelService.chatWithGoogleHistory(
         messages,
         model,
@@ -450,28 +687,38 @@ export class AiProvidersService {
       );
     }
 
-    throw new BadRequestException(`Unsupported provider: ${providerKey}`);
+    throw new BadRequestException(`Unsupported provider: ${providerKey} `);
   }
 
   async chatStream(
     prompt: string,
     model: string,
-    provider?: string,
+    providerConfigId?: string,
     apiKey?: string,
     workspaceId?: string,
     baseUrl?: string,
     useTools?: boolean,
   ): Promise<AsyncGenerator<string>> {
-    const providerKey = this.resolveProviderKey(model, provider);
-    const key = apiKey || (await this.getApiKey(providerKey));
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
+
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
 
     return this.dispatchChatStream(
       providerKey,
       messages,
-      model,
-      key,
-      baseUrl,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
       useTools,
     );
   }
@@ -479,13 +726,29 @@ export class AiProvidersService {
   async chatWithHistoryStream(
     messages: ChatMessage[],
     model: string,
+    providerConfigId?: string,
     apiKey?: string,
     baseUrl?: string,
   ): Promise<AsyncGenerator<string>> {
-    const providerKey = this.resolveProviderKey(model);
-    const key = apiKey || (await this.getApiKey(providerKey));
+    const {
+      providerKey,
+      apiKey: finalApiKey,
+      baseUrl: finalBaseUrl,
+      modelName,
+    } = await this.resolveConfigParams(
+      model,
+      providerConfigId,
+      apiKey,
+      baseUrl,
+    );
 
-    return this.dispatchChatStream(providerKey, messages, model, key, baseUrl);
+    return this.dispatchChatStream(
+      providerKey,
+      messages,
+      modelName,
+      finalApiKey,
+      finalBaseUrl,
+    );
   }
 
   async chatWithHistoryUsingProviderStream(
@@ -586,19 +849,24 @@ export class AiProvidersService {
       );
     }
 
-    throw new BadRequestException(`Unsupported provider: ${providerKey}`);
+    throw new BadRequestException(`Unsupported provider: ${providerKey} `);
   }
 
   async fetchProviderModels(
     configId: string,
     context: 'user' | 'workspace',
     contextId: string,
-  ): Promise<string[]> {
+  ): Promise<AiModel[]> {
     let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
+    let ownerType: AiProviderOwnerType;
+    let ownerId: string;
+
     if (context === 'user') {
       const c = await this.aiConfigService.getUserConfig(contextId, configId);
       if (!c) throw new NotFoundException('Config not found');
       config = c;
+      ownerType = AiProviderOwnerType.USER;
+      ownerId = contextId;
     } else {
       const c = await this.aiConfigService.getWorkspaceConfig(
         contextId,
@@ -606,14 +874,65 @@ export class AiProvidersService {
       );
       if (!c) throw new NotFoundException('Config not found');
       config = c;
+      ownerType = AiProviderOwnerType.WORKSPACE;
+      ownerId = contextId;
     }
 
     if (!config.provider) throw new BadRequestException('Provider not loaded');
 
-    return this.aiModelService.fetchRemoteModels(
+    const remoteModels = await this.aiModelService.fetchRemoteModels(
       config.provider.key,
       config.config,
     );
+
+    // PERSISTENCE LOGIC: Sync with AiModelEntity
+    if (remoteModels.length > 0) {
+      const providerId = config.providerId;
+
+      // 1. Deactivate old models for this config
+      await this.aiModelRepository.deactivateAllByConfigId(configId, ownerType);
+
+      // 2. Prepare new models
+      const modelsToSave: AiModel[] = remoteModels.map((name) => {
+        const m = new AiModel();
+        m.name = name;
+        m.displayName = name; // Can be enhanced later
+        m.type = name.toLowerCase().includes('embed')
+          ? AiModelType.EMBEDDING
+          : AiModelType.CHAT;
+        m.providerId = providerId;
+        m.ownerType = ownerType;
+        m.ownerId = ownerId;
+        m.configId = configId;
+        m.isActive = true;
+        m.metadata = {};
+        return m;
+      });
+
+      // 3. Save all (will update existing ones or insert new ones depending on repo implementation)
+      // For now, let's just save. If we want to avoid duplicates by 'name' within a config,
+      // the repo could handle it. But our current RelationalRepo just saves.
+      // Better: Delete old and save new for this specific sync session.
+      await this.aiModelRepository.deleteByConfigId(configId, ownerType);
+      await this.aiModelRepository.saveAll(modelsToSave);
+      return modelsToSave;
+    }
+
+    return [];
+  }
+
+  async getModelsByConfig(
+    configId: string,
+    context: 'user' | 'workspace',
+    contextId: string,
+    type?: string,
+  ): Promise<AiModel[]> {
+    const ownerType =
+      context === 'user'
+        ? AiProviderOwnerType.USER
+        : AiProviderOwnerType.WORKSPACE;
+
+    return this.aiModelRepository.findByConfigId(configId, ownerType, type);
   }
 
   async fetchModelsFromDirectConfig(
@@ -625,6 +944,40 @@ export class AiProvidersService {
     return this.aiModelService.fetchRemoteModels(provider.key, config);
   }
 
+  async fetchModelsWithPotentialMask(
+    providerId: string,
+    config: Record<string, unknown>,
+    userId: string,
+    configId?: string,
+  ): Promise<string[]> {
+    const finalConfig = { ...config };
+
+    // If we have a configId, we try to resolve masked values
+    if (configId) {
+      const existingConfig = await this.aiConfigService.getUserConfig(
+        userId,
+        configId,
+      );
+      if (existingConfig && existingConfig.providerId === providerId) {
+        // Merge decryption logic similar to update
+        const decryptedExisting =
+          this.aiEncryptionService.decryptConfig(existingConfig);
+
+        Object.keys(finalConfig).forEach((key) => {
+          const val = finalConfig[key];
+          // If value seems to be a mask, replace with existing value
+          if (typeof val === 'string' && val.includes('••••')) {
+            if (decryptedExisting.config && decryptedExisting.config[key]) {
+              finalConfig[key] = decryptedExisting.config[key];
+            }
+          }
+        });
+      }
+    }
+
+    return this.fetchModelsFromDirectConfig(providerId, finalConfig);
+  }
+
   async generateSystemPrompt(params: {
     userId: string;
     description: string;
@@ -633,8 +986,276 @@ export class AiProvidersService {
     tone?: string;
     style?: string;
     additionalContext?: Record<string, unknown>;
-  }) {
-    return this.aiModelService.generateSystemPrompt(params);
+  }): Promise<{
+    prompt: string;
+    improvements: string[];
+    suggestions: string[];
+  }> {
+    try {
+      this.logger.log(
+        `[GeneratePrompt] Starting smart generation for user ${params.userId}`,
+      );
+
+      // 1. Resolve usable AI Provider
+      // We prioritize a specific config if passed, otherwise use effective default
+      let providerKey = '';
+      let apiKey = '';
+      let model = '';
+
+      if (params.providerConfigId) {
+        const config = await this.getUserConfig(
+          params.userId,
+          params.providerConfigId,
+        );
+        if (config && config.isActive) {
+          providerKey = config.provider?.key || '';
+          apiKey = config.config.apiKey || '';
+          model = config.modelList?.[0] || 'default';
+        }
+      }
+
+      if (!apiKey) {
+        const resolved = await this.resolveEffectiveProvider(params.userId);
+        providerKey = resolved.providerKey;
+        apiKey = resolved.apiKey;
+        model = resolved.model;
+      }
+
+      // 2. Construct Meta-Prompt
+      const contextJson = params.additionalContext
+        ? JSON.stringify(params.additionalContext)
+        : 'None';
+      const metaPrompt = `
+      You are an expert AI Prompt Engineer and System Architect.
+      Your goal is to generate a high - quality, production - ready "System Prompt" for another AI agent based on the user's requirements.
+
+      USER REQUIREMENTS:
+- Goal / Description: "${params.description}"
+  - Desired Tone: ${params.tone || 'Professional and helpful'}
+- Writing Style: ${params.style || 'Clear and concise'}
+- Template / Format: ${params.template || 'Standard System Prompt'}
+- Additional Context: ${contextJson}
+
+INSTRUCTIONS:
+1. Analyze the requirements deeply.
+      2. Create a robust System Prompt that enforces the goal, tone, and style.
+      3. Identify 3 specific improvements you made to the user's vague idea.
+4. Suggest 3 follow - up ideas or constraints to make the agent better.
+
+      OUTPUT FORMAT:
+      You must respond with valid JSON ONLY.No markdown blocks.
+      {
+  "prompt": "The generated system prompt text...",
+    "improvements": ["Improvement 1", "Improvement 2", "Improvement 3"],
+      "suggestions": ["Suggestion 1", "Suggestion 2", "Suggestion 3"]
+}
+`;
+
+      // 3. Call AI
+      const messages: ChatMessage[] = [
+        {
+          role: 'system',
+          content: 'You are a JSON-speaking expert prompt engineer.',
+        },
+        { role: 'user', content: metaPrompt },
+      ];
+
+      // Use a "smart" model if possible (Gemini 1.5 Pro, GPT-4)
+      // Logic inside dispatchChat handles strict model mapping usually, but we can try to hint for a better model if "default" was returned
+      if (model === 'default' || model === 'gemini-1.5-flash') {
+        // Upgrade to Pro if using Google for better reasoning? Or stick to Flash for speed.
+        // Flash is usually fine for this.
+      }
+
+      const responseText = await this.dispatchChat(
+        providerKey,
+        messages,
+        model,
+        apiKey,
+      );
+
+      // 4. Parse JSON
+      const cleaned = responseText.replace(/```json | ```/g, '').trim();
+      const result = JSON.parse(cleaned);
+
+      return {
+        prompt: result.prompt || '',
+        improvements: result.improvements || [],
+        suggestions: result.suggestions || [],
+      };
+    } catch (error) {
+      this.logger.warn(
+        `[GeneratePrompt] Smart generation failed: ${error.message}. Falling back to heuristics.`,
+      );
+
+      // Fallback to simple string construction if AI fails
+      const toneString = params.tone
+        ? ` The response should be ${params.tone}.`
+        : '';
+      const styleString = params.style
+        ? ` Write in a ${params.style} style.`
+        : '';
+      const basePrompt =
+        params.template ||
+        `You are an AI assistant designed to: ${params.description}.${toneString}${styleString} `;
+
+      return {
+        prompt: basePrompt,
+        improvements: ['Fallback generation used due to AI service error'],
+        suggestions: ['Check AI provider configuration'],
+      };
+    }
+  }
+
+  async enhancePrompt(
+    userId: string,
+    originalPrompt: string,
+    type: 'image' | 'text' | 'code' | 'general' = 'general',
+  ): Promise<string> {
+    try {
+      // 1. Resolve Provider & Configuration
+      const { providerKey, apiKey, model } =
+        await this.resolveEffectiveProvider(userId);
+
+      // 2. Construct System Instruction
+      const systemInstruction = this.getSystemInstruction(type);
+
+      // 3. Prepare Chat Context
+      const messages: ChatMessage[] = [
+        { role: 'system', content: systemInstruction },
+        {
+          role: 'user',
+          content: `Original Input: "${originalPrompt}"\n\nEnhanced Prompt: `,
+        },
+      ];
+
+      // 4. Dispatch
+      const enhanced = await this.dispatchChat(
+        providerKey,
+        messages,
+        model,
+        apiKey,
+      );
+
+      return enhanced.replace(/^"|"$/g, '').trim();
+    } catch (error) {
+      this.logger.error(
+        `[EnhancePrompt] Failed: ${error.message} `,
+        error.stack,
+      );
+      throw new BadRequestException(
+        'Failed to generate AI response. Please check your AI settings.',
+      );
+    }
+  }
+
+  /**
+   * Resolves the best available AI provider config (User > Workspace > System)
+   */
+  private async resolveEffectiveProvider(
+    userId: string,
+  ): Promise<{ providerKey: string; apiKey: string; model: string }> {
+    // A. Check User Configs
+    const userConfigs = await this.getUserConfigs(userId);
+    const validUserConfigs = userConfigs.filter(
+      (c) => c.isActive && c.config.isVerified,
+    );
+
+    // Preference order: OpenAI > Anthropic > Google > Ollama > Others
+    const preferredOrder = ['openai', 'anthropic', 'google', 'ollama'];
+    let selectedConfig =
+      validUserConfigs.find((c) =>
+        preferredOrder.includes(c.provider?.key || ''),
+      ) || validUserConfigs[0];
+
+    // Refinement: Try to pick matches from preferredOrder explicitly if multiple exist
+    for (const key of preferredOrder) {
+      const found = validUserConfigs.find((c) => c.provider?.key === key);
+      if (found) {
+        selectedConfig = found;
+        break;
+      }
+    }
+
+    if (selectedConfig && selectedConfig.provider) {
+      const model =
+        selectedConfig.modelList?.[0] ||
+        this.getDefaultModelForProvider(selectedConfig.provider.key);
+      return {
+        providerKey: selectedConfig.provider.key,
+        apiKey: selectedConfig.config.apiKey || '',
+        model,
+      };
+    }
+
+    // B. Check System Settings (No Workspace support yet for this specific feature)
+    const systemSettings = await this.getSystemAiSettings();
+    if (!systemSettings) throw new Error('No AI System Settings found');
+
+    const providerKeyRaw = systemSettings.defaultProviderId || 'google';
+    let providerKey = providerKeyRaw;
+    let apiKey = '';
+    let model = systemSettings.defaultModel || 'default';
+
+    // Resolve UUIDs if necessary
+    if (providerKeyRaw.match(/^[0-9a-fA-F-]{36}$/)) {
+      // 1. Try finding as UserConfig (Admin's personal config used as system default)
+      const userConfig =
+        await this.aiConfigService.findUserConfigById(providerKeyRaw);
+      if (userConfig && userConfig.provider) {
+        providerKey = userConfig.provider.key;
+        apiKey = userConfig.config.apiKey || '';
+        if (!model || model === 'default')
+          model = userConfig.modelList?.[0] || 'default';
+      } else {
+        // 2. Try finding as basic Provider Entity
+        const providers = await this.getAvailableProviders();
+        const found = providers.find((p) => p.id === providerKeyRaw);
+        if (found) {
+          providerKey = found.key;
+          apiKey = await this.getApiKey(providerKey);
+        } else {
+          // Fallback
+          apiKey = await this.getApiKey(providerKeyRaw);
+        }
+      }
+    } else {
+      // Standard Key
+      apiKey = await this.getApiKey(providerKey);
+    }
+
+    // Final Model Validations
+    if (!model || model === 'default') {
+      model = this.getDefaultModelForProvider(providerKey);
+    }
+
+    return { providerKey, apiKey, model };
+  }
+
+  private getDefaultModelForProvider(providerKey: string): string {
+    switch (providerKey) {
+      case 'google':
+        return 'gemini-1.5-flash';
+      case 'openai':
+        return 'gpt-4o-mini';
+      case 'anthropic':
+        return 'claude-3-haiku-20240307';
+      default:
+        return 'default';
+    }
+  }
+
+  private getSystemInstruction(type: string): string {
+    switch (type) {
+      case 'image':
+        return "You are an expert prompt engineer for image generation models. Enhance the user's prompt to be descriptive, visual, and artistic. Output ONLY the enhanced prompt.";
+      case 'code':
+        return "You are an expert software architect. Enhance the user's prompt to be a clear, technical requirement for code generation. Output ONLY the enhanced prompt.";
+      case 'text':
+      case 'general':
+      default:
+        return "You are an expert prompt engineer. Rewrite the user's prompt to be clear, detailed, and optimized for an LLM. Output ONLY the enhanced prompt.";
+    }
   }
 
   // --- System Settings ---
@@ -659,30 +1280,39 @@ export class AiProvidersService {
   }
 
   private async getApiKey(providerKey: string): Promise<string> {
-    // 1. Check System Settings (DB)
-    const settings = await this.systemAiSettingsRepository.findSystemSettings();
-    // const config = settings?.encryptedConfig || {};
-    // Assuming keys might be stored in 'apiKeys' object in config or similar,
-    // but typically we'd decrypt them.
-    // For now, since we don't have a standardized System Key storage structure defined in this file,
-    // we will strictly DISABLE the env var fallback to prevent unauthorized usage of system level keys.
+    // Safety check: specific handling if providerKey is a UUID
+    if (providerKey.match(/^[0-9a-fA-F-]{36}$/)) {
+      console.log(
+        `[getApiKey] Received UUID ${providerKey}, resolving to key...`,
+      );
+      const provider = await this.getProviderById(providerKey);
+      if (provider) {
+        console.log(`[getApiKey] Resolved UUID to ${provider.key} `);
+        providerKey = provider.key;
+      } else {
+        console.warn(`[getApiKey] Could not resolve UUID ${providerKey} `);
+      }
+    }
 
-    // If you want to enable System Keys, they must be strictly managed in SystemAiSettings
-    // and explicitly retrieved here after checking permissions (which should be done at Controller level).
-
-    /* 
-    // DANGEROUS: Auto-fallback to env vars allows any user to use system quota
     const key = providerKey.toUpperCase();
-    if (key === 'GOOGLE') return process.env.GOOGLE_API_KEY || '';
-    if (key === 'OPENAI') return process.env.OPENAI_API_KEY || '';
-    if (key === 'ANTHROPIC') return process.env.ANTHROPIC_API_KEY || '';
-    */
+    console.log(`[getApiKey] Looking for env var for: ${key} `);
+
+    if (key === 'GOOGLE' && process.env.GOOGLE_API_KEY)
+      return process.env.GOOGLE_API_KEY;
+    if (key === 'OPENAI' && process.env.OPENAI_API_KEY)
+      return process.env.OPENAI_API_KEY;
+    if (key === 'ANTHROPIC' && process.env.ANTHROPIC_API_KEY)
+      return process.env.ANTHROPIC_API_KEY;
+
+    // Check for other providers if generic naming convention is used
+    const envKey = `${key} _API_KEY`;
+    if (process.env[envKey]) return process.env[envKey];
 
     this.logger.error(
-      `Missing API Key for provider: ${providerKey} (Env fallback disabled for security)`,
+      `Missing API Key for provider: ${providerKey} (Env fallback checked)`,
     );
     throw new UnprocessableEntityException(
-      `Missing API configuration for ${providerKey}. Please configure your own API key in Settings.`,
+      `Missing API configuration for ${providerKey}.Please configure your own API key in Settings.`,
     );
   }
 }

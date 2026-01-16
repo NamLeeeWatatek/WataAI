@@ -53,6 +53,14 @@ export const templatesApi = {
 
     bulkDelete: async (ids: string[]): Promise<void> => {
         await axiosClient.post('/templates/bulk/delete', { ids });
+    },
+
+    import: async (templates: any[], workspaceId: string): Promise<Template[]> => {
+        return axiosClient.post<Template[]>('/templates/import', { templates, workspaceId }) as unknown as Template[];
+    },
+
+    export: async (ids: string[]): Promise<Template[]> => {
+        return axiosClient.get<Template[]>('/templates/export', { params: { ids: ids.join(',') } }) as unknown as Template[];
     }
 };
 

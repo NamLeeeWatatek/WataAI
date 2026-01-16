@@ -74,15 +74,19 @@
   /* Modern SaaS Theme - "Obsidian & Porcelain" */
   /* Inspired by Linear, Vercel, RunwayML */
 
+  /* Modern SaaS Theme - "Obsidian & Porcelain" */
+  /* Inspired by Linear, Vercel, RunwayML */
+
   :root {
+    color-scheme: dark;
     /* Default to Dark Mode (prevent white flash) */
     --background: 0 0% 4%;
-    /* #0a0a0a - Deepest charcoal, almost black */
+    /* #0a0a0a */
     --foreground: 0 0% 98%;
-    /* #fafafa - Crisp white */
+    /* #fafafa */
 
     --card: 0 0% 7%;
-    /* #121212 - Slightly lighter for depth */
+    /* #121212 */
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 7%;
@@ -93,7 +97,6 @@
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 11%;
-    /* Subtle differentiation */
     --secondary-foreground: 0 0% 98%;
 
     --muted: 0 0% 11%;
@@ -106,12 +109,10 @@
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 15%;
-    /* Subtle borders */
-    --input: 0 0% 15%;
+    --input: 0 0% 14%;
     --ring: 263 80% 60%;
 
     --radius: 0.75rem;
-    /* Balanced radius (12px) for premium technical feel */
 
     /* Chart colors - Neon/Vibrant for dark mode contrast */
     --chart-1: 220 70% 50%;
@@ -120,12 +121,11 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
 
-    /* Glow-like shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
-    --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
-    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
-    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.8);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-md: 0 6px 12px -2px rgb(0 0 0 / 0.3), 0 3px 6px -3px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 0.4), 0 6px 10px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 24px 48px -12px rgb(0 0 0 / 0.5);
 
     /* Semantic Colors */
     --success: 142 71% 45%;
@@ -133,39 +133,41 @@
     --info: 217 91% 60%;
   }
 
-  .light {
+  .light,
+  [data-theme='light'] {
+    color-scheme: light;
     /* Light Mode - Crisp, Clean, Technical */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --info: 221 83% 53%;
+    --background: 210 40% 98%;
+    /* Cool, soft off-white (AliceBlue-ish) */
+    --foreground: 222 47% 11%;
+    /* Deep navy charcoal */
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    /* Pure white cards */
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 263 85% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 263 85% 97%;
+    --accent-foreground: 263 85% 60%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 214 32% 91%;
+    /* Cool gray border */
+    --input: 214 32% 91%;
+    --ring: 263 85% 60%;
 
     /* Charts */
     --chart-1: 12 76% 61%;
@@ -174,12 +176,37 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
 
-    /* Shadows */
+    /* Soft Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow: 0 4px 12px -2px rgb(0 0 0 / 0.05), 0 2px 6px -2px rgb(0 0 0 / 0.02);
+    --shadow-md: 0 10px 20px -3px rgb(0 0 0 / 0.08), 0 4px 8px -4px rgb(0 0 0 / 0.04);
+    --shadow-lg: 0 20px 30px -5px rgb(0 0 0 / 0.1), 0 8px 12px -6px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
+  }
+
+  .dark,
+  [data-theme='dark'] {
+    color-scheme: dark;
+    /* Ensure variables are reset for explicit dark mode class */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 80% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 11%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 14%;
+    --ring: 263 80% 60%;
   }
 
   /* Animations */
@@ -222,7 +249,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-sm;
     font-feature-settings: "rlig" 1, "calt" 1;
     /* Better font rendering */
     -webkit-font-smoothing: antialiased;
@@ -246,17 +273,25 @@
     @apply text-xl md:text-2xl lg:text-3xl font-display font-bold;
   }
 
-  /* Reset standard headings to inherit size or use standard values if needed, 
-     but avoid aggressive global overrides that affect dashboard */
-  /* Reset standard headings to inherit size or use standard values if needed, 
-     but avoid aggressive global overrides that affect dashboard */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply text-foreground font-semibold;
+  /* Global Typography Standard */
+  h1 {
+    @apply text-3xl md:text-4xl font-black tracking-tighter leading-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl font-bold tracking-tight leading-tight text-foreground;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl font-semibold tracking-tight leading-snug text-foreground;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl font-semibold leading-snug text-foreground;
+  }
+
+  p {
+    @apply leading-relaxed text-muted-foreground;
   }
 
   button,
@@ -284,11 +319,11 @@
 
   /* Layout Standards */
   .page-container {
-    @apply container mx-auto px-4 md:px-8 py-6 max-w-[1800px] animate-in fade-in-5 slide-in-from-bottom-2 duration-500;
+    @apply w-full max-w-[1700px] mx-auto px-6 md:px-10 lg:px-12 py-8;
   }
 
   .page-container-full {
-    @apply w-full h-full p-0 overflow-hidden animate-in fade-in-5 duration-500;
+    @apply w-full h-full p-0 overflow-hidden;
   }
 
   /* Modern Card */
@@ -301,12 +336,36 @@
   }
 
   /* Glassmorphism Utilities */
+  /* Glassmorphism System - Project Crystal */
+
+  /* Base Glass (Sidebar, Panels) */
   .glass {
-    @apply bg-background/70 backdrop-blur-md border-b border-white/5 supports-[backdrop-filter]:bg-background/70;
+    @apply bg-white/10 dark:bg-black/20 backdrop-blur-xl border-r border-white/20 dark:border-white/10 supports-[backdrop-filter]:bg-white/10 supports-[backdrop-filter]:dark:bg-black/20;
   }
 
+  /* Floating Glass (Headers, Dropdowns) */
+  .glass-floating {
+    @apply bg-white/20 dark:bg-black/40 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shadow-lg supports-[backdrop-filter]:bg-white/20 supports-[backdrop-filter]:dark:bg-black/40;
+  }
+
+  /* Card Glass (Surface) */
   .glass-card {
-    @apply bg-card/40 backdrop-blur-md border border-white/10 shadow-xl;
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm transition-all duration-300 hover:bg-white/50 hover:dark:bg-black/50 hover:shadow-lg hover:border-primary/20;
+  }
+
+  /* Input Glass (Recessed) */
+  .glass-input {
+    @apply bg-black/5 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-inner focus:bg-background/80 transition-all;
+  }
+
+  /* Overlay Glass (Modals) */
+  .glass-overlay {
+    @apply bg-black/20 backdrop-blur-sm;
+  }
+
+  /* High Contrast Modal Content */
+  .glass-modal {
+    @apply bg-background/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
   }
 
   /* Gradient Text */

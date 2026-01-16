@@ -48,7 +48,7 @@ export class WebhooksController {
     private readonly facebookProcessor: FacebookWebhookProcessor,
     private readonly instagramProcessor: InstagramWebhookProcessor,
     private readonly telegramProcessor: TelegramWebhookProcessor,
-  ) { }
+  ) {}
 
   // DEPRECATED: This generic endpoint only parses but doesn't save messages
   // Use specific endpoints like @Post('facebook') instead
@@ -234,7 +234,9 @@ export class WebhooksController {
               );
             }
           } else {
-            this.logger.warn(`⚠️ Found channel for pageId ${pageId} but type is ${channel.type}`);
+            this.logger.warn(
+              `⚠️ Found channel for pageId ${pageId} but type is ${channel.type}`,
+            );
           }
         } else {
           this.logger.warn(`⚠️ No channel found for page ${pageId}`);

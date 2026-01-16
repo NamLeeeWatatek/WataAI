@@ -32,28 +32,26 @@ export class KBVectorService {
       this.configService.get('kb.vectorCollectionName', { infer: true }) ||
       'kb';
 
-    const qdrantUrl = process.env.QDRANT_URL;
+    // Robust default for local development
+    let qdrantUrl = process.env.QDRANT_URL || 'http://127.0.0.1:6333';
+    // Fix Node 18+ IPv6 resolution issue
+    if (qdrantUrl.includes('localhost')) {
+      qdrantUrl = qdrantUrl.replace('localhost', '127.0.0.1');
+    }
+
     const qdrantApiKey = process.env.QDRANT_API_KEY;
-    if (qdrantUrl && qdrantApiKey) {
-      try {
-        this.qdrantClient = new QdrantClient({
-          url: qdrantUrl,
-          apiKey: qdrantApiKey,
-        });
-        this.isAvailable = true;
-        this.logger.log(
-          '🚀 Qdrant vector service initialized (ready for lazy init)',
-        );
-      } catch (error) {
-        this.isAvailable = false;
-        this.logger.error(
-          `❌ Failed to initialize Qdrant client: ${error.message}`,
-        );
-      }
-    } else {
+
+    try {
+      this.qdrantClient = new QdrantClient({
+        url: qdrantUrl,
+        apiKey: qdrantApiKey, // Optional for local Qdrant
+      });
+      this.isAvailable = true;
+      this.logger.log(`🚀 Qdrant vector service initialized at ${qdrantUrl}`);
+    } catch (error) {
       this.isAvailable = false;
-      this.logger.warn(
-        '⚠️ Qdrant credentials not found - Vector search disabled',
+      this.logger.error(
+        `❌ Failed to initialize Qdrant client: ${error.message}`,
       );
     }
   }

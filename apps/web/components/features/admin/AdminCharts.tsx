@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/Chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/shared/Chart"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, XAxis, YAxis, Line, LineChart } from "recharts"
 
 

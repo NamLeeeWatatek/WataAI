@@ -16,7 +16,7 @@ import { authApi } from '@/lib/api/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { fileUploadService } from '@/lib/api/files';
 import { toast } from 'sonner';
-import { AvatarUpload } from '@/components/ui/AvatarUpload';
+import { UnifiedAvatarUpload } from '@/components/shared/UnifiedFileUpload';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -160,11 +160,10 @@ export function AccountTab() {
                   {/* Avatar upload */}
                   <div className="flex items-start gap-8">
                     <div className="w-40 h-40 flex-shrink-0">
-                      <AvatarUpload
+                      <UnifiedAvatarUpload
                         value={avatarUrl}
-                        onChange={(url) => form.setValue('avatarUrl', url, { shouldDirty: true })}
-                        size="2xl"
-                        fallback={userInitial}
+                        onChange={(url) => form.setValue('avatarUrl', (url as string), { shouldDirty: true })}
+                        className="w-full h-full"
                       />
                     </div>
 
@@ -349,7 +348,8 @@ export function AccountTab() {
             <Button
               type="submit"
               disabled={updateProfileMutation.isPending || !form.formState.isDirty}
-              className="px-10 h-12 font-black transition-all"
+              size="xl"
+              className="px-10 font-black transition-all"
             >
               {updateProfileMutation.isPending && (
                 <Loader2 className="mr-3 h-5 w-5 animate-spin" />

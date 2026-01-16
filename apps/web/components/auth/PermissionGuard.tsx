@@ -4,7 +4,7 @@ import React, { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { paths } from '@/lib/routes'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+import { LoadingLogo } from '../shared/LoadingLogo'
 
 interface PermissionGuardProps {
     children: React.ReactNode

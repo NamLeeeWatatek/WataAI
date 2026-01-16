@@ -1,5 +1,5 @@
 import { axiosClient } from '../axios-client';
-import type { AiProviderConfig, UserAiProviderConfig } from '../types/ai-provider';
+import type { AiProviderConfig, UserAiProviderConfig, AiModel, WorkspaceAiProviderConfig } from '../types/ai-provider';
 
 /** AI Model information */
 export interface AiModelInfo {
@@ -17,7 +17,7 @@ export interface AiModelProvider {
   providerKey: string;
   providerName: string;
   configId?: string;
-  models: string[];
+  models: AiModel[];
 }
 
 // Re-export or alias for compatibility if needed, but prefer UserAiProviderConfig
@@ -99,9 +99,24 @@ export const aiProvidersApi = {
   getWorkspaceModels: (workspaceId: string) =>
     axiosClient.get(`/ai-providers/workspace/${workspaceId}/models`) as unknown as Promise<AiModelProvider[]>,
 
-  verifyModels: (providerId: string, config: AiProviderConfig) =>
-    axiosClient.post<string[]>('/ai-providers/verify-models', { providerId, config }) as unknown as Promise<string[]>,
+  getWorkspaceConfigs: (workspaceId: string) =>
+    axiosClient.get<WorkspaceAiProviderConfig[]>(`/ai-providers/workspace/${workspaceId}/configs`) as unknown as Promise<WorkspaceAiProviderConfig[]>,
+
+  getUserModelsByConfig: (configId: string, type?: string) =>
+    axiosClient.get<AiModel[]>(`/ai-providers/user/config/${configId}/models`, { params: { type } }) as unknown as Promise<AiModel[]>,
+
+  getWorkspaceModelsByConfig: (workspaceId: string, configId: string, type?: string) =>
+    axiosClient.get<AiModel[]>(`/ai-providers/workspace/${workspaceId}/config/${configId}/models`, { params: { type } }) as unknown as Promise<AiModel[]>,
+
+  verifyModels: (providerId: string, config: AiProviderConfig, configId?: string) =>
+    axiosClient.post<string[]>('/ai-providers/verify-models', { providerId, config, configId }) as unknown as Promise<string[]>,
 
   syncModels: (id: string) =>
     axiosClient.get<string[]>(`/ai-providers/fetch-models/${id}/user`) as unknown as Promise<string[]>,
+
+  enhancePrompt: (prompt: string, type: 'image' | 'text' | 'code' | 'general' = 'general') =>
+    axiosClient.post<{ enhancedPrompt: string }>('/ai-providers/enhance-prompt', { prompt, type }) as unknown as Promise<{ enhancedPrompt: string }>,
+
+  getConfigDetails: (id: string, workspaceId?: string) =>
+    axiosClient.get<UserAiProviderConfig | WorkspaceAiProviderConfig>(`/ai-providers/unified-config/${id}/details`, { params: { workspaceId } }) as unknown as Promise<UserAiProviderConfig | WorkspaceAiProviderConfig>,
 };

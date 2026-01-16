@@ -18,7 +18,7 @@ export interface UiMessage {
   sentAt?: string;
   timestamp?: string; // Legacy support
   metadata?: MessageMetadata;
-  sources?: AiSource[];
+  sources?: AiSource[] | null;
   id?: string; // Optional for optimistic updates
   isError?: boolean;
 }

@@ -10,13 +10,16 @@ import { creationToolsApi, CreationTool, FormConfig, ExecutionFlow } from '@/lib
 import { useCategories } from '@/lib/hooks/useCategories';
 import { handleApiError } from '@/lib/utils/api-error';
 import { toast } from 'sonner';
+import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { IconPicker } from '@/components/ui/IconPicker';
+import { Switch } from '@/components/ui/Switch';
+import { UnifiedFileUpload } from '@/components/shared/UnifiedFileUpload';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -43,7 +46,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { cn, slugify } from '@/lib/utils';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { Badge } from '@/components/ui/Badge';
 
 
@@ -53,11 +56,13 @@ const toolFormSchema = z.object({
     slug: z.string().min(1, 'Slug is required'),
     description: z.string().optional(),
     icon: z.string().optional(),
+    coverImage: z.string().optional(),
     categoryIds: z.array(z.string()),
     isActive: z.boolean(),
     formConfig: z.custom<FormConfig>((data) => {
         return data && typeof data === 'object' && Array.isArray((data as any).fields);
     }),
+    knowledgeBaseId: z.string().optional(),
     executionFlow: z.custom<ExecutionFlow>((data) => {
         return data && typeof data === 'object' && 'type' in data;
     }),
@@ -85,6 +90,9 @@ export default function EditCreationToolPage() {
     // Fetch Categories
     const { data: categories = [] } = useCategories('creation-tool');
 
+    // Fetch Knowledge Bases
+    const { knowledgeBases = [] } = useKnowledgeBases(tool?.workspaceId);
+
     // Form Setup
     const form = useForm<ToolFormValues>({
         resolver: zodResolver(toolFormSchema),
@@ -93,10 +101,12 @@ export default function EditCreationToolPage() {
             slug: '',
             description: '',
             icon: '',
+            coverImage: '',
             categoryIds: [],
             isActive: true,
             formConfig: { fields: [], submitLabel: 'Generate' },
             executionFlow: { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' },
+            knowledgeBaseId: '',
         },
     });
 
@@ -131,10 +141,12 @@ export default function EditCreationToolPage() {
                 slug: tool.slug || '',
                 description: tool.description || '',
                 icon: tool.icon || '',
+                coverImage: tool.coverImage || '',
                 categoryIds: cats,
                 isActive: tool.isActive ?? true,
                 formConfig: tool.formConfig || { fields: [], submitLabel: 'Generate' },
                 executionFlow: tool.executionFlow || { type: 'ai-generation', provider: 'openai', model: 'gpt-4o', promptTemplate: '' },
+                knowledgeBaseId: tool.knowledgeBaseId || '',
             });
         }
     }, [isNew, tool, reset]);
@@ -227,17 +239,41 @@ export default function EditCreationToolPage() {
                         <TabsContent value="general">
                             <Card>
                                 <CardContent className="pt-6 space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <FormField
+                                        control={control}
+                                        name="coverImage"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex flex-col mb-4">
+                                                    <FormLabel className="text-sm font-bold uppercase tracking-[0.2em] text-primary/70">Cover Image</FormLabel>
+                                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Recommended size: 1200x600px</p>
+                                                </div>
+                                                <FormControl>
+                                                    <UnifiedFileUpload
+                                                        variant="cover"
+                                                        value={field.value}
+                                                        onChange={(url) => field.onChange(url)}
+                                                        bucket="images"
+                                                        className="aspect-[21/9]"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <FormField
                                             control={control}
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Tool Name <span className="text-destructive">*</span></FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Tool Name <span className="text-destructive">*</span></FormLabel>
                                                     <FormControl>
                                                         <Input
                                                             {...field}
                                                             placeholder="e.g. Blog Post Generator"
+                                                            className="h-12 rounded-xl bg-muted/5 border-muted-foreground/10 focus:border-primary/30"
                                                         />
                                                     </FormControl>
                                                     <FormMessage />
@@ -250,9 +286,9 @@ export default function EditCreationToolPage() {
                                             name="slug"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Slug</FormLabel>
+                                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Slug</FormLabel>
                                                     <FormControl>
-                                                        <Input {...field} disabled className="bg-muted/50" />
+                                                        <Input {...field} disabled className="h-12 rounded-xl bg-muted/50 border-muted-foreground/10" />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -265,12 +301,13 @@ export default function EditCreationToolPage() {
                                         name="description"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Description</FormLabel>
+                                                <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Description</FormLabel>
                                                 <FormControl>
                                                     <Textarea
                                                         {...field}
-                                                        rows={3}
+                                                        rows={4}
                                                         placeholder="Describe what this tool does..."
+                                                        className="rounded-xl bg-muted/5 border-muted-foreground/10 focus:border-primary/30 min-h-[100px]"
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -278,10 +315,10 @@ export default function EditCreationToolPage() {
                                         )}
                                     />
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label>Categories</Label>
-                                            <div className="border rounded-md p-4 space-y-3 max-h-60 overflow-y-auto bg-muted/10">
+                                    <div className="grid grid-cols-1 gap-8">
+                                        <div className="space-y-3">
+                                            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Categories</Label>
+                                            <div className="border rounded-2xl p-6 grid grid-cols-2 md:grid-cols-3 gap-4 max-h-72 overflow-y-auto bg-muted/5 border-muted-foreground/10">
                                                 <FormField
                                                     control={control}
                                                     name="categoryIds"
@@ -293,14 +330,18 @@ export default function EditCreationToolPage() {
                                                                     control={control}
                                                                     name="categoryIds"
                                                                     render={({ field }) => {
+                                                                        const isChecked = field.value?.includes(c.id);
                                                                         return (
                                                                             <FormItem
                                                                                 key={c.id}
-                                                                                className="flex items-center space-x-3 space-y-0"
+                                                                                className={cn(
+                                                                                    "flex items-center space-x-3 space-y-0 p-3 rounded-xl border transition-all cursor-pointer",
+                                                                                    isChecked ? "bg-primary/5 border-primary/20" : "bg-transparent border-transparent hover:bg-muted/50"
+                                                                                )}
                                                                             >
                                                                                 <FormControl>
                                                                                     <Checkbox
-                                                                                        checked={field.value?.includes(c.id)}
+                                                                                        checked={isChecked}
                                                                                         onCheckedChange={(checked) => {
                                                                                             return checked
                                                                                                 ? field.onChange([...field.value, c.id])
@@ -312,7 +353,7 @@ export default function EditCreationToolPage() {
                                                                                         }}
                                                                                     />
                                                                                 </FormControl>
-                                                                                <FormLabel className="font-normal cursor-pointer text-sm mb-0">
+                                                                                <FormLabel className="font-medium cursor-pointer text-sm mb-0 flex-1">
                                                                                     {c.name}
                                                                                 </FormLabel>
                                                                             </FormItem>
@@ -324,7 +365,7 @@ export default function EditCreationToolPage() {
                                                     )}
                                                 />
                                                 {categories.length === 0 && (
-                                                    <p className="text-sm text-muted-foreground italic text-center">No categories found</p>
+                                                    <p className="text-sm text-muted-foreground italic text-center col-span-full py-4">No categories found</p>
                                                 )}
                                             </div>
                                         </div>
@@ -332,35 +373,21 @@ export default function EditCreationToolPage() {
                                         <div className="space-y-6">
                                             <FormField
                                                 control={control}
-                                                name="icon"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Icon</FormLabel>
-                                                        <FormControl>
-                                                            <IconPicker value={field.value || ''} onChange={field.onChange} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-
-                                            <FormField
-                                                control={control}
                                                 name="isActive"
                                                 render={({ field }) => (
-                                                    <FormItem className="flex items-center space-x-3 p-4 rounded-lg border bg-secondary/10 space-y-0">
+                                                    <FormItem className="flex items-center space-x-4 p-5 rounded-2xl border bg-primary/5 border-primary/10 space-y-0">
                                                         <FormControl>
-                                                            <Checkbox
+                                                            <Switch
                                                                 checked={field.value}
                                                                 onCheckedChange={field.onChange}
                                                             />
                                                         </FormControl>
-                                                        <div className="space-y-1 leading-none">
-                                                            <FormLabel className="font-medium text-base">
+                                                        <div className="space-y-0.5 leading-none">
+                                                            <FormLabel className="font-bold text-base">
                                                                 Active Status
                                                             </FormLabel>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                Visible to users in the tool library
+                                                            <p className="text-xs text-muted-foreground font-medium">
+                                                                Tool will be visible in the user tool library
                                                             </p>
                                                         </div>
                                                     </FormItem>
@@ -427,6 +454,6 @@ export default function EditCreationToolPage() {
                     </Tabs>
                 </div>
             </FormProvider>
-        </PageShell>
+        </PageShell >
     );
 }

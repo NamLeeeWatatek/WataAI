@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Card } from '@/components/ui/Card'
-import { Sparkles, ArrowLeft, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { Sparkles, ArrowLeft, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -12,8 +12,8 @@ import { useSession } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FaGoogle, FaFacebook } from 'react-icons/fa6'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+// Removed react-icons
+
 import { authApi } from '@/lib/api/auth'
 import Link from 'next/link'
 
@@ -209,12 +209,9 @@ function RegisterPageContent() {
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-30 group-hover/btn:opacity-60 transition duration-500"></div>
                                 <Button
                                     type="submit"
-                                    disabled={isLoading}
+                                    loading={isLoading}
                                     className="relative w-full h-14 font-bold rounded-2xl shadow-xl transition-all active:scale-[0.98] bg-primary hover:bg-primary/90 text-primary-foreground text-lg"
                                 >
-                                    {isLoading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin mr-3" />
-                                    ) : null}
                                     {t('register.signUp')}
                                 </Button>
                             </div>

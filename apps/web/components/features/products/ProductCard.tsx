@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/AlertDialog';
 
 import { Checkbox } from '@/components/ui/Checkbox';
-import { Image } from '@/components/ui/Image';
+import { Image } from '@/components/shared/Image';
 
 interface ProductCardProps {
     job: CreationJob;

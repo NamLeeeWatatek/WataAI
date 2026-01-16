@@ -30,6 +30,10 @@ export abstract class AiProviderConfigRepository {
     id: string,
   ): Promise<NullableType<UserAiProviderConfig>>;
 
+  abstract findUserConfigById(
+    id: string,
+  ): Promise<NullableType<UserAiProviderConfig>>;
+
   abstract updateUserConfig(
     userId: string,
     id: string,
@@ -95,6 +99,10 @@ export abstract class AiProviderConfigRepository {
     providerId: string,
     scope: 'user' | 'workspace',
     scopeId: string,
+  ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>>;
+
+  abstract getConfigById(
+    id: string,
   ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>>;
 
   // Usage logs

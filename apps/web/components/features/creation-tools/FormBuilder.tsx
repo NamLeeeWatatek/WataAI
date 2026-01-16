@@ -4,8 +4,16 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { FormConfig, FormField, FormStep, LayoutRow, ZoneConfig, FieldRow } from '@/lib/api/creation-tools'
 import { Button } from '@/components/ui/Button'
 import {
-    Plus, Trash2, X, Box, GripVertical, Settings, LayoutGrid
+    Plus, Trash2, X, Box, GripVertical, Settings, LayoutGrid, ChevronRight, MoreHorizontal
 } from 'lucide-react'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu"
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -82,7 +90,8 @@ const FIELD_CATEGORIES = [
             { value: 'channel-selector', label: 'Multiple Channels' },
             { value: 'channel-select', label: 'Single Channel' },
             { value: 'page-selector', label: 'Facebook Page Picker' },
-            { value: 'file', label: 'Media Upload' },
+            { value: 'file', label: 'Single File' },
+            { value: 'files', label: 'Multiple Files' },
         ]
     },
     {
@@ -421,11 +430,65 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
             ...row,
             zones: row.zones.map(zone => {
                 // Remove rows that have no fields
-                const cleanRows = zone.fieldRows.filter(fr => fr.fields.length > 0);
+                const cleanRows = zone.fieldRows.filter(fr => fr.fields && fr.fields.length > 0);
                 return { ...zone, fieldRows: cleanRows };
             })
-        }));
+        })).filter(row => row.zones.some(z => z.fieldRows.length > 0)); // Filter out completely empty rows
     }, []);
+
+    const handleMoveFieldToStep = (fieldName: string, targetStepIndex: number) => {
+        if (targetStepIndex === activeStepIndex) return;
+
+        const newSteps = JSON.parse(JSON.stringify(steps)) as FormStep[];
+        let movedField: string | null = null;
+
+        // 1. Remove from current step
+        const currentStep = newSteps[activeStepIndex];
+        for (const row of currentStep.layout.rows) {
+            for (const zone of row.zones) {
+                for (const fieldRow of zone.fieldRows) {
+                    const idx = fieldRow.fields.indexOf(fieldName);
+                    if (idx !== -1) {
+                        fieldRow.fields.splice(idx, 1);
+                        movedField = fieldName;
+                        break;
+                    }
+                }
+                if (movedField) break;
+            }
+            if (movedField) break;
+        }
+
+        if (!movedField) return;
+
+        // 2. Add to target step
+        const targetStep = newSteps[targetStepIndex];
+        if (!targetStep.layout) targetStep.layout = { rows: [] };
+        if (targetStep.layout.rows.length === 0) {
+            targetStep.layout.rows.push({
+                id: generateId(),
+                zones: [{
+                    id: generateId(),
+                    title: 'Main Content',
+                    fieldRows: [{ id: generateId(), fields: [] }]
+                }]
+            });
+        }
+
+        const targetZone = targetStep.layout.rows[0].zones[0];
+        if (targetZone.fieldRows.length === 0) {
+            targetZone.fieldRows.push({ id: generateId(), fields: [] });
+        }
+        targetZone.fieldRows[targetZone.fieldRows.length - 1].fields.push(movedField);
+
+        // 3. Clean both steps
+        newSteps[activeStepIndex].layout.rows = cleanLayout(newSteps[activeStepIndex].layout.rows);
+        newSteps[targetStepIndex].layout.rows = cleanLayout(newSteps[targetStepIndex].layout.rows);
+
+        onChange({ ...config, steps: newSteps });
+        setActiveStepIndex(targetStepIndex);
+        toast.success(`Moved to ${targetStep.title}`);
+    };
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -550,6 +613,44 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                     setActiveStepIndex(targetStepIndex);
                     toast.success(`Field added to ${targetStep.title}`);
                 }
+            }
+            return;
+        }
+
+        // Case 2.1: Dragging from Sidebar to a STEP directly
+        if (activeData?.type === 'FIELD_TEMPLATE' && overData?.type === 'STEP') {
+            const fieldTemplate = activeData.item;
+            const targetStepId = overId as string;
+            const targetStepIndex = steps.findIndex(s => s.id === targetStepId);
+            if (targetStepIndex === -1) return;
+
+            const fieldName = `${fieldTemplate.value}_${generateId().slice(0, 4)}`;
+            const newField: FormField = {
+                name: fieldName,
+                type: fieldTemplate.value as any,
+                label: `New ${fieldTemplate.label}`,
+                placeholder: `Enter ${fieldTemplate.label}...`,
+            };
+
+            const newSteps = JSON.parse(JSON.stringify(steps)) as FormStep[];
+            const targetStep = newSteps[targetStepIndex];
+
+            // Add to first zone of first row
+            if (targetStep.layout.rows.length === 0) {
+                targetStep.layout.rows.push({ id: generateId(), zones: [{ id: generateId(), title: 'Zone 1', fieldRows: [] }] });
+            }
+            if (targetStep.layout.rows[0].zones.length === 0) {
+                targetStep.layout.rows[0].zones.push({ id: generateId(), title: 'Zone 1', fieldRows: [] });
+            }
+
+            targetStep.layout.rows[0].zones[0].fieldRows.push({ id: generateId(), fields: [fieldName] });
+
+            onChange({ ...config, fields: [...config.fields, newField], steps: newSteps });
+            setSelectedFieldName(fieldName);
+            setActiveTab('properties');
+            if (targetStepIndex !== activeStepIndex) {
+                setActiveStepIndex(targetStepIndex);
+                toast.success(`Added to ${targetStep.title}`);
             }
             return;
         }
@@ -777,7 +878,10 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
             <div className="flex flex-col h-full overflow-hidden bg-background">
                 <div className="border-b px-6 py-3 bg-muted/30 flex items-center justify-between gap-4 shrink-0">
                     {/* Steps Stepper */}
-                    <div className="flex items-center w-full max-w-5xl mx-auto px-4 py-6">
+                    <div className="flex items-center w-full max-w-4xl mx-auto px-4 py-8 relative">
+                        {/* Background line (inactive) */}
+                        <div className="absolute top-[3.25rem] left-[10%] right-[10%] h-[2px] bg-muted-foreground/10 z-0" />
+
                         <SortableContext items={steps.map(s => s.id)} strategy={horizontalListSortingStrategy}>
                             {steps.map((step, idx) => {
                                 const isActive = activeStepIndex === idx;
@@ -786,72 +890,78 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
 
                                 return (
                                     <React.Fragment key={step.id}>
-                                        <SortableItem id={step.id} data={{ type: 'STEP', index: idx }}>
-                                            {({ ref, style, attributes, listeners }) => (
-                                                <div
-                                                    ref={ref}
-                                                    style={style}
-                                                    className="relative z-10 flex flex-col items-center gap-2 group cursor-pointer"
-                                                    onClick={() => setActiveStepIndex(idx)}
-                                                >
+                                        <div className="flex-1 flex flex-col items-center relative z-10">
+                                            <SortableItem id={step.id} data={{ type: 'STEP', index: idx }}>
+                                                {({ ref, style, attributes, listeners }) => (
                                                     <div
-                                                        {...attributes}
-                                                        {...listeners}
-                                                        className={cn(
-                                                            "w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300",
-                                                            isActive
-                                                                ? "bg-primary border-primary text-primary-foreground scale-110 shadow-lg ring-4 ring-primary/10"
-                                                                : isCompleted
-                                                                    ? "bg-primary border-primary text-primary-foreground"
-                                                                    : "bg-background border-muted text-muted-foreground hover:border-primary/50"
-                                                        )}
+                                                        ref={ref}
+                                                        style={style}
+                                                        className="flex flex-col items-center gap-3 group"
+                                                        onClick={() => setActiveStepIndex(idx)}
                                                     >
-                                                        {isCompleted ? <Check className="w-4 h-4" /> : idx + 1}
-                                                    </div>
-
-                                                    <div className="absolute top-11 whitespace-nowrap text-center">
-                                                        <p className={cn(
-                                                            "text-xs font-bold transition-colors",
-                                                            isActive ? "text-primary" : "text-muted-foreground"
-                                                        )}>
-                                                            {step.title}
-                                                        </p>
-                                                    </div>
-
-                                                    {steps.length > 1 && (
                                                         <div
-                                                            className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center cursor-pointer shadow-sm z-20"
-                                                            onClick={(e) => { e.stopPropagation(); handleRemoveStep(idx); }}
-                                                            title="Remove Step"
+                                                            {...attributes}
+                                                            {...listeners}
+                                                            className={cn(
+                                                                "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 cursor-pointer relative",
+                                                                isActive
+                                                                    ? "bg-primary border-primary text-primary-foreground scale-110 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] ring-4 ring-primary/20"
+                                                                    : isCompleted
+                                                                        ? "bg-primary border-primary text-primary-foreground"
+                                                                        : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary/50"
+                                                            )}
                                                         >
-                                                            <X className="w-2.5 h-2.5" />
+                                                            {isActive && (
+                                                                <span className="absolute inset-0 rounded-full animate-ping bg-primary/20 -z-10" />
+                                                            )}
+                                                            {isCompleted ? <Check className="w-5 h-5" /> : idx + 1}
                                                         </div>
-                                                    )}
+
+                                                        <div className="flex flex-col items-center">
+                                                            <p className={cn(
+                                                                "text-[11px] font-bold tracking-wider uppercase transition-colors",
+                                                                isActive ? "text-primary" : "text-muted-foreground/60"
+                                                            )}>
+                                                                {step.title}
+                                                            </p>
+                                                        </div>
+
+                                                        {steps.length > 1 && (
+                                                            <div
+                                                                className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center cursor-pointer shadow-sm z-20"
+                                                                onClick={(e) => { e.stopPropagation(); handleRemoveStep(idx); }}
+                                                                title="Remove Step"
+                                                            >
+                                                                <X className="w-2.5 h-2.5" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </SortableItem>
+
+                                            {/* Progress segment to next step */}
+                                            {!isLast && (
+                                                <div className="absolute top-[1.25rem] left-[50%] w-full h-[2px] z-[-1]">
+                                                    <div
+                                                        className={cn(
+                                                            "h-full transition-all duration-500 origin-left",
+                                                            isCompleted ? "bg-primary scale-x-100" : "bg-transparent scale-x-0"
+                                                        )}
+                                                    />
                                                 </div>
                                             )}
-                                        </SortableItem>
-
-                                        {!isLast && (
-                                            <div className="flex-1 h-[2px] mx-4 bg-muted relative overflow-hidden rounded-full min-w-[2rem]">
-                                                <div
-                                                    className={cn(
-                                                        "absolute inset-0 bg-primary transition-transform duration-700 ease-in-out origin-left",
-                                                        isCompleted ? "scale-x-100" : "scale-x-0"
-                                                    )}
-                                                />
-                                            </div>
-                                        )}
+                                        </div>
                                     </React.Fragment>
                                 );
                             })}
                         </SortableContext>
 
                         {/* Add Step Button */}
-                        <div className="flex-none ml-4 relative z-10">
+                        <div className="flex-none ml-4 relative z-10 self-start mt-1">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="w-8 h-8 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors"
+                                className="w-8 h-8 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary hover:text-primary transition-all hover:scale-110"
                                 onClick={handleAddStep}
                                 title="Add New Step"
                             >
@@ -910,13 +1020,15 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                                             const fRow = newRows[rowIdx].zones[zoneIdx].fieldRows.find(fr => fr.id === fieldRowId);
                                                                             if (fRow) {
                                                                                 const [removedField] = fRow.fields.splice(fieldIdx, 1);
-
                                                                                 const newFields = config.fields.filter(f => f.name !== removedField);
-
                                                                                 const newSteps = [...steps];
+
+                                                                                // Apply clean layout immediately to avoid leaving empty row dash boxes
+                                                                                const cleanedRows = cleanLayout(newRows);
+
                                                                                 newSteps[activeStepIndex] = {
                                                                                     ...newSteps[activeStepIndex],
-                                                                                    layout: { ...newSteps[activeStepIndex].layout, rows: newRows }
+                                                                                    layout: { ...newSteps[activeStepIndex].layout, rows: cleanedRows }
                                                                                 };
 
                                                                                 onChange({ ...config, fields: newFields, steps: newSteps });
@@ -927,6 +1039,8 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                                                 toast.success("Field removed");
                                                                             }
                                                                         }}
+                                                                        steps={steps}
+                                                                        onMoveFieldToStep={handleMoveFieldToStep}
                                                                     />
                                                                 </div>
                                                             )}
@@ -949,11 +1063,11 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                     </div>
 
                     <div className="w-80 border-l bg-background flex flex-col h-full">
-                        <div className="flex items-center border-b">
+                        <div className="flex items-center border-b bg-muted/20">
                             <button
                                 className={cn(
-                                    "flex-1 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors",
-                                    activeTab === 'fields' ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:bg-muted"
+                                    "flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] border-b-2 transition-all",
+                                    activeTab === 'fields' ? "border-primary text-primary bg-background" : "border-transparent text-muted-foreground/60 hover:text-foreground hover:bg-muted/30"
                                 )}
                                 onClick={() => setActiveTab('fields')}
                             >
@@ -961,8 +1075,8 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                             </button>
                             <button
                                 className={cn(
-                                    "flex-1 py-3 text-sm font-semibold uppercase tracking-wider border-b-2 transition-colors",
-                                    activeTab === 'properties' ? "border-primary text-primary bg-primary/5" : "border-transparent text-muted-foreground hover:bg-muted"
+                                    "flex-1 py-4 text-[10px] font-black uppercase tracking-[0.2em] border-b-2 transition-all",
+                                    activeTab === 'properties' ? "border-primary text-primary bg-background" : "border-transparent text-muted-foreground/60 hover:text-foreground hover:bg-muted/30"
                                 )}
                                 onClick={() => setActiveTab('properties')}
                             >
@@ -1133,14 +1247,30 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                         </div>
                                                     )}
 
-                                                    <div className="pt-4 border-t space-y-3">
+                                                    <div className="pt-4 border-t space-y-4">
                                                         <div className="flex items-center justify-between">
-                                                            <Label className="text-sm font-bold">Required</Label>
+                                                            <div className="space-y-0.5">
+                                                                <Label className="text-sm font-bold">Required</Label>
+                                                                <p className="text-[10px] text-muted-foreground">Force user to fill this field</p>
+                                                            </div>
                                                             <Switch
                                                                 checked={!!currentField.validation?.required}
                                                                 onCheckedChange={(v) => updateField({ validation: { ...currentField.validation, required: v } })}
                                                             />
                                                         </div>
+
+                                                        {['file', 'files'].includes(currentField.type) && (
+                                                            <div className="flex items-center justify-between pt-2">
+                                                                <div className="space-y-0.5">
+                                                                    <Label className="text-sm font-bold">Multiple Files</Label>
+                                                                    <p className="text-[10px] text-muted-foreground">Allow uploading more than one file</p>
+                                                                </div>
+                                                                <Switch
+                                                                    checked={!!currentField.multiple || currentField.type === 'files'}
+                                                                    onCheckedChange={(v) => updateField({ multiple: v })}
+                                                                />
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <Button

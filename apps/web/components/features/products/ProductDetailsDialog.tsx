@@ -1,4 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
+import { LoadingLogo } from '@/components/shared/LoadingLogo';
+
+
 import { cn } from '@/lib/utils';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { format } from 'date-fns';
@@ -7,7 +10,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { Media } from '@/components/ui/Media';
+import { Media } from '@/components/shared/Media';
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
@@ -62,7 +65,13 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
 
 
     const renderOutput = () => {
-        if (!job.outputData) return <div className="text-muted-foreground italic text-sm py-4">Generating your product, please wait...</div>;
+        if (!job.outputData) {
+            return (
+                <div className="py-12 flex items-center justify-center">
+                    <LoadingLogo size="md" text="Generating your product..." showGlow />
+                </div>
+            );
+        }
 
         const data = job.outputData as any;
         const resultText = data.result || (typeof data === 'string' ? data : null);

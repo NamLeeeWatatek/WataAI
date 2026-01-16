@@ -8,13 +8,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload } from 'lucide-react';
-import { Search } from '@/components/ui/Search';
-import { PageLoading } from '@/components/ui/PageLoading';
+import { Search } from '@/components/shared/Search';
+import { PageLoading } from '@/components/shared/PageLoading';
 import { toast } from 'sonner';
 import { handleApiError } from '@/lib/utils/api-error';
 import { PageShell } from '@/components/layout/PageShell';
 import { useRef } from 'react';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useCategories } from '@/lib/hooks/useCategories';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
@@ -29,7 +29,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { BulkActionsToolbar } from '@/components/ui/BulkActionsToolbar';
+import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import { cn } from '@/lib/utils';
 import { Category } from '@/lib/api/categories';
 
@@ -208,6 +208,41 @@ export default function CreationToolsPage() {
         <PageShell
             title="Creation Tools"
             description="Configure and manage your AI creation tools"
+            actions={
+                <div className="flex items-center gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImport}
+                        accept=".json"
+                        className="hidden"
+                    />
+                    <Button
+                        variant="default"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isMutating}
+                        className="shadow-primary/20 shadow-lg"
+                    >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Import
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => handleExport()}
+                        disabled={isMutating}
+                    >
+                        <Download className="w-4 h-4 mr-2" />
+                        Export All
+                    </Button>
+                    <Button
+                        onClick={() => router.push('/system/creation-tools/new')}
+                        className="shadow-sm"
+                    >
+                        <Plus className="w-4 h-4 mr-2" />
+                        New Tool
+                    </Button>
+                </div>
+            }
         >
             <div className="space-y-6">
                 {/* Unified Toolbar */}
@@ -236,39 +271,6 @@ export default function CreationToolsPage() {
                                         <AdminCategoryItems />
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            <div className="flex items-center gap-2 ml-auto">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImport}
-                                    accept=".json"
-                                    className="hidden"
-                                />
-                                <Button
-                                    variant="default"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={isMutating}
-                                    className="shadow-primary/20 shadow-lg"
-                                >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Import
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => handleExport()}
-                                    disabled={isMutating}
-                                >
-                                    <Download className="w-4 h-4 mr-2" />
-                                    Export All
-                                </Button>
-                                <Button
-                                    onClick={() => router.push('/system/creation-tools/new')}
-                                    className="shadow-sm"
-                                >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    New Tool
-                                </Button>
                             </div>
                         </div>
                     </CardHeader>

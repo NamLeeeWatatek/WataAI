@@ -1,7 +1,7 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { PageHeader } from '../ui/PageHeader'
-import { LucideIcon } from 'lucide-react'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { DashboardFooter } from './DashboardFooter'
 
 interface PageShellProps {
     children: React.ReactNode
@@ -14,37 +14,47 @@ interface PageShellProps {
     className?: string
     contentClassName?: string
     fullWidth?: boolean
+    footer?: React.ReactNode
+    showDefaultFooter?: boolean
 }
 
 export const PageShell = ({
     children,
     title,
-    titleClassName,
     description,
     actions,
     onRefresh,
     refreshing,
     className,
     contentClassName,
-    fullWidth = false
+    fullWidth = false,
+    footer,
+    showDefaultFooter = true
 }: PageShellProps) => {
     return (
-        <div className={cn("flex flex-col", className)}>
+        <div className={cn("flex flex-col min-h-full", className)}>
             {title && (
-                <PageHeader
-                    title={title}
-                    description={description}
-                    onRefresh={onRefresh}
-                    refreshing={refreshing}
-                    className="mb-6 px-1"
-                >
-                    {actions}
-                </PageHeader>
+                <header>
+                    <PageHeader
+                        title={title}
+                        description={description}
+                        onRefresh={onRefresh}
+                        refreshing={refreshing}
+                    >
+                        {actions}
+                    </PageHeader>
+                </header>
             )}
 
-            <div className={cn("flex-1", contentClassName)}>
+            <section className={cn("flex-1", contentClassName)}>
                 {children}
-            </div>
+            </section>
+
+            {footer ? (
+                <footer>{footer}</footer>
+            ) : showDefaultFooter ? (
+                <DashboardFooter />
+            ) : null}
         </div>
     )
 }

@@ -89,30 +89,30 @@ export function AISettingsTab() {
 
             <div className="space-y-3">
               <Label>Temperature Range</Label>
-              <div className="flex gap-4">
-                <div className="flex-1 relative">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="min-temp" className="text-xs text-muted-foreground">Minimum (Creative)</Label>
                   <Input
+                    id="min-temp"
                     type="number"
                     step="0.1"
                     min="0"
                     max="2"
                     value={localSettings.minTemperature}
                     onChange={(e) => setLocalSettings((p: SystemSettings) => ({ ...p, minTemperature: parseFloat(e.target.value) }))}
-                    className="text-center"
                   />
-                  <span className="absolute -top-2 left-4 px-1 bg-card text-xs text-muted-foreground">Min</span>
                 </div>
-                <div className="flex-1 relative">
+                <div className="grid gap-2">
+                  <Label htmlFor="max-temp" className="text-xs text-muted-foreground">Maximum (Precise)</Label>
                   <Input
+                    id="max-temp"
                     type="number"
                     step="0.1"
                     min="0"
                     max="2"
                     value={localSettings.maxTemperature}
                     onChange={(e) => setLocalSettings((p: SystemSettings) => ({ ...p, maxTemperature: parseFloat(e.target.value) }))}
-                    className="text-center"
                   />
-                  <span className="absolute -top-2 left-4 px-1 bg-card text-xs text-muted-foreground">Max</span>
                 </div>
               </div>
             </div>

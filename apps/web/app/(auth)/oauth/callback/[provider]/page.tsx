@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { CheckCircle, XCircle } from 'lucide-react'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 export default function OAuthCallbackPage() {
     const searchParams = useSearchParams()

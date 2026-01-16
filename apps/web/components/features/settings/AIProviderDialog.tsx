@@ -25,13 +25,14 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { toast } from '@/lib/toast';
-import { Loader2, Save, Cpu, Key, Globe, Shield, RefreshCw, X, Stars } from 'lucide-react';
+import { Loader2, Save, Cpu, Key, Globe, Shield, RefreshCw, X, Stars, Plus } from 'lucide-react';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
 import { type AiProviderMetadata } from '@/lib/api/ai-providers';
-import type { AiProviderConfig, UserAiProviderConfig } from '@/lib/types/ai-provider';
+import type { AiProviderConfig, UserAiProviderConfig, AiModel } from '@/lib/types/ai-provider';
+import { ModelListManager } from './ModelListManager';
 
 interface AIProviderDialogProps {
     open: boolean;
@@ -66,6 +67,19 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
     });
 
     const [autoRefreshEnabled, setAutoRefreshEnabled] = React.useState(true);
+    const [persistedModels, setPersistedModels] = React.useState<AiModel[]>([]);
+    const [manualModel, setManualModel] = React.useState('');
+
+    const addManualModel = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (!manualModel.trim()) return;
+        const current = form.getValues('modelList') || [];
+        if (!current.includes(manualModel.trim())) {
+            form.setValue('modelList', [...current, manualModel.trim()]);
+            toast.success('Model added');
+        }
+        setManualModel('');
+    };
 
     const configWatch = form.watch('config');
     const debouncedConfig = useDebounce(configWatch, 1000);
@@ -89,6 +103,23 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
             });
         }
     }, [config, form, open]);
+
+    useEffect(() => {
+        if (isEdit && config?.id && open) {
+            aiProvidersApi.getUserModelsByConfig(config.id).then(models => {
+                if (Array.isArray(models)) {
+                    setPersistedModels(models);
+                }
+            }).catch(err => console.error('Failed to fetch persisted models:', err));
+        } else if (!open) {
+            setPersistedModels([]);
+        }
+    }, [isEdit, config?.id, open]);
+
+    const getModelLabel = (name: string) => {
+        const pModel = persistedModels.find(m => m.name === name);
+        return pModel?.displayName || name;
+    }
 
     const selectedProviderId = form.watch('providerId');
     const selectedProvider = availableProviders.find(p => p.id === selectedProviderId);
@@ -135,12 +166,16 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
         }
 
         try {
-            const models = await verifyModels({ providerId, config: configData });
+            // If editing and provider matches, pass the configId so backend can resolve masked keys
+            const configId = (isEdit && config && config.providerId === providerId) ? config.id : undefined;
+
+            const models = await verifyModels({ providerId, config: configData, configId });
             if (models && Array.isArray(models)) {
                 const currentModels = form.getValues('modelList') || [];
-                if (JSON.stringify(currentModels) !== JSON.stringify(models)) {
-                    form.setValue('modelList', models);
-                    if (!silent) toast.success(`Found ${models.length} models`);
+                const merged = Array.from(new Set([...currentModels, ...models]));
+                if (JSON.stringify(currentModels) !== JSON.stringify(merged)) {
+                    form.setValue('modelList', merged);
+                    if (!silent) toast.success(`Found ${models.length} models, merged with existing`);
                 }
             }
         } catch (error: any) {
@@ -334,31 +369,48 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             </Badge>
                                         </div>
 
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Add model ID manually (e.g. gpt-4-turbo)"
+                                                value={manualModel}
+                                                onChange={(e) => setManualModel(e.target.value)}
+                                                className="h-8 text-xs"
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        // Trigger add
+                                                        if (manualModel.trim()) {
+                                                            const current = form.getValues('modelList') || [];
+                                                            if (!current.includes(manualModel.trim())) {
+                                                                form.setValue('modelList', [...current, manualModel.trim()]);
+                                                                toast.success('Model added');
+                                                            }
+                                                            setManualModel('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                className="h-8"
+                                                onClick={addManualModel}
+                                                type="button"
+                                            >
+                                                <Plus className="size-3 mr-1" /> Add
+                                            </Button>
+                                        </div>
+
                                         <FormField
                                             control={form.control as any}
                                             name="modelList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <div className="flex flex-wrap gap-2 min-h-[60px] p-4 rounded-lg bg-muted/50 border transition-all">
-                                                        {field.value && field.value.length > 0 ? (
-                                                            field.value.map((model: string) => (
-                                                                <Badge
-                                                                    key={model}
-                                                                    variant="secondary"
-                                                                    className="group pr-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
-                                                                    onClick={() => removeModel(model)}
-                                                                >
-                                                                    {model}
-                                                                    <X className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100" />
-                                                                </Badge>
-                                                            ))
-                                                        ) : (
-                                                            <div className="w-full flex flex-col items-center justify-center text-muted-foreground gap-2 py-4 text-xs">
-                                                                <RefreshCw className="size-4 opacity-50" />
-                                                                No models loaded. Click Refresh Models.
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <ModelListManager
+                                                        modelNames={field.value || []}
+                                                        onRemoveModel={removeModel}
+                                                        persistedModels={persistedModels}
+                                                    />
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

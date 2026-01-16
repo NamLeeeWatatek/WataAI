@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
+import { MessageCircle, X, Send } from 'lucide-react'
 
 export default function PublicBotPage() {
     const params = useParams()
@@ -129,13 +130,13 @@ export default function PublicBotPage() {
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'
                 }}
             >
-                <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24">
+                <div className="text-white">
                     {isOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                        <X size={28} />
                     ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        <MessageCircle size={28} />
                     )}
-                </svg>
+                </div>
             </button>
 
             { }
@@ -194,9 +195,7 @@ export default function PublicBotPage() {
                             onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
                             onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
                         >
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X size={20} />
                         </button>
                     </div>
 
@@ -309,9 +308,7 @@ export default function PublicBotPage() {
                                 if (!loading && input.trim()) e.currentTarget.style.opacity = '1'
                             }}
                         >
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
+                            <Send size={20} />
                         </button>
                     </div>
                 </div>

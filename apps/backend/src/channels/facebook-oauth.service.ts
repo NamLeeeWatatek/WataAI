@@ -139,8 +139,8 @@ export class FacebookOAuthService extends BaseOAuthService {
             code: fbError?.code,
             subcode: fbError?.error_subcode,
             type: fbError?.type,
-            fullError: error.response?.data
-          }
+            fullError: error.response?.data,
+          },
         );
         throw new HttpException(
           fbError?.message || 'Failed to get Facebook pages',

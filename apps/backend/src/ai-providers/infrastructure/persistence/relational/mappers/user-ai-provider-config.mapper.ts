@@ -3,16 +3,18 @@ import {
   AiProvider,
 } from '../../../../domain/ai-provider';
 import {
-  UserAiProviderConfigEntity,
+  AiProviderConfigEntity,
   AiProviderEntity,
 } from '../entities/ai-provider.entity';
 import { AiProviderMapper } from './ai-provider.mapper';
+import { AiModelMapper } from './ai-model.mapper';
+import { AiProviderOwnerType } from '../../../../ai-providers.enum';
 
 export class UserAiProviderConfigMapper {
-  static toDomain(raw: UserAiProviderConfigEntity): UserAiProviderConfig {
+  static toDomain(raw: AiProviderConfigEntity): UserAiProviderConfig {
     const domainEntity = new UserAiProviderConfig();
     domainEntity.id = raw.id;
-    domainEntity.userId = raw.userId;
+    domainEntity.userId = raw.ownerId!;
     domainEntity.providerId = raw.providerId;
     domainEntity.displayName = raw.displayName;
     domainEntity.config = raw.config;
@@ -25,17 +27,22 @@ export class UserAiProviderConfigMapper {
       domainEntity.provider = AiProviderMapper.toDomain(raw.provider);
     }
 
+    if (raw.models) {
+      domainEntity.models = raw.models.map((m) => AiModelMapper.toDomain(m));
+    }
+
     return domainEntity;
   }
 
   static toPersistence(
     domainEntity: UserAiProviderConfig,
-  ): UserAiProviderConfigEntity {
-    const persistenceEntity = new UserAiProviderConfigEntity();
+  ): AiProviderConfigEntity {
+    const persistenceEntity = new AiProviderConfigEntity();
     if (domainEntity.id) {
       persistenceEntity.id = domainEntity.id;
     }
-    persistenceEntity.userId = domainEntity.userId;
+    persistenceEntity.ownerType = AiProviderOwnerType.USER;
+    persistenceEntity.ownerId = domainEntity.userId;
     persistenceEntity.providerId = domainEntity.providerId;
     persistenceEntity.displayName = domainEntity.displayName;
     persistenceEntity.config = domainEntity.config;
@@ -48,13 +55,13 @@ export class UserAiProviderConfigMapper {
 }
 
 export class AiProviderConfigMapper {
-  static toDomain(raw: UserAiProviderConfigEntity): UserAiProviderConfig {
+  static toDomain(raw: AiProviderConfigEntity): UserAiProviderConfig {
     return UserAiProviderConfigMapper.toDomain(raw);
   }
 
   static toPersistence(
     domainEntity: UserAiProviderConfig,
-  ): UserAiProviderConfigEntity {
+  ): AiProviderConfigEntity {
     return UserAiProviderConfigMapper.toPersistence(domainEntity);
   }
 }

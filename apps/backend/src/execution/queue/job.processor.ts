@@ -8,6 +8,7 @@ import {
   ExecutionFlow,
   ExecutionType,
 } from '../../creation-tools/domain/creation-tool';
+import { KBRagService } from '../../knowledge-base/services/kb-rag.service';
 import { GenerationJob } from '../../generation-jobs/domain/generation-job';
 import {
   CreationJob,
@@ -16,7 +17,7 @@ import {
 import { ExecutionValidationService } from '../validation/execution-validation.service';
 import { CreationJobsService } from '../../creation-jobs/creation-jobs.service';
 
-import { OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, OnModuleInit } from '@nestjs/common';
 
 @Processor(JOB_QUEUE, {
   concurrency: parseInt(process.env.QUEUE_CONCURRENCY || '50', 10),
@@ -29,6 +30,8 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
     private readonly validationService: ExecutionValidationService,
     private readonly strategyResolver: ExecutionStrategyResolver,
     private readonly creationJobsService: CreationJobsService,
+    @Inject(forwardRef(() => KBRagService))
+    private readonly ragService: KBRagService,
   ) {
     super();
   }
@@ -94,6 +97,49 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         validatedInputs,
       );
 
+      // --- Knowledge Injection (RAG) ---
+      let kbContext = '';
+      if (tool.knowledgeBaseId) {
+        try {
+          // Determine the search query. Fallback: join all string values
+          let ragQuery = '';
+          const textareaFields = tool.formConfig.fields.filter(
+            (f) => f.type === 'textarea',
+          );
+          if (textareaFields.length > 0) {
+            ragQuery = validatedInputs[textareaFields[0].name];
+          } else {
+            ragQuery = Object.values(validatedInputs)
+              .filter((v) => typeof v === 'string')
+              .join(' ');
+          }
+
+          if (ragQuery) {
+            this.logger.log(
+              `Performing RAG search for Tool ${tool.id} on KB ${tool.knowledgeBaseId}`,
+            );
+            const chunks = await this.ragService.query(
+              ragQuery,
+              jobEntity.workspaceId || 'default',
+              tool.knowledgeBaseId,
+              5,
+              0.5,
+            );
+
+            if (chunks.length > 0) {
+              kbContext = chunks
+                .map((c, i) => `[Source ${i + 1}]\n${c.content}`)
+                .join('\n\n');
+              this.logger.log(
+                `Injected ${chunks.length} chunks into knowledge context`,
+              );
+            }
+          }
+        } catch (ragError) {
+          this.logger.warn(`RAG Injection failed: ${ragError.message}`);
+        }
+      }
+
       const config = tool.executionFlow as ExecutionFlow;
       const startTime = Date.now();
       const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
@@ -102,6 +148,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
         _jobId: jobEntity.id,
         _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/${jobEntity.id}/complete`,
         _workspaceId: jobEntity.workspaceId,
+        kb_context: kbContext,
       };
 
       this.logger.log(

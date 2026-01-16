@@ -38,7 +38,7 @@ export class FacebookOAuthController {
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -71,7 +71,9 @@ export class FacebookOAuthController {
       );
     }
 
-    const defaultRedirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
+    const defaultRedirectUri =
+      this.configService.get('facebook.redirectUri', { infer: true }) ||
+      `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
     const uri = redirectUri || defaultRedirectUri;
 
     const state = `${req.user?.id}:${workspaceId}`;
@@ -143,7 +145,9 @@ export class FacebookOAuthController {
         throw new NotFoundException('Facebook App not configured');
       }
 
-      const defaultRedirectUri = this.configService.get('facebook.redirectUri', { infer: true }) || `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
+      const defaultRedirectUri =
+        this.configService.get('facebook.redirectUri', { infer: true }) ||
+        `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
       const redirectUri = redirectUriParam || defaultRedirectUri;
 
       // âœ… Exchange code for token (may fail if code already used)
@@ -196,11 +200,23 @@ export class FacebookOAuthController {
   ) {
     try {
       const userId = req.user.id;
-      this.logger.log(`[FacebookOAuth] Connecting page ${body.pageId} for workspace ${workspaceId}`);
-      this.logger.debug(`[FacebookOAuth] User Token received (first 10 chars): ${body.userAccessToken?.substring(0, 10)}...`);
-      this.logger.debug(`[FacebookOAuth] Page Token received (exists): ${!!body.pageAccessToken}`);
+      this.logger.log(
+        `[FacebookOAuth] Connecting page ${body.pageId} for workspace ${workspaceId}`,
+      );
+      this.logger.debug(
+        `[FacebookOAuth] User Token received (first 10 chars): ${body.userAccessToken?.substring(0, 10)}...`,
+      );
+      this.logger.debug(
+        `[FacebookOAuth] Page Token received (exists): ${!!body.pageAccessToken}`,
+      );
 
-      let pageToConnect: { id: string; name: string; access_token: string; category?: string; tasks?: string[] } | null = null;
+      let pageToConnect: {
+        id: string;
+        name: string;
+        access_token: string;
+        category?: string;
+        tasks?: string[];
+      } | null = null;
 
       // Try to re-verify using userAccessToken (Security best practice)
       try {
@@ -212,12 +228,16 @@ export class FacebookOAuthController {
           pageToConnect = verifiedPage;
         }
       } catch (error) {
-        this.logger.warn(`[FacebookOAuth] Could not re-verify page with user token: ${error.message}`);
+        this.logger.warn(
+          `[FacebookOAuth] Could not re-verify page with user token: ${error.message}`,
+        );
       }
 
       if (!pageToConnect) {
         if (body.pageAccessToken) {
-          this.logger.log(`[FacebookOAuth] Falling back to provided pageAccessToken for page ${body.pageId}`);
+          this.logger.log(
+            `[FacebookOAuth] Falling back to provided pageAccessToken for page ${body.pageId}`,
+          );
           pageToConnect = {
             id: body.pageId,
             name: body.pageName,
@@ -225,7 +245,9 @@ export class FacebookOAuthController {
             category: body.category,
           };
         } else {
-          throw new BadRequestException('Could not verify page ownership and no page token provided');
+          throw new BadRequestException(
+            'Could not verify page ownership and no page token provided',
+          );
         }
       }
 
@@ -279,7 +301,8 @@ export class FacebookOAuthController {
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
   ) {
-    const connections = await this.facebookOAuthService.getConnectedPages(workspaceId);
+    const connections =
+      await this.facebookOAuthService.getConnectedPages(workspaceId);
 
     return {
       success: true,
@@ -321,7 +344,10 @@ export class FacebookOAuthController {
     @Param('id') connectionId: string,
     @Body() body: { recipientId: string; message: string },
   ) {
-    const connection = await this.channelsService.findOne(connectionId, workspaceId);
+    const connection = await this.channelsService.findOne(
+      connectionId,
+      workspaceId,
+    );
     if (!connection) {
       throw new HttpException('Connection not found', HttpStatus.NOT_FOUND);
     }
@@ -391,7 +417,8 @@ export class FacebookOAuthController {
   @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
   @ApiOperation({ summary: 'Get Facebook App credentials' })
   async getSetup(@Request() req, @CurrentWorkspace() workspaceId: string) {
-    const credential = await this.facebookOAuthService.getCredential(workspaceId);
+    const credential =
+      await this.facebookOAuthService.getCredential(workspaceId);
 
     if (!credential) {
       return {
@@ -427,7 +454,10 @@ export class FacebookOAuthController {
     @Query('message_limit') messageLimit?: number,
   ) {
     // Get connection
-    const connection = await this.channelsService.findOne(connectionId, workspaceId);
+    const connection = await this.channelsService.findOne(
+      connectionId,
+      workspaceId,
+    );
     if (!connection) {
       throw new HttpException('Connection not found', HttpStatus.NOT_FOUND);
     }

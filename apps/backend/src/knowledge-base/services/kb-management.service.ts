@@ -14,7 +14,6 @@ import {
 import { IPaginationOptions } from '../../utils/types/pagination-options';
 import { BotKnowledgeBaseEntity } from '../../bots/infrastructure/persistence/relational/entities/bot.entity';
 import { KBDocumentsService } from './kb-documents.service';
-import { Inject, forwardRef } from '@nestjs/common';
 import {
   KnowledgeBaseDocumentEntity,
   KbDocumentEntity,
@@ -55,6 +54,12 @@ export class KBManagementService {
     userId: string;
   }): Promise<{ data: any[]; total: number }> {
     const query = this.kbRepository.createQueryBuilder('kb');
+
+    query
+      .leftJoinAndSelect('kb.aiConfig', 'aiConfig')
+      .leftJoinAndSelect('aiConfig.provider', 'aiProvider')
+      .leftJoinAndSelect('kb.embeddingConfig', 'embeddingConfig')
+      .leftJoinAndSelect('embeddingConfig.provider', 'embeddingProvider');
 
     // Default filters
     const workspaceId = filterOptions?.workspaceId;
@@ -111,7 +116,14 @@ export class KBManagementService {
   async findOne(id: string, userId: string) {
     const kb = await this.kbRepository.findOne({
       where: { id },
-      relations: ['folders', 'documents'],
+      relations: [
+        'folders',
+        'documents',
+        'aiConfig',
+        'aiConfig.provider',
+        'embeddingConfig',
+        'embeddingConfig.provider',
+      ],
     });
 
     if (!kb) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -14,6 +14,7 @@ import {
     Clock,
     Search,
     RefreshCw,
+    Loader2,
     FileText,
     Globe,
     Zap,
@@ -26,16 +27,16 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { cn } from '@/lib/utils';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { useRef } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 export default function ActivityPage() {
     const { workspace } = useAuth();
-    const [page, setPage] = useState(1);
+    const { ref, inView } = useInView();
+
     const [search, setSearch] = useState('');
     const [querySearch, setQuerySearch] = useState('');
-
-    // Manual debounce for search to prevent double-fetch/race conditions
     const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -44,26 +45,42 @@ export default function ActivityPage() {
         }
     }, []);
 
-    const { data: activityData, isLoading: loading, refetch } = useQuery({
-        queryKey: ['activity-logs', workspace?.id, page, querySearch],
-        queryFn: async () => {
+    const {
+        data: infiniteData,
+        isLoading: loading,
+        isFetchingNextPage,
+        fetchNextPage,
+        hasNextPage,
+        refetch
+    } = useInfiniteQuery({
+        queryKey: ['activity-logs', workspace?.id, querySearch],
+        initialPageParam: 1,
+        queryFn: async ({ pageParam = 1 }) => {
             if (!workspace?.id) return { items: [], total: 0 };
             const { data } = await auditApi.getMyActivity(workspace.id, {
-                page,
+                page: pageParam as number,
                 limit: 20,
-                // Add search param if API supports it, implied by UI having search
-                // Assuming the API supports a 'search' or similar param, usually passed here
                 ...(querySearch ? { search: querySearch } : {})
             });
-            // If the API returns raw array or structure, normalize it here
-            // Based on previous code: setLogs(data.items);
             return data;
         },
+        getNextPageParam: (lastPage, allPages) => {
+            const currentTotal = allPages.reduce((acc, p) => acc + (p.items?.length || 0), 0);
+            if (currentTotal < lastPage.total) {
+                return allPages.length + 1;
+            }
+            return undefined;
+        },
         enabled: !!workspace?.id,
-        placeholderData: keepPreviousData,
     });
 
-    const logs = activityData?.items || [];
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    const logs = infiniteData?.pages.flatMap(page => page.items || []) || [];
 
     const getActionIcon = (action: string) => {
         switch (action) {
@@ -83,7 +100,7 @@ export default function ActivityPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="page-container space-y-6">
             <PageHeader
                 title="Activity Feed"
                 description="Track your jobs, crawls, and system interactions in real-time."
@@ -105,7 +122,6 @@ export default function ActivityPage() {
                                 if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
                                 searchTimerRef.current = setTimeout(() => {
                                     setQuerySearch(val);
-                                    setPage(1);
                                 }, 500);
                             }}
                         />
@@ -166,18 +182,15 @@ export default function ActivityPage() {
                     )}
                 </div>
 
-                {logs.length > 0 && (
-                    <div className="flex justify-center pt-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={loading || logs.length < 20}
-                        >
-                            Load More Activities
-                        </Button>
-                    </div>
-                )}
+                {/* Intersection Observer Target */}
+                <div ref={ref} className="h-10 flex items-center justify-center">
+                    {isFetchingNextPage && (
+                        <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in duration-300">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span className="text-xs font-medium">Loading more activities...</span>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

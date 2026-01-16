@@ -1,12 +1,9 @@
-﻿import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import * as crypto from 'crypto';
-import {
-  UserAiProviderConfigEntity,
-  WorkspaceAiProviderConfigEntity,
-} from 'src/ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
+import { AiProviderConfigEntity } from 'src/ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
 import { EncryptionService } from '../../shared/services/encryption.service';
 
 /**
@@ -24,10 +21,8 @@ export class EncryptionMigrationService {
   private readonly oldEncryptionKey: string;
 
   constructor(
-    @InjectRepository(UserAiProviderConfigEntity)
-    private userProviderRepo: Repository<UserAiProviderConfigEntity>,
-    @InjectRepository(WorkspaceAiProviderConfigEntity)
-    private workspaceProviderRepo: Repository<WorkspaceAiProviderConfigEntity>,
+    @InjectRepository(AiProviderConfigEntity)
+    private providerRepo: Repository<AiProviderConfigEntity>,
     private readonly encryptionService: EncryptionService,
   ) {
     this.oldEncryptionKey =
@@ -71,8 +66,7 @@ export class EncryptionMigrationService {
    * Migrate a single provider's API key
    */
   private async migrateProvider(
-    provider: UserAiProviderConfigEntity | WorkspaceAiProviderConfigEntity,
-    repo: Repository<any>,
+    provider: AiProviderConfigEntity,
   ): Promise<boolean> {
     // For new schema, API key is stored in config.apiKey
     const apiKeyEncrypted = provider.config?.apiKey as string | undefined;
@@ -95,125 +89,62 @@ export class EncryptionMigrationService {
 
       // Update in database
       provider.config = { ...provider.config, apiKey: newEncrypted };
-      await repo.save(provider);
+      await this.providerRepo.save(provider);
 
       this.logger.log(
-        `âœ… Migrated provider ${provider.id} (${provider.providerId})`,
+        `✅ Migrated provider ${provider.id} (${provider.providerId})`,
       );
       return true;
     } catch (error) {
-      this.logger.error(`âŒ Failed to migrate provider ${provider.id}`, error);
+      this.logger.error(`❌ Failed to migrate provider ${provider.id}`, error);
       return false;
     }
-  }
-
-  /**
-   * Migrate all user providers
-   */
-  async migrateUserProviders(): Promise<{
-    success: number;
-    failed: number;
-    skipped: number;
-  }> {
-    this.logger.log('ðŸ”„ Starting migration of user providers...');
-
-    const providers = await this.userProviderRepo.find();
-    let success = 0;
-    let failed = 0;
-    let skipped = 0;
-
-    for (const provider of providers) {
-      try {
-        const migrated = await this.migrateProvider(
-          provider,
-          this.userProviderRepo,
-        );
-        if (migrated) {
-          success++;
-        } else {
-          skipped++;
-        }
-      } catch (error) {
-        failed++;
-      }
-    }
-
-    this.logger.log(
-      `âœ… User providers migration complete: ${success} migrated, ${skipped} skipped, ${failed} failed`,
-    );
-
-    return { success, failed, skipped };
-  }
-
-  /**
-   * Migrate all workspace providers
-   */
-  async migrateWorkspaceProviders(): Promise<{
-    success: number;
-    failed: number;
-    skipped: number;
-  }> {
-    this.logger.log('ðŸ”„ Starting migration of workspace providers...');
-
-    const providers = await this.workspaceProviderRepo.find();
-    let success = 0;
-    let failed = 0;
-    let skipped = 0;
-
-    for (const provider of providers) {
-      try {
-        const migrated = await this.migrateProvider(
-          provider,
-          this.workspaceProviderRepo,
-        );
-        if (migrated) {
-          success++;
-        } else {
-          skipped++;
-        }
-      } catch (error) {
-        failed++;
-      }
-    }
-
-    this.logger.log(
-      `âœ… Workspace providers migration complete: ${success} migrated, ${skipped} skipped, ${failed} failed`,
-    );
-
-    return { success, failed, skipped };
   }
 
   /**
    * Run full migration
    */
   async runMigration(): Promise<void> {
-    this.logger.log('ðŸš€ Starting encryption migration from CBC to GCM...');
-    this.logger.warn('âš ï¸  Make sure you have backed up your database!');
+    this.logger.log('🚀 Starting encryption migration from CBC to GCM...');
+    this.logger.warn('⚠️  Make sure you have backed up your database!');
 
-    const userResults = await this.migrateUserProviders();
-    const workspaceResults = await this.migrateWorkspaceProviders();
+    const providers = await this.providerRepo.find();
+    let success = 0;
+    let failed = 0;
+    let skipped = 0;
 
-    const totalSuccess = userResults.success + workspaceResults.success;
-    const totalFailed = userResults.failed + workspaceResults.failed;
-    const totalSkipped = userResults.skipped + workspaceResults.skipped;
+    this.logger.log(`Found ${providers.length} provider configs to check.`);
 
-    this.logger.log('');
-    this.logger.log('ðŸ“Š Migration Summary:');
-    this.logger.log(`   âœ… Successfully migrated: ${totalSuccess}`);
-    this.logger.log(`   â­ï¸  Skipped (already migrated): ${totalSkipped}`);
-    this.logger.log(`   âŒ Failed: ${totalFailed}`);
-    this.logger.log('');
-
-    if (totalFailed > 0) {
-      this.logger.error(
-        'âš ï¸  Some migrations failed. Please check the logs above.',
-      );
-      throw new Error(`Migration completed with ${totalFailed} failures`);
+    for (const provider of providers) {
+      try {
+        const migrated = await this.migrateProvider(provider);
+        if (migrated) {
+          success++;
+        } else {
+          skipped++;
+        }
+      } catch (error) {
+        failed++;
+      }
     }
 
-    this.logger.log('âœ… Migration completed successfully!');
+    this.logger.log('');
+    this.logger.log('📊 Migration Summary:');
+    this.logger.log(`   ✅ Successfully migrated: ${success}`);
+    this.logger.log(`   ⏭️  Skipped (already migrated): ${skipped}`);
+    this.logger.log(`   ❌ Failed: ${failed}`);
+    this.logger.log('');
+
+    if (failed > 0) {
+      this.logger.error(
+        '⚠️  Some migrations failed. Please check the logs above.',
+      );
+      throw new Error(`Migration completed with ${failed} failures`);
+    }
+
+    this.logger.log('✅ Migration completed successfully!');
     this.logger.log(
-      'ðŸ’¡ You can now remove OLD_ENCRYPTION_KEY from your .env file',
+      '💡 You can now remove OLD_ENCRYPTION_KEY from your .env file',
     );
   }
 }

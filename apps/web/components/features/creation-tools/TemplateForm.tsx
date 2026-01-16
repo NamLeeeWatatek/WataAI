@@ -5,17 +5,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, ImageIcon, Film } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
+import { AiEnhancedTextarea } from '@/components/shared/AiEnhancedTextarea';
 import { Label } from '@/components/ui/Label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
-import { IconPicker } from '@/components/ui/IconPicker';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
-import { CoverUpload } from '@/components/ui/CoverUpload';
 import { templateFormSchema, type TemplateFormValues } from '@/lib/types/template-form';
 import { Template } from '@/lib/types/template';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { useEffect } from 'react';
+import { IconPicker } from '@/components/shared/IconPicker';
+import { UnifiedCoverUpload } from '@/components/shared/UnifiedFileUpload';
 
 // Reusing constant from original file or moving to constants
 const ACCEPTED_FILE_TYPES = ['image/*', 'video/*'];
@@ -144,15 +144,11 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                             {/* Upload Area - Spans 3 cols */}
                             <div className="sm:col-span-3">
-                                <CoverUpload
+                                <UnifiedCoverUpload
                                     value={previewUrl || ''}
-                                    onUpload={(url, file) => {
-                                        setValue('thumbnailUrl', url, { shouldDirty: true });
+                                    onChange={(url) => {
+                                        setValue('thumbnailUrl', (url as string), { shouldDirty: true });
                                     }}
-                                    onDelete={() => {
-                                        setValue('thumbnailUrl', '', { shouldDirty: true });
-                                    }}
-                                    aspectRatio={16 / 9}
                                     description="Images (JPG, PNG, GIF, JFIF...) & Videos (MP4...)"
                                     accept={ACCEPTED_FILE_TYPES.join(',')}
                                 />
@@ -208,7 +204,7 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
                             <FormItem>
                                 <FormLabel>Description</FormLabel>
                                 <FormControl>
-                                    <Textarea
+                                    <AiEnhancedTextarea
                                         placeholder="Describe the style, mood, and intended use case..."
                                         rows={3}
                                         className="resize-none min-h-[80px]"

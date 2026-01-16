@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/Button'
 import { CheckCircle2, XCircle, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { authApi } from '@/lib/api/auth'
 import Link from 'next/link'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 function ConfirmNewEmailPageContent() {
     const searchParams = useSearchParams()

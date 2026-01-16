@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { MessageCircle, X, SendHorizontal, Sparkles, AlertCircle } from 'lucide-react'
 import { MessageRole } from '@/lib/types/conversations'
-import { Media } from '@/components/ui/Media'
+import { Media } from '@/components/shared/Media'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { usePublicChat } from '@/lib/hooks/features/usePublicChat'

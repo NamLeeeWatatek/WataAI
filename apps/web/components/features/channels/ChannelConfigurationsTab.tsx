@@ -68,10 +68,6 @@ export function ChannelConfigurationsTab({
     setOrigin(window.location.origin);
   }, []);
 
-
-
-
-
   const openConfig = (configId?: string, provider?: string) => {
     const existing = configId ? configs.find(c => String(c.id) === String(configId)) : null;
     setConfigForm({
@@ -110,7 +106,6 @@ export function ChannelConfigurationsTab({
       return;
     }
 
-    // Prepare data using snake_case to match backend DTO @Expose expectations
     const payload: any = {
       id: configForm.id,
       provider: configForm.provider,
@@ -118,14 +113,12 @@ export function ChannelConfigurationsTab({
       client_id: configForm.client_id,
       scopes: configForm.scopes,
       verify_token: configForm.verify_token,
-      is_active: true // Default to active
+      is_active: true
     };
 
-    // Only send secret if it's changed and not the mask '***'
     if (configForm.client_secret && configForm.client_secret !== '***') {
       payload.client_secret = configForm.client_secret;
     } else if (!configForm.id && !configForm.client_secret) {
-      // Secret is required for new configs
       toast.error("Client Secret is required");
       return;
     }
@@ -138,21 +131,17 @@ export function ChannelConfigurationsTab({
     }
   };
 
-
-
-
-
   return (
-    <div>
+    <div className="space-y-12">
       {configs.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
+        <section>
+          <h2 className="text-xl font-bold mb-8 flex items-center gap-2 tracking-tight">
             Configured Integrations
-            <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5">
+            <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 ml-2">
               {configs.length}
             </Badge>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {configs.map((config) => {
               const provider = config.provider;
               const channelInfo = [...MESSAGING_CHANNELS, ...BUSINESS_INTEGRATIONS].find(c => c.id === provider);
@@ -169,7 +158,6 @@ export function ChannelConfigurationsTab({
                           {config.name || channelInfo?.name || provider}
                           {config.is_active && (
                             <span className="relative flex h-2 w-2">
-                              {/* <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span> */}
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
                           )}
@@ -242,22 +230,22 @@ export function ChannelConfigurationsTab({
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Available Integrations */}
-      <div>
-        <h2 className="text-xl font-semibold mb-6">
+      <section className="pt-12 border-t border-border/10">
+        <h2 className="text-xl font-bold mb-8 tracking-tight">
           Available Integrations
         </h2>
 
         {/* Messaging Channels */}
-        <div className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
+        <div className="mb-14">
+          <div className="flex items-center gap-4 mb-8">
             <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Global Messaging Channels</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {MESSAGING_CHANNELS.map((channel) => (
               <Card
                 key={channel.id}
@@ -285,11 +273,11 @@ export function ChannelConfigurationsTab({
 
         {/* Business Integrations */}
         <div>
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-8">
             <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Business Logic Integrations</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {BUSINESS_INTEGRATIONS.map((integration) => (
               <Card
                 key={integration.id}
@@ -316,7 +304,7 @@ export function ChannelConfigurationsTab({
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Configuration Dialog */}
       {showConfigDialog && (
@@ -356,7 +344,6 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-
                       value={configForm.name}
                       onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
                       placeholder="e.g. Primary Facebook Portal"
@@ -369,7 +356,6 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
                       placeholder="Client / App ID"
@@ -383,7 +369,6 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="password"
-
                       value={configForm.client_secret}
                       onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
                       placeholder="Secret Key"
@@ -449,7 +434,6 @@ export function ChannelConfigurationsTab({
                         </Label>
                         <Input
                           type="text"
-
                           value={configForm.verify_token}
                           onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
                           placeholder="Security Token"
@@ -470,7 +454,6 @@ export function ChannelConfigurationsTab({
                     </Label>
                     <Input
                       type="text"
-
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
                       placeholder="e.g. read_messages, write_post"
@@ -481,14 +464,12 @@ export function ChannelConfigurationsTab({
                 <div className="flex gap-4 mt-8 pt-6 border-t border-white/5">
                   <Button
                     variant="ghost"
-
                     className="flex-1 h-12 font-black uppercase tracking-widest text-xs opacity-60 hover:opacity-100 transition-opacity"
                     onClick={closeConfigDialog}
                   >
                     Discard
                   </Button>
                   <Button
-
                     className="flex-[2] h-12 font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                     onClick={saveConfig}
                     disabled={!configForm.client_id || !configForm.client_secret}

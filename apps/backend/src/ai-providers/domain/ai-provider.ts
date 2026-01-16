@@ -1,6 +1,14 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AiProviderOwnerType } from '../ai-providers.enum';
 
+export enum AiModelType {
+  CHAT = 'chat',
+  EMBEDDING = 'embedding',
+  VISION = 'vision',
+  IMAGE = 'image',
+  OTHER = 'other',
+}
+
 /**
  * AiProvider domain entity
  * Table: ai_providers
@@ -225,6 +233,9 @@ export class UserAiProviderConfig {
   @ApiProperty({ type: [String], example: ['gpt-4', 'gpt-3.5-turbo'] })
   modelList: string[];
 
+  @ApiProperty({ type: () => [AiModel], required: false })
+  models?: AiModel[];
+
   @ApiProperty({ type: Boolean, default: true })
   isActive: boolean;
 
@@ -264,6 +275,9 @@ export class WorkspaceAiProviderConfig {
 
   @ApiProperty({ type: [String] })
   modelList: string[];
+
+  @ApiProperty({ type: () => [AiModel], required: false })
+  models?: AiModel[];
 
   @ApiProperty({ type: Boolean, default: true })
   isActive: boolean;
@@ -309,6 +323,47 @@ export class SystemAiSettings {
 
   @ApiProperty({ type: Number, default: 100 })
   maxRequestsPerUser: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+}
+
+/**
+ * AiModel domain entity
+ */
+export class AiModel {
+  @ApiProperty({ type: String })
+  id: string;
+
+  @ApiProperty({ type: String, example: 'gpt-4o' })
+  name: string;
+
+  @ApiPropertyOptional({ type: String, example: 'GPT-4o' })
+  displayName?: string;
+
+  @ApiProperty({ type: String, example: 'chat' })
+  type: AiModelType;
+
+  @ApiProperty({ type: String })
+  providerId: string;
+
+  @ApiProperty({ enum: AiProviderOwnerType })
+  ownerType: AiProviderOwnerType;
+
+  @ApiProperty({ type: String })
+  ownerId: string;
+
+  @ApiPropertyOptional({ type: String })
+  configId?: string;
+
+  @ApiProperty({ type: 'object', additionalProperties: true })
+  metadata: Record<string, any>;
+
+  @ApiProperty({ type: Boolean, default: true })
+  isActive: boolean;
 
   @ApiProperty()
   createdAt: Date;

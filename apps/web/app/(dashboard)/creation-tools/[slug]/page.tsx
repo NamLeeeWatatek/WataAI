@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, use } from 'react';
+import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
@@ -9,20 +10,18 @@ import { templatesApi } from '@/lib/api/templates';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { Template } from '@/lib/types/template';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Stepper } from '@/components/ui/Stepper';
+import { ArrowLeft } from 'lucide-react';
 import { GridFormRenderer } from '@/components/features/creation-tools/GridFormRenderer';
 import { useForm } from 'react-hook-form';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
 import { useToast } from '@/lib/hooks/use-toast';
-import {
-    showProgressOverlay,
-    updateProgressOverlay,
-    completeProgressOverlay,
-    failProgressOverlay
-} from '@/components/ui/ProgressOverlay';
+
 import { generateZodSchema } from '@/lib/utils/schema-generator';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { completeProgressOverlay, failProgressOverlay, showProgressOverlay } from '@/components/shared/ProgressOverlay';
+import { FormSkeleton } from '@/components/shared/Skeletons';
+
+import { PageShell } from '@/components/layout/PageShell';
 
 export default function CreationToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {
     const resolvedParams = use(params);
@@ -34,8 +33,8 @@ export default function CreationToolDetailPage({ params }: { params: Promise<{ s
 
     if (toolLoading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-background text-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex-1 w-full bg-background overflow-hidden">
+                <FormSkeleton />
             </div>
         );
     }
@@ -105,7 +104,6 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
     }, [searchParams, templateList, form]);
 
     const onFormSubmit = async (data: any) => {
-        // Double check for required prompt (Safety measure)
         const isPromptEmpty = data.prompt === '' || (typeof data.prompt === 'string' && data.prompt.trim() === '');
         if (isPromptEmpty && tool.formConfig.fields.find(f => f.name === 'prompt')?.validation?.required) {
             toast({ title: 'Validation Error', description: 'Please enter the required prompt.', variant: 'destructive' });
@@ -154,43 +152,114 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         }
     };
 
+    const getStepTitle = (step: any, index: number) => {
+        const firstZoneTitle = step.layout?.rows?.[0]?.zones?.[0]?.title;
+        if (firstZoneTitle && firstZoneTitle !== 'Main Zone') return firstZoneTitle;
+        if (step.title && !step.title.startsWith('Step ')) return step.title;
+        return `Step ${index + 1}`;
+    };
+
+    const steps = tool.formConfig?.steps || [];
+    const showSteps = steps.length > 1;
+
     return (
-        <div className="space-y-8 min-h-screen pb-20 px-4 md:px-8 max-w-[100vw] overflow-x-hidden">
-            <div className="pb-8 border-b border-border/40 space-y-10">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="h-12 w-12 border border-border/40 rounded-2xl shrink-0" onClick={() => router.back()}>
-                        <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight text-foreground">{tool.name}</h1>
-                        {tool.description && <p className="text-sm text-muted-foreground">{tool.description}</p>}
+        <PageShell
+            title={tool.name}
+            description={tool.categories?.[0]?.name || 'AI Creation Tool'}
+            className="bg-transparent"
+        >
+            <div className="w-full max-w-4xl mx-auto py-2 lg:py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="bg-card border border-border/60 rounded-[32px] shadow-2xl shadow-black/5 overflow-hidden flex flex-col h-auto">
+                    {/* Unified Header with Steps */}
+                    {showSteps && (
+                        <div className="px-8 lg:px-12 py-5 bg-secondary/10 border-b border-border/40">
+                            <nav className="flex items-center justify-between gap-4 max-w-xl mx-auto">
+                                {steps.map((step, index) => {
+                                    const isActive = activeStep === index;
+                                    const isCompleted = activeStep > index;
+
+                                    return (
+                                        <div key={index} className="flex-1 flex items-center group">
+                                            <button
+                                                onClick={() => isCompleted && setActiveStep(index)}
+                                                disabled={!isCompleted && !isActive}
+                                                className="flex flex-col items-center gap-1.5 group outline-none"
+                                            >
+                                                <div className={cn(
+                                                    "w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold font-mono transition-all duration-300",
+                                                    isActive
+                                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
+                                                        : isCompleted
+                                                            ? "bg-primary/10 text-primary border border-primary/20"
+                                                            : "bg-muted text-muted-foreground/40 opacity-50"
+                                                )}>
+                                                    {index + 1}
+                                                </div>
+                                                <span className={cn(
+                                                    "text-[9px] font-bold uppercase tracking-[0.15em] hidden md:block transition-colors",
+                                                    isActive ? "text-foreground" : "text-muted-foreground/30"
+                                                )}>
+                                                    {getStepTitle(step, index)}
+                                                </span>
+                                            </button>
+
+                                            {index < steps.length - 1 && (
+                                                <div className="flex-1 h-[1px] mx-3 bg-border/30 relative top-[-8px] md:top-[-11px]">
+                                                    <div
+                                                        className="absolute inset-0 bg-primary/40 transition-all duration-500"
+                                                        style={{ width: isCompleted ? '100%' : '0%' }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    )}
+
+                    {/* Progress Bar (Very thin line) */}
+                    <div className="h-1 w-full bg-border/20">
+                        <div
+                            className="h-full bg-primary transition-all duration-700 ease-out"
+                            style={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+                        />
+                    </div>
+
+                    {/* Form Content Area */}
+                    <div className="p-8 lg:p-12 pt-6">
+                        {/* Step Description only - Title is clearly indicated in the stepper above */}
+                        {steps[activeStep]?.description && (
+                            <div className="mb-8 text-center max-w-xl mx-auto animate-in fade-in slide-in-from-top-1 duration-500">
+                                <p className="text-[13px] text-muted-foreground leading-relaxed font-medium">
+                                    {steps[activeStep].description}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="animate-in fade-in duration-700">
+                            <GridFormRenderer
+                                config={tool.formConfig}
+                                onSubmit={onFormSubmit}
+                                isSubmitting={submitting}
+                                form={form}
+                                activeStep={activeStep}
+                                onStepChange={setActiveStep}
+                                toolId={tool.id}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {tool.formConfig?.steps && tool.formConfig.steps.length > 1 && (
-                    <div className="w-full px-2">
-                        <Stepper
-                            steps={tool.formConfig.steps.map((s, i) => ({
-                                id: s.id || String(i),
-                                title: s.title || `Step ${i + 1}`
-                            }))}
-                            currentStep={activeStep}
-                        />
-                    </div>
-                )}
+                {/* Meta Info */}
+                <div className="mt-8 flex justify-center items-center gap-4 text-muted-foreground/40 font-bold text-[10px] uppercase tracking-[0.2em]">
+                    <span>AI Model Processing</span>
+                    <div className="w-1 h-1 rounded-full bg-border" />
+                    <span>Auto-Save active</span>
+                    <div className="w-1 h-1 rounded-full bg-border" />
+                    <span>Secure Input</span>
+                </div>
             </div>
-
-            <div className="w-full text-foreground">
-                <GridFormRenderer
-                    config={tool.formConfig}
-                    onSubmit={onFormSubmit}
-                    isSubmitting={submitting}
-                    form={form}
-                    activeStep={activeStep}
-                    onStepChange={setActiveStep}
-                    toolId={tool.id}
-                />
-            </div>
-        </div>
+        </PageShell>
     );
 }

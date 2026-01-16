@@ -9,9 +9,9 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
 import { authApi } from '@/lib/api/auth'
 import Link from 'next/link'
+import { LoadingLogo } from '@/components/shared/LoadingLogo'
 
 import { useTranslation } from 'react-i18next'
 

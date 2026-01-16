@@ -12,7 +12,12 @@
   NotFoundException, // Add NotFoundException if not already used
   Query, // Add Query decorator
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ChannelsService } from './channels.service';
 import { CreateConnectionDto } from '../integrations/dto/create-connection.dto';
@@ -34,7 +39,7 @@ export class ChannelsController {
   constructor(
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })
@@ -45,8 +50,13 @@ export class ChannelsController {
     @CurrentWorkspace() workspaceId: string,
     @Query() query: PaginationQueryDto,
   ) {
-    this.logger.log(`findAll: workspaceId=${workspaceId}, query=${JSON.stringify(query)}`);
-    const { data: connections, total } = await this.channelsService.findAll(workspaceId, query);
+    this.logger.log(
+      `findAll: workspaceId=${workspaceId}, query=${JSON.stringify(query)}`,
+    );
+    const { data: connections, total } = await this.channelsService.findAll(
+      workspaceId,
+      query,
+    );
     this.logger.log(`findAll: Found ${total} connections`);
 
     // Enrich connections with dynamic data (e.g. pages for Facebook)
@@ -192,7 +202,9 @@ export class ChannelsController {
   }
 
   @Get(':id/access-token')
-  @ApiOperation({ summary: 'Get channel access token for external integrations' })
+  @ApiOperation({
+    summary: 'Get channel access token for external integrations',
+  })
   async getAccessToken(
     @Param('id') id: string,
     @CurrentWorkspace() workspaceId: string,

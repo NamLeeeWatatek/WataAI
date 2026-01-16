@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { LoadingLogo } from '@/components/ui/LoadingLogo'
+import { LoadingLogo } from '../shared/LoadingLogo'
 
 interface AuthLoadingContextType {
     isLoading: boolean

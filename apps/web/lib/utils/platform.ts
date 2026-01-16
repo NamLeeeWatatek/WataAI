@@ -12,30 +12,11 @@ import {
   Linkedin,
   Slack,
   Globe,
-  Phone
+  Phone,
+  ShoppingBag,
+  Chrome
 } from 'lucide-react'
-import {
-  FaWhatsapp,
-  FaTelegram,
-  FaFacebookMessenger,
-  FaTiktok,
-  FaDiscord,
-  FaShopify,
-  FaGoogle,
-  FaLine,
-  FaViber,
-  FaWeixin
-} from 'react-icons/fa'
-import {
-  SiZalo,
-  SiNotion,
-  SiAirtable,
-  SiZapier,
-  SiHubspot,
-  SiSalesforce,
-  SiMailchimp,
-  SiIntercom
-} from 'react-icons/si'
+// Removed react-icons imports
 
 /**
  * Get platform icon component
@@ -44,32 +25,32 @@ import {
 export function getPlatformIcon(type: string): any {
   const iconMap: Record<string, any> = {
     facebook: Facebook,
-    messenger: FaFacebookMessenger,
+    messenger: MessageCircle,
     instagram: Instagram,
-    whatsapp: FaWhatsapp,
-    telegram: FaTelegram,
+    whatsapp: Phone,
+    telegram: MessageCircle,
     email: Mail,
     youtube: Youtube,
     twitter: Twitter,
     linkedin: Linkedin,
-    tiktok: FaTiktok,
-    discord: FaDiscord,
+    tiktok: MessageCircle,
+    discord: MessageCircle,
     slack: Slack,
-    zalo: SiZalo,
-    line: FaLine,
-    viber: FaViber,
-    wechat: FaWeixin,
+    zalo: MessageCircle,
+    line: MessageCircle,
+    viber: MessageCircle,
+    wechat: MessageCircle,
     sms: Phone,
     webchat: Globe,
-    shopify: FaShopify,
-    google: FaGoogle,
-    hubspot: SiHubspot,
-    salesforce: SiSalesforce,
-    mailchimp: SiMailchimp,
-    intercom: SiIntercom,
-    zapier: SiZapier,
-    notion: SiNotion,
-    airtable: SiAirtable
+    shopify: ShoppingBag,
+    google: Chrome,
+    hubspot: MessageCircle,
+    salesforce: MessageCircle,
+    mailchimp: Mail,
+    intercom: MessageCircle,
+    zapier: MessageCircle,
+    notion: MessageCircle,
+    airtable: MessageCircle
   }
 
   return iconMap[type] || MessageCircle

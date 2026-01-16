@@ -20,7 +20,7 @@ export class ChannelsService {
     private connectionRepository: Repository<ChannelConnectionEntity>,
     @InjectRepository(ConversationEntity)
     private conversationRepository: Repository<ConversationEntity>,
-  ) { }
+  ) {}
 
   async findAll(
     workspaceId: string,
@@ -73,7 +73,9 @@ export class ChannelsService {
       .createQueryBuilder('channel')
       .leftJoinAndSelect('channel.credential', 'credential')
       .where("channel.metadata ->> 'pageId' = :externalId", { externalId })
-      .andWhere('channel.status = :status', { status: ChannelConnectionStatus.ACTIVE })
+      .andWhere('channel.status = :status', {
+        status: ChannelConnectionStatus.ACTIVE,
+      })
       .getOne();
   }
 
@@ -144,7 +146,7 @@ export class ChannelsService {
         // Update conversations to remote channel reference
         await this.conversationRepository.update(
           { channelId: id },
-          { channelId: null, channelType: 'internal' }
+          { channelId: null, channelType: 'internal' },
         );
 
         // Then delete the channel

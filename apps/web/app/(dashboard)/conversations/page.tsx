@@ -6,7 +6,7 @@ import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { Pagination } from '@/components/ui/Pagination';
+import { Pagination } from '@/components/shared/Pagination';
 import {
   MessageSquare,
   Clock,
@@ -27,10 +27,13 @@ import {
   Instagram,
   Facebook,
   MessageCircle,
+  Phone,
+  Send,
+  Loader2,
 } from 'lucide-react';
-import { FaWhatsapp, FaTelegram, FaFacebookMessenger } from 'react-icons/fa';
+// Removed react-icons
 import { Button } from '@/components/ui/Button';
-import { Search } from '@/components/ui/Search';
+import { Search } from '@/components/shared/Search';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import {
@@ -40,20 +43,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { LoadingLogo } from '@/components/ui/LoadingLogo';
+
+import { ChatListSkeleton } from '@/components/shared/Skeletons';
 import { ChatInterface } from '@/components/features/chat/ChatInterface';
 import axiosClient from '@/lib/axios-client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { ChannelConversation } from '@/components/features/conversations/ChannelConversationList';
+import { ChannelConversation, ChannelConversationList } from '@/components/features/conversations/ChannelConversationList';
+import { ChannelList, Channel } from '@/components/features/conversations/ChannelList';
 import { Badge } from '@/components/ui/Badge';
-import { useQueryClient, useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
+import { getBotConversations } from '@/lib/api/conversations';
 import { useBotConversations, useBotConversation, botConversationKeys } from '@/lib/hooks/features/useBotConversations';
 import { useChannels } from '@/lib/hooks/features/useChannels';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { MessageRole } from '@/lib/types/conversations';
 import type { SocketConversation, SocketMessage } from '@/lib/types/socket';
-
 
 type Conversation = ChannelConversation;
 
@@ -143,10 +149,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 const getChannelIcon = (type: string) => {
   const icons: Record<string, JSX.Element> = {
     facebook: <Facebook className="w-4 h-4" />,
-    messenger: <FaFacebookMessenger className="w-4 h-4" />,
+    messenger: <MessageCircle className="w-4 h-4" />,
     instagram: <Instagram className="w-4 h-4" />,
-    whatsapp: <FaWhatsapp className="w-4 h-4" />,
-    telegram: <FaTelegram className="w-4 h-4" />,
+    whatsapp: <Phone className="w-4 h-4" />,
+    telegram: <Send className="w-4 h-4" />,
     email: <Mail className="w-4 h-4" />,
     webchat: <MessageCircle className="w-4 h-4" />,
   };
@@ -170,10 +176,10 @@ const getChannelColor = (type: string) => {
 const getChannelIconDisplay = (type: string) => {
   const icons: Record<string, JSX.Element> = {
     facebook: <Facebook className="w-5 h-5" />,
-    messenger: <FaFacebookMessenger className="w-5 h-5" />,
+    messenger: <MessageCircle className="w-5 h-5" />,
     instagram: <Instagram className="w-5 h-5" />,
-    whatsapp: <FaWhatsapp className="w-5 h-5" />,
-    telegram: <FaTelegram className="w-5 h-5" />,
+    whatsapp: <Phone className="w-5 h-5" />,
+    telegram: <Send className="w-5 h-5" />,
     email: <Mail className="w-5 h-5" />,
     webchat: <MessageCircle className="w-5 h-5" />,
   };
@@ -221,7 +227,7 @@ function ConversationsPageContent() {
   // React Query: Channels
   const { channels: rawChannels, isLoading: channelsLoading } = useChannels(currentWorkspace?.id);
 
-  const channels = useMemo(() => {
+  const channels: Channel[] = useMemo(() => {
     return (rawChannels || []).map((channel) => ({
       id: channel.id,
       name: channel.name || (channel as any).channelName || 'Unknown',
@@ -251,17 +257,61 @@ function ConversationsPageContent() {
   const conversationsQueryKey = useMemo(() => botConversationKeys.list(conversationsParams), [conversationsParams]);
 
   const {
-    data: conversationsResponse,
+    data: infiniteData,
     isLoading: conversationsLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
     refetch: refetchConversations,
-    isRefetching: refreshing,
-    total: totalConversations
-  } = useBotConversations(conversationsParams);
+  } = useInfiniteQuery({
+    queryKey: ['infinite-conversations', conversationsParams],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const data: any = await getBotConversations({
+        ...conversationsParams,
+        page: pageParam as number,
+      });
+
+      // Normalize data logic
+      let items = [];
+      let total = 0;
+
+      if (Array.isArray(data)) {
+        items = data;
+        total = data.length;
+      } else if (data?.items) {
+        items = data.items;
+        total = data.total || data.items.length;
+      } else if (data?.data) {
+        items = data.data;
+        total = data.total || data.data.length;
+      }
+
+      return { items: items.map(mapConversation), total };
+    },
+    getNextPageParam: (lastPage: any, allPages: any[]) => {
+      const currentTotal = allPages.reduce((acc, p) => acc + p.items.length, 0);
+      if (currentTotal < lastPage.total) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    enabled: !!currentWorkspace?.id,
+  });
+
+  const { ref: loadMoreRef, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const conversations = useMemo(() => {
-    const raw = Array.isArray(conversationsResponse) ? conversationsResponse : (conversationsResponse?.items || []);
-    return raw.map(mapConversation);
-  }, [conversationsResponse]);
+    return infiniteData?.pages.flatMap(page => page.items) || [];
+  }, [infiniteData]);
+
+  const refreshing = false; // Placeholder
 
   // Real-time updates handlers
   const handleConversationUpdate = useCallback((updatedConversation: SocketConversation) => {
@@ -400,7 +450,7 @@ function ConversationsPageContent() {
     channels.map((channel: any) => ({
       ...channel,
       unreadCount: conversations.filter(
-        (conv: Conversation) => conv.channelType === channel.type && conv.unreadCount > 0
+        (conv: ChannelConversation) => conv.channelType === channel.type && conv.unreadCount > 0
       ).length,
     })),
     [channels, conversations]
@@ -420,89 +470,13 @@ function ConversationsPageContent() {
         </div>
         <ScrollArea className="flex-1 px-3 py-4">
           <div className="space-y-1">
-            <button
-              onClick={() => setSelectedChannel('all')}
-              className={cn(
-                'w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group',
-                selectedChannel === 'all'
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                  : 'hover:bg-muted/80 text-foreground/80 hover:text-foreground'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'p-2.5 rounded-xl transition-colors',
-                  selectedChannel === 'all' ? 'bg-primary-foreground/20' : 'bg-primary/10 group-hover:bg-primary/20'
-                )}>
-                  <Inbox className="w-4.5 h-4.5" />
-                </div>
-                <span className="font-bold text-sm tracking-tight">All Messages</span>
-              </div>
-              {totalUnread > 0 && (
-                <Badge
-                  variant={selectedChannel === 'all' ? 'secondary' : 'default'}
-                  className="h-6 min-w-[24px] px-2 rounded-full font-bold"
-                >
-                  {totalUnread}
-                </Badge>
-              )}
-            </button>
-
-            <div className="py-3 px-4">
-              <div className="h-px bg-border/50" />
-            </div>
-
-            {channelsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <LoadingLogo size="sm" />
-              </div>
-            ) : channelsWithCounts.length === 0 ? (
-              <div className="px-4 py-12 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
-                  <Hash className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <p className="text-sm font-medium text-foreground mb-1">No channels yet</p>
-                <p className="text-xs text-muted-foreground">Connect a channel to get started</p>
-              </div>
-            ) : (
-              channelsWithCounts.map((channel) => (
-                <button
-                  key={channel.id}
-                  onClick={() => setSelectedChannel(channel.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-300 group',
-                    selectedChannel === channel.id
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                      : 'hover:bg-muted/60 text-foreground/80 hover:text-foreground'
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={cn(
-                      'p-2.5 rounded-xl transition-colors shrink-0',
-                      selectedChannel === channel.id
-                        ? 'bg-primary-foreground/20'
-                        : 'bg-card border border-border/40 group-hover:bg-muted group-hover:border-border transition-all'
-                    )}>
-                      <div className={cn(
-                        "transition-transform group-hover:scale-110 duration-300",
-                        selectedChannel === channel.id ? 'text-primary-foreground' : channel.color
-                      )}>
-                        {channel.icon}
-                      </div>
-                    </div>
-                    <span className="font-bold text-sm truncate tracking-tight">{channel.name}</span>
-                  </div>
-                  {channel.unreadCount > 0 && (
-                    <Badge
-                      variant={selectedChannel === channel.id ? 'secondary' : 'default'}
-                      className="h-6 min-w-[24px] px-2 rounded-full shrink-0 ml-2 font-bold"
-                    >
-                      {channel.unreadCount}
-                    </Badge>
-                  )}
-                </button>
-              ))
-            )}
+            <ChannelList
+              channels={channelsWithCounts}
+              selectedChannel={selectedChannel}
+              onSelect={setSelectedChannel}
+              totalUnread={totalUnread}
+              loading={channelsLoading}
+            />
           </div>
         </ScrollArea>
 
@@ -593,6 +567,7 @@ function ConversationsPageContent() {
               onChange={(e: any) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery("")}
               className="w-full"
+              loading={conversationsLoading && searchQuery !== debouncedSearch}
             />
           </div>
 
@@ -608,10 +583,8 @@ function ConversationsPageContent() {
 
         <ScrollArea className="flex-1">
           {conversationsLoading ? (
-            <div
-              className="flex items-center justify-center py-20"
-            >
-              <LoadingLogo size="md" text="Loading conversations..." />
+            <div className="py-0">
+              <ChatListSkeleton />
             </div>
           ) : conversations.length === 0 ? (
             <div
@@ -638,117 +611,25 @@ function ConversationsPageContent() {
               )}
             </div>
           ) : (
-            <div
-              className="divide-y divide-border/50"
-            >
-              {conversations.map((conv: Conversation, index: number) => (
-                <button
-                  key={conv.id}
-                  onClick={() => handleSelectConversation(conv.id)}
-                  className={cn(
-                    'w-full px-4 py-3 text-left transition-all duration-200 relative group',
-                    'hover:bg-muted/60',
-                    selectedId === conv.id && 'bg-primary/5 border-l-2 border-primary'
-                  )}
-                >
-                  <div className="flex gap-3 items-start">
-                    {/* Avatar with channel badge - Compact */}
-                    <div className="relative shrink-0">
-                      <Avatar className="h-11 w-11 ring-1 ring-border">
-                        <AvatarImage src={conv.customerAvatar} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                          {(conv.customerName || 'User').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {/* Channel icon badge - Smaller */}
-                      <div className={cn(
-                        'absolute -bottom-0.5 -right-0.5 p-1 rounded-full bg-background border border-background shadow-sm',
-                        getChannelColor(conv.channelType)
-                      )}>
-                        <div className="w-3 h-3 flex items-center justify-center">
-                          {getChannelIcon(conv.channelType)}
-                        </div>
-                      </div>
-                    </div>
+            <div className="flex flex-col">
+              <ChannelConversationList
+                conversations={conversations}
+                selectedId={selectedId}
+                onSelect={handleSelectConversation}
+              />
 
-                    {/* Content - Cleaner layout */}
-                    <div className="flex-1 min-w-0">
-                      {/* Header row */}
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h3 className={cn(
-                          "font-semibold text-[15px] truncate",
-                          conv.unreadCount > 0 ? 'text-foreground' : 'text-foreground/90'
-                        )}>
-                          {conv.customerName}
-                        </h3>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {formatRelativeTime(conv.lastMessageAt)}
-                        </span>
-                      </div>
-
-                      {/* Badge row - Like image */}
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {conv.metadata?.tags?.includes('VIP') && (
-                          <Badge className="bg-warning/10 text-warning border-warning/20">
-                            🔒 VIP Lead
-                          </Badge>
-                        )}
-                        {conv.metadata?.tags?.includes('Hot') && (
-                          <Badge variant="destructive">
-                            🔥 Hot Lead
-                          </Badge>
-                        )}
-                        {conv.metadata?.tags?.includes('Payment') && (
-                          <Badge variant="default">
-                            💳 Payments
-                          </Badge>
-                        )}
-                        {!conv.metadata?.tags?.length && (
-                          <Badge variant="secondary" className="h-5 px-2 text-[10px] font-medium">
-                            {conv.channelName}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Message preview */}
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={cn(
-                          "text-[13px] truncate leading-tight",
-                          conv.unreadCount > 0
-                            ? 'text-foreground/80 font-medium'
-                            : 'text-muted-foreground'
-                        )}>
-                          {conv.lastMessage}
-                        </p>
-
-                        {/* Unread badge - Compact */}
-                        {conv.unreadCount > 0 && (
-                          <Badge className="h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-[11px] font-semibold shrink-0">
-                            {conv.unreadCount}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+              {/* Intersection Observer Target for Infinite Scroll */}
+              <div ref={loadMoreRef} className="h-12 flex items-center justify-center border-t border-border/10">
+                {isFetchingNextPage && (
+                  <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in duration-300">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Loading more...</span>
                   </div>
-                </button>
-              ))}
-
-              {totalConversations > pageSize && (
-                <div className="p-4 border-t border-border/50">
-                  <Pagination
-                    pagination={{
-                      page: currentPage,
-                      limit: pageSize,
-                      total: totalConversations,
-                      totalPages: Math.ceil(totalConversations / pageSize),
-                      hasNextPage: currentPage < Math.ceil(totalConversations / pageSize)
-                    }}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                    pageSizeOptions={[10, 20, 50, 100]}
-                  />
-                </div>
-              )}
+                )}
+                {!hasNextPage && conversations.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-bold">End of list</span>
+                )}
+              </div>
             </div>
           )}
         </ScrollArea>
@@ -889,8 +770,8 @@ function ConversationChat({
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <LoadingLogo size="md" />
+      <div className="flex-1 overflow-hidden p-6">
+        <ChatListSkeleton />
       </div>
     );
   }

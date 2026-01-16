@@ -46,6 +46,7 @@ import { useBreadcrumbStore } from '@/lib/stores/useBreadcrumbStore';
 import toast from '@/lib/toast';
 import { useQuery } from '@tanstack/react-query';
 import { getKnowledgeBase, getKnowledgeBaseStats, getKBContent } from '@/lib/api/knowledge-base';
+import { kbKeys } from './useKnowledgeBases';
 
 export function useKnowledgeBaseController(kbId: string) {
     const dispatch = useAppDispatch();
@@ -82,7 +83,7 @@ export function useKnowledgeBaseController(kbId: string) {
         isLoading: isQueryLoading,
         refetch: refresh
     } = useQuery({
-        queryKey: ['kb-detail', kbId, folderParam, currentPage, pageSize, searchQuery],
+        queryKey: [...kbKeys.detail(kbId), folderParam, currentPage, pageSize, searchQuery],
         queryFn: async () => {
             if (!kbId) return null;
             const [kbRes, statsRes, contentRes] = await Promise.all([

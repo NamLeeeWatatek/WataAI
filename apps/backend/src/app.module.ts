@@ -77,6 +77,7 @@ const infrastructureDatabaseModule = (databaseConfig() as DatabaseConfig)
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
+import { WorkflowsModule } from './workflows/workflows.module';
 
 @Module({
   imports: [
@@ -196,6 +197,7 @@ import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
     PermissionsModule,
     RolesModule,
     ExecutionModule,
+    WorkflowsModule,
   ],
 })
 export class AppModule {}

@@ -1,8 +1,8 @@
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { FiFileText, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiCircle } from 'react-icons/fi'
+import { StatusBadge } from '@/components/shared/StatusBadge'
+import { FileText, Trash2, CheckCircle, Clock, AlertCircle, Circle } from "lucide-react"
 import type { KBDocument } from '@/lib/types/knowledge-base'
 
 interface KBDocumentItemProps {
@@ -32,7 +32,7 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                        <FiFileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
@@ -47,7 +47,7 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
                             <span>{document.fileType || document.type || 'document'}</span>
                             {document.sourceUrl && (
                                 <>
-                                    <FiCircle className="w-1 h-1 fill-current" />
+                                    <Circle className="w-1 h-1 fill-current" />
                                     <span className="truncate max-w-xs" title={document.sourceUrl}>
                                         {new URL(document.sourceUrl).hostname}
                                     </span>
@@ -55,7 +55,7 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
                             )}
                             {document.fileSize && (
                                 <>
-                                    <FiCircle className="w-1 h-1 fill-current" />
+                                    <Circle className="w-1 h-1 fill-current" />
                                     <span>{formatFileSize(document.fileSize)}</span>
                                 </>
                             )}
@@ -69,7 +69,7 @@ export function KBDocumentItem({ document, onDelete }: KBDocumentItemProps) {
                         className="h-8 w-8 text-destructive hover:bg-destructive/10"
                         onClick={() => onDelete(document.id)}
                     >
-                        <FiTrash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                     </Button>
                 </div>
             </div>

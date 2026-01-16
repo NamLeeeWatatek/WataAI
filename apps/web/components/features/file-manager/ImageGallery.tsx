@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/Dialog';
-import { Media } from '@/components/ui/Media';
+import { Media } from '@/components/shared/Media';
 
 interface ImageGalleryProps {
   images: Array<{

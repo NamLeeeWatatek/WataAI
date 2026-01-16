@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -114,5 +115,32 @@ export class TemplatesController {
     bulkDeleteDto: import('./dto/bulk-operation-template.dto').BulkDeleteTemplateDto,
   ): Promise<void> {
     return this.templatesService.bulkRemove(bulkDeleteDto.ids);
+  }
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  @Permissions('template:Create')
+  async importTemplates(
+    @Body() body: { templates: any[]; workspaceId: string },
+    @Param('id') _id: string, // unused but keeps signature consistent if needed
+    @Req() req,
+  ): Promise<any[]> {
+    // If no workspaceId in body, try to get from user or context?
+    // Ideally the frontend sends it.
+    return this.templatesService.importTemplates(
+      body.templates,
+      body.workspaceId,
+      req.user.id,
+    );
+  }
+
+  @Get('export')
+  @Permissions('template:List')
+  async exportTemplates(@Query('ids') ids: string): Promise<Template[]> {
+    const idArray = ids ? ids.split(',').filter(Boolean) : [];
+    // If no IDs provided, export ALL? Or return empty?
+    // Better to require IDs for specific export, or handle "all" logic if needed.
+    // For now assuming explicit selection.
+    if (idArray.length === 0) return [];
+    return this.templatesService.getTemplatesForExport(idArray);
   }
 }
