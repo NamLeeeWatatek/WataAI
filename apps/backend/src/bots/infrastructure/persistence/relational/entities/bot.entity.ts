@@ -15,7 +15,7 @@ import { EntityRelationalHelper } from '../../../../../utils/relational-entity-h
 import { WorkspaceEntity } from '../../../../../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { WidgetVersionEntity } from './widget-version.entity';
-import { AiProviderEntity } from '../../../../../ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
+import { AiProviderConfigEntity } from '../../../../../ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
 import {
   BotStatus,
   BotWidgetPosition,
@@ -63,12 +63,12 @@ export class BotEntity extends WorkspaceOwnedEntity {
   @Column({ name: 'function_config', type: 'jsonb', nullable: true })
   functionConfig?: Record<string, any> | null;
 
-  @Column({ name: 'ai_provider_id', type: 'uuid', nullable: true })
-  aiProviderId?: string | null;
+  @Column({ name: 'ai_config_id', type: 'uuid', nullable: true })
+  aiConfigId?: string | null;
 
-  @ManyToOne(() => AiProviderEntity)
-  @JoinColumn({ name: 'ai_provider_id' })
-  aiProvider?: AiProviderEntity;
+  @ManyToOne(() => AiProviderConfigEntity)
+  @JoinColumn({ name: 'ai_config_id' })
+  aiConfig?: AiProviderConfigEntity;
 
   @Column({ name: 'ai_model_name', type: String, nullable: true })
   aiModelName?: string | null;

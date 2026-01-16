@@ -43,7 +43,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -61,13 +61,19 @@ export class BotsService {
       );
     }
 
+    const botData: any = { ...createDto };
+    if (botData.aiProviderId) {
+      botData.aiConfigId = botData.aiProviderId;
+      delete botData.aiProviderId;
+    }
+
     const bot = this.botRepository.create({
-      ...createDto,
+      ...botData,
       createdBy: userId,
       status: createDto.status ?? BotStatus.DRAFT,
       defaultLanguage: createDto.defaultLanguage ?? 'en',
       timezone: createDto.timezone ?? 'UTC',
-    });
+    }) as unknown as BotEntity;
     const savedBot = await this.botRepository.save(bot);
 
     try {
@@ -291,13 +297,25 @@ export class BotsService {
     const bot = await this.findOne(id, workspaceId);
 
     // Clean up invalid UUIDs
+    // Clean up invalid UUIDs
     if (botUpdate.flowId === 'undefined' || botUpdate.flowId === 'null')
       botUpdate.flowId = null;
+
+    // Map aiProviderId (DTO) to aiConfigId (Entity)
+    // The frontend sends the Config ID in the providerId field currently.
+    // We map it to the new column.
     if (
       botUpdate.aiProviderId === 'undefined' ||
       botUpdate.aiProviderId === 'null'
-    )
+    ) {
       botUpdate.aiProviderId = null;
+    }
+
+    // Explicitly handle the mapping
+    if (botUpdate.aiProviderId !== undefined) {
+      (bot as any).aiConfigId = botUpdate.aiProviderId;
+      delete botUpdate.aiProviderId; // Remove from spread to avoid error
+    }
 
     Object.assign(bot, botUpdate);
     const savedBot = await this.botRepository.save(bot);
