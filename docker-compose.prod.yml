@@ -3,13 +3,13 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./apps/backend
+      context: ./backend
       dockerfile: Dockerfile
     image: ${DOCKER_USERNAME}/aiwata-backend:latest
     container_name: aiwata-backend
     restart: unless-stopped
     env_file:
-      - apps/backend/.env
+      - backend/.env
     environment:
       # If you want to run DB on Host, uncomment extra_hosts below and set DATABASE_HOST=host.docker.internal in .env
       # If you want to run DB in Docker (infra-shared), set DATABASE_HOST=postgres in .env
@@ -27,7 +27,7 @@ services:
 
   web:
     build:
-      context: ./apps/web
+      context: ./web
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
@@ -36,7 +36,7 @@ services:
     container_name: aiwata-web
     restart: unless-stopped
     env_file:
-      - apps/web/.env
+      - web/.env
     ports:
       - "3000:3000"
     networks:
