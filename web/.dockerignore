@@ -18,7 +18,6 @@ lib/seeds/
 lib/migrations/
 lib/modules/
 lib/infrastructure/
-lib/config/
 src/
 test/
 
