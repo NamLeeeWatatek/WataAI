@@ -8,3 +8,14 @@ dist
 *.swp
 *.swo
 .DS_Store
+*.swp
+*.swo
+.DS_Store
+
+# Backend specific files to ignore in frontend
+**/*.controller.ts
+**/*.module.ts
+**/*.service.ts
+**/*.entity.ts
+**/*.dto.ts
+**/src/
