@@ -233,13 +233,13 @@ export function GridFormRenderer({
                     {renderStepContent()}
                 </div>
 
-                <div className="flex gap-4 mt-8 pt-6 border-t border-border/40">
+                <div className="flex flex-col sm:flex-row gap-4 mt-16">
                     {currentStepIndex > 0 && (
                         <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             onClick={handleBack}
-                            className="flex-1 h-12 rounded-xl font-bold uppercase tracking-wide text-xs transition-all hover:bg-muted/50"
+                            className="h-14 px-8 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                         >
                             Back
                         </Button>
@@ -249,7 +249,7 @@ export function GridFormRenderer({
                             type="button"
                             onClick={handleNext}
                             disabled={isPreviewing}
-                            className="flex-[2] h-12 rounded-xl font-bold uppercase tracking-wide text-xs bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25"
+                            className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] bg-primary text-primary-foreground shadow-[0_8px_32px_-8px_rgba(var(--primary),0.5)] hover:shadow-[0_12px_40px_-8px_rgba(var(--primary),0.6)] transition-all active:scale-[0.98]"
                         >
                             {isPreviewing ? 'Processing Preview...' : 'Continue'}
                         </Button>
@@ -257,9 +257,9 @@ export function GridFormRenderer({
                         <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="flex-[2] h-12 rounded-xl font-bold uppercase tracking-wide text-xs bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all active:scale-[0.98]"
+                            className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] bg-primary text-primary-foreground shadow-[0_8px_32px_-8px_rgba(var(--primary),0.5)] hover:shadow-[0_12px_40px_-8px_rgba(var(--primary),0.6)] transition-all active:scale-[0.98]"
                         >
-                            {isSubmitting ? 'Processing...' : (config.submitLabel || 'Generate Now')}
+                            {isSubmitting ? 'Processing...' : (config.submitLabel || 'Launch Generation')}
                         </Button>
                     )}
                 </div>

@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import axiosClient from '@/lib/axios-client';
+import { Check, X } from 'lucide-react';
 
 function ChannelCallbackContent() {
   const searchParams = useSearchParams();
@@ -113,9 +114,7 @@ function ChannelCallbackContent() {
         {status === 'success' && (
           <>
             <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
-              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-8 h-8 text-green-400" />
             </div>
             <h2 className="text-xl font-semibold mb-2 text-green-400">Success!</h2>
             <p className="text-gray-400">{message}</p>
@@ -126,9 +125,7 @@ function ChannelCallbackContent() {
         {status === 'error' && (
           <>
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className="w-8 h-8 text-red-400" />
             </div>
             <h2 className="text-xl font-semibold mb-2 text-red-400">Error</h2>
             <p className="text-gray-400">{message}</p>

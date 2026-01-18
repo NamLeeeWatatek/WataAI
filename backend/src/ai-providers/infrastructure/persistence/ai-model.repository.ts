@@ -24,4 +24,14 @@ export abstract class AiModelRepository {
     configId: string,
     ownerType: AiProviderOwnerType,
   ): Promise<void>;
+
+  abstract findManyWithPagination({
+    filterOptions,
+    sortOptions,
+    paginationOptions,
+  }: {
+    filterOptions?: any;
+    sortOptions?: any[] | null;
+    paginationOptions: { page: number; limit: number };
+  }): Promise<AiModel[]>;
 }

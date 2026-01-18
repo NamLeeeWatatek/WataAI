@@ -92,7 +92,7 @@ function TabsHeader({
     <div
       data-slot="tabs-header"
       className={cn(
-        "bg-background/50 sticky top-0 z-30 -mx-4 mb-8 border-b border-border/10 px-4 pt-4 pb-4 backdrop-blur-sm md:-mx-8 md:px-8",
+        "glass-floating sticky top-0 z-30 -mx-4 mb-8 -mt-2 pt-4 pb-4 md:-mx-8 md:px-8",
         className
       )}
       {...props}

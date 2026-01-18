@@ -1,12 +1,20 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, horizontalListSortingStrategy, verticalListSortingStrategy, rectSortingStrategy } from '@dnd-kit/sortable'
 import { SortableItem } from './SortableItem'
-import { Box, GripVertical, MoreVertical, Plus, Trash2, X } from 'lucide-react'
+import { Box, ChevronRight, GripVertical, MoreHorizontal, MoreVertical, Plus, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/utils'
-import { FormField, ZoneConfig } from '@/lib/api/creation-tools'
+import { FormField, FormStep, ZoneConfig } from '@/lib/api/creation-tools'
 import { DynamicFormField } from '@/components/ui/DynamicFormField'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/DropdownMenu"
 
 interface FormBuilderZoneProps {
     zone: ZoneConfig
@@ -17,6 +25,8 @@ interface FormBuilderZoneProps {
     selectedFieldName: string | null
     onSelectField: (name: string) => void
     onDeleteField: (rowId: string, fieldIdx: number) => void
+    steps: FormStep[]
+    onMoveFieldToStep: (fieldName: string, stepIdx: number) => void
 }
 
 export function FormBuilderZone({
@@ -27,7 +37,9 @@ export function FormBuilderZone({
     onUpdateZone,
     selectedFieldName,
     onSelectField,
-    onDeleteField
+    onDeleteField,
+    steps,
+    onMoveFieldToStep
 }: FormBuilderZoneProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: zone.id,
@@ -77,23 +89,21 @@ export function FormBuilderZone({
                             {({ ref, style, attributes, listeners, isDragging: isRowDragging }) => (
                                 <div
                                     ref={ref}
+                                    style={style}
                                     className={cn(
-                                        "grid gap-4 p-4 min-h-[90px] rounded-2xl transition-all border-2 border-dashed mb-3 relative group/row-container",
-                                        "hover:border-primary/20 bg-card/50 border-muted-foreground/5",
+                                        "grid gap-6 p-6 transition-all border-2 border-dashed mb-4 relative group/row-container",
+                                        "hover:border-primary/30 bg-card/40 border-muted-foreground/10",
+                                        fieldRow.fields.length === 0 ? "hidden" : "rounded-[2rem] min-h-[100px]",
                                         fieldRow.fields.length === 0 ? "grid-cols-1" : `grid-cols-${Math.min(4, fieldRow.fields.length)}`
                                     )}
-                                    style={{
-                                        ...style,
-                                        gridTemplateColumns: `repeat(${Math.max(1, fieldRow.fields.length)}, minmax(0, 1fr))`
-                                    }}
                                 >
                                     {/* Drag handle for row reordering */}
                                     <div
                                         {...attributes}
                                         {...listeners}
-                                        className="absolute top-1 left-1 opacity-0 group-hover/row-container:opacity-100 cursor-move z-10"
+                                        className="absolute top-2 left-2 opacity-0 group-hover/row-container:opacity-100 cursor-grab active:cursor-grabbing z-10 p-1 hover:bg-muted rounded transition-opacity"
                                     >
-                                        <GripVertical className="w-3 h-3 text-muted-foreground" />
+                                        <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50" />
                                     </div>
 
                                     <SortableContext items={fieldRow.fields} strategy={rectSortingStrategy}>
@@ -120,6 +130,8 @@ export function FormBuilderZone({
                                                                 isSelected={selectedFieldName === fieldName}
                                                                 isDragging={isDragging}
                                                                 onDelete={() => onDeleteField(fieldRow.id, fieldIdx)}
+                                                                steps={steps}
+                                                                onMoveToStep={(idx) => onMoveFieldToStep(fieldName, idx)}
                                                             />
                                                         </div>
                                                     )}
@@ -137,12 +149,26 @@ export function FormBuilderZone({
     )
 }
 
-function FieldPreview({ field, isSelected, isDragging, onDelete }: { field: FormField, isSelected: boolean, isDragging: boolean, onDelete: () => void }) {
+function FieldPreview({
+    field,
+    isSelected,
+    isDragging,
+    onDelete,
+    steps,
+    onMoveToStep
+}: {
+    field: FormField,
+    isSelected: boolean,
+    isDragging: boolean,
+    onDelete: () => void,
+    steps: FormStep[],
+    onMoveToStep: (idx: number) => void
+}) {
     return (
         <div className={cn(
-            "w-full h-full p-3 group/card relative rounded-lg border-2 transition-all overflow-hidden bg-background cursor-pointer",
-            isSelected ? "ring-2 ring-primary border-primary shadow-md z-10" : "border-dashed border-border/50 hover:border-border",
-            isDragging && "shadow-2xl ring-2 ring-primary rotate-2 scale-105 z-50 bg-background opacity-90 cursor-grabbing"
+            "w-full h-full p-6 group/card relative rounded-2xl border-2 transition-all overflow-hidden bg-background cursor-pointer",
+            isSelected ? "ring-4 ring-primary/10 border-primary shadow-[0_10px_40px_rgba(var(--primary-rgb),0.15)] z-10 scale-[1.02]" : "border-dashed border-border/40 hover:border-primary/20 hover:bg-muted/5",
+            isDragging && "shadow-2xl ring-4 ring-primary/20 rotate-1 scale-105 z-50 bg-background opacity-90 cursor-grabbing border-primary"
         )}>
             <div className={cn("pointer-events-none opacity-80", isSelected && "opacity-100")}>
                 <DynamicFormField
@@ -157,6 +183,41 @@ function FieldPreview({ field, isSelected, isDragging, onDelete }: { field: Form
                 "absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity z-20",
                 isSelected && "opacity-100"
             )}>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-background/80 hover:bg-background shadow-sm border">
+                            <MoreHorizontal className="w-3 h-3" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Quick Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-2 mt-2">
+                            <ChevronRight className="w-2 h-2" /> Move to Step
+                        </DropdownMenuLabel>
+                        {steps.map((step, idx) => (
+                            <DropdownMenuItem
+                                key={step.id}
+                                onClick={(e) => { e.stopPropagation(); onMoveToStep(idx); }}
+                                className="text-xs py-2"
+                            >
+                                <div className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold mr-2">
+                                    {idx + 1}
+                                </div>
+                                {step.title}
+                            </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                            className="text-xs py-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                            <Trash2 className="w-3 h-3 mr-2" />
+                            Delete Field
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button
                     variant="destructive" size="icon" className="h-6 w-6 rounded-full shadow-sm"
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}

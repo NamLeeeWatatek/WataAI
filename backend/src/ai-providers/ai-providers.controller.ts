@@ -34,7 +34,9 @@ import {
   UpdateWorkspaceAiProviderConfigDto,
   UpdateSystemAiSettingsDto,
   VerifyApiKeyDto,
+  QueryAiModelDto,
 } from './dto/ai-provider.dto';
+import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import {
   AiProvider,
   UserAiProviderConfig,
@@ -57,7 +59,14 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 })
 @ApiExtraModels(AiModel)
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) {}
+  constructor(private readonly aiProvidersService: AiProvidersService) { }
+
+  @Get('models')
+  @ApiOperation({ summary: 'Find AI models with pagination' })
+  @ApiOkResponse({ type: InfinityPaginationResponseDto })
+  async getPagedModels(@Query() query: QueryAiModelDto) {
+    return this.aiProvidersService.findModelsWithPagination(query);
+  }
 
   @Permissions('ai:Get')
   @Get('unified-config/:id/details')

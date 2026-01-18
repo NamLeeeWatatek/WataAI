@@ -5,6 +5,7 @@ import {
   ArrowUpDown,
   LayoutGrid,
   List,
+  Loader2,
 } from "lucide-react"
 import {
   useReactTable,
@@ -329,45 +330,47 @@ function DataTableInner<TData, TValue>({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody>
-                {loading ? (
+              <TableBody className="relative">
+                {loading && !data.length ? (
                   <TableSkeleton columns={columns.length} rows={pageSize} />
                 ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                      className={cn(
-                        "group transition-colors border-b last:border-0",
-                        onRowClick && "cursor-pointer hover:bg-muted/50"
-                      )}
-                      onClick={() => onRowClick?.(row.original)}
-                    >
-                      {row.getVisibleCells().map((cell) => {
-                        const isSelection = cell.column.id === 'selection'
-                        const isActions = cell.column.id === 'actions'
+                  <>
+                    {table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className={cn(
+                          "group transition-colors border-b last:border-0",
+                          onRowClick && "cursor-pointer hover:bg-muted/50"
+                        )}
+                        onClick={() => onRowClick?.(row.original)}
+                      >
+                        {row.getVisibleCells().map((cell) => {
+                          const isSelection = cell.column.id === 'selection'
+                          const isActions = cell.column.id === 'actions'
 
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              "h-12 px-4 py-2",
-                              isSelection && "w-10 p-0 text-center",
-                              isActions && "w-16 text-right",
-                              (cell.column.columnDef.meta as any)?.className
-                            )}
-                            style={{
-                              width: isSelection ? '40px' : isActions ? '64px' : undefined,
-                              minWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
-                              maxWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        )
-                      })}
-                    </TableRow>
-                  ))
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(
+                                "h-12 px-4 py-2",
+                                isSelection && "w-10 p-0 text-center",
+                                isActions && "w-16 text-right",
+                                (cell.column.columnDef.meta as any)?.className
+                              )}
+                              style={{
+                                width: isSelection ? '40px' : isActions ? '64px' : undefined,
+                                minWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                                maxWidth: isSelection ? '40px' : isActions ? '64px' : undefined,
+                              }}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          )
+                        })}
+                      </TableRow>
+                    ))}
+                  </>
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -377,10 +380,28 @@ function DataTableInner<TData, TValue>({
                 )}
               </TableBody>
             </Table>
+            {/* Feedback Overlay for Subsequent Loads - Moved outside TableBody for valid HTML */}
+            {loading && data.length > 0 && (
+              <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-10 animate-in fade-in duration-300">
+                <div className="bg-background/80 p-3 rounded-full shadow-lg border border-border/50">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={cn("p-6 grid gap-6", gridClassName)}>
-            {data.length > 0 ? (
+            {loading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-48 rounded-2xl border border-border/50 bg-card/40 p-6 shadow-sm animate-pulse space-y-4">
+                  <div className="h-8 w-1/3 bg-muted rounded"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-muted/60 rounded"></div>
+                    <div className="h-4 w-2/3 bg-muted/60 rounded"></div>
+                  </div>
+                </div>
+              ))
+            ) : data.length > 0 ? (
               data.map((item, index) => (
                 <React.Fragment key={(item as any).id || index}>
                   {renderGridItem?.(item)}

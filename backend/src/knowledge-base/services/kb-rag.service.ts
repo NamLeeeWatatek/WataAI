@@ -373,7 +373,7 @@ export class KBRagService {
           'id',
           'name',
           'workspaceId',
-          'aiProviderId',
+          'aiConfigId',
           'aiModelName',
           'createdBy',
         ],
@@ -384,7 +384,7 @@ export class KBRagService {
       }
 
       const workspaceId = bot.workspaceId ?? undefined;
-      const aiProviderId = bot.aiProviderId ?? undefined;
+      const aiConfigId = bot.aiConfigId ?? undefined;
       const modelName = model || bot.aiModelName || KbAiConfig.defaults.model;
 
       let relevantChunks: ChunkSource[] = [];
@@ -435,11 +435,11 @@ export class KBRagService {
         },
       ];
 
-      const answer = aiProviderId
+      const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
           messages,
           modelName,
-          aiProviderId,
+          aiConfigId,
           workspaceId ? 'workspace' : 'user',
           workspaceId || bot.createdBy || 'system',
         )
@@ -508,7 +508,7 @@ export class KBRagService {
             'id',
             'name',
             'workspaceId',
-            'aiProviderId',
+            'aiConfigId',
             'aiModelName',
             'systemPrompt',
             'createdBy',
@@ -665,14 +665,40 @@ export class KBRagService {
       }
     }
 
-    // 2. Bot specific settings
-    if (bot?.aiProviderId) {
-      return {
-        providerId: bot.aiProviderId,
-        scope: bot.workspaceId ? 'workspace' : 'user',
-        scopeId: bot.workspaceId || bot.createdBy || 'unknown',
-        modelName: bot.aiModelName || undefined,
-      };
+    // 2. Bot specific AI settings (Config ID now)
+    if (bot && bot.aiConfigId) {
+      if (bot.workspaceId) {
+        // Now retrieving using the Config ID directly
+        const config = await this.aiProvidersService.getWorkspaceConfig(
+          bot.workspaceId,
+          bot.aiConfigId,
+        );
+
+        if (config) {
+          return {
+            providerId: config.providerId, // Resolved Provider ID from Config
+            scope: 'workspace',
+            scopeId: bot.workspaceId,
+            modelName: bot.aiModelName || undefined,
+          };
+        }
+      }
+
+      if (bot.createdBy) {
+        const config = await this.aiProvidersService.getUserConfig(
+          bot.createdBy,
+          bot.aiConfigId
+        );
+
+        if (config) {
+          return {
+            providerId: config.providerId,
+            scope: 'user',
+            scopeId: bot.createdBy,
+            modelName: bot.aiModelName || undefined,
+          };
+        }
+      }
     }
 
     return null;

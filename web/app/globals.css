@@ -340,32 +340,32 @@
 
   /* Base Glass (Sidebar, Panels) */
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border-r border-border/40 supports-[backdrop-filter]:bg-background/60;
+    @apply bg-white/10 dark:bg-black/20 backdrop-blur-xl border-r border-white/20 dark:border-white/10 supports-[backdrop-filter]:bg-white/10 supports-[backdrop-filter]:dark:bg-black/20;
   }
 
   /* Floating Glass (Headers, Dropdowns) */
   .glass-floating {
-    @apply bg-background/70 backdrop-blur-2xl border border-border/40 shadow-xl supports-[backdrop-filter]:bg-background/70;
+    @apply bg-white/20 dark:bg-black/40 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shadow-lg supports-[backdrop-filter]:bg-white/20 supports-[backdrop-filter]:dark:bg-black/40;
   }
 
   /* Card Glass (Surface) */
   .glass-card {
-    @apply bg-card/40 backdrop-blur-md border border-border/50 shadow-sm transition-all duration-300 hover:bg-card/60 hover:shadow-lg hover:border-primary/20;
+    @apply bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm transition-all duration-300 hover:bg-white/50 hover:dark:bg-black/50 hover:shadow-lg hover:border-primary/20;
   }
 
   /* Input Glass (Recessed) */
   .glass-input {
-    @apply bg-background/40 backdrop-blur-sm border border-border/40 shadow-inner focus:bg-background/80 transition-all;
+    @apply bg-black/5 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-inner focus:bg-background/80 transition-all;
   }
 
   /* Overlay Glass (Modals) */
   .glass-overlay {
-    @apply bg-background/20 backdrop-blur-sm;
+    @apply bg-black/20 backdrop-blur-sm;
   }
 
   /* High Contrast Modal Content */
   .glass-modal {
-    @apply bg-background/80 backdrop-blur-2xl border border-border/50 shadow-2xl;
+    @apply bg-background/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
   }
 
   /* Gradient Text */

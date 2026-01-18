@@ -79,7 +79,7 @@ export function BillingTab() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-12 animate-in fade-in duration-500">
       {/* Usage Section */}
       {quota && (
         <div className="grid gap-4 md:grid-cols-2">

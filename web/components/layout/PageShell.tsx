@@ -40,7 +40,6 @@ export const PageShell = ({
                         description={description}
                         onRefresh={onRefresh}
                         refreshing={refreshing}
-                        className="mb-6"
                     >
                         {actions}
                     </PageHeader>

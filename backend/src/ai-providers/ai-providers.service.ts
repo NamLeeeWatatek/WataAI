@@ -14,7 +14,10 @@ import {
   CreateWorkspaceAiProviderConfigDto,
   UpdateWorkspaceAiProviderConfigDto,
   UpdateSystemAiSettingsDto,
+  QueryAiModelDto,
 } from './dto/ai-provider.dto';
+import { infinityPagination } from '../utils/infinity-pagination';
+import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
 import {
   AiProvider,
   UserAiProviderConfig,
@@ -44,7 +47,7 @@ export class AiProvidersService {
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
     private readonly aiModelRepository: AiModelRepository,
-  ) {}
+  ) { }
 
   /**
    * Encrypt an API key
@@ -221,6 +224,24 @@ export class AiProvidersService {
     return this.aiConfigService.getConfigDetails(configId, userId, workspaceId);
   }
 
+  async findModelsWithPagination(
+    query: QueryAiModelDto,
+  ): Promise<InfinityPaginationResponseDto<AiModel>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 50;
+
+    const data = await this.aiModelRepository.findManyWithPagination({
+      filterOptions: query.filters,
+      sortOptions: query.sort,
+      paginationOptions: {
+        page,
+        limit,
+      },
+    });
+
+    return infinityPagination(data, { page, limit });
+  }
+
   async getUsageLogs(
     workspaceId: string,
     options?: {
@@ -291,7 +312,7 @@ export class AiProvidersService {
     }
 
     // Fallback/Legacy
-    if (!providerKey && finalsApiKey && providerConfigId) {
+    if (!providerKey && providerConfigId) {
       const validKeys = [
         'openai',
         'anthropic',
@@ -412,7 +433,7 @@ export class AiProvidersService {
     }
 
     // Fallback if apiKey is explicitly provided but no config (Ad-hoc)
-    if (!providerKey && finalsApiKey && providerConfigId) {
+    if (!providerKey && providerConfigId) {
       // If providerConfigId is actually a provider TYPE name (legacy support?)
       // The user said REMOVE full flow. So maybe we shouldn't support "openai" string as providerId.
       // But for safety let's allow "custom" or explicit types if provided matching our supported keys.

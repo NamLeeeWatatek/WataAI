@@ -176,6 +176,10 @@ export class CreationToolsService {
       persistencePayload.categories = categoryIds.map((id) => ({ id }));
     }
 
+    if (persistencePayload.knowledgeBaseId === '') {
+      persistencePayload.knowledgeBaseId = null;
+    }
+
     const tool = await this.repository.update(id, persistencePayload);
 
     if (!tool) {

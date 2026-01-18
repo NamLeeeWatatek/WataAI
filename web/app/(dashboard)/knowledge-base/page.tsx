@@ -24,7 +24,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from '@/components/ui/DropdownMenu';
-import { PageLoading } from '@/components/shared/PageLoading';
+
+import { CardGridSkeleton } from '@/components/shared/Skeletons';
 import { Pagination } from '@/components/shared/Pagination';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
@@ -91,7 +92,7 @@ export default function KnowledgeBasePage() {
         } catch { }
     };
 
-    if (loading && knowledgeBases.length === 0) return <div className="page-container"><PageLoading message="Synchronizing vaults..." /></div>;
+    if (loading && knowledgeBases.length === 0) return <div className="page-container"><CardGridSkeleton /></div>;
 
     return (
         <div className="page-container h-full flex flex-col space-y-6">

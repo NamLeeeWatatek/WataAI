@@ -9,10 +9,10 @@ const pageHeaderVariants = cva(
     {
         variants: {
             variant: {
-                default: "pb-6 border-b border-border/10 mb-6", // Standardize: Always have a separator for consistency
-                sticky: "sticky top-0 z-40 bg-background/80 backdrop-blur-md px-6 py-4 border-b border-border/10 w-full mb-6",
-                dashboard: "p-0 mb-6",
-                clean: "pb-4 mb-4", // New variant for no-border headers
+                default: "pb-6 border-b border-border/10 mb-14", // Standardize: Always have a separator for consistency
+                sticky: "sticky top-0 z-40 glass-floating px-6 py-4 w-full mb-14",
+                dashboard: "p-0 mb-14",
+                clean: "pb-4 mb-10", // New variant for no-border headers
             },
         },
         defaultVariants: {
@@ -47,6 +47,7 @@ export function PageHeader({
                 <div className="flex items-center gap-5 w-full md:w-auto">
                     <div className="space-y-1.5 flex-1 min-w-0">
                         <h1 className={cn(
+                            "text-2xl md:text-3xl font-black tracking-tight", // Synchronized size for dashboard consistency
                             premium && "bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent"
                         )}>
                             {title}

@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Facebook, Instagram, Mail, MessageCircle, Phone, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { ChatListSkeleton } from '@/components/shared/Skeletons';
 import { JSX } from 'react';
 
 export interface ChannelConversation {
@@ -90,11 +91,7 @@ export function ChannelConversationList({
   loading = false
 }: ChannelConversationListProps) {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <ChatListSkeleton count={10} />;
   }
 
   if (conversations.length === 0) {

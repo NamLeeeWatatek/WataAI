@@ -10,7 +10,10 @@ import {
   IsObject,
   ValidateNested,
   IsUrl,
+  IsNumber,
 } from 'class-validator';
+import { Transform, plainToInstance } from 'class-transformer';
+import { BaseFilterDto, BaseSortDto } from '../../utils/dto/base-query.dto';
 
 export class AiConfigDto {
   @ApiPropertyOptional()
@@ -203,9 +206,117 @@ export class UpdateSystemAiSettingsDto {
 
   @ApiPropertyOptional({ type: Number })
   @IsOptional()
+  @IsNumber()
   maxRequestsPerHour?: number;
 
   @ApiPropertyOptional({ type: Number })
   @IsOptional()
+  @IsNumber()
   maxRequestsPerUser?: number;
+}
+
+export class FilterAiModelDto extends BaseFilterDto {
+  @ApiPropertyOptional({ description: 'Filter by provider ID' })
+  @IsOptional()
+  @IsString()
+  providerId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by config ID' })
+  @IsOptional()
+  @IsString()
+  configId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by owner type',
+    enum: ['user', 'workspace'],
+  })
+  @IsOptional()
+  @IsString()
+  ownerType?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by owner ID' })
+  @IsOptional()
+  @IsString()
+  ownerId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by model type',
+    enum: ['chat', 'embedding'],
+  })
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @ApiPropertyOptional({ description: 'Search in name or display name' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ description: 'Only show stable/main models' })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  onlyStable?: boolean;
+}
+
+export class SortAiModelDto extends BaseSortDto {
+  @ApiPropertyOptional({ description: 'Field to sort by' })
+  @IsString()
+  orderBy: string;
+
+  @ApiPropertyOptional({ enum: ['ASC', 'DESC'], description: 'Sort order' })
+  @IsString()
+  order: 'ASC' | 'DESC';
+}
+
+export class QueryAiModelDto {
+  @ApiPropertyOptional({ default: 1 })
+  @Transform(({ value }) => (value ? Number(value) : 1))
+  @IsNumber()
+  @IsOptional()
+  page?: number;
+
+  @ApiPropertyOptional({ default: 50, maximum: 100 })
+  @Transform(({ value }) => (value ? Number(value) : 50))
+  @IsNumber()
+  @IsOptional()
+  limit?: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: 'JSON string of FilterAiModelDto',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (typeof value === 'object')
+      return plainToInstance(FilterAiModelDto, value);
+    try {
+      return plainToInstance(FilterAiModelDto, JSON.parse(value));
+    } catch (e) {
+      return undefined;
+    }
+  })
+  @ValidateNested()
+  @Type(() => FilterAiModelDto)
+  filters?: FilterAiModelDto | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    description: 'JSON string of SortAiModelDto[]',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    if (typeof value === 'object')
+      return plainToInstance(SortAiModelDto, value);
+    try {
+      return plainToInstance(SortAiModelDto, JSON.parse(value));
+    } catch (e) {
+      return undefined;
+    }
+  })
+  @ValidateNested({ each: true })
+  @Type(() => SortAiModelDto)
+  sort?: SortAiModelDto[] | null;
 }

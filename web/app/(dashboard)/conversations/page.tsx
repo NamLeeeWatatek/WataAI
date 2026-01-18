@@ -29,6 +29,7 @@ import {
   MessageCircle,
   Phone,
   Send,
+  Loader2,
 } from 'lucide-react';
 // Removed react-icons
 import { Button } from '@/components/ui/Button';
@@ -42,7 +43,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { LoadingLogo } from '@/components/shared/LoadingLogo';
+
+import { ChatListSkeleton } from '@/components/shared/Skeletons';
 import { ChatInterface } from '@/components/features/chat/ChatInterface';
 import axiosClient from '@/lib/axios-client';
 import { toast } from 'sonner';
@@ -50,7 +52,9 @@ import { cn } from '@/lib/utils';
 import { ChannelConversation, ChannelConversationList } from '@/components/features/conversations/ChannelConversationList';
 import { ChannelList, Channel } from '@/components/features/conversations/ChannelList';
 import { Badge } from '@/components/ui/Badge';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
+import { getBotConversations } from '@/lib/api/conversations';
 import { useBotConversations, useBotConversation, botConversationKeys } from '@/lib/hooks/features/useBotConversations';
 import { useChannels } from '@/lib/hooks/features/useChannels';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
@@ -253,17 +257,61 @@ function ConversationsPageContent() {
   const conversationsQueryKey = useMemo(() => botConversationKeys.list(conversationsParams), [conversationsParams]);
 
   const {
-    data: conversationsResponse,
+    data: infiniteData,
     isLoading: conversationsLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
     refetch: refetchConversations,
-    isRefetching: refreshing,
-    total: totalConversations
-  } = useBotConversations(conversationsParams);
+  } = useInfiniteQuery({
+    queryKey: ['infinite-conversations', conversationsParams],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1 }) => {
+      const data: any = await getBotConversations({
+        ...conversationsParams,
+        page: pageParam as number,
+      });
+
+      // Normalize data logic
+      let items = [];
+      let total = 0;
+
+      if (Array.isArray(data)) {
+        items = data;
+        total = data.length;
+      } else if (data?.items) {
+        items = data.items;
+        total = data.total || data.items.length;
+      } else if (data?.data) {
+        items = data.data;
+        total = data.total || data.data.length;
+      }
+
+      return { items: items.map(mapConversation), total };
+    },
+    getNextPageParam: (lastPage: any, allPages: any[]) => {
+      const currentTotal = allPages.reduce((acc, p) => acc + p.items.length, 0);
+      if (currentTotal < lastPage.total) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    enabled: !!currentWorkspace?.id,
+  });
+
+  const { ref: loadMoreRef, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const conversations = useMemo(() => {
-    const raw = Array.isArray(conversationsResponse) ? conversationsResponse : (conversationsResponse?.items || []);
-    return raw.map(mapConversation);
-  }, [conversationsResponse]);
+    return infiniteData?.pages.flatMap(page => page.items) || [];
+  }, [infiniteData]);
+
+  const refreshing = false; // Placeholder
 
   // Real-time updates handlers
   const handleConversationUpdate = useCallback((updatedConversation: SocketConversation) => {
@@ -519,6 +567,7 @@ function ConversationsPageContent() {
               onChange={(e: any) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery("")}
               className="w-full"
+              loading={conversationsLoading && searchQuery !== debouncedSearch}
             />
           </div>
 
@@ -534,10 +583,8 @@ function ConversationsPageContent() {
 
         <ScrollArea className="flex-1">
           {conversationsLoading ? (
-            <div
-              className="flex items-center justify-center py-20"
-            >
-              <LoadingLogo size="md" text="Loading conversations..." />
+            <div className="py-0">
+              <ChatListSkeleton />
             </div>
           ) : conversations.length === 0 ? (
             <div
@@ -564,31 +611,25 @@ function ConversationsPageContent() {
               )}
             </div>
           ) : (
-            <div
-              className="divide-y divide-border/50"
-            >
+            <div className="flex flex-col">
               <ChannelConversationList
                 conversations={conversations}
                 selectedId={selectedId}
                 onSelect={handleSelectConversation}
               />
 
-              {totalConversations > pageSize && (
-                <div className="p-4 border-t border-border/50">
-                  <Pagination
-                    pagination={{
-                      page: currentPage,
-                      limit: pageSize,
-                      total: totalConversations,
-                      totalPages: Math.ceil(totalConversations / pageSize),
-                      hasNextPage: currentPage < Math.ceil(totalConversations / pageSize)
-                    }}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={setPageSize}
-                    pageSizeOptions={[10, 20, 50, 100]}
-                  />
-                </div>
-              )}
+              {/* Intersection Observer Target for Infinite Scroll */}
+              <div ref={loadMoreRef} className="h-12 flex items-center justify-center border-t border-border/10">
+                {isFetchingNextPage && (
+                  <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in duration-300">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Loading more...</span>
+                  </div>
+                )}
+                {!hasNextPage && conversations.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-bold">End of list</span>
+                )}
+              </div>
             </div>
           )}
         </ScrollArea>
@@ -729,8 +770,8 @@ function ConversationChat({
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <LoadingLogo size="md" />
+      <div className="flex-1 overflow-hidden p-6">
+        <ChatListSkeleton />
       </div>
     );
   }

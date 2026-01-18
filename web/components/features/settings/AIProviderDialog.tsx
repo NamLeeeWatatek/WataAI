@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
 import { type AiProviderMetadata } from '@/lib/api/ai-providers';
 import type { AiProviderConfig, UserAiProviderConfig, AiModel } from '@/lib/types/ai-provider';
+import { ModelListManager } from './ModelListManager';
 
 interface AIProviderDialogProps {
     open: boolean;
@@ -405,26 +406,11 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             name="modelList"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <div className="flex flex-wrap gap-2 min-h-[60px] p-4 rounded-lg bg-muted/50 border transition-all">
-                                                        {field.value && field.value.length > 0 ? (
-                                                            field.value.map((model: string) => (
-                                                                <Badge
-                                                                    key={model}
-                                                                    variant="secondary"
-                                                                    className="group pr-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive"
-                                                                    onClick={() => removeModel(model)}
-                                                                >
-                                                                    {getModelLabel(model)}
-                                                                    <X className="w-3 h-3 ml-1 opacity-50 group-hover:opacity-100" />
-                                                                </Badge>
-                                                            ))
-                                                        ) : (
-                                                            <div className="w-full flex flex-col items-center justify-center text-muted-foreground gap-2 py-4 text-xs">
-                                                                <RefreshCw className="size-4 opacity-50" />
-                                                                No models loaded. Click Refresh Models.
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <ModelListManager
+                                                        modelNames={field.value || []}
+                                                        onRemoveModel={removeModel}
+                                                        persistedModels={persistedModels}
+                                                    />
                                                     <FormMessage />
                                                 </FormItem>
                                             )}

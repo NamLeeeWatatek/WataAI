@@ -48,6 +48,7 @@ import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { PageLoading } from '@/components/shared/PageLoading'
+import { TableSkeleton } from '@/components/shared/Skeletons'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 import { useKnowledgeBaseController } from '@/lib/hooks/features/useKnowledgeBaseController'
@@ -154,7 +155,7 @@ export default function KnowledgeBaseDetailPage() {
         await moveItems([{ type: itemType, id: itemId }], targetFolderId)
     }
 
-    if (isLoading && !kb) return <PageLoading />
+    if (isLoading && !kb) return <div className="h-full"><TableSkeleton /></div>
     if (!kb && !isLoading) return (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center p-6">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">

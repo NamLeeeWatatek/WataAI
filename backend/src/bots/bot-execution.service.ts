@@ -117,12 +117,12 @@ export class BotExecutionService {
     let answer = '';
     const modelName = bot.aiModelName || 'gpt-3.5-turbo'; // TODO: Use config default
 
-    if (bot.aiProviderId) {
+    if (bot.aiConfigId) {
       // Use specific provider configured for this bot
       answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
         messages,
         modelName,
-        bot.aiProviderId,
+        bot.aiConfigId,
         'workspace', // Bots usually belong to workspace
         bot.workspaceId || 'system' // Fallback
       );

@@ -9,7 +9,7 @@ const nextConfig = {
   images: {
     // Add domains if you load external images
     remotePatterns: [
-      // { protocol: 'https', hostname: 'example.com' }
+      { protocol: 'https', hostname: 'minio.aiwata.cloud' }
     ],
   },
   async headers() {

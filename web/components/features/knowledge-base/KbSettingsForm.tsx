@@ -16,13 +16,12 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import type { KnowledgeBase } from '@/lib/types/knowledge-base'
 import { aiProvidersApi } from '@/lib/api/ai-providers'
 import type { AiModel } from '@/lib/types/ai-provider'
 import { handleFormError } from '@/lib/utils/form-errors'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Separator } from '@/components/ui/Separator'
-import { Info, Settings2, Sparkles, Layout } from 'lucide-react'
+import { AlertCircle, BrainCircuit, ScanFace, Sliders, Database, Save, X } from 'lucide-react'
 
 const kbFormSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -54,11 +53,11 @@ export function KbSettingsForm({
     onCancel,
     submitLabel = 'Save Changes'
 }: KbSettingsFormProps) {
-    // AI Provider Configurations (Simplified)
+    // AI Provider Configurations
     const [availableProviders, setAvailableProviders] = useState<{ configId: string, providerName: string, providerKey: string, ownerType: 'user' | 'workspace' }[]>([])
     const [loadingProviders, setLoadingProviders] = useState(false)
 
-    // Filtered Model Lists (Fetched on demand)
+    // Filtered Model Lists
     const [ragModels, setRagModels] = useState<AiModel[]>([])
     const [loadingRagModels, setLoadingRagModels] = useState(false)
     const [embeddingModels, setEmbeddingModels] = useState<AiModel[]>([])
@@ -80,7 +79,12 @@ export function KbSettingsForm({
         },
     })
 
-    // Sync form data when initialData changes
+    const { formState: { errors } } = form
+    const hasEssentialsError = !!errors.name || !!errors.color || !!errors.description
+    const hasAiError = !!errors.aiConfigId || !!errors.ragModel || !!errors.embeddingConfigId || !!errors.embeddingModel
+    const hasProcessingError = !!errors.chunkSize || !!errors.chunkOverlap
+
+    // Sync form data
     useEffect(() => {
         if (initialData) {
             form.reset({
@@ -96,92 +100,58 @@ export function KbSettingsForm({
                 chunkOverlap: initialData.chunkOverlap ?? 200,
             })
         }
-    }, [initialData]) // Only depend on initialData
+    }, [initialData, form])
 
-    // 1. Load available Provider Configurations
+    // Load Providers Logic
     useEffect(() => {
         const loadProviders = async () => {
             setLoadingProviders(true)
             try {
-                // Load User Configs (Include inactive ones to resolve references)
                 const userConfigs = await aiProvidersApi.getUserConfigs()
-                const configs: any[] = userConfigs
-                    .map((c: any) => ({
-                        configId: c.id,
-                        providerName: c.displayName || (c.provider as any)?.label || c.providerId + (c.isActive ? '' : ' (Inactive)'),
-                        providerKey: (c.provider as any)?.key || '',
-                        ownerType: 'user'
-                    }))
+                const configs: any[] = userConfigs.map((c: any) => ({
+                    configId: c.id,
+                    providerName: c.displayName || (c.provider as any)?.label || c.providerId + (c.isActive ? '' : ' (Inactive)'),
+                    providerKey: (c.provider as any)?.key || '',
+                    ownerType: 'user'
+                }))
 
                 const targetWorkspaceId = workspaceId || initialData?.workspaceId || undefined
                 if (targetWorkspaceId) {
                     try {
                         const workspaceConfigs = await aiProvidersApi.getWorkspaceConfigs(targetWorkspaceId)
-                        const wConfigs = workspaceConfigs
-                            .map((c: any) => ({
-                                configId: c.id,
-                                providerName: c.displayName || (c.provider as any)?.label || c.providerId + (c.isActive ? '' : ' (Inactive)'),
-                                providerKey: (c.provider as any)?.key || '',
-                                ownerType: 'workspace'
-                            }))
-                        configs.push(...wConfigs)
-                    } catch (err) {
-                        console.warn('Failed to load workspace configs', err)
-                    }
+                        configs.push(...workspaceConfigs.map((c: any) => ({
+                            configId: c.id,
+                            providerName: c.displayName || (c.provider as any)?.label || c.providerId + (c.isActive ? '' : ' (Inactive)'),
+                            providerKey: (c.provider as any)?.key || '',
+                            ownerType: 'workspace'
+                        })))
+                    } catch (err) { console.warn('Failed to load workspace configs', err) }
                 }
 
-                // Check if initialData configs are missing and fetch them
                 if (initialData) {
-                    // Method A: Use nested relations (Best robustness)
-                    const addFromRelation = (config: any) => {
-                        if (!config) return
-                        if (!configs.find(c => c.configId === config.id)) {
-                            configs.push({
-                                configId: config.id,
-                                providerName: (config.displayName || config.provider?.label || config.providerId), // + ' (Linked)',
-                                providerKey: config.provider?.key || '',
-                                ownerType: config.ownerType || 'user'
-                            })
-                        }
-                    }
-
-                    if (initialData.aiConfig) addFromRelation(initialData.aiConfig)
-                    if (initialData.embeddingConfig) addFromRelation(initialData.embeddingConfig)
-
-                    // Method B: Fetch by ID if relational data missing (Legacy fallback)
-                    const fetchMissing = async (id?: string) => {
-                        if (id && !configs.find(c => c.configId === id)) {
+                    // Logic to ensure current configs are in the list even if missing/archived
+                    const knownIds = new Set(configs.map(c => c.configId))
+                    const ensureConfig = async (id?: string) => {
+                        if (id && !knownIds.has(id)) {
                             try {
                                 const details = await aiProvidersApi.getConfigDetails(id, targetWorkspaceId)
                                 if (details) {
-                                    const isWorkspace = 'workspaceId' in details
                                     configs.push({
                                         configId: details.id,
-                                        providerName: (details.displayName || (details as any).provider?.label || details.providerId) + ' (Archived/Missing)',
+                                        providerName: (details.displayName || (details as any).provider?.label || details.providerId) + ' (Archived)',
                                         providerKey: (details as any).provider?.key || '',
-                                        ownerType: isWorkspace ? 'workspace' : 'user'
+                                        ownerType: 'user' // Default fallback
                                     })
                                 }
-                            } catch (e) {
-                                console.warn('Could not recover missing config', id, e)
-                            }
+                            } catch (e) { console.warn('Missing config', id) }
                         }
                     }
-
-                    // Only fetch if we didn't already add them via relations
-                    const missingAiId = initialData.aiConfig ? undefined : initialData.aiConfigId
-                    const missingEmbId = initialData.embeddingConfig ? undefined : initialData.embeddingConfigId
-
-                    if (missingAiId || missingEmbId) {
-                        await Promise.all([
-                            fetchMissing(missingAiId || undefined),
-                            fetchMissing(missingEmbId || undefined)
-                        ])
-                    }
+                    await Promise.all([
+                        ensureConfig(initialData.aiConfigId || undefined),
+                        ensureConfig(initialData.embeddingConfigId || undefined)
+                    ])
                 }
-
                 setAvailableProviders(configs)
-                console.log('Final Available Providers:', configs)
             } catch (error) {
                 console.error('Failed to load AI providers:', error)
             } finally {
@@ -194,18 +164,14 @@ export function KbSettingsForm({
     const aiConfigId = form.watch('aiConfigId')
     const embeddingConfigId = form.watch('embeddingConfigId')
 
-    // 2. Fetch Chat Models when aiConfigId changes
+    // Fetch Chat Models
     useEffect(() => {
         const fetchModels = async () => {
-            if (!aiConfigId) {
-                setRagModels([])
-                return
-            }
+            if (!aiConfigId) { setRagModels([]); return }
             setLoadingRagModels(true)
             try {
                 const provider = availableProviders.find(p => p.configId === aiConfigId)
                 const targetWorkspaceId = workspaceId || initialData?.workspaceId || undefined
-
                 let models = []
                 if (provider?.ownerType === 'workspace' && targetWorkspaceId) {
                     models = await aiProvidersApi.getWorkspaceModelsByConfig(targetWorkspaceId, aiConfigId, 'chat')
@@ -213,34 +179,20 @@ export function KbSettingsForm({
                     models = await aiProvidersApi.getUserModelsByConfig(aiConfigId, 'chat')
                 }
                 setRagModels(models)
-
-                // IMPORTANT: Ensure the saved model is still valid, or at least visible
-                // We don't auto-clear here because "Unknown" handling is done in the Select component
-            } catch (error) {
-                console.error('Failed to fetch chat models:', error)
-            } finally {
-                setLoadingRagModels(false)
-            }
+            } catch (error) { console.error('Failed to fetch chat models:', error) }
+            finally { setLoadingRagModels(false) }
         }
-
-        // Only fetch if we have a config ID
-        if (aiConfigId) {
-            fetchModels()
-        }
+        if (aiConfigId) fetchModels()
     }, [aiConfigId, availableProviders, workspaceId, initialData?.workspaceId])
 
-    // 3. Fetch Embedding Models when embeddingConfigId changes
+    // Fetch Embedding Models
     useEffect(() => {
         const fetchModels = async () => {
-            if (!embeddingConfigId) {
-                setEmbeddingModels([])
-                return
-            }
+            if (!embeddingConfigId) { setEmbeddingModels([]); return }
             setLoadingEmbeddingModels(true)
             try {
                 const provider = availableProviders.find(p => p.configId === embeddingConfigId)
                 const targetWorkspaceId = workspaceId || initialData?.workspaceId || undefined
-
                 let models = []
                 if (provider?.ownerType === 'workspace' && targetWorkspaceId) {
                     models = await aiProvidersApi.getWorkspaceModelsByConfig(targetWorkspaceId, embeddingConfigId, 'embedding')
@@ -248,13 +200,10 @@ export function KbSettingsForm({
                     models = await aiProvidersApi.getUserModelsByConfig(embeddingConfigId, 'embedding')
                 }
                 setEmbeddingModels(models)
-            } catch (error) {
-                console.error('Failed to fetch embedding models:', error)
-            } finally {
-                setLoadingEmbeddingModels(false)
-            }
+            } catch (error) { console.error('Failed to fetch embedding models:', error) }
+            finally { setLoadingEmbeddingModels(false) }
         }
-        fetchModels()
+        if (embeddingConfigId) fetchModels()
     }, [embeddingConfigId, availableProviders, workspaceId, initialData?.workspaceId])
 
     const getProviderName = (configId?: string) => {
@@ -283,71 +232,105 @@ export function KbSettingsForm({
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-                {/* Section: General */}
-                <Card className="bg-muted/30 border-none shadow-none overflow-visible">
-                    <CardHeader className="pb-3 pt-4 px-6">
-                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                            <Layout className="w-4 h-4" /> General Info
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6 px-6 pb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                            <div className="md:col-span-12">
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Knowledge Base Name</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="e.g., Sales Documentation" {...field} className="h-11 bg-background font-bold pl-4 border-white/5" />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full overflow-hidden">
+                <div className="flex-1 overflow-y-auto">
+                    <Tabs defaultValue="essentials" className="w-full flex flex-col min-h-full">
+                        <div className="px-6 py-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b z-10 sticky top-0">
+                            <TabsList className="grid w-full grid-cols-3 h-9">
+                                <TabsTrigger value="essentials" className="text-xs font-bold uppercase tracking-wider relative">
+                                    <ScanFace className="w-4 h-4 mr-2 opacity-70" />
+                                    Identity
+                                    {hasEssentialsError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                                </TabsTrigger>
+                                <TabsTrigger value="intelligence" className="text-xs font-bold uppercase tracking-wider relative">
+                                    <BrainCircuit className="w-4 h-4 mr-2 opacity-70" />
+                                    Brain
+                                    {hasAiError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                                </TabsTrigger>
+                                <TabsTrigger value="processing" className="text-xs font-bold uppercase tracking-wider relative">
+                                    <Sliders className="w-4 h-4 mr-2 opacity-70" />
+                                    Index
+                                    {hasProcessingError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                                </TabsTrigger>
+                            </TabsList>
+                        </div>
 
-                            <div className="md:col-span-7">
-                                <FormField
-                                    control={form.control}
-                                    name="color"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Theme Color</FormLabel>
-                                            <div className="flex gap-2">
-                                                <FormControl>
-                                                    <div className="relative group">
-                                                        <Input
-                                                            type="color"
-                                                            {...field}
-                                                            className="w-12 h-11 p-1 cursor-pointer bg-background border-white/5"
-                                                        />
-                                                        <div className="absolute inset-0 rounded-md pointer-events-none group-hover:ring-2 ring-primary/20 transition-all" />
-                                                    </div>
-                                                </FormControl>
-                                                <FormControl>
-                                                    <Input {...field} placeholder="#3B82F6" className="h-11 font-mono uppercase text-xs bg-background border-white/5" maxLength={7} />
-                                                </FormControl>
-                                            </div>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                        <div className="p-6 space-y-6 flex-1">
+                            {/* TAB 1: ESSENTIALS */}
+                            <TabsContent value="essentials" className="space-y-6 mt-0 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                                <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <FormField
+                                                control={form.control}
+                                                name="name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Knowledge Name</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="E.g., Engineering Docs" {...field} className="h-11 font-bold" />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="w-24">
+                                            <FormField
+                                                control={form.control}
+                                                name="color"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Theme</FormLabel>
+                                                        <div className="flex relative">
+                                                            <Input
+                                                                type="color"
+                                                                {...field}
+                                                                className="w-full h-11 p-1 cursor-pointer absolute opacity-0"
+                                                            />
+                                                            <div
+                                                                className="w-full h-11 rounded-md border shadow-sm flex items-center justify-center cursor-pointer transition-transform active:scale-95"
+                                                                style={{ backgroundColor: field.value }}
+                                                            >
+                                                                <span className="text-[10px] font-mono mix-blend-difference text-white/80">{field.value}</span>
+                                                            </div>
+                                                        </div>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
 
-                            <div className="md:col-span-5 flex flex-col justify-end">
-                                <FormField
-                                    control={form.control}
-                                    name="isPublic"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Visibility</FormLabel>
-                                            <div className="flex items-center justify-between h-11 px-4 rounded-lg border border-white/5 bg-background/50 hover:bg-background/80 transition-colors">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    {field.value ? 'Public' : 'Private'}
-                                                </span>
+                                    <FormField
+                                        control={form.control}
+                                        name="description"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</FormLabel>
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder="What knowledge does this engine contain?"
+                                                        className="resize-none min-h-[120px] leading-relaxed"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="isPublic"
+                                        render={({ field }) => (
+                                            <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-muted/30 space-y-0">
+                                                <div className="space-y-1">
+                                                    <FormLabel className="text-sm font-bold">Public Access</FormLabel>
+                                                    <p className="text-[11px] text-muted-foreground font-medium pr-4">
+                                                        Allow this knowledge base to be queried by other workspaces or public agents.
+                                                    </p>
+                                                </div>
                                                 <FormControl>
                                                     <Switch
                                                         checked={field.value}
@@ -355,275 +338,253 @@ export function KbSettingsForm({
                                                         className="data-[state=checked]:bg-primary"
                                                     />
                                                 </FormControl>
-                                            </div>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </TabsContent>
 
-                        <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Description</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="What is this knowledge base about?"
-                                            className="resize-none min-h-[100px] bg-background border-white/5 font-medium leading-relaxed"
-                                            {...field}
+                            {/* TAB 2: INTELLIGENCE */}
+                            <TabsContent value="intelligence" className="space-y-8 mt-0 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                                {/* RAG Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                                            <BrainCircuit className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Generation Model</h3>
+                                            <p className="text-[10px] text-muted-foreground font-medium">Powering the "Chat" capability</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 p-4 border rounded-xl bg-background/50 relative overflow-hidden group hover:border-indigo-500/30 transition-colors">
+                                        <div className="absolute top-0 right-0 p-2 opacity-5 font-black text-6xl text-indigo-500 pointer-events-none select-none">RAG</div>
+
+                                        <FormField
+                                            control={form.control}
+                                            name="aiConfigId"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
+                                                    <Select value={field.value || ""} onValueChange={(val) => {
+                                                        const currentVal = form.getValues('aiConfigId');
+                                                        field.onChange(val);
+                                                        if (val !== currentVal && currentVal) form.setValue('ragModel', '');
+                                                    }}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-10 bg-background/80">
+                                                                <SelectValue>{getProviderName(field.value)}</SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {availableProviders.map((p) => (
+                                                                <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
                                         />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </CardContent>
-                </Card>
 
-                {/* Section: AI Engine */}
-                <Card className="bg-muted/30 border-none shadow-none overflow-visible">
-                    <CardHeader className="pb-3 pt-4 px-6">
-                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                            <Sparkles className="w-4 h-4" /> AI & Retrieval
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-8 px-6 pb-6 pt-2">
-                        {/* RAG Configuration */}
-                        <div className="space-y-4">
-                            <div className="border-l-2 border-indigo-500 pl-4 py-1">
-                                <h4 className="text-xs font-black uppercase tracking-widest text-indigo-500">Retrieval logic (RAG)</h4>
-                                <p className="text-[10px] text-muted-foreground">Provider and Model for generating responses.</p>
-                            </div>
+                                        <FormField
+                                            control={form.control}
+                                            name="ragModel"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chat Model</FormLabel>
+                                                    <Select value={field.value || ""} onValueChange={field.onChange} disabled={!aiConfigId}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-10 bg-background/80 disabled:opacity-50">
+                                                                <SelectValue>{field.value || (loadingRagModels ? "Loading..." : "Select Model")}</SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {ragModels.map((m) => (
+                                                                <SelectItem key={m.id || m.name} value={m.name}>{m.displayName || m.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="aiConfigId"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">AI Service Provider</FormLabel>
-                                            <Select value={field.value || ""} onValueChange={(val) => {
-                                                const currentVal = form.getValues('aiConfigId');
-                                                field.onChange(val);
-                                                // Only reset model if provider actually changes (and it's not the initial set)
-                                                if (val !== currentVal && currentVal) {
-                                                    form.setValue('ragModel', '');
-                                                }
-                                            }}>
+                                {/* Embedding Section */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                            <Database className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Embedding Model</h3>
+                                            <p className="text-[10px] text-muted-foreground font-medium">Converting text to vectors</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 p-4 border rounded-xl bg-background/50 relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
+                                        <div className="absolute top-0 right-0 p-2 opacity-5 font-black text-6xl text-emerald-500 pointer-events-none select-none">VEC</div>
+
+                                        <FormField
+                                            control={form.control}
+                                            name="embeddingConfigId"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
+                                                    <Select value={field.value || ""} onValueChange={(val) => {
+                                                        const currentVal = form.getValues('embeddingConfigId');
+                                                        field.onChange(val);
+                                                        if (val !== currentVal && currentVal) form.setValue('embeddingModel', '');
+                                                    }}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-10 bg-background/80">
+                                                                <SelectValue>{getProviderName(field.value)}</SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {availableProviders.map((p) => (
+                                                                <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="embeddingModel"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
+                                                    <Select value={field.value || ""} onValueChange={field.onChange} disabled={!embeddingConfigId}>
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-10 bg-background/80 disabled:opacity-50">
+                                                                <SelectValue>{field.value || (loadingEmbeddingModels ? "Loading..." : "Select Model")}</SelectValue>
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {embeddingModels.map((m) => (
+                                                                <SelectItem key={m.id || m.name} value={m.name}>{m.displayName || m.name}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            </TabsContent>
+
+                            {/* TAB 3: PROCESSING */}
+                            <TabsContent value="processing" className="space-y-6 mt-0 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                                <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-bold uppercase tracking-wide">Advance Configuration</p>
+                                        <p className="text-[11px] opacity-90 leading-relaxed">
+                                            Adjusting these settings after creation will require re-indexing all documents. Leave as default if unsure.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 pt-2">
+                                    <FormField
+                                        control={form.control}
+                                        name="chunkSize"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chunk Size (Tokens)</FormLabel>
+                                                    <span className="text-xs font-mono font-medium bg-muted px-2 py-0.5 rounded">{field.value}</span>
+                                                </div>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-10 bg-background border-white/5">
-                                                        <SelectValue>
-                                                            {getProviderName(field.value)}
-                                                        </SelectValue>
-                                                    </SelectTrigger>
+                                                    <div className="relative">
+                                                        <Input
+                                                            type="number"
+                                                            {...field}
+                                                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1000)}
+                                                            className="font-mono bg-background/50"
+                                                        />
+                                                    </div>
                                                 </FormControl>
-                                                <SelectContent>
-                                                    {availableProviders.map((p) => (
-                                                        <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
-                                                    ))}
-                                                    {field.value && !availableProviders.find(p => p.configId === field.value) && (
-                                                        <SelectItem key="saved-provider-ai" value={field.value}>
-                                                            Unknown Provider ({field.value.substring(0, 8)}...)
-                                                        </SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                                <FormDescription className="text-[10px]">
+                                                    Maximum number of tokens per document segment.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
-                                <FormField
-                                    control={form.control}
-                                    name="ragModel"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Chat Model</FormLabel>
-                                            <Select value={field.value || ""} onValueChange={field.onChange} disabled={!aiConfigId}>
+                                    <FormField
+                                        control={form.control}
+                                        name="chunkOverlap"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chunk Overlap</FormLabel>
+                                                    <span className="text-xs font-mono font-medium bg-muted px-2 py-0.5 rounded">{field.value}</span>
+                                                </div>
                                                 <FormControl>
-                                                    <SelectTrigger className="h-10 bg-background border-white/5 disabled:opacity-50">
-                                                        <SelectValue>
-                                                            {field.value || (loadingRagModels ? "Searching models..." : "Select Model")}
-                                                        </SelectValue>
-                                                    </SelectTrigger>
+                                                    <Input
+                                                        type="number"
+                                                        {...field}
+                                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 200)}
+                                                        className="font-mono bg-background/50"
+                                                    />
                                                 </FormControl>
-                                                <SelectContent>
-                                                    {ragModels.length > 0 && ragModels.map((m) => (
-                                                        <SelectItem key={m.id || m.name} value={m.name}>
-                                                            {m.displayName || m.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                    {field.value && !ragModels.find(m => m.name === field.value) && (
-                                                        <SelectItem key="saved-model" value={field.value}>{field.value} (Currently Selected)</SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormDescription className="text-[9px] opacity-60">Specific model identifier to use for response generation.</FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                                                <FormDescription className="text-[10px]">
+                                                    Number of tokens to repeat between chunks to maintain context.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </TabsContent>
                         </div>
+                    </Tabs>
+                </div>
 
-                        <Separator className="bg-border/30" />
-
-                        {/* Embedding Configuration */}
-                        <div className="space-y-4">
-                            <div className="border-l-2 border-cyan-500 pl-4 py-1">
-                                <h4 className="text-xs font-black uppercase tracking-widest text-cyan-500">Embedding Settings</h4>
-                                <p className="text-[10px] text-muted-foreground">Provider and Model for semantic indexing.</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField
-                                    control={form.control}
-                                    name="embeddingConfigId"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Embedding Provider</FormLabel>
-                                            <Select value={field.value || ""} onValueChange={(val) => {
-                                                const currentVal = form.getValues('embeddingConfigId');
-                                                field.onChange(val);
-                                                if (val !== currentVal && currentVal) {
-                                                    form.setValue('embeddingModel', '');
-                                                }
-                                            }}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-10 bg-background border-white/5">
-                                                        <SelectValue>
-                                                            {getProviderName(field.value)}
-                                                        </SelectValue>
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {availableProviders.map((p) => (
-                                                        <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
-                                                    ))}
-                                                    {field.value && !availableProviders.find(p => p.configId === field.value) && (
-                                                        <SelectItem key="saved-provider-emb" value={field.value}>
-                                                            Unknown Provider ({field.value.substring(0, 8)}...)
-                                                        </SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="embeddingModel"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">Embedding Model</FormLabel>
-                                            <Select value={field.value || ""} onValueChange={field.onChange} disabled={!embeddingConfigId}>
-                                                <FormControl>
-                                                    <SelectTrigger className="h-10 bg-background border-white/5 disabled:opacity-50">
-                                                        <SelectValue>
-                                                            {field.value || (loadingEmbeddingModels ? "Searching models..." : "Select Model")}
-                                                        </SelectValue>
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {embeddingModels.length > 0 && embeddingModels.map((m) => (
-                                                        <SelectItem key={m.id || m.name} value={m.name}>
-                                                            {m.displayName || m.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                    {field.value && !embeddingModels.find(m => m.name === field.value) && (
-                                                        <SelectItem key="saved-embedding" value={field.value}>{field.value} (Currently Selected)</SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormDescription className="text-[9px] opacity-60">Model used for generating semantic vectors.</FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Section: Optimization */}
-                <Card className="bg-muted/30 border-none shadow-none overflow-visible">
-                    <CardHeader className="pb-3 pt-4 px-6">
-                        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                            <Settings2 className="w-4 h-4" /> Processing Settings
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-6 pb-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                            <FormField
-                                control={form.control}
-                                name="chunkSize"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">
-                                            Chunk Size <Info className="w-3 h-3 opacity-40" />
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                {...field}
-                                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1000)}
-                                                className="h-10 bg-background border-white/5 font-mono"
-                                            />
-                                        </FormControl>
-                                        <FormDescription className="text-[10px] leading-tight opacity-70">
-                                            Determines the unit scale for retrieval segments.
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="chunkOverlap"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground ml-1">
-                                            Overlap Size <Info className="w-3 h-3 opacity-40" />
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                {...field}
-                                                onChange={(e) => field.onChange(parseInt(e.target.value) || 200)}
-                                                className="h-10 bg-background border-white/5 font-mono"
-                                            />
-                                        </FormControl>
-                                        <FormDescription className="text-[10px] leading-tight opacity-70">
-                                            Semantic overlap between neighboring chunks.
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <div className="flex items-center justify-end gap-3 pt-6 border-t border-white/5 bg-background/20 -mx-6 px-6 -mb-6 pb-6 rounded-b-xl">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={onCancel}
-                        disabled={form.formState.isSubmitting}
-                        className="font-bold text-xs uppercase tracking-widest"
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" loading={form.formState.isSubmitting} className="min-w-[140px] font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/20">
-                        {submitLabel}
-                    </Button>
+                <div className="p-6 border-t bg-background/95 backdrop-blur z-20 flex items-center justify-between gap-4">
+                    <div className="text-[10px] text-muted-foreground font-medium hidden sm:block">
+                        {hasEssentialsError || hasAiError || hasProcessingError ? (
+                            <span className="text-red-500 font-bold flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> Fix errors before saving
+                            </span>
+                        ) : (
+                            <span className="opacity-70">Review all settings before creating.</span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-3 ml-auto">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={onCancel}
+                            disabled={form.formState.isSubmitting}
+                            className="text-xs font-bold uppercase tracking-wider"
+                        >
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            loading={form.formState.isSubmitting}
+                            className="text-xs font-bold uppercase tracking-wider px-6 shadow-lg shadow-primary/20"
+                        >
+                            <Save className="w-4 h-4 mr-2" />
+                            {submitLabel}
+                        </Button>
+                    </div>
                 </div>
             </form>
         </Form>
     )
 }
+
+

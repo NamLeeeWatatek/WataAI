@@ -7,7 +7,7 @@ import './globals.css'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { I18nProvider } from '@/components/providers/I18nProvider'
 import { SessionProvider } from 'next-auth/react'
-import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper'
+
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { SessionWatcher } from '@/components/providers/SessionWatcher'
 
@@ -30,6 +30,8 @@ export const metadata: Metadata = {
     description: 'AI-powered omnichannel customer engagement platform with zero-code flow builder and unified inbox.',
     keywords: ['AI', 'chatbot', 'omnichannel', 'customer engagement', 'automation', 'n8n'],
 }
+
+import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
 
 export default function RootLayout({
     children,

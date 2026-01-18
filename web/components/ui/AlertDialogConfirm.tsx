@@ -1,9 +1,10 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { AlertDialogHeader, AlertDialogFooter, AlertDialogDescription, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogTitle } from './AlertDialog'
 import { buttonVariants } from './Button'
 import { cn } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
 
 interface AlertDialogConfirmProps {
   open: boolean
@@ -26,19 +27,27 @@ export function AlertDialogConfirm({
   onConfirm,
   variant = 'default'
 }: AlertDialogConfirmProps) {
-  const handleConfirm = async () => {
+  const [loading, setLoading] = useState(false)
+
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (loading) return
+
+    setLoading(true)
     try {
       await onConfirm()
       if (open) {
         onOpenChange(false)
       }
-    } catch {
-
+    } catch (error) {
+      console.error(error)
+    } finally {
+      if (open) setLoading(false)
     }
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(val) => !loading && onOpenChange(val)}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
@@ -47,11 +56,13 @@ export function AlertDialogConfirm({
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             className={cn(variant === 'destructive' && buttonVariants({ variant: "destructive" }))}
+            disabled={loading}
           >
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
