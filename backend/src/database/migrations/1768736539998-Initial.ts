@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Initial1766900989600 implements MigrationInterface {
-  name = 'Initial1766900989600';
+export class Initial1768736539998 implements MigrationInterface {
+  name = 'Initial1768736539998';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -11,7 +11,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE TABLE "role" ("id" integer NOT NULL, "name" character varying NOT NULL, "description" character varying, CONSTRAINT "PK_b36bcfe02fc8de3c57a8b2391c2" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying, "name" character varying, "avatar_url" character varying, "password_hash" character varying, "provider" character varying NOT NULL DEFAULT 'email', "provider_id" character varying, "email_verified_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, "first_name" character varying, "last_name" character varying, "social_id" character varying, "external_id" character varying, "last_login" TIMESTAMP, "failed_login_attempts" integer NOT NULL DEFAULT '0', "locked_until" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "role_id" integer, CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "UQ_d9479cbc9c65660b7cf9b657954" UNIQUE ("external_id"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "user" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "email" character varying, "name" character varying, "avatar_url" character varying, "password_hash" character varying, "provider" character varying NOT NULL DEFAULT 'email', "provider_id" character varying, "email_verified_at" TIMESTAMP, "is_active" boolean NOT NULL DEFAULT true, "first_name" character varying, "last_name" character varying, "social_id" character varying, "notificationPreferences" jsonb, "external_id" character varying, "last_login" TIMESTAMP, "failed_login_attempts" integer NOT NULL DEFAULT '0', "locked_until" TIMESTAMP, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "role_id" integer, CONSTRAINT "UQ_e12875dfb3b1d92d7d7c5377e22" UNIQUE ("email"), CONSTRAINT "UQ_d9479cbc9c65660b7cf9b657954" UNIQUE ("external_id"), CONSTRAINT "PK_cace4a159ff9f2512dd42373760" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_e12875dfb3b1d92d7d7c5377e2" ON "user" ("email") `,
@@ -41,10 +41,31 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_0eab76d5a9c509930a9f3d7a10" ON "workspace_member" ("workspace_id", "user_id") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "workflows" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "title" character varying NOT NULL, "description" text, "thumbnailUrl" character varying, "graph" jsonb NOT NULL DEFAULT '{}', "isPublic" boolean NOT NULL DEFAULT false, "category" character varying NOT NULL DEFAULT 'Draft', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "ownerId" uuid, CONSTRAINT "PK_5b5757cc1cd86268019fef52e0c" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "ai_models" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "display_name" character varying, "type" character varying NOT NULL DEFAULT 'chat', "provider_id" uuid NOT NULL, "owner_type" character varying NOT NULL, "owner_id" uuid NOT NULL, "config_id" uuid, "metadata" jsonb NOT NULL DEFAULT '{}', "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_3d254744f0bcf6f35be5826e25e" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_b2e64c27a46f4707b83ea5ee75" ON "ai_models" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_959da1d5b224333f044c958feb" ON "ai_models" ("provider_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_2e94c017a761ef1a4655619fd8" ON "ai_models" ("owner_type") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_05b8d0a1515429ebc110544efc" ON "ai_models" ("owner_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_ba6a31f928ecb86e40f544081e" ON "ai_models" ("config_id") `,
+    );
+    await queryRunner.query(
       `CREATE TABLE "ai_providers" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "key" character varying NOT NULL, "label" character varying NOT NULL, "icon" character varying, "description" text, "required_fields" jsonb NOT NULL DEFAULT '[]', "optional_fields" jsonb NOT NULL DEFAULT '[]', "default_values" jsonb NOT NULL DEFAULT '{}', "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_ebb21740e10748770b54434db59" UNIQUE ("key"), CONSTRAINT "PK_de28ebefc0fb425c37b27a4c0a7" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "ai_provider_configs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "provider_id" uuid NOT NULL, "model" character varying NOT NULL, "api_key" character varying NOT NULL, "base_url" character varying, "api_version" character varying, "timeout" integer, "use_stream" boolean NOT NULL DEFAULT true, "owner_type" character varying NOT NULL, "owner_id" uuid, "is_default" boolean NOT NULL DEFAULT false, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_5c72661bb93d1e6263172f452db" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "ai_provider_configs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "provider_id" uuid NOT NULL, "display_name" character varying, "config" jsonb NOT NULL, "model_list" jsonb NOT NULL DEFAULT '[]', "owner_type" character varying NOT NULL, "owner_id" uuid, "is_default" boolean NOT NULL DEFAULT false, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_5c72661bb93d1e6263172f452db" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_7299ed156a084d7e97df80b7ff" ON "ai_provider_configs" ("provider_id") `,
@@ -54,30 +75,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_b4e4ef106d84e38e8577cd965d" ON "ai_provider_configs" ("owner_id") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "user_ai_provider_configs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "provider_id" uuid NOT NULL, "display_name" character varying NOT NULL, "config" jsonb NOT NULL, "model_list" jsonb NOT NULL DEFAULT '[]', "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_b5931888df2b024311f8a132373" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_bca82934cd53e143c74a2ff97c" ON "user_ai_provider_configs" ("user_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_ec0f1703bed5fb29ea5e0afe16" ON "user_ai_provider_configs" ("provider_id") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "workspace_ai_provider_configs" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "provider_id" uuid NOT NULL, "display_name" character varying NOT NULL, "config" jsonb NOT NULL, "model_list" jsonb NOT NULL DEFAULT '[]', "is_active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_453a175908363f730ee3ad12c4c" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_3522a3e473b56a703fe8d98c95" ON "workspace_ai_provider_configs" ("workspace_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_6d05834339513f9800bc9a6915" ON "workspace_ai_provider_configs" ("created_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_a9a6100cbec33ef94cd06e46fe" ON "workspace_ai_provider_configs" ("updated_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_2a55b8ba19368d0e6499ba5df1" ON "workspace_ai_provider_configs" ("provider_id") `,
     );
     await queryRunner.query(
       `CREATE TABLE "ai_usage_log" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "provider" character varying NOT NULL, "model" character varying NOT NULL, "input_tokens" integer NOT NULL, "output_tokens" integer NOT NULL, "cost" numeric(10,6) NOT NULL DEFAULT '0', "requested_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_b51c8fcf98a77ad8bef55c91bd5" PRIMARY KEY ("id"))`,
@@ -134,13 +131,13 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_63ad76a14a8321d22dc0a5e704" ON "category" ("type") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "creation_tool" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying NOT NULL, "description" text, "icon" character varying, "cover_image" character varying, "form_config" jsonb NOT NULL, "execution_flow" jsonb NOT NULL, "is_active" boolean NOT NULL DEFAULT true, "workspace_id" uuid, "sort_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "category_id" uuid, CONSTRAINT "UQ_712006d033481a0b3e433132769" UNIQUE ("slug"), CONSTRAINT "PK_9f58e7f23046a18e8e157150149" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "creation_tool" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "slug" character varying NOT NULL, "description" text, "icon" character varying, "cover_image" character varying, "form_config" jsonb NOT NULL, "execution_flow" jsonb NOT NULL, "is_active" boolean NOT NULL DEFAULT true, "workspace_id" uuid, "knowledge_base_id" uuid, "sort_order" integer NOT NULL DEFAULT '0', "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_9f58e7f23046a18e8e157150149" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_39f0a0ce96e591d2aff915fb32" ON "creation_tool" ("name") `,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_712006d033481a0b3e43313276" ON "creation_tool" ("slug") `,
+      `CREATE UNIQUE INDEX "IDX_8ab867c28039173469919cc8df" ON "creation_tool" ("slug") WHERE "deleted_at" IS NULL`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_1a0e54dd330805ccb6486814ef" ON "creation_tool" ("is_active") `,
@@ -149,7 +146,10 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_cd6e013d98ac33e10aea9137cc" ON "creation_tool" ("workspace_id") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "template" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "creation_tool_id" uuid, "name" character varying NOT NULL, "description" character varying, "prompt" text, "media_files" jsonb, "style_config" jsonb, "prefilled_data" jsonb, "thumbnail_url" character varying, "execution_overrides" jsonb, "is_active" boolean NOT NULL DEFAULT true, "created_by" uuid, "workspace_id" uuid, "sort_order" integer NOT NULL DEFAULT '0', "prompt_template" text, "execution_config" jsonb, "form_schema" jsonb, "input_schema" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "category_id" uuid, CONSTRAINT "PK_fbae2ac36bd9b5e1e793b957b7f" PRIMARY KEY ("id"))`,
+      `CREATE INDEX "IDX_81a8d057ebaa8ca6f7ed6cfe45" ON "creation_tool" ("knowledge_base_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "template" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "creation_tool_id" uuid, "name" character varying NOT NULL, "description" character varying, "prompt" text, "media_files" jsonb, "style_config" jsonb, "prefilled_data" jsonb, "thumbnail_url" character varying, "icon" character varying, "execution_overrides" jsonb, "is_active" boolean NOT NULL DEFAULT true, "created_by" uuid, "workspace_id" uuid, "sort_order" integer NOT NULL DEFAULT '0', "prompt_template" text, "execution_config" jsonb, "form_schema" jsonb, "input_schema" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, "category_id" uuid, CONSTRAINT "PK_fbae2ac36bd9b5e1e793b957b7f" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_9b6a7e06a23a072d065e6790dc" ON "template" ("creation_tool_id") `,
@@ -164,7 +164,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_3f8b9d372187ad54c33210721d" ON "template" ("workspace_id") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "plan" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "price_monthly" numeric(10,2) NOT NULL, "price_yearly" numeric(10,2) NOT NULL, "max_bots" integer NOT NULL, "max_messages" integer NOT NULL, "max_storage_gb" integer NOT NULL, "features" jsonb, CONSTRAINT "UQ_8aa73af67fa634d33de9bf874ab" UNIQUE ("name"), CONSTRAINT "PK_54a2b686aed3b637654bf7ddbb3" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "plan" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "price_monthly" numeric(10,2) NOT NULL, "stripe_price_id" character varying, "price_yearly" numeric(10,2) NOT NULL, "max_bots" integer NOT NULL, "max_messages" integer NOT NULL, "max_storage_gb" integer NOT NULL, "features" jsonb, CONSTRAINT "UQ_8aa73af67fa634d33de9bf874ab" UNIQUE ("name"), CONSTRAINT "PK_54a2b686aed3b637654bf7ddbb3" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "subscription" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "plan_id" uuid NOT NULL, "status" character varying NOT NULL DEFAULT 'active', "current_period_end" TIMESTAMP NOT NULL, "stripe_customer_id" character varying, "stripe_subscription_id" character varying, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_8c3e00ebd02103caa1174cd5d9d" PRIMARY KEY ("id"))`,
@@ -188,7 +188,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_192fa04382405c62d6e7a0eedf" ON "usage_quota" ("workspace_id", "period_start") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "invoice" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "subscription_id" uuid NOT NULL, "amount" numeric(10,2) NOT NULL, "status" character varying NOT NULL DEFAULT 'draft', "pdf_url" character varying, "period_start" date NOT NULL, "period_end" date NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_15d25c200d9bcd8a33f698daf18" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "invoice" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "workspace_id" uuid NOT NULL, "subscription_id" uuid NOT NULL, "amount" numeric(10,2) NOT NULL, "status" character varying NOT NULL DEFAULT 'draft', "provider" character varying NOT NULL DEFAULT 'stripe', "provider_invoice_id" character varying, "currency" character varying NOT NULL DEFAULT 'usd', "pdf_url" character varying, "period_start" date NOT NULL, "period_end" date NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_15d25c200d9bcd8a33f698daf18" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_a85d07a63679df4dd094bfc756" ON "invoice" ("workspace_id") `,
@@ -224,7 +224,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_5cb157e3d3ab8abd16251129db" ON "project" ("workspace_id") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "notification" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "workspace_id" uuid NOT NULL, "title" character varying NOT NULL, "message" text NOT NULL, "type" character varying NOT NULL DEFAULT 'info', "is_read" boolean NOT NULL DEFAULT false, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_705b6c7cdf9b2c2ff7ac7872cb7" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "notification" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "workspace_id" uuid NOT NULL, "title" character varying NOT NULL, "message" text NOT NULL, "type" character varying NOT NULL DEFAULT 'info', "is_read" boolean NOT NULL DEFAULT false, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_705b6c7cdf9b2c2ff7ac7872cb7" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_928b7aa1754e08e1ed7052cb9d" ON "notification" ("user_id") `,
@@ -239,7 +239,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_8bdc07e9c41ce8d83730f0f5d8" ON "notification" ("created_at") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "knowledge_base" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "ai_provider_id" uuid, "rag_model" character varying, "embedding_model" character varying NOT NULL DEFAULT 'text-embedding-3-small', "chunk_size" integer NOT NULL DEFAULT '1000', "chunk_overlap" integer NOT NULL DEFAULT '200', "total_documents" integer NOT NULL DEFAULT '0', "total_size" bigint NOT NULL DEFAULT '0', "is_active" boolean NOT NULL DEFAULT true, "deleted_at" TIMESTAMP, CONSTRAINT "PK_19d3f52f6da1501b7e235f1da5c" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "knowledge_base" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "is_public" boolean NOT NULL DEFAULT false, "ai_config_id" uuid, "rag_model" character varying, "embedding_config_id" uuid, "embedding_model" character varying, "chunk_size" integer NOT NULL DEFAULT '1000', "chunk_overlap" integer NOT NULL DEFAULT '200', "total_documents" integer NOT NULL DEFAULT '0', "total_size" bigint NOT NULL DEFAULT '0', "is_active" boolean NOT NULL DEFAULT true, "deleted_at" TIMESTAMP, CONSTRAINT "PK_19d3f52f6da1501b7e235f1da5c" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_f39683bc3c87e158ee5afffdba" ON "knowledge_base" ("workspace_id") `,
@@ -251,7 +251,10 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_494eaf1b1f45f0ffd71bef6a1b" ON "knowledge_base" ("updated_by") `,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_8ae166c823e535eb731f333522" ON "knowledge_base" ("ai_provider_id") `,
+      `CREATE INDEX "IDX_a07aa88feb9666bb12cecc03b9" ON "knowledge_base" ("ai_config_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_579da2ba9875c11b6758ea92f7" ON "knowledge_base" ("embedding_config_id") `,
     );
     await queryRunner.query(
       `CREATE TABLE "kb_folder" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "knowledge_base_id" uuid NOT NULL, "parent_id" uuid, "deleted_at" TIMESTAMP, CONSTRAINT "PK_b9ecced097312ba705828ad18f6" PRIMARY KEY ("id"))`,
@@ -323,6 +326,15 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_d8d931d5410e54404e3ee0f29c" ON "rag_feedback" ("bot_id") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "kb_chunk" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "content" text NOT NULL, "document_id" uuid NOT NULL, "knowledge_base_id" uuid NOT NULL, "chunk_index" integer NOT NULL, "start_char" integer, "end_char" integer, "token_count" integer, "embedding_status" character varying NOT NULL DEFAULT 'pending', "embedding_error" character varying, "vector_id" character varying, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_53f290237ff06a63b55ae7f23c9" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_f37a6fd48b5ba27e7da2d4a8e6" ON "kb_chunk" ("document_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_e9e43161d0e1e48cc608513802" ON "kb_chunk" ("knowledge_base_id") `,
+    );
+    await queryRunner.query(
       `CREATE TABLE "channel_credential" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "provider" character varying NOT NULL, "name" character varying, "clientId" character varying, "clientSecret" character varying, "scopes" character varying, "isActive" boolean NOT NULL DEFAULT true, "metadata" jsonb DEFAULT '{}', CONSTRAINT "PK_dac10e98607782ecfb6bd9b141e" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -336,30 +348,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_7759e3294e12c1bd976f2ca8ac" ON "channel_credential" ("provider") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "kb_chunk" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "content" text NOT NULL, "document_id" uuid NOT NULL, "knowledge_base_id" uuid NOT NULL, "chunk_index" integer NOT NULL, "start_char" integer, "end_char" integer, "token_count" integer, "embedding_status" character varying NOT NULL DEFAULT 'pending', "embedding_error" character varying, "vector_id" character varying, "metadata" jsonb, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_53f290237ff06a63b55ae7f23c9" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_f37a6fd48b5ba27e7da2d4a8e6" ON "kb_chunk" ("document_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_e9e43161d0e1e48cc608513802" ON "kb_chunk" ("knowledge_base_id") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "channel_connection" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "type" character varying NOT NULL, "credential_id" uuid, "access_token" character varying, "metadata" jsonb, "status" character varying NOT NULL DEFAULT 'active', "connected_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f0b0b90fa3837ad5470c942462d" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_55d874410302583167f7759e08" ON "channel_connection" ("workspace_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_838080dea10a1362428cf3531a" ON "channel_connection" ("created_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_71cbc2a4ea0a14c8105f2492b6" ON "channel_connection" ("updated_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_81d0c0117227d233206d06fa95" ON "channel_connection" ("type") `,
     );
     await queryRunner.query(
       `CREATE TYPE "public"."generation_job_status_enum" AS ENUM('pending', 'processing', 'completed', 'failed')`,
@@ -389,6 +377,39 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_b4974649383ab4efd579981415" ON "file" ("workspace_id") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "channel_connection" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "type" character varying NOT NULL, "credential_id" uuid, "access_token" character varying, "metadata" jsonb, "status" character varying NOT NULL DEFAULT 'active', "connected_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f0b0b90fa3837ad5470c942462d" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_55d874410302583167f7759e08" ON "channel_connection" ("workspace_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_838080dea10a1362428cf3531a" ON "channel_connection" ("created_by") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_71cbc2a4ea0a14c8105f2492b6" ON "channel_connection" ("updated_by") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_81d0c0117227d233206d06fa95" ON "channel_connection" ("type") `,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."creation_jobs_status_enum" AS ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED')`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "creation_jobs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "status" "public"."creation_jobs_status_enum" NOT NULL DEFAULT 'PENDING', "creation_tool_id" uuid NOT NULL, "input_data" jsonb NOT NULL, "output_data" jsonb, "progress" double precision NOT NULL DEFAULT '0', "created_by" uuid, "workspace_id" uuid, "error" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_0470db42c173417a5d97582dfae" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_165945df826afa8e2598cad390" ON "creation_jobs" ("status") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_0860b0fd7e2de8558dc7287b60" ON "creation_jobs" ("creation_tool_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_4e0a3845e1d887f9c3397ca91d" ON "creation_jobs" ("created_by") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_38595fae8b3f5c7ef884a2bdef" ON "creation_jobs" ("workspace_id") `,
+    );
+    await queryRunner.query(
       `CREATE TABLE "widget_version" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "bot_id" uuid NOT NULL, "version" character varying(20) NOT NULL, "status" character varying(20) NOT NULL DEFAULT 'draft', "is_active" boolean NOT NULL DEFAULT false, "config" jsonb NOT NULL, "published_at" TIMESTAMP, "published_by" uuid, "cdn_url" character varying(500), "changelog" text, "notes" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_fd4fd7ecfa5a3c040d85ce9be7d" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
@@ -401,7 +422,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_869c687d5115dda182f23c3d7d" ON "widget_version" ("bot_id", "version") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "bot" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "avatar_url" character varying, "default_language" character varying NOT NULL DEFAULT 'en', "timezone" character varying NOT NULL DEFAULT 'UTC', "status" character varying NOT NULL DEFAULT 'draft', "icon" character varying DEFAULT 'FiMessageSquare', "is_active" boolean NOT NULL DEFAULT true, "flow_id" uuid, "system_prompt" text, "functions" text, "function_config" jsonb, "ai_provider_id" uuid, "ai_model_name" character varying, "ai_parameters" jsonb, "enable_auto_learn" boolean NOT NULL DEFAULT false, "allowed_origins" jsonb, "active_version_id" uuid, "deleted_at" TIMESTAMP, CONSTRAINT "REL_dd8bd6dec0d0732d267d6a826e" UNIQUE ("active_version_id"), CONSTRAINT "PK_bc6d59d7870eb2efd5f7f61e5ca" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "bot" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "avatar_url" character varying, "default_language" character varying NOT NULL DEFAULT 'en', "timezone" character varying NOT NULL DEFAULT 'UTC', "status" character varying NOT NULL DEFAULT 'draft', "icon" character varying DEFAULT 'FiMessageSquare', "is_active" boolean NOT NULL DEFAULT true, "flow_id" uuid, "system_prompt" text, "functions" text, "function_config" jsonb, "ai_config_id" uuid, "ai_model_name" character varying, "ai_parameters" jsonb, "enable_auto_learn" boolean NOT NULL DEFAULT false, "allowed_origins" jsonb, "active_version_id" uuid, "deleted_at" TIMESTAMP, CONSTRAINT "REL_dd8bd6dec0d0732d267d6a826e" UNIQUE ("active_version_id"), CONSTRAINT "PK_bc6d59d7870eb2efd5f7f61e5ca" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_e45750f69e8b0280974c298b82" ON "bot" ("workspace_id") `,
@@ -452,7 +473,25 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_f9f62556c7092913f2a0697505" ON "contact" ("phone") `,
     );
     await queryRunner.query(
-      `CREATE TABLE "conversation" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "bot_id" uuid NOT NULL, "channel_type" character varying NOT NULL DEFAULT 'web', "channel_id" uuid, "contact_id" uuid, "metadata" jsonb NOT NULL DEFAULT '{}', "status" character varying NOT NULL DEFAULT 'active', "last_message_at" TIMESTAMP, "handover_ticket_id" uuid, "external_id" character varying, "source" character varying NOT NULL DEFAULT 'web', "type" character varying NOT NULL DEFAULT 'support', "deleted_at" TIMESTAMP, CONSTRAINT "PK_864528ec4274360a40f66c29845" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "channel" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "bot_id" uuid, "connection_id" uuid, "type" character varying NOT NULL, "name" character varying NOT NULL, "config" jsonb, "is_active" boolean NOT NULL DEFAULT true, "connected_at" TIMESTAMP, CONSTRAINT "PK_590f33ee6ee7d76437acf362e39" PRIMARY KEY ("id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_54d184fa863ba93b007e8dcc27" ON "channel" ("workspace_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_bf9c25c4068a5913cf57cb3276" ON "channel" ("created_by") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_ff5a82ccfb1591f2997031d920" ON "channel" ("updated_by") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_82da258fe45382a03c820a8daf" ON "channel" ("bot_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_f0b0b90fa3837ad5470c942462" ON "channel" ("connection_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "conversation" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "bot_id" uuid, "channel_type" character varying NOT NULL DEFAULT 'web', "channel_id" uuid, "contact_id" uuid, "metadata" jsonb NOT NULL DEFAULT '{}', "status" character varying NOT NULL DEFAULT 'active', "last_message_at" TIMESTAMP, "handover_ticket_id" uuid, "external_id" character varying, "source" character varying NOT NULL DEFAULT 'web', "type" character varying NOT NULL DEFAULT 'support', "deleted_at" TIMESTAMP, CONSTRAINT "PK_864528ec4274360a40f66c29845" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_ef32ab8bf06d335895fa097234" ON "conversation" ("workspace_id") `,
@@ -509,6 +548,9 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_7ef021fc5aaa4d1f58fad2ab90" ON "message" ("metadata") `,
     );
     await queryRunner.query(
+      `CREATE INDEX "IDX_f21c8a866b3ba501f91518ca33" ON "message" ("conversation_id", "sent_at") `,
+    );
+    await queryRunner.query(
       `CREATE TABLE "message_feedback" ("message_id" uuid NOT NULL, "rating" integer NOT NULL, "comment" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_ca21e42f59ad7a1f2638a86aedf" PRIMARY KEY ("message_id"))`,
     );
     await queryRunner.query(
@@ -519,42 +561,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_8718c0c649f54b2e26e819018e" ON "ai_conversation" ("bot_id") `,
-    );
-    await queryRunner.query(
-      `CREATE TYPE "public"."creation_jobs_status_enum" AS ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED')`,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "creation_jobs" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "status" "public"."creation_jobs_status_enum" NOT NULL DEFAULT 'PENDING', "creation_tool_id" uuid NOT NULL, "input_data" jsonb NOT NULL, "output_data" jsonb, "progress" double precision NOT NULL DEFAULT '0', "created_by" uuid, "workspace_id" uuid, "error" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_0470db42c173417a5d97582dfae" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_165945df826afa8e2598cad390" ON "creation_jobs" ("status") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_0860b0fd7e2de8558dc7287b60" ON "creation_jobs" ("creation_tool_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_4e0a3845e1d887f9c3397ca91d" ON "creation_jobs" ("created_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_38595fae8b3f5c7ef884a2bdef" ON "creation_jobs" ("workspace_id") `,
-    );
-    await queryRunner.query(
-      `CREATE TABLE "channel" ("workspace_id" uuid NOT NULL, "created_by" uuid, "updated_by" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "id" uuid NOT NULL DEFAULT uuid_generate_v4(), "bot_id" uuid NOT NULL, "connection_id" uuid, "type" character varying NOT NULL, "name" character varying NOT NULL, "config" jsonb, "is_active" boolean NOT NULL DEFAULT true, "connected_at" TIMESTAMP, CONSTRAINT "PK_590f33ee6ee7d76437acf362e39" PRIMARY KEY ("id"))`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_54d184fa863ba93b007e8dcc27" ON "channel" ("workspace_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_bf9c25c4068a5913cf57cb3276" ON "channel" ("created_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_ff5a82ccfb1591f2997031d920" ON "channel" ("updated_by") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_82da258fe45382a03c820a8daf" ON "channel" ("bot_id") `,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "IDX_f0b0b90fa3837ad5470c942462" ON "channel" ("connection_id") `,
     );
     await queryRunner.query(
       `CREATE TABLE "character" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "description" character varying, "metadata" jsonb, "workspace_id" character varying, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "deleted_at" TIMESTAMP, CONSTRAINT "PK_6c4aec48c564968be15078b8ae5" PRIMARY KEY ("id"))`,
@@ -620,6 +626,15 @@ export class Initial1766900989600 implements MigrationInterface {
       `CREATE INDEX "IDX_e3a3ba47b7ca00fd23be4ebd6c" ON "role_permission" ("permission_id") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "creation_tool_categories" ("creation_tool_id" uuid NOT NULL, "category_id" uuid NOT NULL, CONSTRAINT "PK_f94acbaba4970e6486187c76205" PRIMARY KEY ("creation_tool_id", "category_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_b9e45858d57b5165fcca360a85" ON "creation_tool_categories" ("creation_tool_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_5494fe4ec53e6325eafaab114f" ON "creation_tool_categories" ("category_id") `,
+    );
+    await queryRunner.query(
       `ALTER TABLE "user" ADD CONSTRAINT "FK_fb2e442d14add3cefbdf33c4561" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -635,19 +650,16 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "workspace_member" ADD CONSTRAINT "FK_82b74268d8b7e1574fd744b3903" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "workflows" ADD CONSTRAINT "FK_9a1afdc4e604b491831ded3090c" FOREIGN KEY ("ownerId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ai_models" ADD CONSTRAINT "FK_ba6a31f928ecb86e40f544081e4" FOREIGN KEY ("config_id") REFERENCES "ai_provider_configs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ai_models" ADD CONSTRAINT "FK_959da1d5b224333f044c958feb5" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "ai_provider_configs" ADD CONSTRAINT "FK_7299ed156a084d7e97df80b7ff6" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_ai_provider_configs" ADD CONSTRAINT "FK_bca82934cd53e143c74a2ff97c5" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_ai_provider_configs" ADD CONSTRAINT "FK_ec0f1703bed5fb29ea5e0afe160" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "workspace_ai_provider_configs" ADD CONSTRAINT "FK_3522a3e473b56a703fe8d98c950" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "workspace_ai_provider_configs" ADD CONSTRAINT "FK_2a55b8ba19368d0e6499ba5df1b" FOREIGN KEY ("provider_id") REFERENCES "ai_providers"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "ai_usage_log" ADD CONSTRAINT "FK_d4b3d0a0eac463e2224513fff7c" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -663,9 +675,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "workspace_invitation" ADD CONSTRAINT "FK_a72acd3aadc3ce48a8177ac4593" FOREIGN KEY ("sender_id") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "creation_tool" ADD CONSTRAINT "FK_526f0affaf8cba58a06823a529b" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "template" ADD CONSTRAINT "FK_9b6a7e06a23a072d065e6790dcb" FOREIGN KEY ("creation_tool_id") REFERENCES "creation_tool"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -695,6 +704,12 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_f39683bc3c87e158ee5afffdbac" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_a07aa88feb9666bb12cecc03b96" FOREIGN KEY ("ai_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" ADD CONSTRAINT "FK_579da2ba9875c11b6758ea92f70" FOREIGN KEY ("embedding_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "kb_folder" ADD CONSTRAINT "FK_3e30495d9d58f03974ddb00e41d" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -722,16 +737,19 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "channel_credential" ADD CONSTRAINT "FK_2e364ef7d5ed635ad687108fcab" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "generation_job" ADD CONSTRAINT "FK_2d9817f15f65160045f6ce17a76" FOREIGN KEY ("template_id") REFERENCES "template"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "file" ADD CONSTRAINT "FK_b4974649383ab4efd579981415b" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "channel_connection" ADD CONSTRAINT "FK_55d874410302583167f7759e085" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "channel_connection" ADD CONSTRAINT "FK_22a26194e6dca7ad6913d6152d5" FOREIGN KEY ("credential_id") REFERENCES "channel_credential"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "generation_job" ADD CONSTRAINT "FK_2d9817f15f65160045f6ce17a76" FOREIGN KEY ("template_id") REFERENCES "template"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "file" ADD CONSTRAINT "FK_b4974649383ab4efd579981415b" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "creation_jobs" ADD CONSTRAINT "FK_0860b0fd7e2de8558dc7287b606" FOREIGN KEY ("creation_tool_id") REFERENCES "creation_tool"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "widget_version" ADD CONSTRAINT "FK_73d825a2b5257fecae3fa443911" FOREIGN KEY ("bot_id") REFERENCES "bot"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -740,7 +758,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "bot" ADD CONSTRAINT "FK_e45750f69e8b0280974c298b82f" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "bot" ADD CONSTRAINT "FK_58487db73d419a07163400cd26b" FOREIGN KEY ("ai_provider_id") REFERENCES "ai_providers"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "bot" ADD CONSTRAINT "FK_1d33a6f78b456305c3f053dc1bd" FOREIGN KEY ("ai_config_id") REFERENCES "ai_provider_configs"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "bot" ADD CONSTRAINT "FK_dd8bd6dec0d0732d267d6a826e7" FOREIGN KEY ("active_version_id") REFERENCES "widget_version"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -758,7 +776,19 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "contact" ADD CONSTRAINT "FK_33d4fc93803e7192e150216fffb" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "channel" ADD CONSTRAINT "FK_54d184fa863ba93b007e8dcc279" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "channel" ADD CONSTRAINT "FK_82da258fe45382a03c820a8daf4" FOREIGN KEY ("bot_id") REFERENCES "bot"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "channel" ADD CONSTRAINT "FK_f0b0b90fa3837ad5470c942462d" FOREIGN KEY ("connection_id") REFERENCES "channel_connection"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "conversation" ADD CONSTRAINT "FK_ef32ab8bf06d335895fa0972340" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "conversation" ADD CONSTRAINT "FK_91fdb6236859404ddf7c5f64377" FOREIGN KEY ("channel_id") REFERENCES "channel"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "conversation" ADD CONSTRAINT "FK_497e6b0cfc02cd94483f194b8bc" FOREIGN KEY ("contact_id") REFERENCES "contact"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
@@ -779,18 +809,6 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "ai_conversation" ADD CONSTRAINT "FK_4eb1cdcb75977fe6774fad6f654" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "creation_jobs" ADD CONSTRAINT "FK_0860b0fd7e2de8558dc7287b606" FOREIGN KEY ("creation_tool_id") REFERENCES "creation_tool"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" ADD CONSTRAINT "FK_54d184fa863ba93b007e8dcc279" FOREIGN KEY ("workspace_id") REFERENCES "workspace"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" ADD CONSTRAINT "FK_82da258fe45382a03c820a8daf4" FOREIGN KEY ("bot_id") REFERENCES "bot"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" ADD CONSTRAINT "FK_f0b0b90fa3837ad5470c942462d" FOREIGN KEY ("connection_id") REFERENCES "channel_connection"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "widget_deployment" ADD CONSTRAINT "FK_46f3d06fc514b5dbd701949d225" FOREIGN KEY ("bot_id") REFERENCES "bot"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -805,9 +823,21 @@ export class Initial1766900989600 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "role_permission" ADD CONSTRAINT "FK_e3a3ba47b7ca00fd23be4ebd6cf" FOREIGN KEY ("permission_id") REFERENCES "permission"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
+    await queryRunner.query(
+      `ALTER TABLE "creation_tool_categories" ADD CONSTRAINT "FK_b9e45858d57b5165fcca360a853" FOREIGN KEY ("creation_tool_id") REFERENCES "creation_tool"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "creation_tool_categories" ADD CONSTRAINT "FK_5494fe4ec53e6325eafaab114f9" FOREIGN KEY ("category_id") REFERENCES "category"("id") ON DELETE CASCADE ON UPDATE CASCADE`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "creation_tool_categories" DROP CONSTRAINT "FK_5494fe4ec53e6325eafaab114f9"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "creation_tool_categories" DROP CONSTRAINT "FK_b9e45858d57b5165fcca360a853"`,
+    );
     await queryRunner.query(
       `ALTER TABLE "role_permission" DROP CONSTRAINT "FK_e3a3ba47b7ca00fd23be4ebd6cf"`,
     );
@@ -822,18 +852,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "widget_deployment" DROP CONSTRAINT "FK_46f3d06fc514b5dbd701949d225"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" DROP CONSTRAINT "FK_f0b0b90fa3837ad5470c942462d"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" DROP CONSTRAINT "FK_82da258fe45382a03c820a8daf4"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "channel" DROP CONSTRAINT "FK_54d184fa863ba93b007e8dcc279"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "creation_jobs" DROP CONSTRAINT "FK_0860b0fd7e2de8558dc7287b606"`,
     );
     await queryRunner.query(
       `ALTER TABLE "ai_conversation" DROP CONSTRAINT "FK_4eb1cdcb75977fe6774fad6f654"`,
@@ -854,7 +872,19 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "conversation" DROP CONSTRAINT "FK_497e6b0cfc02cd94483f194b8bc"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "conversation" DROP CONSTRAINT "FK_91fdb6236859404ddf7c5f64377"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "conversation" DROP CONSTRAINT "FK_ef32ab8bf06d335895fa0972340"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "channel" DROP CONSTRAINT "FK_f0b0b90fa3837ad5470c942462d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "channel" DROP CONSTRAINT "FK_82da258fe45382a03c820a8daf4"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "channel" DROP CONSTRAINT "FK_54d184fa863ba93b007e8dcc279"`,
     );
     await queryRunner.query(
       `ALTER TABLE "contact" DROP CONSTRAINT "FK_33d4fc93803e7192e150216fffb"`,
@@ -872,7 +902,7 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "bot" DROP CONSTRAINT "FK_dd8bd6dec0d0732d267d6a826e7"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "bot" DROP CONSTRAINT "FK_58487db73d419a07163400cd26b"`,
+      `ALTER TABLE "bot" DROP CONSTRAINT "FK_1d33a6f78b456305c3f053dc1bd"`,
     );
     await queryRunner.query(
       `ALTER TABLE "bot" DROP CONSTRAINT "FK_e45750f69e8b0280974c298b82f"`,
@@ -881,16 +911,19 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "widget_version" DROP CONSTRAINT "FK_73d825a2b5257fecae3fa443911"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "file" DROP CONSTRAINT "FK_b4974649383ab4efd579981415b"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "generation_job" DROP CONSTRAINT "FK_2d9817f15f65160045f6ce17a76"`,
+      `ALTER TABLE "creation_jobs" DROP CONSTRAINT "FK_0860b0fd7e2de8558dc7287b606"`,
     );
     await queryRunner.query(
       `ALTER TABLE "channel_connection" DROP CONSTRAINT "FK_22a26194e6dca7ad6913d6152d5"`,
     );
     await queryRunner.query(
       `ALTER TABLE "channel_connection" DROP CONSTRAINT "FK_55d874410302583167f7759e085"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "file" DROP CONSTRAINT "FK_b4974649383ab4efd579981415b"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "generation_job" DROP CONSTRAINT "FK_2d9817f15f65160045f6ce17a76"`,
     );
     await queryRunner.query(
       `ALTER TABLE "channel_credential" DROP CONSTRAINT "FK_2e364ef7d5ed635ad687108fcab"`,
@@ -920,6 +953,12 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "kb_folder" DROP CONSTRAINT "FK_3e30495d9d58f03974ddb00e41d"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "knowledge_base" DROP CONSTRAINT "FK_579da2ba9875c11b6758ea92f70"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "knowledge_base" DROP CONSTRAINT "FK_a07aa88feb9666bb12cecc03b96"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "knowledge_base" DROP CONSTRAINT "FK_f39683bc3c87e158ee5afffdbac"`,
     );
     await queryRunner.query(
@@ -947,9 +986,6 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "template" DROP CONSTRAINT "FK_9b6a7e06a23a072d065e6790dcb"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "creation_tool" DROP CONSTRAINT "FK_526f0affaf8cba58a06823a529b"`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "workspace_invitation" DROP CONSTRAINT "FK_a72acd3aadc3ce48a8177ac4593"`,
     );
     await queryRunner.query(
@@ -965,19 +1001,16 @@ export class Initial1766900989600 implements MigrationInterface {
       `ALTER TABLE "ai_usage_log" DROP CONSTRAINT "FK_d4b3d0a0eac463e2224513fff7c"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "workspace_ai_provider_configs" DROP CONSTRAINT "FK_2a55b8ba19368d0e6499ba5df1b"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "workspace_ai_provider_configs" DROP CONSTRAINT "FK_3522a3e473b56a703fe8d98c950"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_ai_provider_configs" DROP CONSTRAINT "FK_ec0f1703bed5fb29ea5e0afe160"`,
-    );
-    await queryRunner.query(
-      `ALTER TABLE "user_ai_provider_configs" DROP CONSTRAINT "FK_bca82934cd53e143c74a2ff97c5"`,
-    );
-    await queryRunner.query(
       `ALTER TABLE "ai_provider_configs" DROP CONSTRAINT "FK_7299ed156a084d7e97df80b7ff6"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ai_models" DROP CONSTRAINT "FK_959da1d5b224333f044c958feb5"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ai_models" DROP CONSTRAINT "FK_ba6a31f928ecb86e40f544081e4"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "workflows" DROP CONSTRAINT "FK_9a1afdc4e604b491831ded3090c"`,
     );
     await queryRunner.query(
       `ALTER TABLE "workspace_member" DROP CONSTRAINT "FK_82b74268d8b7e1574fd744b3903"`,
@@ -994,6 +1027,13 @@ export class Initial1766900989600 implements MigrationInterface {
     await queryRunner.query(
       `ALTER TABLE "user" DROP CONSTRAINT "FK_fb2e442d14add3cefbdf33c4561"`,
     );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_5494fe4ec53e6325eafaab114f"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_b9e45858d57b5165fcca360a85"`,
+    );
+    await queryRunner.query(`DROP TABLE "creation_tool_categories"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_e3a3ba47b7ca00fd23be4ebd6c"`,
     );
@@ -1048,36 +1088,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "character"`);
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_f0b0b90fa3837ad5470c942462"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_82da258fe45382a03c820a8daf"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_ff5a82ccfb1591f2997031d920"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_bf9c25c4068a5913cf57cb3276"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_54d184fa863ba93b007e8dcc27"`,
-    );
-    await queryRunner.query(`DROP TABLE "channel"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_38595fae8b3f5c7ef884a2bdef"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_4e0a3845e1d887f9c3397ca91d"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_0860b0fd7e2de8558dc7287b60"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_165945df826afa8e2598cad390"`,
-    );
-    await queryRunner.query(`DROP TABLE "creation_jobs"`);
-    await queryRunner.query(`DROP TYPE "public"."creation_jobs_status_enum"`);
-    await queryRunner.query(
       `DROP INDEX "public"."IDX_8718c0c649f54b2e26e819018e"`,
     );
     await queryRunner.query(
@@ -1085,6 +1095,9 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "ai_conversation"`);
     await queryRunner.query(`DROP TABLE "message_feedback"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f21c8a866b3ba501f91518ca33"`,
+    );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_7ef021fc5aaa4d1f58fad2ab90"`,
     );
@@ -1138,6 +1151,22 @@ export class Initial1766900989600 implements MigrationInterface {
       `DROP INDEX "public"."IDX_ef32ab8bf06d335895fa097234"`,
     );
     await queryRunner.query(`DROP TABLE "conversation"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f0b0b90fa3837ad5470c942462"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_82da258fe45382a03c820a8daf"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_ff5a82ccfb1591f2997031d920"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_bf9c25c4068a5913cf57cb3276"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_54d184fa863ba93b007e8dcc27"`,
+    );
+    await queryRunner.query(`DROP TABLE "channel"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_f9f62556c7092913f2a0697505"`,
     );
@@ -1194,6 +1223,33 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "widget_version"`);
     await queryRunner.query(
+      `DROP INDEX "public"."IDX_38595fae8b3f5c7ef884a2bdef"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_4e0a3845e1d887f9c3397ca91d"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_0860b0fd7e2de8558dc7287b60"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_165945df826afa8e2598cad390"`,
+    );
+    await queryRunner.query(`DROP TABLE "creation_jobs"`);
+    await queryRunner.query(`DROP TYPE "public"."creation_jobs_status_enum"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_81d0c0117227d233206d06fa95"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_71cbc2a4ea0a14c8105f2492b6"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_838080dea10a1362428cf3531a"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_55d874410302583167f7759e08"`,
+    );
+    await queryRunner.query(`DROP TABLE "channel_connection"`);
+    await queryRunner.query(
       `DROP INDEX "public"."IDX_b4974649383ab4efd579981415"`,
     );
     await queryRunner.query(`DROP TABLE "file"`);
@@ -1215,26 +1271,6 @@ export class Initial1766900989600 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "generation_job"`);
     await queryRunner.query(`DROP TYPE "public"."generation_job_status_enum"`);
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_81d0c0117227d233206d06fa95"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_71cbc2a4ea0a14c8105f2492b6"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_838080dea10a1362428cf3531a"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_55d874410302583167f7759e08"`,
-    );
-    await queryRunner.query(`DROP TABLE "channel_connection"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_e9e43161d0e1e48cc608513802"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_f37a6fd48b5ba27e7da2d4a8e6"`,
-    );
-    await queryRunner.query(`DROP TABLE "kb_chunk"`);
-    await queryRunner.query(
       `DROP INDEX "public"."IDX_7759e3294e12c1bd976f2ca8ac"`,
     );
     await queryRunner.query(
@@ -1247,6 +1283,13 @@ export class Initial1766900989600 implements MigrationInterface {
       `DROP INDEX "public"."IDX_2e364ef7d5ed635ad687108fca"`,
     );
     await queryRunner.query(`DROP TABLE "channel_credential"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_e9e43161d0e1e48cc608513802"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_f37a6fd48b5ba27e7da2d4a8e6"`,
+    );
+    await queryRunner.query(`DROP TABLE "kb_chunk"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_d8d931d5410e54404e3ee0f29c"`,
     );
@@ -1309,7 +1352,10 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "kb_folder"`);
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_8ae166c823e535eb731f333522"`,
+      `DROP INDEX "public"."IDX_579da2ba9875c11b6758ea92f7"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_a07aa88feb9666bb12cecc03b9"`,
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_494eaf1b1f45f0ffd71bef6a1b"`,
@@ -1392,13 +1438,16 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "template"`);
     await queryRunner.query(
+      `DROP INDEX "public"."IDX_81a8d057ebaa8ca6f7ed6cfe45"`,
+    );
+    await queryRunner.query(
       `DROP INDEX "public"."IDX_cd6e013d98ac33e10aea9137cc"`,
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_1a0e54dd330805ccb6486814ef"`,
     );
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_712006d033481a0b3e43313276"`,
+      `DROP INDEX "public"."IDX_8ab867c28039173469919cc8df"`,
     );
     await queryRunner.query(
       `DROP INDEX "public"."IDX_39f0a0ce96e591d2aff915fb32"`,
@@ -1449,26 +1498,6 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "ai_usage_log"`);
     await queryRunner.query(
-      `DROP INDEX "public"."IDX_2a55b8ba19368d0e6499ba5df1"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_a9a6100cbec33ef94cd06e46fe"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_6d05834339513f9800bc9a6915"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_3522a3e473b56a703fe8d98c95"`,
-    );
-    await queryRunner.query(`DROP TABLE "workspace_ai_provider_configs"`);
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_ec0f1703bed5fb29ea5e0afe16"`,
-    );
-    await queryRunner.query(
-      `DROP INDEX "public"."IDX_bca82934cd53e143c74a2ff97c"`,
-    );
-    await queryRunner.query(`DROP TABLE "user_ai_provider_configs"`);
-    await queryRunner.query(
       `DROP INDEX "public"."IDX_b4e4ef106d84e38e8577cd965d"`,
     );
     await queryRunner.query(
@@ -1479,6 +1508,23 @@ export class Initial1766900989600 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "ai_provider_configs"`);
     await queryRunner.query(`DROP TABLE "ai_providers"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_ba6a31f928ecb86e40f544081e"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_05b8d0a1515429ebc110544efc"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_2e94c017a761ef1a4655619fd8"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_959da1d5b224333f044c958feb"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_b2e64c27a46f4707b83ea5ee75"`,
+    );
+    await queryRunner.query(`DROP TABLE "ai_models"`);
+    await queryRunner.query(`DROP TABLE "workflows"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_0eab76d5a9c509930a9f3d7a10"`,
     );

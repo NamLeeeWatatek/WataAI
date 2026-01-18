@@ -40,7 +40,7 @@ interface PDFTextItem {
 export class KBTextExtractorService {
   private readonly logger = new Logger(KBTextExtractorService.name);
 
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   async extractText(
     buffer: Buffer,

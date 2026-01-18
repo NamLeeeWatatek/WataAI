@@ -193,4 +193,4 @@ import { WorkflowsModule } from './workflows/workflows.module';
     WorkflowsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

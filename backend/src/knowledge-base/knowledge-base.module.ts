@@ -105,4 +105,4 @@ import { KBChunkEntity } from './infrastructure/persistence/relational/entities/
     KBProcessingQueueService,
   ],
 })
-export class KnowledgeBaseModule { }
+export class KnowledgeBaseModule {}

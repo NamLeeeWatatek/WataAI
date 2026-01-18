@@ -16,7 +16,7 @@ export class BotInteractionService {
     private botRepository: Repository<BotEntity>,
     @InjectRepository(ConversationEntity)
     private conversationRepository: Repository<ConversationEntity>,
-  ) { }
+  ) {}
 
   async getBotForInteraction(botId: string) {
     const bot = await this.botRepository.findOne({

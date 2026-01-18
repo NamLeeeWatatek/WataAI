@@ -52,4 +52,4 @@ import { BotsModule } from '../bots/bots.module';
     ConversationEventListener,
   ],
 })
-export class ConversationsModule { }
+export class ConversationsModule {}

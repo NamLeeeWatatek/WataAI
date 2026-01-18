@@ -31,7 +31,7 @@ export class AiConfigService {
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelRepository: AiModelRepository,
-  ) { }
+  ) {}
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -109,7 +109,9 @@ export class AiConfigService {
         // 2. Metadata: Snapshot vs Latest vs Preview
         const isSnapshot = /-[0-9]{8}/.test(name) || /:[0-9]{8}/.test(name);
         const isPreview =
-          lower.includes('preview') || lower.includes('experimental') || lower.includes('beta');
+          lower.includes('preview') ||
+          lower.includes('experimental') ||
+          lower.includes('beta');
 
         m.metadata = {
           isSnapshot,

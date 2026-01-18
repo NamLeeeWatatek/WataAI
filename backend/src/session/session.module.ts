@@ -9,4 +9,4 @@ const infrastructurePersistenceModule = RelationalSessionPersistenceModule;
   providers: [SessionService],
   exports: [SessionService, infrastructurePersistenceModule],
 })
-export class SessionModule { }
+export class SessionModule {}

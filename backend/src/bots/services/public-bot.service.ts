@@ -49,7 +49,7 @@ export class PublicBotService {
 
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getBotConfig(
     botId: string,
@@ -232,7 +232,7 @@ export class PublicBotService {
           role: m.role as 'user' | 'assistant',
           content: m.content,
         })),
-        { workspaceId: conversation.workspaceId }
+        { workspaceId: conversation.workspaceId },
       );
 
       aiContent = chatResult.answer;

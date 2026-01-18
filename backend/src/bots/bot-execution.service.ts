@@ -1,7 +1,10 @@
 ﻿import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BotEntity, BotKnowledgeBaseEntity } from './infrastructure/persistence/relational/entities/bot.entity';
+import {
+  BotEntity,
+  BotKnowledgeBaseEntity,
+} from './infrastructure/persistence/relational/entities/bot.entity';
 import { ConversationEntity } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
 import { MessengerService } from '../channels/providers/messenger.service';
@@ -44,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -56,7 +59,7 @@ export class BotExecutionService {
     botId: string,
     message: string,
     history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
-    contextOverride?: { conversationId?: string; workspaceId?: string }
+    contextOverride?: { conversationId?: string; workspaceId?: string },
   ): Promise<ChatResult> {
     const bot = await this.botRepository.findOne({
       where: { id: botId },
@@ -66,7 +69,8 @@ export class BotExecutionService {
       throw new NotFoundException(`Bot ${botId} not found`);
     }
 
-    const workspaceId = bot.workspaceId || contextOverride?.workspaceId || 'default';
+    const workspaceId =
+      bot.workspaceId || contextOverride?.workspaceId || 'default';
 
     // 1. Gather RAG Context
     let ragSources: any[] = [];
@@ -79,8 +83,12 @@ export class BotExecutionService {
       });
 
       if (linkedKBs.length > 0) {
-        const kbIds = linkedKBs.map(kb => kb.knowledgeBaseId);
-        ragSources = await this.kbRagService.gatherRAGContext(message, workspaceId, kbIds); // Using public method
+        const kbIds = linkedKBs.map((kb) => kb.knowledgeBaseId);
+        ragSources = await this.kbRagService.gatherRAGContext(
+          message,
+          workspaceId,
+          kbIds,
+        ); // Using public method
 
         // Take top 5 for context
         const topSources = ragSources.slice(0, 5);
@@ -98,7 +106,8 @@ export class BotExecutionService {
     let systemPrompt = bot.systemPrompt || 'You are a helpful assistant.';
 
     // Add Multilingual instruction
-    systemPrompt += "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English.";
+    systemPrompt +=
+      "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English.";
 
     // Add RAG Context
     const lang = I18nContext.current()?.lang;
@@ -124,13 +133,13 @@ export class BotExecutionService {
         modelName,
         bot.aiConfigId,
         'workspace', // Bots usually belong to workspace
-        bot.workspaceId || 'system' // Fallback
+        bot.workspaceId || 'system', // Fallback
       );
     } else {
       // Fallback to generic chat (system default or resolved from model name)
       answer = await this.aiProvidersService.chatWithHistory(
         messages,
-        modelName
+        modelName,
       );
     }
 
@@ -159,7 +168,11 @@ export class BotExecutionService {
 
       // TODO: Fetch conversation history for this external user
       // For now, passing empty history as this service didn't handle history before
-      const response = await this.generateBotResponse(bot.id, incomingMessage.message, []);
+      const response = await this.generateBotResponse(
+        bot.id,
+        incomingMessage.message,
+        [],
+      );
 
       await this.sendResponse(
         incomingMessage.channel,
@@ -168,7 +181,6 @@ export class BotExecutionService {
       );
 
       this.logger.log(`✅ Bot response sent to ${incomingMessage.senderId}`);
-
     } catch (error) {
       this.logger.error(
         `Error processing message: ${error.message}`,

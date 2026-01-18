@@ -66,7 +66,6 @@ For support of both databases used [Hexagonal Architecture](architecture.md#hexa
    ```
 
 1. Apply this migration to database via [npm run migration:run](#run-migration).
-
 ### Run migration
 
 ```bash

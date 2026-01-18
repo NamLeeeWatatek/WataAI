@@ -59,7 +59,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 })
 @ApiExtraModels(AiModel)
 export class AiProvidersController {
-  constructor(private readonly aiProvidersService: AiProvidersService) { }
+  constructor(private readonly aiProvidersService: AiProvidersService) {}
 
   @Get('models')
   @ApiOperation({ summary: 'Find AI models with pagination' })

@@ -13,7 +13,7 @@ export class AiModelRelationalRepository implements AiModelRepository {
   constructor(
     @InjectRepository(AiModelEntity)
     private readonly repository: Repository<AiModelEntity>,
-  ) { }
+  ) {}
 
   async save(data: AiModel): Promise<AiModel> {
     const persistenceModel = AiModelMapper.toPersistence(data);

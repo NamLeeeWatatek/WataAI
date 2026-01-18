@@ -16,7 +16,7 @@ export class AiConversationsService {
     @InjectRepository(AiConversationEntity)
     private readonly conversationRepository: Repository<AiConversationEntity>,
     private readonly botExecutionService: BotExecutionService,
-  ) { }
+  ) {}
 
   async create(userId: string, createDto: CreateAiConversationDto) {
     const conversation = this.conversationRepository.create({
@@ -91,16 +91,16 @@ export class AiConversationsService {
     if (conversation.botId) {
       try {
         // Convert history to format expected by execution service
-        const history = conversation.messages.map(m => ({
+        const history = conversation.messages.map((m) => ({
           role: m.role as 'user' | 'assistant',
-          content: m.content
+          content: m.content,
         }));
 
         const chatResult = await this.botExecutionService.generateBotResponse(
           conversation.botId,
           messageDto.content,
           history,
-          { conversationId: conversation.id }
+          { conversationId: conversation.id },
         );
 
         // 3. Add Assistant Message
@@ -109,8 +109,8 @@ export class AiConversationsService {
           content: chatResult.answer,
           timestamp: new Date().toISOString(),
           metadata: {
-            sources: chatResult.sources
-          } as any
+            sources: chatResult.sources,
+          } as any,
         });
       } catch (error) {
         // Fallback error message

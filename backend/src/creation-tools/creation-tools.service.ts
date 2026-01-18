@@ -27,7 +27,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {

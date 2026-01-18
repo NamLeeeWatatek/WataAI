@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -52,7 +52,7 @@ export class KBRagService {
       knowledgeBaseId,
       limit,
       similarityThreshold,
-      useHybrid
+      useHybrid,
     );
   }
 
@@ -68,7 +68,7 @@ export class KBRagService {
       workspaceId,
       knowledgeBaseId,
       limit,
-      similarityThreshold
+      similarityThreshold,
     );
   }
 
@@ -81,8 +81,15 @@ export class KBRagService {
       similarityThreshold?: number;
       fallbackToGeneralKnowledge?: boolean;
     },
-  ): Promise<AsyncGenerator<{ type: 'source' | 'token' | 'error'; data: any }>> {
-    return this._generateAnswerStream(question, knowledgeBaseId, model, options);
+  ): Promise<
+    AsyncGenerator<{ type: 'source' | 'token' | 'error'; data: any }>
+  > {
+    return this._generateAnswerStream(
+      question,
+      knowledgeBaseId,
+      model,
+      options,
+    );
   }
 
   private async *_generateAnswerStream(
@@ -402,7 +409,11 @@ export class KBRagService {
 
       if (knowledgeBaseIds.length > 0) {
         try {
-          relevantChunks = await this.gatherRAGContext(question, workspaceId || 'default', knowledgeBaseIds);
+          relevantChunks = await this.gatherRAGContext(
+            question,
+            workspaceId || 'default',
+            knowledgeBaseIds,
+          );
           relevantChunks = relevantChunks.slice(0, 5); // Ensure top 5
         } catch (kbError) {
           this.logger.warn(
@@ -437,12 +448,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiConfigId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiConfigId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -503,17 +514,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiConfigId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiConfigId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {
@@ -601,7 +612,11 @@ export class KBRagService {
     workspaceId: string,
     knowledgeBaseIds: string[],
   ): Promise<ChunkSource[]> {
-    return this.searchService.gatherRAGContext(message, workspaceId, knowledgeBaseIds);
+    return this.searchService.gatherRAGContext(
+      message,
+      workspaceId,
+      knowledgeBaseIds,
+    );
   }
 
   private buildMessages(
@@ -687,7 +702,7 @@ export class KBRagService {
       if (bot.createdBy) {
         const config = await this.aiProvidersService.getUserConfig(
           bot.createdBy,
-          bot.aiConfigId
+          bot.aiConfigId,
         );
 
         if (config) {
