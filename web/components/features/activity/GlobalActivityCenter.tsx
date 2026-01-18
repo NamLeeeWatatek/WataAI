@@ -31,7 +31,7 @@ import {
 import { auditApi, AuditLog } from '@/lib/api/audit';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
-import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
+import { CreationJob, CreationJobStatus } from '../../../lib/types/creation-job';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ProductDetailsDialog } from '../products/ProductDetailsDialog';
