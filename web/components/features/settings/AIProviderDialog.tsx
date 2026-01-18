@@ -199,10 +199,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border">
+            <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border max-h-[85vh] flex flex-col">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-                        <DialogHeader className="p-6 pb-4 border-b">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full overflow-hidden">
+                        <DialogHeader className="p-6 pb-4 border-b shrink-0">
                             <div className="flex items-center gap-4">
                                 <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
                                     <Cpu className="size-5 text-primary" />
@@ -218,7 +218,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             </div>
                         </DialogHeader>
 
-                        <div className="p-6 space-y-6">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control as any}
@@ -420,7 +420,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                             )}
                         </div>
 
-                        <DialogFooter className="p-6 pt-0 gap-2 border-t mt-auto pt-6 bg-muted/10">
+                        <DialogFooter className="p-6 pt-0 gap-2 border-t mt-auto pt-6 bg-muted/10 shrink-0">
                             <Button
                                 type="button"
                                 variant="ghost"

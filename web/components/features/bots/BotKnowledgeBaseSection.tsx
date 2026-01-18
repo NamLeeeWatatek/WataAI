@@ -240,7 +240,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                         </div>
                         <div>
                             <CardTitle className="text-xl font-bold tracking-tight">Knowledge Base</CardTitle>
-                            <CardDescription className="text-xs font-medium">Manage the knowledge sources your bot uses</CardDescription>
+                            <CardDescription className="text-xs font-medium text-muted-foreground/60">Manage the knowledge sources your bot uses</CardDescription>
                         </div>
                     </div>
                     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>

@@ -72,6 +72,11 @@ export class CreateKnowledgeBaseDto {
   chunkOverlap?: number;
 
   @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  useSystemAI?: boolean;
+
+  @ApiPropertyOptional()
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
@@ -135,6 +140,11 @@ export class UpdateKnowledgeBaseDto {
   @Min(0)
   @IsOptional()
   chunkOverlap?: number;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  useSystemAI?: boolean;
 
   @ApiPropertyOptional()
   @IsArray()

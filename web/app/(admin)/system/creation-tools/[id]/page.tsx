@@ -21,7 +21,7 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { Switch } from '@/components/ui/Switch';
 import { UnifiedFileUpload } from '@/components/shared/UnifiedFileUpload';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/Form';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, TabsHeader } from '@/components/ui/Tabs';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Loader2, ArrowLeft, Save, LayoutTemplate, Settings, Play, Sparkles, Plus, Edit2, Trash2 } from 'lucide-react';
@@ -220,20 +220,22 @@ export default function EditCreationToolPage() {
             <FormProvider {...form}>
                 <div className="flex flex-col space-y-6">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full max-w-2xl grid-cols-3 mb-6">
-                            <TabsTrigger value="general" className="flex items-center gap-2">
-                                <Settings className="w-4 h-4" />
-                                General Info
-                            </TabsTrigger>
-                            <TabsTrigger value="form" className="flex items-center gap-2">
-                                <LayoutTemplate className="w-4 h-4" />
-                                Form Builder
-                            </TabsTrigger>
-                            <TabsTrigger value="execution" className="flex items-center gap-2">
-                                <Play className="w-4 h-4" />
-                                Execution Flow
-                            </TabsTrigger>
-                        </TabsList>
+                        <TabsHeader>
+                            <TabsList variant="pills">
+                                <TabsTrigger value="general" variant="pills">
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    General Info
+                                </TabsTrigger>
+                                <TabsTrigger value="form" variant="pills">
+                                    <LayoutTemplate className="w-4 h-4 mr-2" />
+                                    Form Builder
+                                </TabsTrigger>
+                                <TabsTrigger value="execution" variant="pills">
+                                    <Play className="w-4 h-4 mr-2" />
+                                    Execution Flow
+                                </TabsTrigger>
+                            </TabsList>
+                        </TabsHeader>
 
                         {/* TAB 1: General Info */}
                         <TabsContent value="general">

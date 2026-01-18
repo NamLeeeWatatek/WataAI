@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/Switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Zap, ShieldCheck, Settings2, Loader2, Gauge } from 'lucide-react';
 import { useAiProviders, type SystemSettings } from '@/lib/hooks/features/useAiProviders';
+import { FormActions } from '@/components/shared/FormActions';
 
 export function AISettingsTab() {
   const {
@@ -29,6 +30,7 @@ export function AISettingsTab() {
     updateSystemSettings(localSettings);
   };
 
+  const isDirty = JSON.stringify(localSettings) !== JSON.stringify(serverSettings);
   const activeProviders = userConfigs.filter(c => c.isActive);
 
   if (isLoading) return <div className="p-20 text-center text-muted-foreground animate-pulse">Loading configuration...</div>;
@@ -180,20 +182,13 @@ export function AISettingsTab() {
         </Card>
       </div>
 
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={isMutating}
-          className="min-w-[150px]"
-        >
-          {isMutating ? (
-            <Loader2 className="size-4 mr-2 animate-spin" />
-          ) : (
-            <Settings2 className="size-4 mr-2" />
-          )}
-          Save Settings
-        </Button>
-      </div>
+      <FormActions
+        onSave={handleSave}
+        disabled={!isDirty}
+        loading={isMutating}
+        saveLabel="Save Settings"
+        icon={<Settings2 className="mr-3 h-5 w-5" />}
+      />
     </div>
   );
 }

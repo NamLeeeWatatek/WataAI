@@ -18,6 +18,13 @@ lib/seeds/
 lib/migrations/
 lib/modules/
 lib/infrastructure/
+lib/audit/
+lib/users/
+lib/auth/
+lib/roles/
+lib/files/
+lib/common/
+**/domain/
 src/
 test/
 

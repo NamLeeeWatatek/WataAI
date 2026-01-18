@@ -335,37 +335,39 @@
     @apply border-primary/20 shadow-lg transform -translate-y-[1px];
   }
 
-  /* Glassmorphism Utilities */
-  /* Glassmorphism System - Project Crystal */
+  /* Glassmorphism System - Strict Implementation */
+  /* Rule: Bg semi-transparent, Backdrop blur, Check contrast */
 
-  /* Base Glass (Sidebar, Panels) */
+  /* Base Glass */
   .glass {
-    @apply bg-white/10 dark:bg-black/20 backdrop-blur-xl border-r border-white/20 dark:border-white/10 supports-[backdrop-filter]:bg-white/10 supports-[backdrop-filter]:dark:bg-black/20;
+    @apply bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-lg supports-[backdrop-filter]:bg-white/10 supports-[backdrop-filter]:dark:bg-black/10;
   }
 
-  /* Floating Glass (Headers, Dropdowns) */
-  .glass-floating {
-    @apply bg-white/20 dark:bg-black/40 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shadow-lg supports-[backdrop-filter]:bg-white/20 supports-[backdrop-filter]:dark:bg-black/40;
+  /* Intense Glass (Modals, Featured Cards) */
+  .glass-heavy {
+    @apply bg-white/5 dark:bg-black/5 backdrop-blur-xl border border-white/10 dark:border-white/10 shadow-2xl;
   }
 
   /* Card Glass (Surface) */
   .glass-card {
-    @apply bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm transition-all duration-300 hover:bg-white/50 hover:dark:bg-black/50 hover:shadow-lg hover:border-primary/20;
-  }
-
-  /* Input Glass (Recessed) */
-  .glass-input {
-    @apply bg-black/5 dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-inner focus:bg-background/80 transition-all;
+    @apply bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-black/20 shadow-xl rounded-2xl transition-all duration-300;
   }
 
   /* Overlay Glass (Modals) */
   .glass-overlay {
-    @apply bg-black/20 backdrop-blur-sm;
+    @apply bg-black/40 backdrop-blur-sm;
   }
 
-  /* High Contrast Modal Content */
+  /* High Contrast Modal Content - Fixed Overflow */
   .glass-modal {
-    @apply bg-background/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl;
+    @apply bg-white/10 dark:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-3xl text-foreground;
+    /* Ensure text readability */
+    @apply before:absolute before:inset-0 before:bg-background/40 before:rounded-[inherit] before:-z-10;
+  }
+
+  /* Sticky Glass Header */
+  .glass-floating {
+    @apply bg-background/80 backdrop-blur-xl border-b border-border/10 supports-[backdrop-filter]:bg-background/60;
   }
 
   /* Gradient Text */

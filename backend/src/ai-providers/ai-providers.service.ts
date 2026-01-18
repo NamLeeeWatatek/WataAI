@@ -47,7 +47,7 @@ export class AiProvidersService {
     private readonly aiModelService: AiModelService,
     private readonly systemAiSettingsRepository: SystemAiSettingsRepository,
     private readonly aiModelRepository: AiModelRepository,
-  ) {}
+  ) { }
 
   /**
    * Encrypt an API key

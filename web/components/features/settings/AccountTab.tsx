@@ -17,6 +17,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { fileUploadService } from '@/lib/api/files';
 import { toast } from 'sonner';
 import { UnifiedAvatarUpload } from '@/components/shared/UnifiedFileUpload';
+import { FormActions } from '@/components/shared/FormActions';
 
 const profileSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -341,23 +342,11 @@ export function AccountTab() {
           </div>
 
           {/* Action Bar */}
-          <div className="flex items-center justify-between p-6 bg-card/40 border border-border/40 rounded-3xl backdrop-blur-sm">
-            <div className="hidden sm:block">
-              <p className="text-xs text-muted-foreground">Ensure all changes are correct before saving.</p>
-            </div>
-            <Button
-              type="submit"
-              disabled={updateProfileMutation.isPending || !form.formState.isDirty}
-              size="xl"
-              className="px-10 font-black transition-all"
-            >
-              {updateProfileMutation.isPending && (
-                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-              )}
-              <Save className="mr-3 h-5 w-5" />
-              Save Professional Profile
-            </Button>
-          </div>
+          <FormActions
+            disabled={!form.formState.isDirty}
+            loading={updateProfileMutation.isPending}
+            saveLabel="Save Professional Profile"
+          />
         </form>
       </Form>
     </div>

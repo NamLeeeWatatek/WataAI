@@ -13,9 +13,9 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "glass h-10 bg-muted/20 border border-border/10",
+        default: "bg-muted/50 p-1 border border-border/10",
         dashboard: "bg-transparent border-none shadow-none h-auto p-0 gap-6",
-        pills: "glass h-12 w-auto bg-muted/20 p-1 rounded-lg border border-border/30",
+        pills: "w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0 h-auto gap-2 border-none rounded-none",
       },
     },
     defaultVariants: {
@@ -45,7 +45,7 @@ const tabsTriggerVariants = cva(
       variant: {
         default: "rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
         dashboard: "data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 gap-2 font-bold text-sm transition-all text-muted-foreground hover:text-foreground data-[state=active]:text-foreground",
-        pills: "rounded-lg font-bold transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md flex items-center gap-2 px-6",
+        pills: "rounded-lg h-9 px-4 font-bold transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:border-primary/20 hover:bg-muted/50 border border-transparent",
       },
     },
     defaultVariants: {
@@ -92,7 +92,7 @@ function TabsHeader({
     <div
       data-slot="tabs-header"
       className={cn(
-        "glass-floating sticky top-0 z-30 -mx-4 mb-8 -mt-2 pt-4 pb-4 md:-mx-8 md:px-8",
+        "sticky top-0 z-30 mb-8 pt-4 pb-4 glass-floating -mx-4 px-4 md:-mx-8 md:px-8",
         className
       )}
       {...props}

@@ -198,16 +198,21 @@ export function BotChannelsSection({ botId, botChannels, onRefresh, workspaceId 
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden transition-all hover:shadow-md hover:border-primary/20">
                 <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-xl font-bold flex items-center gap-2">
-                                <span className="bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">Connected Channels</span>
-                                <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] font-black tracking-widest px-2.5 py-0.5">
-                                    {connectedChannels.length}
-                                </Badge>
-                            </CardTitle>
-                            <CardDescription className="font-medium mt-1">
-                                Manage the communication endpoints for this bot
-                            </CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-primary/10 rounded-xl">
+                                <Share2 className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+                                    Connected Channels
+                                    <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px] font-black tracking-widest px-2.5 py-0.5">
+                                        {connectedChannels.length}
+                                    </Badge>
+                                </CardTitle>
+                                <CardDescription className="text-xs font-medium text-muted-foreground/60 mt-1">
+                                    Manage the communication endpoints for this bot
+                                </CardDescription>
+                            </div>
                         </div>
                         <Button
                             onClick={() => setShowModal(true)}

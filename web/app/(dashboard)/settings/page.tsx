@@ -56,24 +56,20 @@ export default function SettingsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-1 flex flex-col">
-          {/* Sticky Tabs Bar - Full width background, aligned content */}
-          <div className="sticky top-0 z-30 glass-floating border-x-0 border-t-0 rounded-none shadow-sm">
-            <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-              <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar bg-transparent p-0 h-auto gap-2 border-none">
-                {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    variant="pills"
-                    className="shrink-0 rounded-lg px-4 h-9"
-                  >
-                    <tab.icon className="w-4 h-4 mr-2" />
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </div>
+          <TabsHeader>
+            <TabsList variant="pills">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  variant="pills"
+                >
+                  <tab.icon className="w-4 h-4 mr-2" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </TabsHeader>
 
           {/* Content Area - Centered & Aligned */}
           <div className="flex-1 py-8">
