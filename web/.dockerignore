@@ -8,14 +8,39 @@ dist
 *.swp
 *.swo
 .DS_Store
-*.swp
-*.swo
-.DS_Store
+# Backend specific folders to ignore (Aggressive Cleanup)
+lib/ai-providers/
+lib/bots/
+lib/channels/
+lib/knowledge-base/
+lib/database/
+lib/seeds/
+lib/migrations/
+lib/modules/
+lib/infrastructure/
+lib/config/
+src/
+test/
 
-# Backend specific files to ignore in frontend
-**/*.controller.ts
-**/*.module.ts
-**/*.service.ts
-**/*.entity.ts
-**/*.dto.ts
-**/src/
+# Backend specific configuration files
+nest-cli.json
+tsconfig.build.json
+ormconfig.*
+typeorm-cli.config.ts
+
+# Backend specific file types
+*.controller.ts
+*.module.ts
+*.service.ts
+*.entity.ts
+*.dto.ts
+*.decorator.ts
+*.guard.ts
+*.strategy.ts
+*.resolver.ts
+*.interceptor.ts
+*.gateway.ts
+*.filter.ts
+*.spec.ts
+*.e2e-spec.ts
+
