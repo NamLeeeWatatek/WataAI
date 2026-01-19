@@ -34,6 +34,7 @@ export class KBProcessingQueueService {
     type: 'embedding' | 'crawl' = 'embedding',
     userId?: string,
     addToQueue = true,
+    documentName?: string,
   ): Promise<string> {
     const internalJobId = documentId.startsWith('crawl-')
       ? documentId
@@ -45,9 +46,10 @@ export class KBProcessingQueueService {
       knowledgeBaseId,
       status: 'queued',
       progress: 0,
-      totalChunks: 0,
       processedChunks: 0,
+      totalChunks: 0,
       type,
+      documentName,
     };
 
     this.jobs.set(internalJobId, jobStatus);

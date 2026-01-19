@@ -14,6 +14,8 @@ import { KBManagementService } from './kb-management.service';
 import { KbProcessingStatus } from '../knowledge-base.enum';
 import { KBTextExtractorService } from './kb-text-extractor.service';
 import { sanitizeText, sanitizeMetadata } from '../utils/text-sanitizer';
+import { KBCrawlerService } from './kb-crawler.service';
+import { MarkdownProcessorUtil } from '../utils/markdown-processor.util';
 
 @Processor('kb-processing')
 export class KBProcessor extends WorkerHost {
@@ -28,6 +30,7 @@ export class KBProcessor extends WorkerHost {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly kbManagementService: KBManagementService,
     private readonly textExtractorService: KBTextExtractorService,
+    private readonly crawlerService: KBCrawlerService,
   ) {
     super();
   }
@@ -289,52 +292,19 @@ export class KBProcessor extends WorkerHost {
 
       this.logger.log(`🕸️ Fetching URL: ${url}`);
 
-      // Dynamic imports
-      const axios = (await import('axios')).default;
-      const cheerio = await import('cheerio');
+      this.logger.log(`🕸️ Fetching URL via unified stealth crawler: ${url}`);
 
-      const response = await axios.get(url, {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-          'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Cache-Control': 'max-age=0',
-          'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand)";v="24", "Google Chrome";v="122"',
-          'Sec-Ch-Ua-Mobile': '?0',
-          'Sec-Ch-Ua-Platform': '"Windows"',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Upgrade-Insecure-Requests': '1',
-          'Referer': 'https://www.google.com/',
-        },
-        timeout: 15000, // 15s timeout
-      });
+      // Use the unified fetcher with Jina Reader fallback to bypass 403s
+      const html = await this.crawlerService.fetchUrlContent(url);
 
-      const $ = cheerio.load(response.data);
+      const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(
+        html,
+        url,
+      );
 
-      // Cleanup
-      $('script, style, nav, footer, iframe, noscript, svg').remove();
-
-      // Extract metadata
-      const title = $('title').text().trim() || document.name;
-      const description = $('meta[name="description"]').attr('content') || '';
-
-      // Extract main content
-      // Prioritize article, main, or body
-      let content = '';
-      if ($('article').length > 0) {
-        content = $('article').text();
-      } else if ($('main').length > 0) {
-        content = $('main').text();
-      } else {
-        content = $('body').text();
-      }
-
-      content = content.replace(/\s+/g, ' ').trim();
+      this.logger.log(
+        `✅ Crawled ${content.length} chars (Title: ${title}). Updating document...`,
+      );
 
       if (!content) {
         throw new Error('Crawled content is empty');
@@ -350,7 +320,7 @@ export class KBProcessor extends WorkerHost {
       document.metadata = {
         ...document.metadata,
         title,
-        description,
+        description: excerpt || '',
         crawledAt: new Date().toISOString(),
         contentType: 'text/html',
       };

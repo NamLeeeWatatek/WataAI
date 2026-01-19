@@ -46,13 +46,15 @@ export class KBCrawlerService {
     private readonly auditService: AuditService,
   ) { }
 
-  async crawlUrl(url: string): Promise<CrawlResult> {
+  /**
+   * Powerful stealth content fetcher with Jina Reader fallback.
+   * Public to allow KBProcessor and other services to use it.
+   */
+  public async fetchUrlContent(url: string, headers?: any): Promise<string> {
     try {
-      this.logger.log(`🕷️ Crawling: ${url}`);
-
+      this.logger.debug(`Fetching: ${url}`);
       const response = await axios.get(url, {
-        timeout: 30000,
-        headers: {
+        headers: headers || {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -69,9 +71,40 @@ export class KBCrawlerService {
           'Upgrade-Insecure-Requests': '1',
           'Referer': 'https://www.google.com/',
         },
+        timeout: 20000, // 20s
       });
 
-      const html = response.data;
+      return response.data;
+    } catch (error) {
+      // POWERFUL FALLBACK: Use Jina Reader if 403/401 occurs or as requested by user
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        this.logger.warn(
+          `403 Forbidden on ${url}. Attempting powerful stealth bypass via Jina Reader...`,
+        );
+        try {
+          // Jina Reader handles browser impersonation, JS rendering, and WAF bypass
+          const jinaResponse = await axios.get(`https://r.jina.ai/${url}`, {
+            headers: {
+              'X-Return-Format': 'html', // We want HTML to keep consistency with existing parser
+            },
+            timeout: 30000,
+          });
+          return jinaResponse.data;
+        } catch (jinaError) {
+          this.logger.error(`Jina Reader bypass also failed: ${jinaError.message}`);
+          throw error; // Throw original 403 if jina fails
+        }
+      }
+      throw error;
+    }
+  }
+
+  async crawlUrl(url: string): Promise<CrawlResult> {
+    try {
+      this.logger.log(`🕷️ Crawling: ${url}`);
+
+      const html = await this.fetchUrlContent(url);
+
       const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(
         html,
         url,
@@ -163,8 +196,8 @@ export class KBCrawlerService {
       'crawl',
       userId,
       false, // Local tracking only, do not add to BullMQ
+      `Crawl: ${startUrl}`,
     );
-    this.processingQueue.setJobDocumentName(crawlJobId, `Crawl: ${startUrl}`);
     this.processingQueue.startJob(crawlJobId);
 
     const BATCH_SIZE = 5; // Concurrent requests
