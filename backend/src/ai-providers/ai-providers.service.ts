@@ -609,23 +609,13 @@ export class AiProvidersService {
     scopeId: string,
     options?: Record<string, any>,
   ): Promise<string> {
-    let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
+    const config = await this.aiConfigService.getConfigDetails(
+      providerConfigId,
+      scope === 'user' ? scopeId : null,
+      scope === 'workspace' ? scopeId : undefined,
+    );
 
-    if (scope === 'user') {
-      const c = await this.aiConfigService.getUserConfig(
-        scopeId,
-        providerConfigId,
-      );
-      if (!c) throw new NotFoundException('Config not found');
-      config = c;
-    } else {
-      const c = await this.aiConfigService.getWorkspaceConfig(
-        scopeId,
-        providerConfigId,
-      );
-      if (!c) throw new NotFoundException('Config not found');
-      config = c;
-    }
+    if (!config) throw new NotFoundException('Config not found');
 
     if (!config.provider) throw new BadRequestException('Provider not loaded');
 

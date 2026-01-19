@@ -31,7 +31,7 @@ export class AiConfigService {
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelRepository: AiModelRepository,
-  ) {}
+  ) { }
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {
@@ -353,12 +353,14 @@ export class AiConfigService {
   // Unified Config Retrieval (User or Workspace)
   async getConfigDetails(
     configId: string,
-    userId: string,
+    userId?: string | null,
     workspaceId?: string,
   ): Promise<NullableType<UserAiProviderConfig | WorkspaceAiProviderConfig>> {
     // 1. Try User Config
-    const userConfig = await this.getUserConfig(userId, configId);
-    if (userConfig) return userConfig;
+    if (userId) {
+      const userConfig = await this.getUserConfig(userId, configId);
+      if (userConfig) return userConfig;
+    }
 
     // 2. Try Workspace Config
     if (workspaceId) {
@@ -372,8 +374,8 @@ export class AiConfigService {
     // 3. Last Resort: Try Generic Config ID (e.g., System or Shared)
     const genericConfig =
       await this.aiProviderConfigRepository.getConfigById(configId);
-    if (genericConfig) return genericConfig;
-
+    if (genericConfig)
+      return this.aiEncryptionService.decryptConfig(genericConfig);
     return null;
   }
 

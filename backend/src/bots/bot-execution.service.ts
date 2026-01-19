@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -132,8 +132,8 @@ export class BotExecutionService {
         messages,
         modelName,
         bot.aiConfigId,
-        'workspace', // Bots usually belong to workspace
-        bot.workspaceId || 'system', // Fallback
+        'workspace',
+        bot.workspaceId || contextOverride?.workspaceId || 'system',
       );
     } else {
       // Fallback to generic chat (system default or resolved from model name)

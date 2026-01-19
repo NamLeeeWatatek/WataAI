@@ -151,7 +151,7 @@ export class AiModelService {
     apiKey?: string,
     options?: Record<string, any>,
   ): Promise<string> {
-    const url = baseURL || 'http://localhost:11434';
+    const url = (baseURL || 'http://localhost:11434').trim();
 
     if (url.endsWith('/v1') || url.endsWith('/v1/')) {
       return this.chatWithOpenAIHistory(
@@ -171,7 +171,8 @@ export class AiModelService {
     const endpoint = `${validUrl}/api/chat`;
 
     try {
-      const parsedUrl = new URL(endpoint);
+      // Use validUrl for host parsing to ensure protocol exists
+      const parsedUrl = new URL(validUrl);
       const hostHeader = parsedUrl.host;
 
       const sanitizedMessages = messages.map((m) => ({
@@ -396,7 +397,7 @@ export class AiModelService {
     apiKey?: string,
     options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
-    const url = baseURL || 'http://localhost:11434';
+    const url = (baseURL || 'http://localhost:11434').trim();
 
     if (url.endsWith('/v1') || url.endsWith('/v1/')) {
       return this.chatWithOpenAIStream(
@@ -416,7 +417,8 @@ export class AiModelService {
     const endpoint = `${validUrl}/api/chat`;
 
     try {
-      const parsedUrl = new URL(endpoint);
+      // Use validUrl for host parsing to ensure protocol exists
+      const parsedUrl = new URL(validUrl);
       const hostHeader = parsedUrl.host;
 
       const sanitizedMessages = messages.map((m) => ({
@@ -972,7 +974,9 @@ export class AiModelService {
 
   private validateBaseUrl(url: string): void {
     try {
-      const parsed = new URL(url);
+      // Allow localhost without protocol
+      const urlToCheck = url.startsWith('http') ? url : `http://${url}`;
+      const parsed = new URL(urlToCheck);
       const hostname = parsed.hostname;
 
       // Block access to AWS/GCP Metadata services
@@ -981,12 +985,10 @@ export class AiModelService {
           'Access to metadata services is restricted.',
         );
       }
-
-      // Additional block list can be added here
-      // e.g. internal range 10.x.x.x etc, but that might be valid for self-hosted LLMs.
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
-      // Invalid URL format
+      // If URL parsing fails, throw bad request
+      throw new BadRequestException(`Invalid URL format: ${url}`);
     }
   }
 
