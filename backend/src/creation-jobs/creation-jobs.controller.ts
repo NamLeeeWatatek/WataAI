@@ -41,7 +41,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post()
   @Permissions('job:Create')
@@ -169,7 +169,7 @@ export class CreationJobsController {
   })
   post(
     @Param('id') id: string,
-    @Body() body: { channels: string[]; scheduledTime?: string },
+    @Body() body: { channels: string[]; scheduledTime?: string; message?: string },
     @CurrentWorkspace() workspaceId: string,
   ) {
     return this.service.postToChannels(
@@ -177,6 +177,7 @@ export class CreationJobsController {
       body.channels,
       workspaceId,
       body.scheduledTime,
+      body.message,
     );
   }
 
