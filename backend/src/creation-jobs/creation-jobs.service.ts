@@ -338,6 +338,7 @@ export class CreationJobsService {
     channels: string[],
     workspaceId: string,
     scheduledTime?: string,
+    customMessage?: string,
   ): Promise<any> {
     const job = await this.creationJobsRepository.findById(jobId, workspaceId);
     if (!job) {
@@ -349,7 +350,7 @@ export class CreationJobsService {
     // This depends on the tool output structure.
     // For now, we'll look for common fields or joined text.
 
-    let message = '';
+    let message = customMessage || '';
     let imageUrl = '';
 
     if (job.outputData) {
@@ -375,27 +376,31 @@ export class CreationJobsService {
         if (possibleUrl) imageUrl = possibleUrl as string;
       }
 
-      // 2. Extract Message
-      if (typeof output.content === 'string') {
-        message = output.content;
-      } else if (typeof output.text === 'string') {
-        message = output.text;
-      } else if (typeof job.outputData === 'string') {
-        message = job.outputData;
-      } else {
-        // Fallback: join strings but skip system info and already detected image URL
-        const skipKeywords = ['id', 'status', 'success', 'error', 'execution'];
-        message = Object.entries(output)
-          .filter(([key, val]) => {
-            if (typeof val !== 'string' || !val.trim()) return false;
-            if (val === imageUrl) return false;
-            if (skipKeywords.some((k) => key.toLowerCase().includes(k)))
-              return false;
-            if (val.toLowerCase() === 'success') return false;
-            return true;
-          })
-          .map(([_, val]) => val)
-          .join('\n');
+      // 2. Extract Message if customMessage is not provided
+      if (!message) {
+        if (typeof output.content === 'string') {
+          message = output.content;
+        } else if (typeof output.text === 'string') {
+          message = output.text;
+        } else if (typeof output.result === 'string') {
+          message = output.result;
+        } else if (typeof job.outputData === 'string') {
+          message = job.outputData;
+        } else {
+          // Fallback: join strings but skip system info and already detected image URL
+          const skipKeywords = ['id', 'status', 'success', 'error', 'execution'];
+          message = Object.entries(output)
+            .filter(([key, val]) => {
+              if (typeof val !== 'string' || !val.trim()) return false;
+              if (val === imageUrl) return false;
+              if (skipKeywords.some((k) => key.toLowerCase().includes(k)))
+                return false;
+              if (val.toLowerCase() === 'success') return false;
+              return true;
+            })
+            .map(([_, val]) => val)
+            .join('\n');
+        }
       }
     }
 
