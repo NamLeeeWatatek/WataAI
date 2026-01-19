@@ -181,7 +181,7 @@ export default function BotsPage() {
             </div>
 
             {bots.length === 0 ? (
-                <Card className="flex flex-col items-center justify-center py-20 border-border/40 border-dashed bg-muted/5">
+                <Card className="flex flex-col items-center justify-center py-20 border-dashed glass-card">
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>

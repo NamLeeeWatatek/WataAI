@@ -7,7 +7,7 @@ const Table = React.forwardRef<HTMLTableElement, React.ComponentProps<"table">>(
             <table
                 ref={ref}
                 data-slot="table"
-                className={cn("w-full caption-bottom text-sm", className)}
+                className={cn("w-full caption-bottom text-sm whitespace-nowrap", className)}
                 {...props}
             />
         </div>

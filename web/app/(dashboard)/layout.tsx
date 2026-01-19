@@ -75,22 +75,24 @@ export default function DashboardLayout({
             <WorkspaceInitializer />
             {/* Mobile Sheet Navigation */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetContent side="left" className="p-0 w-80 border-none bg-background/60 backdrop-blur-3xl shadow-2xl">
-                    <SheetHeader className="sr-only">
-                        <SheetTitle>Navigation Menu</SheetTitle>
-                    </SheetHeader>
-                    <DashboardSidebar
-                        expandedSections={expandedSections}
-                        onToggleSection={toggleSection}
-                        onSignOutConfirm={() => {
-                            setSidebarOpen(false);
-                            handleSignOut();
-                        }}
-                        sidebarOpen={true}
-                        onCloseSidebar={() => setSidebarOpen(false)}
-                        user={user} // Pass user data
-                        isLoggingOut={isLoggingOut}
-                    />
+                <SheetContent side="left" className="p-0 w-auto border-none bg-transparent shadow-none">
+                    <div className="h-full w-full">
+                        <SheetHeader className="sr-only">
+                            <SheetTitle>Navigation Menu</SheetTitle>
+                        </SheetHeader>
+                        <DashboardSidebar
+                            expandedSections={expandedSections}
+                            onToggleSection={toggleSection}
+                            onSignOutConfirm={() => {
+                                setSidebarOpen(false);
+                                handleSignOut();
+                            }}
+                            sidebarOpen={true}
+                            onCloseSidebar={() => setSidebarOpen(false)}
+                            user={user} // Pass user data
+                            isLoggingOut={isLoggingOut}
+                        />
+                    </div>
                 </SheetContent>
             </Sheet>
 

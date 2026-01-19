@@ -82,7 +82,8 @@ export const DashboardHeader = React.memo<DashboardHeaderProps>(({
                     <AdminLink />
 
                     {/* Theme Toggle */}
-                    <Button
+                    {/* Theme Toggle - Disabled for now */}
+                    {/* <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
@@ -96,7 +97,7 @@ export const DashboardHeader = React.memo<DashboardHeaderProps>(({
                         ) : (
                             <Moon className="w-4 h-4" />
                         )}
-                    </Button>
+                    </Button> */}
 
                     {/* Language Switcher */}
                     <LanguageSwitcher />

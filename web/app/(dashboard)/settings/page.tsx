@@ -45,14 +45,17 @@ export default function SettingsPage() {
       <div className="flex flex-col min-h-full">
         {/* Header - Centered & Aligned */}
         <div className="flex-none pt-8 pb-4">
-          <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <PageHeader
-              title="System Configuration"
-              description="Neural gateway orchestration and system-wide preference matrix"
-              premium
-              className="mb-0"
-            />
+          <div className="flex-none">
+            <div className="page-container pb-4">
+              <PageHeader
+                title="System Configuration"
+                description="Neural gateway orchestration and system-wide preference matrix"
+                premium
+                className="mb-0"
+              />
+            </div>
           </div>
+
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-1 flex flex-col">
@@ -72,8 +75,8 @@ export default function SettingsPage() {
           </TabsHeader>
 
           {/* Content Area - Centered & Aligned */}
-          <div className="flex-1 py-8">
-            <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex-1">
+            <div className="page-container pt-0">
               <TabsContent value="workspace" className="m-0 focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <WorkspaceTab />
               </TabsContent>
