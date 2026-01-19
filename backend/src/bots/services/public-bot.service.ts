@@ -52,7 +52,7 @@ export class PublicBotService {
 
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getBotConfig(
     botId: string,
@@ -92,7 +92,10 @@ export class PublicBotService {
     }
 
     let allowedOrigins = widgetVersion.config.security?.allowedOrigins || [];
-    if (allowedOrigins.length === 0 || (allowedOrigins.length === 1 && allowedOrigins[0] === '')) {
+    if (
+      allowedOrigins.length === 0 ||
+      (allowedOrigins.length === 1 && allowedOrigins[0] === '')
+    ) {
       allowedOrigins = ['*'];
     }
     if (origin) {
@@ -148,7 +151,10 @@ export class PublicBotService {
     }
 
     let allowedOrigins = bot.allowedOrigins || [];
-    if (allowedOrigins.length === 0 || (allowedOrigins.length === 1 && allowedOrigins[0] === '')) {
+    if (
+      allowedOrigins.length === 0 ||
+      (allowedOrigins.length === 1 && allowedOrigins[0] === '')
+    ) {
       allowedOrigins = ['*'];
     }
 
@@ -170,40 +176,54 @@ export class PublicBotService {
       const conversationCount = await this.conversationRepository
         .createQueryBuilder('conversation')
         .where('conversation.botId = :botId', { botId })
-        .andWhere("conversation.metadata -> 'guestIdentity' ->> 'phone' = :phone", { phone: guestPhone })
+        .andWhere(
+          "conversation.metadata -> 'guestIdentity' ->> 'phone' = :phone",
+          { phone: guestPhone },
+        )
         .andWhere('conversation.createdAt >= :today', { today })
         .getCount();
 
       if (conversationCount >= 5) {
-        this.logger.warn(`Rate limit exceeded for phone ${guestPhone} on bot ${botId} `);
-        throw new ForbiddenException('You have reached the daily limit for new conversations.');
+        this.logger.warn(
+          `Rate limit exceeded for phone ${guestPhone} on bot ${botId} `,
+        );
+        throw new ForbiddenException(
+          'You have reached the daily limit for new conversations.',
+        );
       }
 
       // Find or Create Contact
       let contact = await this.contactRepository.findOne({
         where: {
           phone: guestPhone,
-          workspaceId: bot.workspaceId
-        }
+          workspaceId: bot.workspaceId,
+        },
       });
 
       if (!contact) {
         contact = this.contactRepository.create({
           workspaceId: bot.workspaceId,
           phone: guestPhone,
-          name: dto.metadata?.guestIdentity?.name || `Guest ${guestPhone.slice(-4)} `,
+          name:
+            dto.metadata?.guestIdentity?.name ||
+            `Guest ${guestPhone.slice(-4)} `,
           avatar: dto.metadata?.avatar,
           metadata: {
             source: 'public-bot-widget',
             botId: botId,
-            firstSeen: new Date().toISOString()
-          }
+            firstSeen: new Date().toISOString(),
+          },
         });
         await this.contactRepository.save(contact);
-        this.logger.log(`Created new contact ${contact.id} for phone ${guestPhone}`);
+        this.logger.log(
+          `Created new contact ${contact.id} for phone ${guestPhone}`,
+        );
       } else {
         // Update name if provided and wasn't set or looks like a default
-        if (dto.metadata?.guestIdentity?.name && (!contact.name || contact.name.startsWith('Guest '))) {
+        if (
+          dto.metadata?.guestIdentity?.name &&
+          (!contact.name || contact.name.startsWith('Guest '))
+        ) {
           contact.name = dto.metadata.guestIdentity.name;
           await this.contactRepository.save(contact);
         }
@@ -220,7 +240,8 @@ export class PublicBotService {
       metadata: {
         ...dto.metadata,
         guestIdentity: dto.metadata?.guestIdentity, // Ensure this is preserved
-        contactName: dto.metadata?.guestIdentity?.name || dto.metadata?.name || null,
+        contactName:
+          dto.metadata?.guestIdentity?.name || dto.metadata?.name || null,
         contactPhone: guestPhone || null, // Top-level access for easier viewing
         contactAvatar: dto.metadata?.avatar || null,
         userId: dto.userId,

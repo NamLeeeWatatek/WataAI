@@ -31,7 +31,7 @@ export class AiConfigService {
     private readonly aiProviderConfigRepository: AiProviderConfigRepository,
     private readonly aiEncryptionService: AiEncryptionService,
     private readonly aiModelRepository: AiModelRepository,
-  ) { }
+  ) {}
 
   // Provider access
   async getAvailableProviders(): Promise<AiProvider[]> {

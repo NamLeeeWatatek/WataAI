@@ -71,6 +71,7 @@ export default function BotDetailPage() {
         };
         enableAutoLearn: boolean;
         status: BotStatus;
+        tags: string[];
 
         // Widget Config (Flat)
         widgetEnabled: boolean;
@@ -95,6 +96,7 @@ export default function BotDetailPage() {
         },
         enableAutoLearn: false,
         status: 'draft',
+        tags: [],
 
         widgetEnabled: true,
         welcomeMessage: '',
@@ -121,6 +123,7 @@ export default function BotDetailPage() {
                 },
                 enableAutoLearn: bot.enableAutoLearn || false,
                 status: bot.status || 'draft',
+                tags: bot.tags || [],
 
                 widgetEnabled: bot.widgetEnabled ?? true,
                 welcomeMessage: bot.welcomeMessage || '',

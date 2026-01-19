@@ -64,6 +64,15 @@ export class CreateBotDto {
 
   @ApiPropertyOptional({
     type: [String],
+    example: ['Marketing', 'Writer'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[] | null;
+
+  @ApiPropertyOptional({
+    type: [String],
     example: ['document_access', 'ai_suggest'],
   })
   @IsOptional()

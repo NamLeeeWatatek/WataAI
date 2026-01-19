@@ -74,6 +74,12 @@ export interface Bot {
   // Origins
   allowedOrigins?: string[] | null
 
+  // Flow
+  flowId?: string | null
+
+  // Tags
+  tags?: string[] | null
+
   // Functions
   functions?: string[] | null
   functionConfig?: Record<string, any> | null
@@ -98,7 +104,7 @@ export interface CreateBotDto {
   aiModelName?: string
   aiParameters?: Record<string, any>
   systemPrompt?: string
-
+  tags?: string[]
   knowledgeBaseIds?: string[]
 
   widgetEnabled?: boolean

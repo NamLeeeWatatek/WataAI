@@ -253,6 +253,16 @@ export default function BotsPage() {
                                         <p className="text-xs font-medium text-muted-foreground line-clamp-2 min-h-[32px] leading-relaxed">
                                             {bot.description || 'Advanced neural architecture tailored for complex workflow orchestration.'}
                                         </p>
+
+                                        {bot.tags && bot.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mt-4">
+                                                {bot.tags.map((tag) => (
+                                                    <Badge key={tag} variant="outline" className="text-[9px] font-bold py-0 h-4.5 bg-primary/[0.03] border-primary/20 text-primary/80">
+                                                        {tag}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="mt-auto p-4 bg-muted/10 border-t border-border/10 flex items-center justify-between">

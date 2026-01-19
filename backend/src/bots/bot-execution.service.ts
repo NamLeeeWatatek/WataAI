@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.

@@ -96,4 +96,4 @@ import { WidgetAppearanceController } from './controllers/widget-appearance.cont
     BotAppearanceService,
   ],
 })
-export class BotsModule { }
+export class BotsModule {}

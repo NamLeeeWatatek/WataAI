@@ -14,9 +14,18 @@ export const botFormSchema = z.object({
   workspaceId: z.string(),
   defaultLanguage: z.string(),
   timezone: z.string(),
+  tags: z.array(z.string()),
 })
 
-export type BotFormData = z.infer<typeof botFormSchema>
+export type BotFormData = {
+  name: string;
+  workspaceId: string;
+  defaultLanguage: string;
+  timezone: string;
+  tags: string[];
+  description?: string;
+  avatarUrl?: string | null;
+}
 
 // API functions
 const createBot = async (data: BotFormData) => {
@@ -31,11 +40,12 @@ const updateBot = async ({ id, data }: { id: string; data: BotFormData }) => {
 export function useBotForm(workspaceId: string, bot?: {
   id: string
   name: string
-  description?: string
+  description?: string | null
   avatarUrl?: string | null
   workspaceId: string
   defaultLanguage?: string
   timezone?: string
+  tags?: string[] | null
 }) {
   const queryClient = useQueryClient()
 
@@ -48,6 +58,7 @@ export function useBotForm(workspaceId: string, bot?: {
       workspaceId,
       defaultLanguage: 'en',
       timezone: 'UTC',
+      tags: [],
     },
   })
 
@@ -61,6 +72,7 @@ export function useBotForm(workspaceId: string, bot?: {
         workspaceId: bot.workspaceId || workspaceId,
         defaultLanguage: bot.defaultLanguage || 'en',
         timezone: bot.timezone || 'UTC',
+        tags: bot.tags || [],
       })
     } else {
       form.reset({
@@ -69,6 +81,7 @@ export function useBotForm(workspaceId: string, bot?: {
         workspaceId,
         defaultLanguage: 'en',
         timezone: 'UTC',
+        tags: [],
       })
     }
   }, [bot, workspaceId, form])

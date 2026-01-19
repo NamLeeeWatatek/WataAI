@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IExecutionStrategy } from './execution.strategy.interface';
 import { AiExecutionConfig } from '../../creation-tools/domain/creation-tool';
-import { AiProvidersService, ChatMessage } from '../../ai-providers/ai-providers.service';
+import {
+  AiProvidersService,
+  ChatMessage,
+} from '../../ai-providers/ai-providers.service';
 import { TemplatesService } from '../../templates/templates.service';
 import { Liquid } from 'liquidjs';
 
@@ -76,13 +79,15 @@ export class AiExecutionStrategy implements IExecutionStrategy {
           workspaceId,
           config.knowledgeBaseId,
           3, // Limit
-          0.5 // Threshold
+          0.5, // Threshold
         );
 
         if (ragResults && ragResults.length > 0) {
-          const contextText = ragResults.map(r => r.content).join('\n\n');
+          const contextText = ragResults.map((r) => r.content).join('\n\n');
           finalInputs['context'] = contextText;
-          this.logger.log(`RAG Context Injected (Length: ${contextText.length})`);
+          this.logger.log(
+            `RAG Context Injected (Length: ${contextText.length})`,
+          );
         }
       } catch (err) {
         this.logger.warn(`RAG Query failed: ${err.message}`);

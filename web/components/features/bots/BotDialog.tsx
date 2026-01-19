@@ -12,17 +12,10 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { useBotForm } from '@/lib/hooks/useBotForm'
+import { Bot } from '@/lib/types/bots';
+import { Badge } from '@/components/ui/Badge';
+import { Tag, Plus, X } from 'lucide-react';
 import { UnifiedAvatarUpload } from '@/components/shared/UnifiedFileUpload';
-
-interface Bot {
-    id: string
-    name: string
-    description?: string
-    workspaceId: string
-    defaultLanguage?: string
-    timezone?: string
-    avatarUrl?: string | null
-}
 
 interface BotDialogProps {
     open: boolean
@@ -130,6 +123,51 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                 )}
                             />
                         </div>
+
+                        <FormField
+                            control={form.control}
+                            name="tags"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Purpose Tags</FormLabel>
+                                    <div className="flex flex-wrap gap-1.5 mb-2 min-h-[32px] p-2 border border-border/40 rounded-xl bg-muted/10">
+                                        {field.value?.map((tag: string) => (
+                                            <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-0.5 gap-1 text-[10px] font-bold bg-primary/5 hover:bg-primary/10 border-primary/20 transition-all">
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => field.onChange(field.value.filter((t: string) => t !== tag))}
+                                                    className="p-0.5 hover:bg-destructive/20 rounded-full transition-colors"
+                                                >
+                                                    <X className="w-2.5 h-2.5" />
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                        {(!field.value || field.value.length === 0) && (
+                                            <span className="text-[10px] text-muted-foreground/50 self-center px-1 italic">No tags added yet</span>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Support, Marketing, Sales..."
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    const val = e.currentTarget.value.trim();
+                                                    if (val && !field.value.includes(val)) {
+                                                        field.onChange([...field.value, val]);
+                                                        e.currentTarget.value = '';
+                                                    }
+                                                }
+                                            }}
+                                            className="h-9 text-xs bg-background/50"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground/60 italic pl-1">Press Enter to add tags quickly</p>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                 Cancel
