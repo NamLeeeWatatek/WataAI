@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
+import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/Slider';
 import { Badge } from '@/components/ui/Badge';
 import { Separator } from '@/components/ui/Separator';
-import { Brain, Sparkles, MessageSquare, Settings2, Info, Eye, EyeOff } from 'lucide-react';
+import { Brain, Sparkles, MessageSquare, Settings2, Info, Eye, EyeOff, Tag, Plus, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 import { BotStatus } from '@/lib/types/bots';
 
@@ -27,6 +28,7 @@ interface BotFormData {
   };
   enableAutoLearn: boolean;
   status: BotStatus;
+  tags: string[];
 }
 
 interface BotConfigurationTabProps {
@@ -39,6 +41,25 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isManual, setIsManual] = useState(false);
+  const [currentTag, setCurrentTag] = useState('');
+
+  const handleAddTag = () => {
+    if (currentTag.trim() && !formData.tags.includes(currentTag.trim())) {
+      onChange({ tags: [...formData.tags, currentTag.trim()] });
+      setCurrentTag('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    onChange({ tags: formData.tags.filter(t => t !== tagToRemove) });
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -142,6 +163,45 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                 className="resize-none min-h-[120px] bg-background/50"
                 rows={2}
               />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Purpose Tags</Label>
+              <div className="flex flex-wrap gap-1.5 mb-2 min-h-[32px] p-2 border border-border/40 rounded-xl bg-muted/10">
+                {formData.tags?.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-0.5 gap-1 text-[10px] font-bold bg-primary/5 hover:bg-primary/10 border-primary/20 transition-all">
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="p-0.5 hover:bg-destructive/20 rounded-full transition-colors"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </Badge>
+                ))}
+                {(!formData.tags || formData.tags.length === 0) && (
+                  <span className="text-[10px] text-muted-foreground/50 self-center px-1 italic">No tags added yet</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={currentTag}
+                  onChange={(e) => setCurrentTag(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                  placeholder="Support, Marketing, Sales..."
+                  className="h-9 text-xs bg-background/50"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddTag}
+                  className="h-9 px-3 border-dashed"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 italic pl-1">Press Enter to add tags quickly</p>
             </div>
           </CardContent>
         </Card>

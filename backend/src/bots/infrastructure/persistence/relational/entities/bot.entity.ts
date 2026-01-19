@@ -58,6 +58,9 @@ export class BotEntity extends WorkspaceOwnedEntity {
   systemPrompt?: string | null;
 
   @Column({ type: 'simple-array', nullable: true })
+  tags?: string[] | null;
+
+  @Column({ type: 'simple-array', nullable: true })
   functions?: string[] | null;
 
   @Column({ name: 'function_config', type: 'jsonb', nullable: true })

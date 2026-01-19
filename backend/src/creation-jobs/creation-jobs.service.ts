@@ -41,7 +41,7 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) { }
+  ) {}
 
   async executePreview(
     toolId: string,
@@ -361,7 +361,10 @@ export class CreationJobsService {
         imageUrl = output.imageUrl;
       } else if (typeof output.image === 'string') {
         imageUrl = output.image;
-      } else if (typeof output.url === 'string' && output.url.startsWith('http')) {
+      } else if (
+        typeof output.url === 'string' &&
+        output.url.startsWith('http')
+      ) {
         imageUrl = output.url;
       } else {
         // Look for any field that looks like a URL pointing to an image or temp file
@@ -388,7 +391,13 @@ export class CreationJobsService {
           message = job.outputData;
         } else {
           // Fallback: join strings but skip system info and already detected image URL
-          const skipKeywords = ['id', 'status', 'success', 'error', 'execution'];
+          const skipKeywords = [
+            'id',
+            'status',
+            'success',
+            'error',
+            'execution',
+          ];
           message = Object.entries(output)
             .filter(([key, val]) => {
               if (typeof val !== 'string' || !val.trim()) return false;

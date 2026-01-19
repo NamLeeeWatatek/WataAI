@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -450,12 +450,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiConfigId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiConfigId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -516,17 +516,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiConfigId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiConfigId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {

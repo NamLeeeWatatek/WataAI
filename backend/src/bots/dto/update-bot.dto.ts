@@ -55,6 +55,12 @@ export class UpdateBotDto extends PartialType(CreateBotDto) {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  tags?: string[] | null;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   functions?: string[] | null;
 
   @ApiPropertyOptional({ type: Object })
