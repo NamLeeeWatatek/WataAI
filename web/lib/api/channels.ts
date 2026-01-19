@@ -109,7 +109,12 @@ export async function getOAuthUrl(
 
   // Use the specific controller for Facebook to ensure consistency
   if (provider === 'facebook') {
-    return axiosClient.get('/channels/facebook/oauth/url', { params }) as unknown as Promise<{ url: string }>
+    const facebookParams: any = { ...params };
+    if (configId) {
+      facebookParams.credential_id = configId;
+      delete facebookParams.configId;
+    }
+    return axiosClient.get('/channels/facebook/oauth/url', { params: facebookParams }) as unknown as Promise<{ url: string }>
   }
 
   return axiosClient.get(`/oauth/login/${provider}`, { params }) as unknown as Promise<{ url: string }>

@@ -26,7 +26,7 @@ export class KBProcessingQueueService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     @InjectQueue('kb-processing') private readonly kbQueue: Queue,
-  ) { }
+  ) {}
 
   async addJob(
     documentId: string,
@@ -61,7 +61,9 @@ export class KBProcessingQueueService {
     );
     const priority = Math.min(255, 1 + activeJobsForKB.length);
 
-    this.logger.log(`📥 Job ${internalJobId} added (Priority: ${priority}, Local: ${!addToQueue})`);
+    this.logger.log(
+      `📥 Job ${internalJobId} added (Priority: ${priority}, Local: ${!addToQueue})`,
+    );
 
     if (addToQueue) {
       // Add to BullMQ

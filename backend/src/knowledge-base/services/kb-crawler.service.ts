@@ -44,7 +44,7 @@ export class KBCrawlerService {
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly auditService: AuditService,
-  ) { }
+  ) {}
 
   /**
    * Powerful stealth content fetcher with Jina Reader fallback.
@@ -57,11 +57,13 @@ export class KBCrawlerService {
         headers: headers || {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
           'Accept-Language': 'vi-VN,vi;q=0.9,en-US;q=0.8,en;q=0.7',
           'Accept-Encoding': 'gzip, deflate, br',
           'Cache-Control': 'max-age=0',
-          'Sec-Ch-Ua': '"Chromium";v="122", "Not(A:Brand)";v="24", "Google Chrome";v="122"',
+          'Sec-Ch-Ua':
+            '"Chromium";v="122", "Not(A:Brand)";v="24", "Google Chrome";v="122"',
           'Sec-Ch-Ua-Mobile': '?0',
           'Sec-Ch-Ua-Platform': '"Windows"',
           'Sec-Fetch-Dest': 'document',
@@ -69,7 +71,7 @@ export class KBCrawlerService {
           'Sec-Fetch-Site': 'none',
           'Sec-Fetch-User': '?1',
           'Upgrade-Insecure-Requests': '1',
-          'Referer': 'https://www.google.com/',
+          Referer: 'https://www.google.com/',
         },
         timeout: 20000, // 20s
       });
@@ -91,7 +93,9 @@ export class KBCrawlerService {
           });
           return jinaResponse.data;
         } catch (jinaError) {
-          this.logger.error(`Jina Reader bypass also failed: ${jinaError.message}`);
+          this.logger.error(
+            `Jina Reader bypass also failed: ${jinaError.message}`,
+          );
           throw error; // Throw original 403 if jina fails
         }
       }

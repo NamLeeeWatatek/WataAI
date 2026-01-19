@@ -17,6 +17,10 @@ export interface KnowledgeBase {
   embeddingConfig?: any;
   embeddingModel?: string | null;
   useSystemAI?: boolean;
+  aiParameters?: {
+    temperature?: number;
+    maxTokens?: number;
+  } | null;
   chunkSize: number;
   chunkOverlap: number;
   totalDocuments: number;

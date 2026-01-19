@@ -18,9 +18,15 @@ export class AiModelService {
     model: string,
     apiKey: string,
     useTools?: boolean,
+    options?: Record<string, any>,
   ): Promise<string> {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const chat = genAI.getGenerativeModel({ model });
+    const generationConfig = {
+      temperature: options?.temperature ?? 0.7,
+      maxOutputTokens: options?.maxTokens ?? 1024,
+      ...options,
+    };
+    const chat = genAI.getGenerativeModel({ model, generationConfig });
 
     const systemMessage = messages.find((m) => m.role === 'system');
     const relevantMessages = messages.filter((m) => m.role !== 'system');
@@ -53,6 +59,7 @@ export class AiModelService {
     model: string,
     apiKey: string,
     baseURL?: string,
+    options?: Record<string, any>,
   ): Promise<string> {
     const clientConfig: ClientOptions = { apiKey };
     if (baseURL) {
@@ -71,6 +78,9 @@ export class AiModelService {
       const response = await openai.chat.completions.create({
         model,
         messages: sanitizedMessages,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 1024,
+        ...options,
       });
       return response.choices[0]?.message?.content || '';
     } catch (error) {
@@ -83,6 +93,7 @@ export class AiModelService {
     messages: ChatMessage[],
     model: string,
     apiKey: string,
+    options?: Record<string, any>,
   ): Promise<string> {
     const anthropic = new Anthropic({ apiKey });
 
@@ -117,9 +128,11 @@ export class AiModelService {
     try {
       const response = await anthropic.messages.create({
         model,
-        max_tokens: 4096,
+        max_tokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature ?? 0.7,
         system: systemMessage?.content,
         messages: sanitizedMessages,
+        ...options,
       });
       const content = response.content[0];
       return content.type === 'text' ? content.text : '';
@@ -136,6 +149,7 @@ export class AiModelService {
     model: string,
     baseURL?: string,
     apiKey?: string,
+    options?: Record<string, any>,
   ): Promise<string> {
     const url = baseURL || 'http://localhost:11434';
 
@@ -145,6 +159,7 @@ export class AiModelService {
         model,
         apiKey || 'no-key-required',
         url,
+        options,
       );
     }
 
@@ -168,7 +183,12 @@ export class AiModelService {
         model,
         messages: sanitizedMessages,
         stream: false,
-        options: { num_ctx: 4096 },
+        options: {
+          num_ctx: 4096,
+          temperature: options?.temperature ?? 0.7,
+          num_predict: options?.maxTokens ?? 1024,
+          ...options,
+        },
       };
 
       const headers: Record<string, string> = {
@@ -209,9 +229,15 @@ export class AiModelService {
     model: string,
     apiKey: string,
     useTools?: boolean,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const chat = genAI.getGenerativeModel({ model });
+    const generationConfig = {
+      temperature: options?.temperature ?? 0.7,
+      maxOutputTokens: options?.maxTokens ?? 1024,
+      ...options,
+    };
+    const chat = genAI.getGenerativeModel({ model, generationConfig });
 
     const systemMessage = messages.find((m) => m.role === 'system');
     const relevantMessages = messages.filter((m) => m.role !== 'system');
@@ -256,6 +282,7 @@ export class AiModelService {
     model: string,
     apiKey: string,
     baseURL?: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const clientConfig: ClientOptions = { apiKey };
     if (baseURL) {
@@ -275,6 +302,9 @@ export class AiModelService {
         model,
         messages: sanitizedMessages,
         stream: true,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 1024,
+        ...options,
       });
 
       async function* streamGenerator() {
@@ -294,6 +324,7 @@ export class AiModelService {
     messages: ChatMessage[],
     model: string,
     apiKey: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const anthropic = new Anthropic({ apiKey });
 
@@ -328,10 +359,12 @@ export class AiModelService {
     try {
       const stream = await anthropic.messages.create({
         model,
-        max_tokens: 4096,
+        max_tokens: options?.maxTokens ?? 4096,
+        temperature: options?.temperature ?? 0.7,
         system: systemMessage?.content,
         messages: sanitizedMessages,
         stream: true,
+        ...options,
       });
 
       async function* streamGenerator() {
@@ -361,6 +394,7 @@ export class AiModelService {
     model: string,
     baseURL?: string,
     apiKey?: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const url = baseURL || 'http://localhost:11434';
 
@@ -370,6 +404,7 @@ export class AiModelService {
         model,
         apiKey || 'no-key-required',
         url,
+        options,
       );
     }
 
@@ -393,7 +428,12 @@ export class AiModelService {
         model,
         messages: sanitizedMessages,
         stream: true,
-        options: { num_ctx: 4096 },
+        options: {
+          num_ctx: 4096,
+          temperature: options?.temperature ?? 0.7,
+          num_predict: options?.maxTokens ?? 1024,
+          ...options,
+        },
       };
 
       const headers: Record<string, string> = {
@@ -460,6 +500,7 @@ export class AiModelService {
     model: string, // In Azure, model usually == deployment name, or handled via config
     apiKey: string,
     endpoint?: string,
+    options?: Record<string, any>,
   ): Promise<string> {
     if (!endpoint)
       throw new BadRequestException('Azure Endpoint (baseURL) is required');
@@ -482,6 +523,9 @@ export class AiModelService {
       const response = await client.chat.completions.create({
         messages: sanitizedMessages,
         model: model, // Azure SDK often needs this redundant field or ignores it if deployment is set
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 1024,
+        ...options,
       });
       return response.choices[0]?.message?.content || '';
     } catch (error) {
@@ -495,6 +539,7 @@ export class AiModelService {
     model: string,
     apiKey: string,
     endpoint?: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     if (!endpoint) throw new BadRequestException('Azure Endpoint is required');
 
@@ -515,6 +560,9 @@ export class AiModelService {
         messages: sanitizedMessages,
         model: model,
         stream: true,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 1024,
+        ...options,
       });
 
       async function* streamGenerator() {
@@ -854,13 +902,45 @@ export class AiModelService {
         const validUrl = nativeBaseUrl.startsWith('http')
           ? nativeBaseUrl
           : `http://${nativeBaseUrl}`;
-        const endpoint = `${validUrl}/api/embeddings`;
 
+        // Attempt to use the newer /api/embed endpoint first, fallback to /api/embeddings
         return await executeWithRetry(async () => {
-          const response = await fetch(endpoint, {
+          // We'll try /api/embed first as it's the more modern one
+          const embedEndpoint = `${validUrl}/api/embed`;
+          try {
+            const response = await fetch(embedEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model,
+                input: text,
+                options: { num_ctx: 4096 }, // Allow larger context if the model supports it
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              // /api/embed returns { embeddings: [[...]] } because it supports batching
+              if (data.embeddings && data.embeddings.length > 0) {
+                return data.embeddings[0];
+              }
+            }
+          } catch (e) {
+            this.logger.debug(
+              `Ollama /api/embed failed, falling back to /api/embeddings: ${e.message}`,
+            );
+          }
+
+          // Fallback to legacy /api/embeddings
+          const legacyEndpoint = `${validUrl}/api/embeddings`;
+          const response = await fetch(legacyEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, prompt: text }),
+            body: JSON.stringify({
+              model,
+              prompt: text,
+              options: { num_ctx: 4096 },
+            }),
           });
 
           if (!response.ok) {

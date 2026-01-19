@@ -17,7 +17,9 @@ import {
   Settings,
   Trash2,
   MoreVertical,
-  Edit2
+  Edit2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -60,6 +62,8 @@ export function ChannelConfigurationsTab({
     scopes: '',
     verify_token: ''
   });
+
+  const [showClientSecret, setShowClientSecret] = useState(false);
 
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [origin, setOrigin] = useState('');
@@ -367,13 +371,28 @@ export function ChannelConfigurationsTab({
                     <Label className="mb-2 block">
                       Authorization Secret <span className="text-destructive">*</span>
                     </Label>
-                    <Input
-                      type="password"
-                      value={configForm.client_secret}
-                      onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
-                      placeholder="Secret Key"
-                      className="font-mono"
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showClientSecret ? "text" : "password"}
+                        value={configForm.client_secret}
+                        onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
+                        placeholder="Secret Key"
+                        className="font-mono pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowClientSecret(!showClientSecret)}
+                      >
+                        {showClientSecret ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { handleFormError } from '@/lib/utils/form-errors'
-import { Settings, Copy, Check } from 'lucide-react'
+import { Settings, Copy, Check, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 const channelConfigSchema = z.object({
@@ -47,6 +47,8 @@ export function ChannelConfigDialog({
 }: ChannelConfigDialogProps) {
     const [origin, setOrigin] = useState('')
     const [copied, setCopied] = useState(false)
+    const [showAppSecret, setShowAppSecret] = useState(false)
+    const [showAccessToken, setShowAccessToken] = useState(false)
 
     // Construct simplified callback URL (assuming standard API structure)
     // In a real app, this might come from configuration
@@ -231,7 +233,22 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>App Secret</FormLabel>
                                                 <FormControl>
-                                                    <Input type="password" placeholder="App Secret" {...field} />
+                                                    <div className="relative">
+                                                        <Input type={showAppSecret ? "text" : "password"} placeholder="App Secret" {...field} />
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                            onClick={() => setShowAppSecret(!showAppSecret)}
+                                                        >
+                                                            {showAppSecret ? (
+                                                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                            ) : (
+                                                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                                            )}
+                                                        </Button>
+                                                    </div>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -244,7 +261,22 @@ export function ChannelConfigDialog({
                                             <FormItem>
                                                 <FormLabel>Page Access Token</FormLabel>
                                                 <FormControl>
-                                                    <Input type="password" placeholder="EAA..." {...field} />
+                                                    <div className="relative">
+                                                        <Input type={showAccessToken ? "text" : "password"} placeholder="EAA..." {...field} />
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                                            onClick={() => setShowAccessToken(!showAccessToken)}
+                                                        >
+                                                            {showAccessToken ? (
+                                                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                            ) : (
+                                                                <Eye className="h-4 w-4 text-muted-foreground" />
+                                                            )}
+                                                        </Button>
+                                                    </div>
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

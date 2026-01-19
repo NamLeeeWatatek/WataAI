@@ -240,7 +240,15 @@ export class FacebookOAuthService extends BaseOAuthService {
   async getCredential(
     workspaceId: string,
     fallbackId?: string,
+    credentialId?: string,
   ): Promise<ChannelCredentialEntity | null> {
+    if (credentialId) {
+      const cred = await this.credentialRepository.findOne({
+        where: { id: credentialId, workspaceId, isActive: true },
+      });
+      if (cred) return cred;
+    }
+
     const searchWorkspaces = [workspaceId];
     if (fallbackId && fallbackId !== workspaceId) {
       searchWorkspaces.push(fallbackId);

@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -291,6 +291,7 @@ export class KBRagService {
           providerConfig.providerId,
           providerConfig.scope,
           providerConfig.scopeId,
+          kb?.aiParameters as Record<string, any>,
         );
       }
 
@@ -341,6 +342,7 @@ export class KBRagService {
           providerConfig.providerId,
           providerConfig.scope,
           providerConfig.scopeId,
+          kb?.aiParameters as Record<string, any>,
         );
       }
 
@@ -448,12 +450,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiConfigId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiConfigId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -514,17 +516,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiConfigId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiConfigId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
@@ -595,6 +597,7 @@ export class KBRagService {
         providerConfig.providerId,
         providerConfig.scope,
         providerConfig.scopeId,
+        providerConfig.aiParameters,
       );
 
       return {
@@ -650,6 +653,7 @@ export class KBRagService {
     scope: 'workspace' | 'user';
     scopeId: string;
     modelName?: string;
+    aiParameters?: Record<string, any>;
   } | null> {
     this.logger.debug(
       `🔎 Resolving AI Provider for Bot: ${bot?.id || 'none'}, KB: ${knowledgeBaseId || 'none'}`,
@@ -674,6 +678,7 @@ export class KBRagService {
               scope: 'workspace',
               scopeId: kb.workspaceId,
               modelName: kb.ragModel || undefined,
+              aiParameters: kb.aiParameters as Record<string, any>,
             };
           }
         }
@@ -695,6 +700,7 @@ export class KBRagService {
             scope: 'workspace',
             scopeId: bot.workspaceId,
             modelName: bot.aiModelName || undefined,
+            aiParameters: (bot as any).aiParameters as Record<string, any>,
           };
         }
       }
@@ -711,6 +717,7 @@ export class KBRagService {
             scope: 'user',
             scopeId: bot.createdBy,
             modelName: bot.aiModelName || undefined,
+            aiParameters: (bot as any).aiParameters as Record<string, any>,
           };
         }
       }

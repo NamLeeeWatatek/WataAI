@@ -59,6 +59,10 @@ export class CreateKnowledgeBaseDto {
   @IsOptional()
   ragModel?: string;
 
+  @ApiPropertyOptional({ type: Object, nullable: true })
+  @IsOptional()
+  aiParameters?: Record<string, any>;
+
   @ApiPropertyOptional()
   @IsInt()
   @Min(100)
@@ -128,6 +132,10 @@ export class UpdateKnowledgeBaseDto {
   @IsString()
   @IsOptional()
   ragModel?: string;
+
+  @ApiPropertyOptional({ type: Object, nullable: true })
+  @IsOptional()
+  aiParameters?: Record<string, any>;
 
   @ApiPropertyOptional()
   @IsInt()

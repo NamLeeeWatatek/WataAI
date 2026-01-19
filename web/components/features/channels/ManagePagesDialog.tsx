@@ -42,7 +42,7 @@ export function ManagePagesDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-white/5 bg-background shadow-2xl rounded-2xl">
-        <div className="bg-gradient-to-br from-primary/10 via-background to-background p-8">
+        <div className="bg-background p-8">
           <DialogHeader className="mb-8">
             <div className="flex items-center gap-4 mb-2">
               <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner transform -rotate-3">

@@ -32,7 +32,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async chunkText(
     text: string,
@@ -72,7 +72,9 @@ export class KBEmbeddingsService {
   }
 
   private estimateTokenCount(text: string): number {
-    return Math.ceil(text.length / 4);
+    // More conservative estimate: 2.5 chars per token for mixed Vietnamese/English text
+    // standard (English-only) is ~4 chars per token.
+    return Math.ceil(text.length / 2.5);
   }
 
   async processChunks(chunks: KBChunkEntity[], embeddingModel?: string) {
@@ -210,7 +212,8 @@ export class KBEmbeddingsService {
                 { baseUrl: providerConfig.baseUrl }, // Pass baseUrl for Ollama
               );
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               this.logger.error(
                 `Embedding failed for chunk ${chunk.id} using provider ${provider}: ${errorMessage}`,
               );
@@ -380,10 +383,9 @@ export class KBEmbeddingsService {
       await this.cacheManager.set(cacheKey, embedding, 3600);
       return embedding;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        `Embedding generation failed: ${errorMessage}`,
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(`Embedding generation failed: ${errorMessage}`);
       throw new BadRequestException(
         `Embedding generation failed. Please check your AI Provider settings. Error: ${errorMessage}`,
       );
@@ -415,20 +417,20 @@ export class KBEmbeddingsService {
       try {
         // Fetch system configs - assumed method exists or we fetch 'system' scope
         // Since I haven't confirmed getSystemConfigs, I will assume it exists or use a workaround if needed.
-        // Actually, usually 'system' config might be stored in a special way. 
-        // Let's assume aiProvidersService has a method or we can query with a special ID? 
-        // Ideally aiProvidersService.getSystemConfigs() 
-        // If not, I'll need to check the service definition file I just requested. 
-        // For now, I'll write this tentatively and wait for the file read to confirm. 
+        // Actually, usually 'system' config might be stored in a special way.
+        // Let's assume aiProvidersService has a method or we can query with a special ID?
+        // Ideally aiProvidersService.getSystemConfigs()
+        // If not, I'll need to check the service definition file I just requested.
+        // For now, I'll write this tentatively and wait for the file read to confirm.
         // BUT, I can't wait if I do parellel.
         // I will pause this replace until I see the service.
         // ABORTING replace for now.
         return {
           provider: 'google',
           model: 'text-embedding-004',
-          requiresApiKey: true
+          requiresApiKey: true,
         };
-      } catch (e) { }
+      } catch (e) {}
     }
     // ... rest
 
@@ -520,12 +522,23 @@ export class KBEmbeddingsService {
             if (!model) {
               // Defaults
               switch (providerKey) {
-                case 'openai': model = 'text-embedding-ada-002'; break;
-                case 'google': model = 'text-embedding-004'; break;
-                case 'ollama': model = 'mxbai-embed-large:latest'; break;
-                case 'azure': model = 'text-embedding-ada-002'; break; // Assumption
-                case 'custom': model = 'text-embedding-ada-002'; break; // Assumption for OpenAI compatible
-                default: continue; // Skip unknown providers for embeddings fallback to be safe, or default?
+                case 'openai':
+                  model = 'text-embedding-ada-002';
+                  break;
+                case 'google':
+                  model = 'text-embedding-004';
+                  break;
+                case 'ollama':
+                  model = 'mxbai-embed-large:latest';
+                  break;
+                case 'azure':
+                  model = 'text-embedding-ada-002';
+                  break; // Assumption
+                case 'custom':
+                  model = 'text-embedding-ada-002';
+                  break; // Assumption for OpenAI compatible
+                default:
+                  continue; // Skip unknown providers for embeddings fallback to be safe, or default?
               }
             }
 
@@ -537,7 +550,6 @@ export class KBEmbeddingsService {
             };
           }
         }
-
       } catch (error) {
         this.logger.warn(
           `Error checking ${scope.type} fallback: ${error.message}`,
