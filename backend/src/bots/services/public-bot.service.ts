@@ -49,7 +49,7 @@ export class PublicBotService {
 
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getBotConfig(
     botId: string,
@@ -88,9 +88,10 @@ export class PublicBotService {
       }
     }
 
-    const allowedOrigins = widgetVersion.config.security?.allowedOrigins || [
-      '*',
-    ];
+    let allowedOrigins = widgetVersion.config.security?.allowedOrigins || [];
+    if (allowedOrigins.length === 0 || (allowedOrigins.length === 1 && allowedOrigins[0] === '')) {
+      allowedOrigins = ['*'];
+    }
     if (origin) {
       const allowed = this.isOriginAllowed(allowedOrigins, origin);
       if (!allowed) {
@@ -143,8 +144,13 @@ export class PublicBotService {
       throw new NotFoundException('Bot not found or widget is disabled');
     }
 
-    if (bot.allowedOrigins && origin) {
-      const allowed = this.isOriginAllowed(bot.allowedOrigins, origin);
+    let allowedOrigins = bot.allowedOrigins || [];
+    if (allowedOrigins.length === 0 || (allowedOrigins.length === 1 && allowedOrigins[0] === '')) {
+      allowedOrigins = ['*'];
+    }
+
+    if (origin) {
+      const allowed = this.isOriginAllowed(allowedOrigins, origin);
       if (!allowed) {
         throw new ForbiddenException('Origin not allowed');
       }
@@ -326,7 +332,7 @@ export class PublicBotService {
   }
 
   private isOriginAllowed(allowedOrigins: string[], origin: string): boolean {
-    if (allowedOrigins.includes('*')) {
+    if (allowedOrigins.includes('*') || !origin) {
       return true;
     }
 
