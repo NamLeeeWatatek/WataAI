@@ -46,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) {}
+  ) { }
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);
@@ -185,8 +185,9 @@ export class KBDocumentsService {
       createDto.knowledgeBaseId,
       'embedding',
       userId,
+      true,
+      sanitizedName,
     );
-    this.processingQueue.setJobDocumentName(jobId, sanitizedName);
 
     return savedDoc;
   }
@@ -401,6 +402,8 @@ export class KBDocumentsService {
         document.knowledgeBaseId,
         'embedding',
         userId,
+        true,
+        document.name,
       );
 
       return savedDoc;

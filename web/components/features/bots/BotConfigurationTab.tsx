@@ -38,6 +38,7 @@ interface BotConfigurationTabProps {
 export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConfigurationTabProps) {
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isManual, setIsManual] = useState(false);
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -76,6 +77,8 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
   }, [workspaceId]);
 
   const isOnline = formData.status === 'active';
+  const selectedProvider = providers.find((p) => p.configId === formData.aiProviderId);
+  const availableModels = selectedProvider?.models || [];
 
   return (
     <div className="space-y-6">
@@ -211,14 +214,51 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                     )}
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model Name</Label>
-                    <Input
-                      value={formData.aiModelName || ''}
-                      onChange={(e) => onChange({ aiModelName: e.target.value })}
-                      placeholder="e.g. gpt-4o, claude-3-opus"
-                      className="h-11 bg-background/50 font-mono text-sm"
-                    />
-                    <p className="text-[10px] text-muted-foreground">Enter the model name manually</p>
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Model Name</Label>
+                      {availableModels.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setIsManual(!isManual)}
+                          className="text-[10px] font-bold text-primary hover:underline transition-all"
+                        >
+                          {isManual ? 'CHỌN TỪ DANH SÁCH' : 'NHẬP THỦ CÔNG'}
+                        </button>
+                      )}
+                    </div>
+
+                    {availableModels.length > 0 && !isManual ? (
+                      <Select
+                        value={formData.aiModelName || undefined}
+                        onValueChange={(value) => onChange({ aiModelName: value })}
+                      >
+                        <SelectTrigger className="h-11 bg-background/50 font-mono text-sm">
+                          <SelectValue placeholder="Chọn model..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl shadow-2xl border-none">
+                          {availableModels.map((m: any) => (
+                            <SelectItem key={m.id} value={m.id}>
+                              <div className="flex flex-col">
+                                <span className="font-bold">{m.displayName || m.name}</span>
+                                <span className="text-[10px] opacity-50 font-mono">{m.id}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        value={formData.aiModelName || ''}
+                        onChange={(e) => onChange({ aiModelName: e.target.value })}
+                        placeholder="e.g. gpt-4o, claude-3-opus"
+                        className="h-11 bg-background/50 font-mono text-sm"
+                      />
+                    )}
+                    <p className="text-[10px] text-muted-foreground">
+                      {isManual || availableModels.length === 0
+                        ? "Nhập chính xác tên model (ví dụ: gpt-4o)"
+                        : "Chọn model tối ưu cho Bot của bạn"}
+                    </p>
                   </div>
                 </div>
 
