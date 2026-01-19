@@ -12,7 +12,8 @@ export function ThemeProviderWrapper({ children }: ThemeProviderWrapperProps) {
         <ThemeProvider
             attribute="class"
             defaultTheme="dark"
-            enableSystem
+            forcedTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange
         >
             {children}

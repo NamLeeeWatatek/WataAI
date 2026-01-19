@@ -141,17 +141,8 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
 
     return (
         <React.Fragment>
-            {/* Mobile Overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40 lg:hidden"
-                    onClick={() => onToggleSection('close_mobile')}
-                />
-            )}
-
             <aside className={cn(
-                "fixed top-0 left-0 z-50 h-screen w-64 glass flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-full lg:z-0",
-                sidebarOpen ? "translate-x-0" : "-translate-x-full",
+                "h-full w-64 glass flex flex-col bg-card/50",
                 onCloseSidebar ? "border-r-0" : ""
             )}>
                 {/* Brand Header */}
@@ -247,7 +238,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
 
                 {/* User Profile Footer */}
                 <div className="p-3 border-t border-border/20">
-                    <Card className="p-3 hover:bg-card/60 transition-all duration-300 overflow-visible glass-card border-none shadow-none bg-transparent">
+                    <Card className="p-3 transition-all duration-300 overflow-visible border-none shadow-none bg-white/5 hover:bg-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                         <div className="flex items-center gap-3 mb-3">
                             <Avatar className="w-9 h-9 ring-2 ring-primary/10 shadow-md">
                                 <AvatarImage src={user?.avatarUrl || user?.image || ''} />
