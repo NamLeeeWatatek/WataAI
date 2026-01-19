@@ -301,7 +301,7 @@ export default function BotsPage() {
                                     control={form.control}
                                     name="name"
                                     render={({ field }) => (
-                                        <div className="space-y-2">
+                                        <FormItem>
                                             <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bot Name</FormLabel>
                                             <FormControl>
                                                 <Input
@@ -310,7 +310,8 @@ export default function BotsPage() {
                                                     className="font-bold text-lg"
                                                 />
                                             </FormControl>
-                                        </div>
+                                            <FormMessage />
+                                        </FormItem>
                                     )}
                                 />
 
