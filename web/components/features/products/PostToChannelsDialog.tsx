@@ -1,6 +1,4 @@
-'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
     Dialog,
@@ -10,12 +8,22 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/Dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/Select';
 import { FieldChannelSelector } from '@/components/ui/form-fields/FieldChannelSelector';
 import { toast } from 'sonner';
-import { Loader2, Share2, Sparkles } from 'lucide-react';
+import { Loader2, Share2, Sparkles, BrainCircuit } from 'lucide-react';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
 import axiosClient from '@/lib/axios-client';
+import { useBots } from '@/lib/hooks/features/useBots';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { botsApi } from '@/lib/api/bots';
 
 interface PostToChannelsDialogProps {
     open: boolean;
@@ -30,23 +38,42 @@ export function PostToChannelsDialog({
     jobId,
     productName
 }: PostToChannelsDialogProps) {
+    const { workspaceId } = useWorkspace();
+    const { data: bots } = useBots(workspaceId || undefined);
     const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+    const [selectedBotId, setSelectedBotId] = useState<string>('');
     const [message, setMessage] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Default to first bot if available
+    useEffect(() => {
+        const botList = bots?.data || [];
+        if (open && botList.length > 0 && !selectedBotId) {
+            setSelectedBotId(botList[0].id);
+        }
+    }, [open, bots, selectedBotId]);
+
     const handleGenerateContent = async () => {
         setIsGenerating(true);
         try {
-            // TODO: Replace with actual AI generation endpoint
-            // For now, we simulate a generation based on product name
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            if (selectedBotId) {
+                // Zero-Hardcoding: Send only raw content. Bot's systemPrompt handles the logic.
+                const prompt = productName || message || '';
 
-            const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Art'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity`;
-            setMessage(generatedContent);
-            toast.success("Content generated!");
+                const result = await botsApi.chat(selectedBotId, prompt);
+                setMessage(result.response);
+                toast.success("Content generated using Bot's knowledge!");
+            } else {
+                // Fallback for no bot selected
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Content'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity`;
+                setMessage(generatedContent);
+                toast.success("Content generated!");
+            }
         } catch (error) {
-            toast.error("Failed to generate content");
+            console.error(error);
+            toast.error("Failed to generate content with the selected bot");
         } finally {
             setIsGenerating(false);
         }
@@ -83,20 +110,53 @@ export function PostToChannelsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Post to Channels</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Share2 className="w-5 h-5 text-primary" />
+                        Post to Channels
+                    </DialogTitle>
                     <DialogDescription>
                         Select the channels where you want to publish "{productName || 'this content'}".
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="py-4 space-y-4">
+                <div className="py-2 space-y-4">
+                    {/* Bot selection for generation */}
+                    <div className="space-y-2 px-1">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Writing Bot</Label>
+                            {selectedBotId && (
+                                <span className="text-[10px] text-primary flex items-center gap-1">
+                                    <BrainCircuit className="w-3 h-3" />
+                                    Knowledge Enabled
+                                </span>
+                            )}
+                        </div>
+                        <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                            <SelectTrigger className="w-full bg-secondary/20">
+                                <SelectValue placeholder="Choose a bot to write..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {bots?.data?.map((bot) => (
+                                    <SelectItem key={bot.id} value={bot.id}>
+                                        <div className="flex items-center gap-2">
+                                            {bot.name}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                                {(!bots?.data || bots.data.length === 0) && (
+                                    <SelectItem value="none" disabled>No bots available</SelectItem>
+                                )}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label>Caption / Message</Label>
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Caption / Message</Label>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 text-xs text-primary hover:text-primary/80"
+                                className="h-6 text-xs text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10"
                                 onClick={handleGenerateContent}
                                 disabled={isGenerating}
                             >
@@ -105,37 +165,39 @@ export function PostToChannelsDialog({
                                 ) : (
                                     <Sparkles className="w-3 h-3 mr-1" />
                                 )}
-                                Generate with AI
+                                {selectedBotId ? 'Rewrite with Bot' : 'Generate with AI'}
                             </Button>
                         </div>
                         <Textarea
                             placeholder="Write a caption for your post..."
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            rows={4}
-                            className="resize-none"
+                            rows={5}
+                            className="resize-none text-sm leading-relaxed"
                         />
                     </div>
-                    <FieldChannelSelector
-                        field={{
-                            name: 'channels',
-                            type: 'channel-selector',
-                            label: 'Select Channels',
-                            // The selector uses dynamic options internally based on type
-                        } as any}
-                        value={selectedChannels}
-                        onChange={(_, val) => setSelectedChannels(val as string[])}
-                        allValues={{}}
-                    />
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">Select Destination Channels</Label>
+                        <FieldChannelSelector
+                            field={{
+                                name: 'channels',
+                                type: 'channel-selector',
+                                label: 'Select Channels',
+                            } as any}
+                            value={selectedChannels}
+                            onChange={(_, val) => setSelectedChannels(val as string[])}
+                            allValues={{}}
+                        />
+                    </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="mt-2 border-t pt-4">
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPosting}>
                         Cancel
                     </Button>
                     <Button onClick={handlePost} disabled={isPosting || selectedChannels.length === 0}>
                         {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isPosting ? 'Posting...' : 'Post Content'}
+                        {isPosting ? 'Posting...' : 'Post Content Now'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
