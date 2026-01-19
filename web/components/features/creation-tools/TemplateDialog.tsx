@@ -60,7 +60,6 @@ export function TemplateDialog({
                 name: data.name,
                 description: data.description,
                 thumbnailUrl: finalThumbnailUrl,
-                icon: data.icon,
                 creationToolId: data.creationToolId,
                 prefilledData: template?.prefilledData || {},
                 isActive: true,

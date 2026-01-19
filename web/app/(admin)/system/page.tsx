@@ -10,7 +10,7 @@ import { AdminStatsCards } from '@/components/features/admin/AdminStatsCards';
 import { AdminCharts } from '@/components/features/admin/AdminCharts';
 import { QdrantMaintenanceCard } from '@/components/features/admin/QdrantMaintenanceCard';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, TabsHeader } from '@/components/ui/Tabs';
 import { AdminPaymentManagement } from '@/components/features/admin/AdminPaymentManagement';
 import { AdminSystemStatus } from '@/components/features/admin/AdminSystemStatus';
 import { AdminSystemTools } from '@/components/features/admin/AdminSystemTools';
@@ -57,14 +57,14 @@ export default function AdminDashboardPage() {
         >
             <div className="pt-4 pb-20">
                 <Tabs defaultValue="overview" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
-                            <TabsTrigger value="overview">Overview</TabsTrigger>
-                            <TabsTrigger value="payments">Payments</TabsTrigger>
-                            <TabsTrigger value="health">System Health</TabsTrigger>
-                            <TabsTrigger value="tools">System Tools</TabsTrigger>
+                    <TabsHeader>
+                        <TabsList variant="pills">
+                            <TabsTrigger value="overview" variant="pills">Overview</TabsTrigger>
+                            <TabsTrigger value="payments" variant="pills">Payments</TabsTrigger>
+                            <TabsTrigger value="health" variant="pills">System Health</TabsTrigger>
+                            <TabsTrigger value="tools" variant="pills">System Tools</TabsTrigger>
                         </TabsList>
-                    </div>
+                    </TabsHeader>
 
                     <TabsContent value="overview" className="space-y-10 animate-in fade-in-50 duration-500">
                         {/* 1. Quick Actions / Navigation (Streamlined) */}

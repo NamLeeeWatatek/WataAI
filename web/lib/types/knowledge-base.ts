@@ -16,6 +16,7 @@ export interface KnowledgeBase {
   embeddingConfigId?: string | null;
   embeddingConfig?: any;
   embeddingModel?: string | null;
+  useSystemAI?: boolean;
   chunkSize: number;
   chunkOverlap: number;
   totalDocuments: number;
@@ -37,6 +38,7 @@ export interface CreateKnowledgeBaseDto {
   ragModel?: string;
   embeddingConfigId?: string;
   embeddingModel?: string;
+  useSystemAI?: boolean;
   chunkSize?: number;
   chunkOverlap?: number;
   icon?: string;
@@ -52,6 +54,7 @@ export interface UpdateKnowledgeBaseDto {
   ragModel?: string;
   embeddingConfigId?: string;
   embeddingModel?: string;
+  useSystemAI?: boolean;
   chunkSize?: number;
   chunkOverlap?: number;
   icon?: string;

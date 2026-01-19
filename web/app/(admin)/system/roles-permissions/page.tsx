@@ -11,13 +11,15 @@ import {
     ShieldCheck,
     Plus,
     Edit2,
-    Boxes,
     Save,
-    Trash2
+    Trash2,
+    Search as SearchIcon,
+    Settings,
+    Lock,
+    Key
 } from 'lucide-react';
 import { Search } from '@/components/shared/Search';
 import { Input } from '@/components/ui/Input';
-import { Tabs, TabsContent, TabsList, TabsTrigger, TabsHeader } from '@/components/ui/Tabs';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { cn } from '@/lib/utils';
 import { adminApi, CreateRoleDto, UpdateRoleDto, CreatePermissionDto } from '@/lib/api/admin';
@@ -26,7 +28,6 @@ import toast from '@/lib/toast';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Label } from '@/components/ui/Label';
 import { useDebounce } from '@/lib/hooks/useDebounce';
-import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import {
     Dialog,
     DialogContent,
@@ -58,24 +59,14 @@ export default function RolesPermissionsPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [roleToEdit, setRoleToEdit] = useState<{ name: string, description: string } | null>(null);
     const [roleToDeleteId, setRoleToDeleteId] = useState<number | null>(null);
-    const [activeTab, setActiveTab] = useState('roles');
+
+    // Permission Management States
     const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
     const [isDeletePermissionOpen, setIsDeletePermissionOpen] = useState(false);
     const [permissionToDeleteId, setPermissionToDeleteId] = useState<string | null>(null);
     const [permissionToEdit, setPermissionToEdit] = useState<{ resource: string, action: string, description: string }>({ resource: '', action: '', description: '' });
     const [permissionSearch, setPermissionSearch] = useState('');
     const debouncedPermissionSearch = useDebounce(permissionSearch, 500);
-
-    // Role Selection
-    const [selectedRoleIds, setSelectedRoleIds] = useState<Set<number>>(new Set());
-    const [isBulkDeletingRoles, setIsBulkDeletingRoles] = useState(false);
-    const [bulkDeleteRolesAlertOpen, setBulkDeleteRolesAlertOpen] = useState(false);
-
-    // Permission Selection
-    const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<string>>(new Set());
-    const [isBulkDeletingPermissions, setIsBulkDeletingPermissions] = useState(false);
-    const [bulkDeletePermissionsAlertOpen, setBulkDeletePermissionsAlertOpen] = useState(false);
-
 
     const { data: rolesData, isLoading: loadingRoles } = useQuery({
         queryKey: ['roles', debouncedRoleSearch],
@@ -220,60 +211,6 @@ export default function RolesPermissionsPage() {
         deletePermissionMutation.mutate(permissionToDeleteId);
     };
 
-    const toggleRoleSelection = (id: number) => {
-        const newSelected = new Set(selectedRoleIds);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedRoleIds(newSelected);
-    };
-
-    const togglePermissionSelection = (id: string) => {
-        const newSelected = new Set(selectedPermissionIds);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedPermissionIds(newSelected);
-    };
-
-    const handleBulkDeleteRoles = async () => {
-        setIsBulkDeletingRoles(true);
-        try {
-            for (const id of Array.from(selectedRoleIds)) {
-                await adminApi.deleteRole(id);
-            }
-            toast.success(`Deleted ${selectedRoleIds.size} roles successfully`);
-            setSelectedRoleIds(new Set());
-            queryClient.invalidateQueries({ queryKey: ['roles'] });
-        } catch (error) {
-            toast.error('Failed to delete some roles');
-        } finally {
-            setIsBulkDeletingRoles(false);
-            setBulkDeleteRolesAlertOpen(false);
-        }
-    };
-
-    const handleBulkDeletePermissions = async () => {
-        setIsBulkDeletingPermissions(true);
-        try {
-            for (const id of Array.from(selectedPermissionIds)) {
-                await adminApi.deletePermission(id);
-            }
-            toast.success(`Deleted ${selectedPermissionIds.size} permissions successfully`);
-            setSelectedPermissionIds(new Set());
-            queryClient.invalidateQueries({ queryKey: ['permissions'] });
-        } catch (error) {
-            toast.error('Failed to delete some permissions');
-        } finally {
-            setIsBulkDeletingPermissions(false);
-            setBulkDeletePermissionsAlertOpen(false);
-        }
-    };
-
     // Group permissions
     const groupedPermissions = permissions.reduce((acc, perm: PermissionEntity) => {
         if (!acc[perm.resource]) acc[perm.resource] = [];
@@ -283,476 +220,392 @@ export default function RolesPermissionsPage() {
 
     return (
         <PageShell
-            title="IAM - Identity & Access Management"
+            title="Identity & Access Management"
             description="Manage system access control via Roles and Permissions."
+            contentClassName="overflow-hidden" // Prevent double scrollbars
             actions={
-                activeTab === 'roles' ? (
-                    <Button onClick={handleOpenCreateDialog} className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 font-bold rounded-xl">
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsPermissionDialogOpen(true)}
+                        className="gap-2 h-9"
+                    >
+                        <Lock className="w-4 h-4" />
+                        New Permission
+                    </Button>
+                    <Button onClick={handleOpenCreateDialog} className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-9 font-bold">
                         <Plus className="w-4 h-4" />
                         Create Role
                     </Button>
-                ) : (
-                    <Button
-                        onClick={() => setIsPermissionDialogOpen(true)}
-                        className="gap-2 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 font-bold rounded-xl"
-                    >
-                        <Plus className="w-4 h-4" />
-                        New Permission
-                    </Button>
-                )
+                </div>
             }
-            className="h-full"
+            className="h-[calc(100vh-4rem)]" // Adjust for navbar height
         >
-            <div className="h-full flex flex-col space-y-4">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
-                    <TabsHeader>
-                        <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
-                            <TabsTrigger value="roles" variant="pills">
-                                <Shield className="w-4 h-4 mr-2" />
-                                <span className="font-bold">Protocol Roles</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="permissions" variant="pills">
-                                <Boxes className="w-4 h-4 mr-2" />
-                                <span className="font-bold">Permissions Library</span>
-                            </TabsTrigger>
-                        </TabsList>
-                    </TabsHeader>
+            <div className="grid grid-cols-12 gap-6 h-full pt-2 pb-6">
 
-                    <div className="flex-1 mt-6">
-                        <TabsContent value="roles" className="m-0 focus-visible:outline-none h-full">
-                            <div className="grid grid-cols-12 gap-6 h-full min-h-[600px]">
-                                {/* Roles List */}
-                                <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4 flex flex-col h-full">
-                                    <Card className="flex flex-col h-full border-muted-foreground/20 shadow-sm">
-                                        <CardHeader className="p-4 border-b bg-muted/20 shrink-0">
-                                            <div className="relative">
-                                                <Search
-                                                    placeholder="Find role..."
-                                                    value={search}
-                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                                        setSearch(e.target.value)
-                                                    }}
-                                                    onClear={() => {
-                                                        setSearch('')
-                                                    }}
-                                                    className="h-9"
-                                                />
+                {/* Left Sidebar: Roles List */}
+                <div className="col-span-12 md:col-span-4 lg:col-span-3 flex flex-col h-full overflow-hidden">
+                    <Card className="flex flex-col h-full glass border-none shadow-xl overflow-hidden">
+                        <CardHeader className="p-4 border-b border-white/5 bg-white/5 shrink-0 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                    <Shield className="w-5 h-5 text-primary" />
+                                    Roles
+                                </CardTitle>
+                                <Badge variant="secondary" className="bg-primary/20 text-primary hover:bg-primary/30">
+                                    {roles.length}
+                                </Badge>
+                            </div>
+                            <div className="relative">
+                                <Search
+                                    placeholder="Find role..."
+                                    value={search}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                                    onClear={() => setSearch('')}
+                                    className="h-9 bg-black/20 border-white/10"
+                                />
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-1 overflow-hidden relative">
+                            <ScrollArea className="h-full">
+                                <div className="p-3 space-y-2">
+                                    {roles.map(role => (
+                                        <div
+                                            key={role.id}
+                                            onClick={() => setSelectedRole(role)}
+                                            className={cn(
+                                                "group p-3 rounded-xl cursor-pointer transition-all relative flex flex-col gap-1 border",
+                                                selectedRole?.id === role.id
+                                                    ? "bg-primary/10 border-primary/40 shadow-inner"
+                                                    : "hover:bg-white/5 border-transparent hover:border-white/10"
+                                            )}
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={cn(
+                                                        "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                                                        selectedRole?.id === role.id ? "bg-primary text-primary-foreground" : "bg-white/5 text-muted-foreground"
+                                                    )}>
+                                                        {role.name.toLowerCase() === 'admin' ? <Key className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className={cn(
+                                                            "font-bold text-sm truncate",
+                                                            selectedRole?.id === role.id ? "text-primary" : "text-foreground"
+                                                        )}>
+                                                            {role.name}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground truncate">
+                                                            {role.permissions.length} permissions
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className={cn(
+                                                    "flex items-center gap-1 transition-opacity",
+                                                    selectedRole?.id === role.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                )}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(role); }}
+                                                    >
+                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent className="p-0 flex-1 overflow-hidden">
-                                            <ScrollArea className="h-full">
-                                                <div className="p-2 space-y-1">
-                                                    {roles.map(role => (
-                                                        <div
-                                                            key={role.id}
-                                                            className={cn(
-                                                                "group p-3 rounded-lg cursor-pointer transition-all relative flex flex-col gap-1",
-                                                                selectedRole?.id === role.id ? "bg-primary/10 border-primary/20 border" : "hover:bg-muted/50 border border-transparent",
-                                                                selectedRoleIds.has(role.id) && "ring-1 ring-primary border-primary bg-primary/5"
-                                                            )}
-                                                            onClick={() => setSelectedRole(role)}
-                                                        >
-                                                            <div className="flex items-center justify-between gap-2">
-                                                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                                    <div
-                                                                        className={cn(
-                                                                            "transition-opacity shrink-0",
-                                                                            selectedRoleIds.has(role.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
-                                                                        )}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            toggleRoleSelection(role.id);
-                                                                        }}
-                                                                    >
-                                                                        <Checkbox
-                                                                            checked={selectedRoleIds.has(role.id)}
-                                                                            onCheckedChange={() => toggleRoleSelection(role.id)}
-                                                                            className="h-4 w-4"
-                                                                        />
-                                                                    </div>
-                                                                    <ShieldCheck className={cn("w-4 h-4 shrink-0", selectedRole?.id === role.id ? "text-primary" : "text-muted-foreground")} />
-                                                                    <span className="font-bold text-sm truncate">{role.name}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                                                        onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(role); }}
-                                                                    >
-                                                                        <Edit2 className="w-3.5 h-3.5" />
-                                                                    </Button>
-                                                                    {(role.name.toLowerCase() !== 'admin' && role.name.toLowerCase() !== 'user') && (
+                                        </div>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Right Content: Permissions Matrix */}
+                <div className="col-span-12 md:col-span-8 lg:col-span-9 flex flex-col h-full overflow-hidden">
+                    {selectedRole ? (
+                        <div className="flex flex-col h-full space-y-4">
+                            {/* Header Panel */}
+                            <div className="glass-card p-6 flex items-start justify-between shrink-0">
+                                <div className="space-y-1">
+                                    <h2 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+                                        {selectedRole.name}
+                                        {hasChanges && (
+                                            <Badge variant="outline" className="text-yellow-500 border-yellow-500/50 bg-yellow-500/10 animate-pulse">
+                                                Unsaved Changes
+                                            </Badge>
+                                        )}
+                                    </h2>
+                                    <p className="text-muted-foreground max-w-2xl">
+                                        {selectedRole.description || 'No description provided for this role.'}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {(selectedRole.name !== 'Super Admin') && (
+                                        <Button
+                                            variant="ghost"
+                                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => {
+                                                setRoleToDeleteId(selectedRole.id);
+                                                setIsDeleteDialogOpen(true);
+                                            }}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Role
+                                        </Button>
+                                    )}
+                                    <Button
+                                        onClick={handleSaveRole}
+                                        disabled={!hasChanges}
+                                        loading={updateRolePermissionsMutation.isPending}
+                                        className={cn(
+                                            "gap-2 font-bold transition-all",
+                                            hasChanges ? "bg-primary shadow-lg shadow-primary/25" : "bg-muted text-muted-foreground"
+                                        )}
+                                    >
+                                        <Save className="w-4 h-4" />
+                                        Save Changes
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Permissions Grid */}
+                            <Card className="flex-1 glass border-none shadow-none overflow-hidden flex flex-col">
+                                <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-64">
+                                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Search permissions..."
+                                                value={permissionSearch}
+                                                onChange={(e) => setPermissionSearch(e.target.value)}
+                                                className="pl-9 bg-black/20 border-white/10 focus:bg-black/40 transition-colors h-9"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Showing {permissions.length} permissions across {Object.keys(groupedPermissions).length} resources
+                                    </div>
+                                </div>
+
+                                <CardContent className="p-0 flex-1 overflow-hidden bg-black/5">
+                                    <ScrollArea className="h-full">
+                                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                            {(Object.entries(groupedPermissions) as [string, PermissionEntity[]][]).map(([resource, perms]) => (
+                                                <div key={resource} className="bg-card/50 border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors">
+                                                    <div className="px-4 py-3 bg-white/5 border-b border-white/5 flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                            <span className="font-semibold capitalize text-sm">{resource}</span>
+                                                        </div>
+                                                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-black/20 text-muted-foreground">
+                                                            {perms.length}
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="p-2 space-y-0.5">
+                                                        {perms.map(perm => (
+                                                            <div
+                                                                key={perm.id}
+                                                                className={cn(
+                                                                    "group flex items-start space-x-3 p-2 rounded-lg transition-all",
+                                                                    rolePermissions.includes(perm.id)
+                                                                        ? "bg-primary/10 hover:bg-primary/15"
+                                                                        : "hover:bg-white/5"
+                                                                )}
+                                                            >
+                                                                <Checkbox
+                                                                    id={`perm-${perm.id}`}
+                                                                    checked={rolePermissions.includes(perm.id)}
+                                                                    onCheckedChange={() => handlePermissionToggle(perm.id)}
+                                                                    disabled={selectedRole.name.toLowerCase() === 'admin' && resource === 'all'}
+                                                                    className="mt-0.5 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                                                />
+                                                                <div className="space-y-0.5 flex-1 cursor-pointer" onClick={() => handlePermissionToggle(perm.id)}>
+                                                                    <div className="flex items-center justify-between">
+                                                                        <Label
+                                                                            htmlFor={`perm-${perm.id}`}
+                                                                            className="text-sm font-medium cursor-pointer leading-none text-foreground"
+                                                                        >
+                                                                            {perm.action}
+                                                                        </Label>
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="icon"
-                                                                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                                                            className="h-5 w-5 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                setRoleToDeleteId(role.id);
-                                                                                setIsDeleteDialogOpen(true);
+                                                                                setPermissionToDeleteId(perm.id);
+                                                                                setIsDeletePermissionOpen(true);
                                                                             }}
                                                                         >
-                                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                                            <Trash2 className="w-3 h-3" />
                                                                         </Button>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <p className="text-[10px] text-muted-foreground truncate pl-6">{role.description || 'No description'}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-
-                                {/* Role Details & Permissions */}
-                                <div className="col-span-12 md:col-span-8 lg:col-span-9 flex flex-col h-full">
-                                    {selectedRole ? (
-                                        <Card className="border-border/60 shadow-xl overflow-hidden h-full flex flex-col">
-                                            <CardHeader className="bg-muted/30 border-b border-border/50 py-4 shrink-0">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                            <Shield className="w-5 h-5 text-primary" />
-                                                        </div>
-                                                        <div>
-                                                            <CardTitle className="text-xl">{selectedRole.name}</CardTitle>
-                                                            <CardDescription className="text-xs">{selectedRole.description}</CardDescription>
-                                                        </div>
-                                                    </div>
-                                                    {hasChanges && (
-                                                        <Button onClick={handleSaveRole} loading={updateRolePermissionsMutation.isPending} className="gap-2 font-bold">
-                                                            <Save className="w-4 h-4" />
-                                                            Save Changes
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </CardHeader>
-                                            <CardContent className="p-0 flex-1 overflow-auto bg-slate-50/50 dark:bg-slate-950/20">
-                                                <div className="p-6">
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                        {(Object.entries(groupedPermissions) as [string, PermissionEntity[]][]).map(([resource, perms]) => (
-                                                            <div key={resource} className="space-y-3 p-4 rounded-xl border bg-card shadow-sm">
-                                                                <h4 className="font-semibold capitalize flex items-center gap-2 border-b pb-2">
-                                                                    <div className="w-2 h-2 rounded-full bg-primary" />
-                                                                    {resource}
-                                                                </h4>
-                                                                <div className="space-y-2">
-                                                                    {perms.map(perm => (
-                                                                        <div key={perm.id} className="flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                                                                            <Checkbox
-                                                                                id={`perm-${perm.id}`}
-                                                                                checked={rolePermissions.includes(perm.id)}
-                                                                                onCheckedChange={() => handlePermissionToggle(perm.id)}
-                                                                                disabled={selectedRole.name.toLowerCase() === 'admin' && resource === 'all'} // Prevent locking out admin
-                                                                            />
-                                                                            <div className="space-y-1">
-                                                                                <Label
-                                                                                    htmlFor={`perm-${perm.id}`}
-                                                                                    className="text-sm font-medium cursor-pointer leading-none"
-                                                                                >
-                                                                                    {perm.action}
-                                                                                </Label>
-                                                                                <p className="text-[10px] text-muted-foreground">{perm.description}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
+                                                                    </div>
+                                                                    <p className="text-[11px] text-muted-foreground line-clamp-2">{perm.description}</p>
                                                                 </div>
                                                             </div>
                                                         ))}
                                                     </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center text-muted-foreground border rounded-lg border-dashed">
-                                            <div className="text-center">
-                                                <Shield className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                                                <p>Select a role to view permissions</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="permissions" className="m-0 h-full pt-4">
-                            <Card className="h-full border-muted-foreground/20 shadow-sm flex flex-col">
-                                <CardHeader className="shrink-0 flex flex-row items-center justify-between space-y-0">
-                                    <div>
-                                        <CardTitle>System Permissions Library</CardTitle>
-                                        <CardDescription>
-                                            Reference list of all available permissions in the system.
-                                        </CardDescription>
-                                    </div>
-                                    <div className="relative w-64">
-                                        <Search
-                                            placeholder="Search permissions..."
-                                            value={permissionSearch}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                                setPermissionSearch(e.target.value)
-                                            }}
-                                            onClear={() => {
-                                                setPermissionSearch('')
-                                            }}
-                                            className="h-9"
-                                        />
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="flex-1 overflow-hidden p-0">
-                                    <ScrollArea className="h-full">
-                                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {permissions.map(perm => (
-                                                <div
-                                                    key={perm.id}
-                                                    className={cn(
-                                                        "group p-3 border rounded-lg flex flex-col gap-1 bg-card hover:bg-muted/30 transition-all h-fit relative",
-                                                        selectedPermissionIds.has(perm.id) && "ring-2 ring-primary border-primary bg-primary/5 shadow-md"
-                                                    )}
-                                                    onClick={() => togglePermissionSelection(perm.id)}
-                                                >
-                                                    <div className={cn(
-                                                        "absolute top-2 left-2 z-10 transition-opacity",
-                                                        selectedPermissionIds.has(perm.id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                    )}>
-                                                        <Checkbox
-                                                            checked={selectedPermissionIds.has(perm.id)}
-                                                            onCheckedChange={() => togglePermissionSelection(perm.id)}
-                                                            className="h-3.5 w-3.5"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        />
-                                                    </div>
-                                                    <div className="flex items-center justify-between pl-6">
-                                                        <span className="font-mono text-xs font-bold text-primary flex items-center gap-2">
-                                                            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal text-muted-foreground">{perm.resource}</Badge>
-                                                            {perm.action}
-                                                        </span>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setPermissionToDeleteId(perm.id);
-                                                                setIsDeletePermissionOpen(true);
-                                                            }}
-                                                        >
-                                                            <Trash2 className="w-3 w-3" />
-                                                        </Button>
-                                                    </div>
-                                                    <span className="text-xs text-muted-foreground line-clamp-2 pl-6">{perm.description}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </ScrollArea>
                                 </CardContent>
                             </Card>
-                        </TabsContent>
-                    </div>
-                </Tabs>
-
-                {/* Role Create/Edit Dialog */}
-                <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>{roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Edit Role' : 'Create New Role'}</DialogTitle>
-                            <DialogDescription>
-                                Enter the role name and a brief description of its purpose.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="name">Role Name</Label>
-                                <Input
-                                    id="name"
-                                    placeholder="e.g. Content Manager"
-                                    value={roleToEdit?.name || ''}
-                                    onChange={(e) => setRoleToEdit(prev => ({ ...prev!, name: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Input
-                                    id="description"
-                                    placeholder="Briefly describe this role's access..."
-                                    value={roleToEdit?.description || ''}
-                                    onChange={(e) => setRoleToEdit(prev => ({ ...prev!, description: e.target.value }))}
-                                />
-                            </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleCreateOrUpdateRole} loading={saveRoleMutation.isPending} disabled={!roleToEdit?.name}>
-                                {roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Save Changes' : 'Create Role'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Delete Confirmation */}
-                <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the role
-                                and remove it from all assigned users.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setRoleToDeleteId(null)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDeleteRole}
-                                disabled={deleteRoleMutation.isPending}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                                {deleteRoleMutation.isPending ? 'Deleting...' : 'Delete Role'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                {/* Permission Create Dialog */}
-                <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>New System Permission</DialogTitle>
-                            <DialogDescription>
-                                Register a new action/resource pair in the system.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="resource">Resource</Label>
-                                    <Input
-                                        id="resource"
-                                        placeholder="e.g. users, bots"
-                                        value={permissionToEdit.resource}
-                                        onChange={(e) => setPermissionToEdit(prev => ({ ...prev, resource: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="action">Action</Label>
-                                    <Input
-                                        id="action"
-                                        placeholder="e.g. read, write, *"
-                                        value={permissionToEdit.action}
-                                        onChange={(e) => setPermissionToEdit(prev => ({ ...prev, action: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="perm-desc">Description</Label>
-                                <Input
-                                    id="perm-desc"
-                                    placeholder="What does this permission allow?"
-                                    value={permissionToEdit.description}
-                                    onChange={(e) => setPermissionToEdit(prev => ({ ...prev, description: e.target.value }))}
-                                />
-                            </div>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground/50 border-2 border-dashed border-white/5 rounded-3xl bg-white/5 m-4">
+                            <Shield className="w-16 h-16 mb-4 opacity-20" />
+                            <p className="text-lg font-medium">Select a role to manage permissions</p>
+                            <p className="text-sm">Choose a role from the sidebar to view and edit its access rights.</p>
                         </div>
-                        <DialogFooter>
-                            <Button variant="ghost" onClick={() => setIsPermissionDialogOpen(false)}>Cancel</Button>
-                            <Button
-                                onClick={handleCreatePermission}
-                                loading={createPermissionMutation.isPending}
-                                disabled={!permissionToEdit.resource || !permissionToEdit.action}
-                            >
-                                Create Permission
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Delete Permission Confirmation */}
-                <AlertDialog open={isDeletePermissionOpen} onOpenChange={setIsDeletePermissionOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Permission?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will remove the permission definition from the library.
-                                Any roles currently using this permission will lose access to it.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setPermissionToDeleteId(null)}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleDeletePermission}
-                                disabled={deletePermissionMutation.isPending}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                                {deletePermissionMutation.isPending ? 'Deleting...' : 'Delete'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                {/* Bulk Delete Roles Confirmation */}
-                <AlertDialog open={bulkDeleteRolesAlertOpen} onOpenChange={setBulkDeleteRolesAlertOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete {selectedRoleIds.size} roles?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to delete the selected roles? This will remove them from all assigned users.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleBulkDeleteRoles}
-                                disabled={isBulkDeletingRoles}
-                                className="bg-destructive text-white hover:bg-destructive/90"
-                            >
-                                {isBulkDeletingRoles ? 'Deleting...' : 'Delete Roles'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                {/* Bulk Delete Permissions Confirmation */}
-                <AlertDialog open={bulkDeletePermissionsAlertOpen} onOpenChange={setBulkDeletePermissionsAlertOpen}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Delete {selectedPermissionIds.size} permissions?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to delete the selected permissions? Any roles using them will lose access.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleBulkDeletePermissions}
-                                disabled={isBulkDeletingPermissions}
-                                className="bg-destructive text-white hover:bg-destructive/90"
-                            >
-                                {isBulkDeletingPermissions ? 'Deleting...' : 'Delete'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                <BulkActionsToolbar
-                    selectedCount={activeTab === 'roles' ? selectedRoleIds.size : selectedPermissionIds.size}
-                    onClearSelection={() => {
-                        if (activeTab === 'roles') setSelectedRoleIds(new Set());
-                        else setSelectedPermissionIds(new Set());
-                    }}
-                    actions={[
-                        {
-                            label: 'Delete',
-                            icon: Trash2,
-                            onClick: () => {
-                                if (activeTab === 'roles') setBulkDeleteRolesAlertOpen(true);
-                                else setBulkDeletePermissionsAlertOpen(true);
-                            },
-                            variant: 'destructive'
-                        }
-                    ]}
-                />
+                    )}
+                </div>
             </div>
+
+            {/* Role Create/Edit Dialog */}
+            <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Edit Role' : 'Create New Role'}</DialogTitle>
+                        <DialogDescription>
+                            Enter the role name and a brief description of its purpose.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Role Name</Label>
+                            <Input
+                                id="name"
+                                placeholder="e.g. Content Manager"
+                                value={roleToEdit?.name || ''}
+                                onChange={(e) => setRoleToEdit(prev => ({ ...prev!, name: e.target.value }))}
+                                className="glass-input"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Input
+                                id="description"
+                                placeholder="Briefly describe this role's access..."
+                                value={roleToEdit?.description || ''}
+                                onChange={(e) => setRoleToEdit(prev => ({ ...prev!, description: e.target.value }))}
+                                className="glass-input"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsRoleDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleCreateOrUpdateRole} loading={saveRoleMutation.isPending} disabled={!roleToEdit?.name}>
+                            {roleToEdit?.name && selectedRole && roleToEdit.name === selectedRole.name ? 'Save Changes' : 'Create Role'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Role Confirmation */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent className="glass-modal">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Role?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the role
+                            and remove it from all assigned users.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setRoleToDeleteId(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteRole}
+                            disabled={deleteRoleMutation.isPending}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deleteRoleMutation.isPending ? 'Deleting...' : 'Delete Role'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Permission Create Dialog */}
+            <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>New System Permission</DialogTitle>
+                        <DialogDescription>
+                            Register a new action/resource pair in the system.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="resource">Resource</Label>
+                                <Input
+                                    id="resource"
+                                    placeholder="e.g. users"
+                                    value={permissionToEdit.resource}
+                                    onChange={(e) => setPermissionToEdit(prev => ({ ...prev, resource: e.target.value }))}
+                                    className="glass-input"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="action">Action</Label>
+                                <Input
+                                    id="action"
+                                    placeholder="e.g. read"
+                                    value={permissionToEdit.action}
+                                    onChange={(e) => setPermissionToEdit(prev => ({ ...prev, action: e.target.value }))}
+                                    className="glass-input"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="perm-desc">Description</Label>
+                            <Input
+                                id="perm-desc"
+                                placeholder="What does this permission allow?"
+                                value={permissionToEdit.description}
+                                onChange={(e) => setPermissionToEdit(prev => ({ ...prev, description: e.target.value }))}
+                                className="glass-input"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setIsPermissionDialogOpen(false)}>Cancel</Button>
+                        <Button
+                            onClick={handleCreatePermission}
+                            loading={createPermissionMutation.isPending}
+                            disabled={!permissionToEdit.resource || !permissionToEdit.action}
+                        >
+                            Create Permission
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Permission Confirmation */}
+            <AlertDialog open={isDeletePermissionOpen} onOpenChange={setIsDeletePermissionOpen}>
+                <AlertDialogContent className="glass-modal">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Permission?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will remove the permission definition from the library.
+                            Any roles currently using this permission will lose access to it.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setPermissionToDeleteId(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeletePermission}
+                            disabled={deletePermissionMutation.isPending}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {deletePermissionMutation.isPending ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </PageShell>
     );
 }

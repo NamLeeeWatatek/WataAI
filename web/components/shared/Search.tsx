@@ -1,9 +1,8 @@
 import * as React from "react"
-import { SearchIcon, XIcon } from "lucide-react"
+import { Search as LucideSearch, X as LucideX, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
-import { Loader2 } from "lucide-react"
 
 export interface SearchProps extends React.ComponentProps<typeof Input> {
     onClear?: () => void
@@ -31,7 +30,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
                         "pl-8 pr-10 bg-white/5 dark:bg-black/20 border-white/10 dark:border-white/5 focus-visible:ring-primary/20",
                         inputClassName
                     )}
-                    value={value}
+                    value={value || ""}
                     onChange={onChange}
                     {...props}
                 />
@@ -39,7 +38,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
                     {loading ? (
                         <Loader2 className="text-primary animate-spin size-3.5" />
                     ) : (
-                        <SearchIcon className="text-muted-foreground size-4" />
+                        <LucideSearch className="text-muted-foreground size-4" />
                     )}
                 </div>
                 {showClear && value && (
@@ -51,7 +50,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
                         onClick={handleClear}
                         data-slot="search-clear"
                     >
-                        <XIcon className="size-3" />
+                        <LucideX className="size-3" />
                         <span className="sr-only">Clear search</span>
                     </Button>
                 )}

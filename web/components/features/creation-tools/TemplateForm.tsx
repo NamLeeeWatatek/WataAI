@@ -2,7 +2,7 @@
 
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ImageIcon, Film } from 'lucide-react';
+import { Loader2, Image as LucideImage, Film, Info, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AiEnhancedTextarea } from '@/components/shared/AiEnhancedTextarea';
@@ -12,10 +12,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { templateFormSchema, type TemplateFormValues } from '@/lib/types/template-form';
 import { Template } from '@/lib/types/template';
 import { useQuery } from '@tanstack/react-query';
-import { creationToolsApi } from '@/lib/api/creation-tools';
+import { creationToolsApi, type CreationTool } from '@/lib/api/creation-tools';
 import { useEffect } from 'react';
-import { IconPicker } from '@/components/shared/IconPicker';
 import { UnifiedCoverUpload } from '@/components/shared/UnifiedFileUpload';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
 // Reusing constant from original file or moving to constants
 const ACCEPTED_FILE_TYPES = ['image/*', 'video/*'];
@@ -77,144 +77,129 @@ export function TemplateForm({ template, creationToolId: initialToolId, onSave, 
     return (
         <Form {...form}>
             <form onSubmit={handleSubmit(onSave)} className="space-y-6">
-                {/* Creation Tool Selection */}
-                <div className="space-y-2">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
-                        Configuration
-                    </Label>
+                <Tabs defaultValue="general" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="general" className="flex items-center gap-2">
+                            <Info className="w-4 h-4" />
+                            Thông tin chung
+                        </TabsTrigger>
+                        <TabsTrigger value="media" className="flex items-center gap-2">
+                            <LucideImage className="w-4 h-4" />
+                            Hình ảnh & Preview
+                        </TabsTrigger>
+                    </TabsList>
 
-                    <FormField
-                        control={control}
-                        name="creationToolId"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Creation Tool <span className="text-destructive">*</span></FormLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value}
-                                    disabled={loadingTools || !!initialToolId}
-                                >
+                    <TabsContent value="general" className="space-y-6 mt-0">
+                        {/* Creation Tool Selection */}
+                        <FormField
+                            control={control}
+                            name="creationToolId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Settings className="w-4 h-4 text-primary" />
+                                        <FormLabel className="text-base">Công cụ khởi tạo <span className="text-destructive">*</span></FormLabel>
+                                    </div>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        disabled={loadingTools || !!initialToolId}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger className="w-full h-11 bg-background/50">
+                                                <SelectValue placeholder={loadingTools ? 'Đang tải...' : 'Chọn một công cụ'} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {tools.map((tool: CreationTool) => (
+                                                <SelectItem key={tool.id} value={tool.id}>
+                                                    {tool.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base">Tên Template <span className="text-destructive">*</span></FormLabel>
                                     <FormControl>
-                                        <SelectTrigger className="w-full h-10">
-                                            <SelectValue placeholder={loadingTools ? 'Loading...' : 'Select a tool'} />
-                                        </SelectTrigger>
+                                        <Input
+                                            placeholder="VD: Ultra-Realistic Product Hero"
+                                            className="h-11 font-medium bg-background/50"
+                                            {...field}
+                                        />
                                     </FormControl>
-                                    <SelectContent>
-                                        {tools.map((tool) => (
-                                            <SelectItem key={tool.id} value={tool.id}>
-                                                <div className="flex items-center gap-2">
-                                                    <span>{tool.name}</span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                {/* Icon Selection */}
-                <div className="space-y-4">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider block">Identity</Label>
+                        <FormField
+                            control={control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-base">Mô tả</FormLabel>
+                                    <FormControl>
+                                        <AiEnhancedTextarea
+                                            placeholder="Mô tả phong cách, bối cảnh và mục đích sử dụng..."
+                                            rows={4}
+                                            className="resize-none min-h-[120px] bg-background/50"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </TabsContent>
 
-                    <FormField
-                        control={control}
-                        name="icon"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Template Icon</FormLabel>
-                                <FormControl>
-                                    <IconPicker value={field.value || ''} onChange={field.onChange} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                    <TabsContent value="media" className="space-y-6 mt-0">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-3">
+                                    <Label className="text-base">Hình đại diện (Thumbnail)</Label>
+                                    <UnifiedCoverUpload
+                                        value={previewUrl || ''}
+                                        onChange={(url) => {
+                                            setValue('thumbnailUrl', (url as string), { shouldDirty: true });
+                                        }}
+                                        description="Hỗ trợ Hình ảnh (JPG, PNG, GIF...) & Video (MP4...)"
+                                        accept={ACCEPTED_FILE_TYPES.join(',')}
+                                    />
+                                </div>
 
-                <div className="space-y-4">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider block">Media</Label>
-
-                    <div className="space-y-2">
-                        <Label>Preview Thumbnail</Label>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
-                            {/* Upload Area - Spans 3 cols */}
-                            <div className="sm:col-span-3">
-                                <UnifiedCoverUpload
-                                    value={previewUrl || ''}
-                                    onChange={(url) => {
-                                        setValue('thumbnailUrl', (url as string), { shouldDirty: true });
-                                    }}
-                                    description="Images (JPG, PNG, GIF, JFIF...) & Videos (MP4...)"
-                                    accept={ACCEPTED_FILE_TYPES.join(',')}
-                                />
-                            </div>
-
-                            {/* Info - Spans 2 cols */}
-                            <div className="sm:col-span-2 space-y-3 p-3 rounded-lg bg-secondary/30 border border-border/50 h-fit">
-                                <h4 className="font-medium text-xs uppercase tracking-wider text-foreground">Guidelines</h4>
-                                <ul className="space-y-2 text-xs text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <ImageIcon className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary" />
-                                        <span>Images: High quality JPG, PNG, or GIF.</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <Film className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary" />
-                                        <span>Videos: Short clips under 30s work best.</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="text-[9px] w-3.5 text-center mt-0.5">16:9</span>
-                                        <span>Ratio: Landscape 16:9 is recommended.</span>
-                                    </li>
-                                </ul>
+                                <div className="space-y-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                                    <h4 className="font-semibold text-sm flex items-center gap-2 text-primary">
+                                        <Info className="w-4 h-4" />
+                                        Hướng dẫn tải lên
+                                    </h4>
+                                    <ul className="space-y-2.5 text-sm text-muted-foreground">
+                                        <li className="flex items-start gap-3">
+                                            <LucideImage className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/70" />
+                                            <span>Hình ảnh: Chất lượng cao (JPG, PNG hoặc GIF).</span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <Film className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary/70" />
+                                            <span>Video: Các đoạn clip ngắn dưới 30 giây sẽ hoạt động tốt nhất.</span>
+                                        </li>
+                                        <li className="flex items-start gap-3">
+                                            <div className="text-[10px] font-bold w-4 h-4 border border-current rounded flex items-center justify-center mt-0.5 text-primary/70">16:9</div>
+                                            <span>Tỷ lệ: Nên sử dụng tỷ lệ ngang 16:9 để hiển thị tối ưu.</span>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <Label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Details</Label>
-
-                    <FormField
-                        control={control}
-                        name="name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Template Name <span className="text-destructive">*</span></FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="e.g., Ultra-Realistic Product Hero"
-                                        className="h-10 font-medium"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={control}
-                        name="description"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <AiEnhancedTextarea
-                                        placeholder="Describe the style, mood, and intended use case..."
-                                        rows={3}
-                                        className="resize-none min-h-[80px]"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                    </TabsContent>
+                </Tabs>
 
                 <div className="flex-none p-4 border-t border-border/50 bg-secondary/20 -mx-6 -mb-6 mt-6 flex justify-end gap-2">
                     <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="hover:bg-background">

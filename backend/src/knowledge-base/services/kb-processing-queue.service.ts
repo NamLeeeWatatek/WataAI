@@ -26,15 +26,18 @@ export class KBProcessingQueueService {
   constructor(
     private readonly eventEmitter: EventEmitter2,
     @InjectQueue('kb-processing') private readonly kbQueue: Queue,
-  ) {}
+  ) { }
 
   async addJob(
     documentId: string,
     knowledgeBaseId: string,
     type: 'embedding' | 'crawl' = 'embedding',
     userId?: string,
+    addToQueue = true,
   ): Promise<string> {
-    const internalJobId = `${type}-${documentId}-${Date.now()}`;
+    const internalJobId = documentId.startsWith('crawl-')
+      ? documentId
+      : `${type}-${documentId}-${Date.now()}`;
 
     const jobStatus: ProcessingJob = {
       id: internalJobId,
@@ -56,24 +59,26 @@ export class KBProcessingQueueService {
     );
     const priority = Math.min(255, 1 + activeJobsForKB.length);
 
-    this.logger.log(`📥 Job ${internalJobId} added (Priority: ${priority})`);
+    this.logger.log(`📥 Job ${internalJobId} added (Priority: ${priority}, Local: ${!addToQueue})`);
 
-    // Add to BullMQ
-    await this.kbQueue.add(
-      type === 'embedding' ? 'process-document' : 'crawl-website',
-      {
-        documentId,
-        knowledgeBaseId,
-        userId,
-        internalJobId,
-      },
-      {
-        jobId: internalJobId,
-        priority, // Apply fair-queueing priority
-        removeOnComplete: true,
-        removeOnFail: false,
-      },
-    );
+    if (addToQueue) {
+      // Add to BullMQ
+      await this.kbQueue.add(
+        type === 'embedding' ? 'process-document' : 'crawl-website',
+        {
+          documentId,
+          knowledgeBaseId,
+          userId,
+          internalJobId,
+        },
+        {
+          jobId: internalJobId,
+          priority, // Apply fair-queueing priority
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
 
     this.emitJobUpdate(jobStatus);
     return internalJobId;

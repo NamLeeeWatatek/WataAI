@@ -44,7 +44,7 @@ export class KBCrawlerService {
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   async crawlUrl(url: string): Promise<CrawlResult> {
     try {
@@ -53,7 +53,11 @@ export class KBCrawlerService {
       const response = await axios.get(url, {
         timeout: 30000,
         headers: {
-          'User-Agent': 'KnowledgeBase-Bot/1.0',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
         },
       });
 
@@ -148,6 +152,7 @@ export class KBCrawlerService {
       knowledgeBaseId,
       'crawl',
       userId,
+      false, // Local tracking only, do not add to BullMQ
     );
     this.processingQueue.setJobDocumentName(crawlJobId, `Crawl: ${startUrl}`);
     this.processingQueue.startJob(crawlJobId);

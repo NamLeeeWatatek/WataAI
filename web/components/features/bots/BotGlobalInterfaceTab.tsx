@@ -54,15 +54,20 @@ export function BotGlobalInterfaceTab({ botId, formData, onChange }: Props) {
     return (
         <Tabs value={subTab} onValueChange={setSubTab} className="w-full flex flex-col space-y-8">
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-black tracking-tight mb-2 flex items-center gap-3 uppercase">
-                        {subTab === 'identity' && 'Interface Identity'}
-                        {subTab === 'deployment' && 'Deployment Operations'}
-                    </h2>
-                    <p className="text-sm font-medium text-muted-foreground/60">
-                        {subTab === 'identity' && 'Synchronize the visual aesthetics and messaging protocols of the public widget.'}
-                        {subTab === 'deployment' && 'Manage deployment versions, rollbacks, and integration scripts.'}
-                    </p>
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-primary/10 rounded-xl">
+                        {subTab === 'identity' ? <Palette className="w-5 h-5 text-primary" /> : <Rocket className="w-5 h-5 text-primary" />}
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight mb-1 text-foreground">
+                            {subTab === 'identity' && 'Interface Identity'}
+                            {subTab === 'deployment' && 'Deployment Operations'}
+                        </h2>
+                        <p className="text-xs font-medium text-muted-foreground/60">
+                            {subTab === 'identity' && 'Synchronize the visual aesthetics and messaging protocols of the public widget'}
+                            {subTab === 'deployment' && 'Manage deployment versions, rollbacks, and integration scripts'}
+                        </p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     {subTab === 'deployment' && (

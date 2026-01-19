@@ -80,6 +80,9 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   @Column({ name: 'is_active', type: Boolean, default: true })
   isActive: boolean;
 
+  @Column({ name: 'use_system_ai', type: Boolean, default: false })
+  useSystemAI: boolean;
+
   @OneToMany('KbFolderEntity', (folder: any) => folder.knowledgeBase)
   folders?: KbFolderEntity[];
 

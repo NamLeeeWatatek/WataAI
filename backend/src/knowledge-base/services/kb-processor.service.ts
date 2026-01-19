@@ -119,7 +119,7 @@ export class KBProcessor extends WorkerHost {
           {
             workspaceId: kb.workspaceId,
             userId: userId,
-            model: kb.ragModel || 'gemini-1.5-flash',
+            model: kb.ragModel || undefined, // Let the service handle default resolution if undefined
           },
         );
 
@@ -295,7 +295,11 @@ export class KBProcessor extends WorkerHost {
 
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'WataAI-Crawler/1.0',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
         },
         timeout: 10000, // 10s timeout
       });
