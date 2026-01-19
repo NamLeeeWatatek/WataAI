@@ -53,6 +53,19 @@ export class KBProcessor extends WorkerHost {
     const internalJobId = job.data.internalJobId;
 
     try {
+      // Ensure tracking handles cases where we restarted and lost in-memory state
+      this.processingQueue.ensureJobTracking({
+        id: internalJobId,
+        documentId,
+        knowledgeBaseId,
+        status: 'processing',
+        progress: 0,
+        totalChunks: 0,
+        processedChunks: 0,
+        type: 'embedding',
+        startedAt: new Date(),
+      });
+
       this.processingQueue.startJob(internalJobId);
 
       const document = await this.documentRepository.findOne({
@@ -267,12 +280,25 @@ export class KBProcessor extends WorkerHost {
   }
 
   private async handleCrawlWebsite(job: Job<any>) {
-    const { documentId, internalJobId } = job.data;
+    const { documentId, internalJobId, knowledgeBaseId } = job.data;
 
     try {
       this.logger.log(
         `🕷️ Starting crawl for job ${internalJobId} (Doc: ${documentId})`,
       );
+      // Ensure tracking
+      this.processingQueue.ensureJobTracking({
+        id: internalJobId,
+        documentId,
+        knowledgeBaseId,
+        status: 'processing',
+        progress: 0,
+        totalChunks: 0,
+        processedChunks: 0,
+        type: 'crawl',
+        startedAt: new Date(),
+      });
+
       this.processingQueue.startJob(internalJobId);
       await this.checkCancellation(internalJobId);
 
