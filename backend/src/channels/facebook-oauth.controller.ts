@@ -38,7 +38,7 @@ export class FacebookOAuthController {
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -48,18 +48,20 @@ export class FacebookOAuthController {
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
     @Query('redirect_uri') redirectUri?: string,
+    @Query('credential_id') credentialId?: string,
   ) {
     if (!workspaceId) {
       throw new BadRequestException('Workspace ID is required');
     }
 
     this.logger.log(
-      `[FacebookOAuth] Getting OAuth URL for workspace: ${workspaceId} (user: ${req.user.id})`,
+      `[FacebookOAuth] Getting OAuth URL for workspace: ${workspaceId} (user: ${req.user.id}, credential: ${credentialId || 'default'})`,
     );
 
     const credential = await this.facebookOAuthService.getCredential(
       workspaceId,
       req.user.id,
+      credentialId,
     );
 
     if (!credential) {
@@ -76,7 +78,7 @@ export class FacebookOAuthController {
       `${process.env.FRONTEND_DOMAIN}/channels/callback/facebook`;
     const uri = redirectUri || defaultRedirectUri;
 
-    const state = `${req.user?.id}:${workspaceId}`;
+    const state = `${req.user?.id}:${workspaceId}${credentialId ? `:${credentialId}` : ''}`;
 
     const oauthUrl = this.facebookOAuthService.getOAuthUrl(
       credential.clientId!,
@@ -118,28 +120,29 @@ export class FacebookOAuthController {
     try {
       let wsId = workspaceId;
       let userId: string | undefined;
+      let credential;
 
       if (state) {
-        // state is formatted as userId:workspaceId
+        // state is formatted as userId:workspaceId[:credentialId]
         const parts = state.split(':');
         if (parts.length > 1) {
           userId = parts[0];
           if (!wsId) wsId = parts[1];
+          const credentialId = parts[2];
+
+          this.logger.log(
+            `[FacebookOAuth] Handling callback for workspace: ${wsId}, user: ${userId}, credential: ${credentialId || 'default'}`,
+          );
+
+          credential = await this.facebookOAuthService.getCredential(
+            wsId!,
+            userId,
+            credentialId,
+          );
         } else if (!wsId) {
-          // If state is just one part, we don't know if it's userId or workspaceId
-          // This should be avoided by ensuring state is always formatted as userId:workspaceId
           throw new BadRequestException('Invalid OAuth state format');
         }
       }
-
-      this.logger.log(
-        `[FacebookOAuth] Handling callback for workspace: ${wsId}, user: ${userId}`,
-      );
-
-      const credential = await this.facebookOAuthService.getCredential(
-        wsId!,
-        userId,
-      );
 
       if (!credential) {
         throw new NotFoundException('Facebook App not configured');

@@ -62,6 +62,7 @@ export interface ChannelPage {
   name: string
   category?: string
   tasks?: string[]
+  access_token?: string
   picture?: {
     data: {
       url: string

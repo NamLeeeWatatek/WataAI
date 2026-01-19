@@ -63,6 +63,7 @@ export default function ChannelsPage() {
     const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
     const [managePagesDialogOpen, setManagePagesDialogOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+    const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
 
     // TanStack Query Hooks
     const {
@@ -164,12 +165,58 @@ export default function ChannelsPage() {
                 botId: selectedBotId,
             });
 
-            toast.success('Facebook page connected successfully');
+            toast.success(`Connected ${page.name}`);
             dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
+            setSelectedPageIds(prev => prev.filter(id => id !== page.id));
             refetch();
         } catch (error: any) {
+            toast.error(`Failed to connect ${page.name}`);
         } finally {
             dispatch(setConnectingPage(null));
+        }
+    };
+
+    const handleBulkConnectPages = async () => {
+        const pagesToConnect = facebookPages.filter(p => selectedPageIds.includes(p.id));
+        if (pagesToConnect.length === 0) return;
+
+        dispatch(setConnectingPage('bulk'));
+        let successCount = 0;
+
+        for (const page of pagesToConnect) {
+            try {
+                await connectFacebook({
+                    pageId: page.id,
+                    pageName: page.name,
+                    category: page.category,
+                    userAccessToken: facebookTempToken,
+                    pageAccessToken: page.access_token,
+                    botId: selectedBotId,
+                });
+                successCount++;
+            } catch (error) {
+                console.error(`Failed to connect ${page.name}`, error);
+            }
+        }
+
+        toast.success(`Connected ${successCount} page(s)`);
+        dispatch(setFacebookPages(facebookPages.filter(p => !selectedPageIds.includes(p.id))));
+        setSelectedPageIds([]);
+        dispatch(setConnectingPage(null));
+        refetch();
+    };
+
+    const togglePageSelection = (id: string) => {
+        setSelectedPageIds(prev =>
+            prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAllPages = () => {
+        if (selectedPageIds.length === facebookPages.length) {
+            setSelectedPageIds([]);
+        } else {
+            setSelectedPageIds(facebookPages.map(p => p.id));
         }
     };
 
@@ -248,13 +295,34 @@ export default function ChannelsPage() {
                                         Select the pages you want to connect to WataAI.
                                     </p>
                                 </div>
-                                <Button variant="ghost" size="sm" onClick={() => {
-                                    dispatch(clearFacebookState());
-                                    setActiveTab('connected');
-                                }}>
-                                    <X className="w-4 h-4 mr-2" />
-                                    Cancel Selection
-                                </Button>
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={toggleSelectAllPages}
+                                        className="font-bold"
+                                    >
+                                        {selectedPageIds.length === facebookPages.length ? 'Deselect All' : 'Select All'}
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        disabled={selectedPageIds.length === 0 || connectingPage === 'bulk'}
+                                        loading={connectingPage === 'bulk'}
+                                        onClick={handleBulkConnectPages}
+                                        className="font-bold"
+                                    >
+                                        Connect {selectedPageIds.length} Selected
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => {
+                                        dispatch(clearFacebookState());
+                                        setSelectedPageIds([]);
+                                        setActiveTab('connected');
+                                    }}>
+                                        <X className="w-4 h-4 mr-2" />
+                                        Cancel
+                                    </Button>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20 overflow-y-auto">
@@ -266,16 +334,26 @@ export default function ChannelsPage() {
                                         icon={page.picture?.data?.url}
                                         status="online"
                                         tags={[page.category || 'Facebook Page']}
+                                        onClick={() => togglePageSelection(page.id)}
+                                        className={cn(
+                                            "cursor-pointer transition-all",
+                                            selectedPageIds.includes(page.id) ? "ring-2 ring-primary border-primary bg-primary/5" : ""
+                                        )}
                                     >
-                                        <Button
-                                            onClick={() => handleConnectFacebookPage(page)}
-                                            disabled={connectingPage === page.id}
-                                            loading={connectingPage === page.id}
-                                            className="w-full mt-4"
-                                            variant="primary"
-                                        >
-                                            Connect Page
-                                        </Button>
+                                        <div className="flex items-center justify-between mt-4 gap-3">
+                                            <Button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleConnectFacebookPage(page);
+                                                }}
+                                                disabled={connectingPage === page.id || connectingPage === 'bulk'}
+                                                loading={connectingPage === page.id}
+                                                className="flex-1 font-bold"
+                                                variant={selectedPageIds.includes(page.id) ? "primary" : "outline"}
+                                            >
+                                                Connect Now
+                                            </Button>
+                                        </div>
                                     </AgentCard>
                                 ))}
                             </div>
