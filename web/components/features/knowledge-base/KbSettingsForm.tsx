@@ -479,10 +479,7 @@ export function KbSettingsForm({
                                                                         <SelectContent>
                                                                             {ragModels.map((m) => (
                                                                                 <SelectItem key={m.id} value={m.name}>
-                                                                                    <div className="flex flex-col">
-                                                                                        <span className="text-sm font-medium">{m.displayName || m.name}</span>
-                                                                                        <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
-                                                                                    </div>
+                                                                                    {m.displayName || m.name}
                                                                                 </SelectItem>
                                                                             ))}
                                                                         </SelectContent>
@@ -643,10 +640,7 @@ export function KbSettingsForm({
                                                                         <SelectContent>
                                                                             {embeddingModels.map((m) => (
                                                                                 <SelectItem key={m.id} value={m.name}>
-                                                                                    <div className="flex flex-col">
-                                                                                        <span className="text-sm font-medium">{m.displayName || m.name}</span>
-                                                                                        <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
-                                                                                    </div>
+                                                                                    {m.displayName || m.name}
                                                                                 </SelectItem>
                                                                             ))}
                                                                         </SelectContent>

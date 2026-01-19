@@ -52,6 +52,7 @@ export interface Bot {
 
   // AI Settings
   aiProviderId?: string | null
+  aiConfigId?: string | null
   aiModelName?: string | null
   aiParameters?: Record<string, any> | null
   systemPrompt?: string | null

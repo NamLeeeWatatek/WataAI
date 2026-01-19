@@ -23,6 +23,11 @@ export class AiExecutionConfigDto {
   @IsNotEmpty()
   provider: string;
 
+  @ApiPropertyOptional({ example: 'uuid-of-config' })
+  @IsOptional()
+  @IsString()
+  aiConfigId?: string;
+
   @ApiProperty({ example: 'gpt-4' })
   @IsString()
   @IsNotEmpty()

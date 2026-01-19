@@ -28,7 +28,6 @@ import { toast } from '@/lib/toast';
 import { Loader2, Save, Cpu, Key, Globe, Shield, RefreshCw, X, Stars, Plus } from 'lucide-react';
 import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { Badge } from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
 import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
 import { type AiProviderMetadata } from '@/lib/api/ai-providers';
 import type { AiProviderConfig, UserAiProviderConfig, AiModel } from '@/lib/types/ai-provider';
