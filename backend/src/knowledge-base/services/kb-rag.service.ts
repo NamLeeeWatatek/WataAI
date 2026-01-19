@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -283,12 +283,12 @@ export class KBRagService {
         const finalModel =
           model || providerConfig.modelName || KbAiConfig.defaults.model;
         this.logger.log(
-          `🔎 [RAG] Using resolved provider: ${providerConfig.providerId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
+          `🔎 [RAG] Using resolved provider: ${providerConfig.configId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
         );
         return await this.aiProvidersService.chatWithHistoryUsingProvider(
           [{ role: 'user', content: prompt }],
           finalModel,
-          providerConfig.providerId,
+          providerConfig.configId,
           providerConfig.scope,
           providerConfig.scopeId,
           kb?.aiParameters as Record<string, any>,
@@ -334,12 +334,12 @@ export class KBRagService {
         const finalModel =
           model || providerConfig.modelName || KbAiConfig.defaults.model;
         this.logger.log(
-          `🔎 [RAG Stream] Using resolved provider: ${providerConfig.providerId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
+          `🔎 [RAG] Using resolved provider: ${providerConfig.configId} (${providerConfig.scope}) for KB ${knowledgeBaseId} with model: ${finalModel}`,
         );
         return await this.aiProvidersService.chatWithHistoryUsingProviderStream(
           [{ role: 'user', content: prompt }],
           finalModel,
-          providerConfig.providerId,
+          providerConfig.configId,
           providerConfig.scope,
           providerConfig.scopeId,
           kb?.aiParameters as Record<string, any>,
@@ -450,12 +450,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiConfigId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiConfigId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -516,17 +516,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiConfigId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiConfigId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
@@ -594,7 +594,7 @@ export class KBRagService {
       const answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
         messages,
         finalModel,
-        providerConfig.providerId,
+        providerConfig.configId,
         providerConfig.scope,
         providerConfig.scopeId,
         providerConfig.aiParameters,
@@ -649,7 +649,7 @@ export class KBRagService {
     bot?: BotEntity | null,
     knowledgeBaseId?: string,
   ): Promise<{
-    providerId: string;
+    configId: string;
     scope: 'workspace' | 'user';
     scopeId: string;
     modelName?: string;
@@ -674,7 +674,7 @@ export class KBRagService {
           );
           if (config && config.isActive) {
             return {
-              providerId: config.providerId,
+              configId: config.id,
               scope: 'workspace',
               scopeId: kb.workspaceId,
               modelName: kb.ragModel || undefined,
@@ -696,7 +696,7 @@ export class KBRagService {
 
         if (config) {
           return {
-            providerId: config.providerId, // Resolved Provider ID from Config
+            configId: config.id,
             scope: 'workspace',
             scopeId: bot.workspaceId,
             modelName: bot.aiModelName || undefined,
@@ -713,7 +713,7 @@ export class KBRagService {
 
         if (config) {
           return {
-            providerId: config.providerId,
+            configId: config.id,
             scope: 'user',
             scopeId: bot.createdBy,
             modelName: bot.aiModelName || undefined,
