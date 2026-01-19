@@ -405,129 +405,157 @@ export function KbSettingsForm({
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
-                                                    <Select
-                                                        value={form.watch('aiConfigId') || ''}
-                                                        onValueChange={(val) => {
-                                                            form.setValue('aiConfigId', val)
-                                                            form.setValue('ragModel', '')
-                                                        }}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-11 bg-background/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
-                                                                <SelectValue placeholder="Select Provider" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {availableProviders.map((p) => (
-                                                                <SelectItem key={p.configId} value={p.configId}>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{p.providerKey}</Badge>
-                                                                        <span>{p.providerName}</span>
-                                                                    </div>
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-
-                                                <FormItem>
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Model Name</FormLabel>
-                                                        <div className="flex items-center gap-2 mr-1">
-                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
-                                                            <Switch
-                                                                checked={isManualRag}
-                                                                onCheckedChange={setIsManualRag}
-                                                                className="scale-[0.6] data-[state=checked]:bg-primary"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <FormControl>
-                                                        {isManualRag ? (
-                                                            <div className="relative">
-                                                                <Input
-                                                                    value={form.watch('ragModel') || ''}
-                                                                    onChange={(e) => form.setValue('ragModel', e.target.value)}
-                                                                    placeholder="e.g. gpt-4-turbo"
-                                                                    className="h-11 bg-background/50 border-primary/10 pr-10"
-                                                                />
-                                                                <Sparkles className="w-4 h-4 text-primary/40 absolute right-3 top-3.5" />
-                                                            </div>
-                                                        ) : (
+                                                <FormField
+                                                    control={form.control}
+                                                    name="aiConfigId"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
                                                             <Select
-                                                                value={form.watch('ragModel') || ''}
-                                                                onValueChange={(val) => form.setValue('ragModel', val)}
-                                                                disabled={!aiConfigId || loadingRagModels}
+                                                                value={field.value || ''}
+                                                                onValueChange={(val) => {
+                                                                    field.onChange(val)
+                                                                    form.setValue('ragModel', '')
+                                                                }}
                                                             >
                                                                 <FormControl>
-                                                                    <SelectTrigger className="h-11 bg-background/50 border-primary/10">
-                                                                        <SelectValue placeholder={loadingRagModels ? "Loading models..." : "Select Model"} />
+                                                                    <SelectTrigger className="h-11 bg-background/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
+                                                                        <SelectValue placeholder="Select Provider" />
                                                                     </SelectTrigger>
                                                                 </FormControl>
                                                                 <SelectContent>
-                                                                    {ragModels.map((m) => (
-                                                                        <SelectItem key={m.id} value={m.name}>
-                                                                            <div className="flex flex-col">
-                                                                                <span className="text-sm font-medium">{m.displayName || m.name}</span>
-                                                                                <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                    {availableProviders.map((p) => (
+                                                                        <SelectItem key={p.configId} value={p.configId}>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{p.providerKey}</Badge>
+                                                                                <span>{p.providerName}</span>
                                                                             </div>
                                                                         </SelectItem>
                                                                     ))}
                                                                 </SelectContent>
                                                             </Select>
-                                                        )}
-                                                    </FormControl>
-                                                </FormItem>
+                                                        </FormItem>
+                                                    )}
+                                                />
+
+                                                <FormField
+                                                    control={form.control}
+                                                    name="ragModel"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <div className="flex items-center justify-between mb-0.5">
+                                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Model Name</FormLabel>
+                                                                <div className="flex items-center gap-2 mr-1">
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                                    <Switch
+                                                                        checked={isManualRag}
+                                                                        onCheckedChange={setIsManualRag}
+                                                                        className="scale-[0.6] data-[state=checked]:bg-primary"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <FormControl>
+                                                                {isManualRag ? (
+                                                                    <div className="relative">
+                                                                        <Input
+                                                                            {...field}
+                                                                            value={field.value || ''}
+                                                                            placeholder="e.g. gpt-4-turbo"
+                                                                            className="h-11 bg-background/50 border-primary/10 pr-10"
+                                                                        />
+                                                                        <Sparkles className="w-4 h-4 text-primary/40 absolute right-3 top-3.5" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <Select
+                                                                        value={field.value || ''}
+                                                                        onValueChange={field.onChange}
+                                                                        disabled={!aiConfigId || loadingRagModels}
+                                                                    >
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="h-11 bg-background/50 border-primary/10">
+                                                                                <SelectValue placeholder={loadingRagModels ? "Loading models..." : "Select Model"} />
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent>
+                                                                            {ragModels.map((m) => (
+                                                                                <SelectItem key={m.id} value={m.name}>
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="text-sm font-medium">{m.displayName || m.name}</span>
+                                                                                        <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                                    </div>
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                )}
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-6 rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden">
-                                                <div className="space-y-5">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <Thermometer className="w-4 h-4 text-orange-500" />
-                                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Temperature</Label>
-                                                        </div>
-                                                        <Badge variant="outline" className="font-mono text-[10px] bg-background">
-                                                            {form.watch('aiParameters.temperature')?.toFixed(1)}
-                                                        </Badge>
-                                                    </div>
-                                                    <Slider
-                                                        value={[form.watch('aiParameters.temperature') || 0.7]}
-                                                        min={0}
-                                                        max={1.2}
-                                                        step={0.1}
-                                                        onValueChange={([v]) => form.setValue('aiParameters.temperature', v)}
-                                                    />
-                                                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                                                        <span>Precise</span>
-                                                        <span>Creative</span>
-                                                    </div>
-                                                </div>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="aiParameters.temperature"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-5">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Thermometer className="w-4 h-4 text-orange-500" />
+                                                                    <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Temperature</FormLabel>
+                                                                </div>
+                                                                <Badge variant="outline" className="font-mono text-[10px] bg-background">
+                                                                    {field.value?.toFixed(1) ?? '0.7'}
+                                                                </Badge>
+                                                            </div>
+                                                            <FormControl>
+                                                                <Slider
+                                                                    value={[field.value ?? 0.7]}
+                                                                    min={0}
+                                                                    max={1.2}
+                                                                    step={0.1}
+                                                                    onValueChange={([v]) => field.onChange(v)}
+                                                                />
+                                                            </FormControl>
+                                                            <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                                                                <span>Precise</span>
+                                                                <span>Creative</span>
+                                                            </div>
+                                                        </FormItem>
+                                                    )}
+                                                />
 
-                                                <div className="space-y-5">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            <Zap className="w-4 h-4 text-yellow-500" />
-                                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Max Tokens</Label>
-                                                        </div>
-                                                        <Badge variant="outline" className="font-mono text-[10px] bg-background">
-                                                            {form.watch('aiParameters.maxTokens')}
-                                                        </Badge>
-                                                    </div>
-                                                    <Slider
-                                                        value={[form.watch('aiParameters.maxTokens') || 1000]}
-                                                        min={256}
-                                                        max={4096}
-                                                        step={128}
-                                                        onValueChange={([v]) => form.setValue('aiParameters.maxTokens', v)}
-                                                    />
-                                                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                                                        <span>Short</span>
-                                                        <span>Long</span>
-                                                    </div>
-                                                </div>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="aiParameters.maxTokens"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-5">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Zap className="w-4 h-4 text-yellow-500" />
+                                                                    <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Max Tokens</FormLabel>
+                                                                </div>
+                                                                <Badge variant="outline" className="font-mono text-[10px] bg-background">
+                                                                    {field.value ?? '1000'}
+                                                                </Badge>
+                                                            </div>
+                                                            <FormControl>
+                                                                <Slider
+                                                                    value={[field.value ?? 1000]}
+                                                                    min={256}
+                                                                    max={4096}
+                                                                    step={128}
+                                                                    onValueChange={([v]) => field.onChange(v)}
+                                                                />
+                                                            </FormControl>
+                                                            <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                                                                <span>Short</span>
+                                                                <span>Long</span>
+                                                            </div>
+                                                        </FormItem>
+                                                    )}
+                                                />
                                             </div>
                                         </div>
 
@@ -541,81 +569,93 @@ export function KbSettingsForm({
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <FormItem>
-                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
-                                                    <Select
-                                                        value={form.watch('embeddingConfigId') || ''}
-                                                        onValueChange={(val) => {
-                                                            form.setValue('embeddingConfigId', val)
-                                                            form.setValue('embeddingModel', '')
-                                                        }}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10 hover:border-emerald-500/30 transition-all">
-                                                                <SelectValue placeholder="Select Provider" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {availableProviders.map((p) => (
-                                                                <SelectItem key={p.configId} value={p.configId}>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-emerald-500/20 text-emerald-600">{p.providerKey}</Badge>
-                                                                        <span>{p.providerName}</span>
-                                                                    </div>
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </FormItem>
-
-                                                <FormItem>
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
-                                                        <div className="flex items-center gap-2 mr-1">
-                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
-                                                            <Switch
-                                                                checked={isManualEmbedding}
-                                                                onCheckedChange={setIsManualEmbedding}
-                                                                className="scale-[0.6] data-[state=checked]:bg-emerald-500"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <FormControl>
-                                                        {isManualEmbedding ? (
-                                                            <div className="relative">
-                                                                <Input
-                                                                    value={form.watch('embeddingModel') || ''}
-                                                                    onChange={(e) => form.setValue('embeddingModel', e.target.value)}
-                                                                    placeholder="e.g. text-embedding-3-small"
-                                                                    className="h-11 bg-background/50 border-emerald-500/10 pr-10"
-                                                                />
-                                                                <Database className="w-4 h-4 text-emerald-500/40 absolute right-3 top-3.5" />
-                                                            </div>
-                                                        ) : (
+                                                <FormField
+                                                    control={form.control}
+                                                    name="embeddingConfigId"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
                                                             <Select
-                                                                value={form.watch('embeddingModel') || ''}
-                                                                onValueChange={(val) => form.setValue('embeddingModel', val)}
-                                                                disabled={!embeddingConfigId || loadingEmbeddingModels}
+                                                                value={field.value || ''}
+                                                                onValueChange={(val) => {
+                                                                    field.onChange(val)
+                                                                    form.setValue('embeddingModel', '')
+                                                                }}
                                                             >
                                                                 <FormControl>
-                                                                    <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10">
-                                                                        <SelectValue placeholder={loadingEmbeddingModels ? "Loading..." : "Select Model"} />
+                                                                    <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10 hover:border-emerald-500/30 transition-all">
+                                                                        <SelectValue placeholder="Select Provider" />
                                                                     </SelectTrigger>
                                                                 </FormControl>
                                                                 <SelectContent>
-                                                                    {embeddingModels.map((m) => (
-                                                                        <SelectItem key={m.id} value={m.name}>
-                                                                            <div className="flex flex-col">
-                                                                                <span className="text-sm font-medium">{m.displayName || m.name}</span>
-                                                                                <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                    {availableProviders.map((p) => (
+                                                                        <SelectItem key={p.configId} value={p.configId}>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-emerald-500/20 text-emerald-600">{p.providerKey}</Badge>
+                                                                                <span>{p.providerName}</span>
                                                                             </div>
                                                                         </SelectItem>
                                                                     ))}
                                                                 </SelectContent>
                                                             </Select>
-                                                        )}
-                                                    </FormControl>
-                                                </FormItem>
+                                                        </FormItem>
+                                                    )}
+                                                />
+
+                                                <FormField
+                                                    control={form.control}
+                                                    name="embeddingModel"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <div className="flex items-center justify-between mb-0.5">
+                                                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
+                                                                <div className="flex items-center gap-2 mr-1">
+                                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                                    <Switch
+                                                                        checked={isManualEmbedding}
+                                                                        onCheckedChange={setIsManualEmbedding}
+                                                                        className="scale-[0.6] data-[state=checked]:bg-emerald-500"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <FormControl>
+                                                                {isManualEmbedding ? (
+                                                                    <div className="relative">
+                                                                        <Input
+                                                                            {...field}
+                                                                            value={field.value || ''}
+                                                                            placeholder="e.g. text-embedding-3-small"
+                                                                            className="h-11 bg-background/50 border-emerald-500/10 pr-10"
+                                                                        />
+                                                                        <Database className="w-4 h-4 text-emerald-500/40 absolute right-3 top-3.5" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <Select
+                                                                        value={field.value || ''}
+                                                                        onValueChange={field.onChange}
+                                                                        disabled={!embeddingConfigId || loadingEmbeddingModels}
+                                                                    >
+                                                                        <FormControl>
+                                                                            <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10">
+                                                                                <SelectValue placeholder={loadingEmbeddingModels ? "Loading models..." : "Select Model"} />
+                                                                            </SelectTrigger>
+                                                                        </FormControl>
+                                                                        <SelectContent>
+                                                                            {embeddingModels.map((m) => (
+                                                                                <SelectItem key={m.id} value={m.name}>
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="text-sm font-medium">{m.displayName || m.name}</span>
+                                                                                        <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                                    </div>
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                )}
+                                                            </FormControl>
+                                                        </FormItem>
+                                                    )}
+                                                />
                                             </div>
                                         </div>
                                     </div>
