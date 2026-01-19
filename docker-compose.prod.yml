@@ -5,7 +5,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: ${DOCKER_USERNAME}/aiwata-backend:latest
+    image: ${IMAGE_PREFIX}/backend:latest
     container_name: aiwata-backend
     restart: unless-stopped
     env_file:
@@ -32,7 +32,7 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL}
-    image: ${DOCKER_USERNAME}/aiwata-web:latest
+    image: ${IMAGE_PREFIX}/web:latest
     container_name: aiwata-web
     restart: unless-stopped
     env_file:
