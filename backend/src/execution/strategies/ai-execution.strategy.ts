@@ -5,6 +5,8 @@ import { AiProvidersService, ChatMessage } from '../../ai-providers/ai-providers
 import { TemplatesService } from '../../templates/templates.service';
 import { Liquid } from 'liquidjs';
 
+import { KBRagService } from '../../knowledge-base/services/kb-rag.service';
+
 @Injectable()
 export class AiExecutionStrategy implements IExecutionStrategy {
   private readonly logger = new Logger(AiExecutionStrategy.name);
@@ -13,6 +15,7 @@ export class AiExecutionStrategy implements IExecutionStrategy {
   constructor(
     private readonly aiProvidersService: AiProvidersService,
     private readonly templatesService: TemplatesService,
+    private readonly kbService: KBRagService,
   ) {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
   }
@@ -60,6 +63,29 @@ export class AiExecutionStrategy implements IExecutionStrategy {
         this.logger.warn(
           `Failed to fetch template ${inputs.templateId} for inclusion: ${error.message}`,
         );
+      }
+    }
+
+    // 0.5 Handle RAG context if Knowledge Base is config
+    if (config.knowledgeBaseId) {
+      this.logger.log(`Performing RAG for KB: ${config.knowledgeBaseId}`);
+      try {
+        const workspaceId = context?.workspaceId || 'default';
+        const ragResults = await this.kbService.query(
+          JSON.stringify(finalInputs), // Query using inputs
+          workspaceId,
+          config.knowledgeBaseId,
+          3, // Limit
+          0.5 // Threshold
+        );
+
+        if (ragResults && ragResults.length > 0) {
+          const contextText = ragResults.map(r => r.content).join('\n\n');
+          finalInputs['context'] = contextText;
+          this.logger.log(`RAG Context Injected (Length: ${contextText.length})`);
+        }
+      } catch (err) {
+        this.logger.warn(`RAG Query failed: ${err.message}`);
       }
     }
 

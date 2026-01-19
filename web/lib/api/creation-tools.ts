@@ -118,6 +118,7 @@ export interface AiExecutionConfig extends BaseExecutionConfig {
     parameters?: Record<string, any>;
     promptTemplate: string;
     includeTemplate?: boolean;
+    knowledgeBaseId?: string;
     useTools?: boolean;
 }
 

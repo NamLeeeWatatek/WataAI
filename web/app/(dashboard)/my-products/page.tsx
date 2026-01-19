@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ProductsGrid } from '@/components/features/products/ProductsGrid';
 import { ProductsTable } from '@/components/features/products/ProductsTable';
 import { Package, LayoutGrid, List } from 'lucide-react';
@@ -38,6 +39,8 @@ export default function MyProductsPage() {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [bulkDeleteAlertOpen, setBulkDeleteAlertOpen] = useState(false);
+
+    const { t } = useTranslation();
 
     const {
         jobs,
@@ -98,7 +101,7 @@ export default function MyProductsPage() {
     return (
         <div className="page-container space-y-6">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight">My Products</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{t('navigation.assetLibrary')}</h1>
                 <p className="text-muted-foreground">Manage and view your generated content and products.</p>
             </div>
 

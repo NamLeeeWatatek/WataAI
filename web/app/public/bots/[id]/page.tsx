@@ -5,7 +5,12 @@ import { useParams } from 'next/navigation'
 
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
-import { MessageCircle, X, Send } from 'lucide-react'
+import { MessageCircle, X, Send, User } from 'lucide-react'
+
+interface GuestIdentity {
+    name: string;
+    phone: string;
+}
 
 export default function PublicBotPage() {
     const params = useParams()
@@ -24,6 +29,12 @@ export default function PublicBotPage() {
     const [isOpen, setIsOpen] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
+    // Identity State
+    const [guestIdentity, setGuestIdentity] = useState<GuestIdentity | null>(null)
+    const [showIdentityForm, setShowIdentityForm] = useState(false)
+    const [identityName, setIdentityName] = useState('')
+    const [identityPhone, setIdentityPhone] = useState('')
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
@@ -38,18 +49,52 @@ export default function PublicBotPage() {
         }
     }, [bot]);
 
+    // Check for existing identity
+    useEffect(() => {
+        if (!isOpen) return;
+        const stored = localStorage.getItem(`guest_identity_${botId}`)
+        if (stored) {
+            try {
+                setGuestIdentity(JSON.parse(stored))
+            } catch (e) {
+                setShowIdentityForm(true)
+            }
+        } else {
+            setShowIdentityForm(true)
+        }
+    }, [isOpen, botId]);
+
+    // Initialize conversation only if identity exists or form is bypassed/optional 
+    // (For this request, we assume mandatory if form is shown)
     useEffect(() => {
         const initConversation = async () => {
+            if (!guestIdentity) return;
+
             try {
                 const data = await createConv({
                     url: window.location.href,
-                    userAgent: navigator.userAgent
+                    userAgent: navigator.userAgent,
+                    guest: guestIdentity // Pass guest info
                 });
                 setConversationId(data.conversationId);
             } catch (err) { }
         };
         initConversation();
-    }, [botId]);
+    }, [botId, guestIdentity]);
+
+    const handleIdentitySubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!identityPhone.trim()) return;
+
+        const identity = {
+            name: identityName,
+            phone: identityPhone
+        };
+
+        localStorage.setItem(`guest_identity_${botId}`, JSON.stringify(identity));
+        setGuestIdentity(identity);
+        setShowIdentityForm(false);
+    }
 
     const handleSend = async () => {
         if (!input.trim() || loading || !conversationId) return
@@ -101,7 +146,9 @@ export default function PublicBotPage() {
                 }
             `}</style>
 
-            { }
+
+
+            {/* Chat Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
@@ -139,7 +186,7 @@ export default function PublicBotPage() {
                 </div>
             </button>
 
-            { }
+            {/* Chat Window */}
             {isOpen && (
                 <div style={{
                     position: 'fixed',
@@ -157,7 +204,7 @@ export default function PublicBotPage() {
                     zIndex: 999998,
                     overflow: 'hidden',
                 }}>
-                    { }
+                    {/* Header */}
                     <div style={{
                         background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
                         color: 'white',
@@ -199,118 +246,206 @@ export default function PublicBotPage() {
                         </button>
                     </div>
 
-                    { }
+                    {/* Content Area */}
                     <div style={{
                         flex: 1,
                         overflowY: 'auto',
-                        padding: '16px',
+                        padding: '0',
                         background: '#f9fafb',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '12px',
+                        position: 'relative'
                     }}>
-                        {messages.map((msg, idx) => (
-                            <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                <div style={{
-                                    maxWidth: '80%',
-                                    padding: '12px 16px',
-                                    borderRadius: msg.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-                                    fontSize: '14px',
-                                    lineHeight: '1.5',
-                                    wordWrap: 'break-word',
-                                    background: msg.role === 'user' ? primaryColor : 'white',
-                                    color: msg.role === 'user' ? 'white' : '#1f2937',
-                                    border: msg.role === 'user' ? 'none' : '1px solid #e5e7eb',
-                                }}>
-                                    <MarkdownRenderer content={msg.content} />
-                                </div>
-                            </div>
-                        ))}
-                        {loading && (
-                            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                <div style={{ padding: '12px 16px', background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                                    <div style={{ display: 'flex', gap: '6px' }}>
-                                        {[0, 1, 2].map(i => (
-                                            <div key={i} style={{
-                                                width: '8px',
-                                                height: '8px',
-                                                background: '#9ca3af',
-                                                borderRadius: '50%',
-                                                animation: 'bounce 1.4s infinite ease-in-out both',
-                                                animationDelay: `${-0.32 + i * 0.16}s`,
-                                            }} />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    { }
-                    <div style={{
-                        padding: '16px',
-                        borderTop: '1px solid #e5e7eb',
-                        background: 'white',
-                        display: 'flex',
-                        gap: '8px',
-                        flexShrink: 0,
-                    }}>
-                        <textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            placeholder={bot.placeholderText || 'Nhập tin nhắn...'}
-                            disabled={loading}
-                            rows={1}
-                            style={{
-                                flex: 1,
-                                padding: '10px 14px',
-                                border: '1px solid #e5e7eb',
-                                borderRadius: '10px',
-                                fontSize: '14px',
-                                outline: 'none',
-                                transition: 'border-color 0.2s',
-                                resize: 'none',
-                                minHeight: '44px',
-                                maxHeight: '120px',
-                                fontFamily: 'inherit'
-                            }}
-                            onFocus={(e) => e.currentTarget.style.borderColor = primaryColor}
-                            onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim() || loading}
-                            style={{
-                                padding: '10px 16px',
-                                background: primaryColor,
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '10px',
-                                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                                fontSize: '14px',
-                                transition: 'opacity 0.2s',
+                        {showIdentityForm ? (
+                            <div style={{
+                                padding: '24px',
                                 display: 'flex',
+                                flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                opacity: loading || !input.trim() ? 0.5 : 1,
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!loading && input.trim()) e.currentTarget.style.opacity = '0.9'
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!loading && input.trim()) e.currentTarget.style.opacity = '1'
-                            }}
-                        >
-                            <Send size={20} />
-                        </button>
+                                height: '100%',
+                                textAlign: 'center'
+                            }}>
+                                <div style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '50%',
+                                    background: `${primaryColor}1a`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: '16px',
+                                    color: primaryColor
+                                }}>
+                                    <User size={32} />
+                                </div>
+                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#1f2937' }}>Welcome!</h4>
+                                <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
+                                    Please enter your phone number to start chatting.
+                                </p>
+                                <form onSubmit={handleIdentitySubmit} style={{ width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Your Name (Optional)"
+                                        value={identityName}
+                                        onChange={(e) => setIdentityName(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #e5e7eb',
+                                            fontSize: '14px',
+                                            color: '#1f2937',
+                                            background: '#ffffff',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone Number (Required)"
+                                        value={identityPhone}
+                                        onChange={(e) => setIdentityPhone(e.target.value)}
+                                        required
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #e5e7eb',
+                                            fontSize: '14px',
+                                            color: '#1f2937',
+                                            background: '#ffffff',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                    <button
+                                        type="submit"
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            background: primaryColor,
+                                            color: 'white',
+                                            border: 'none',
+                                            fontSize: '14px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            marginTop: '8px'
+                                        }}
+                                    >
+                                        Start Chatting
+                                    </button>
+                                </form>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                                {messages.map((msg, idx) => (
+                                    <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                        <div style={{
+                                            maxWidth: '80%',
+                                            padding: '12px 16px',
+                                            borderRadius: msg.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                                            fontSize: '14px',
+                                            lineHeight: '1.5',
+                                            wordWrap: 'break-word',
+                                            background: msg.role === 'user' ? primaryColor : 'white',
+                                            color: msg.role === 'user' ? 'white' : '#1f2937',
+                                            border: msg.role === 'user' ? 'none' : '1px solid #e5e7eb',
+                                        }}>
+                                            <MarkdownRenderer content={msg.content} />
+                                        </div>
+                                    </div>
+                                ))}
+                                {loading && (
+                                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                        <div style={{ padding: '12px 16px', background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                {[0, 1, 2].map(i => (
+                                                    <div key={i} style={{
+                                                        width: '8px',
+                                                        height: '8px',
+                                                        background: '#9ca3af',
+                                                        borderRadius: '50%',
+                                                        animation: 'bounce 1.4s infinite ease-in-out both',
+                                                        animationDelay: `${-0.32 + i * 0.16}s`,
+                                                    }} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+                        )}
                     </div>
+
+                    {/* Footer Input - Hide if identity form is showing */}
+                    {!showIdentityForm && (
+                        <div style={{
+                            padding: '16px',
+                            borderTop: '1px solid #e5e7eb',
+                            background: 'white',
+                            display: 'flex',
+                            gap: '8px',
+                            flexShrink: 0,
+                        }}>
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder={bot.placeholderText || 'Nhập tin nhắn...'}
+                                disabled={loading}
+                                rows={1}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 14px',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '10px',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s',
+                                    resize: 'none',
+                                    minHeight: '44px',
+                                    maxHeight: '120px',
+                                    fontFamily: 'inherit',
+                                    color: '#1f2937',
+                                    background: '#ffffff',
+                                }}
+                                onFocus={(e) => e.currentTarget.style.borderColor = primaryColor}
+                                onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
+                            />
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim() || loading}
+                                style={{
+                                    padding: '10px 16px',
+                                    background: primaryColor,
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '10px',
+                                    cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                                    fontSize: '14px',
+                                    transition: 'opacity 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    opacity: loading || !input.trim() ? 0.5 : 1,
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!loading && input.trim()) e.currentTarget.style.opacity = '0.9'
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!loading && input.trim()) e.currentTarget.style.opacity = '1'
+                                }}
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
