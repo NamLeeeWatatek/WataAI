@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { IExecutionStrategy } from './execution.strategy.interface';
 import { AiExecutionConfig } from '../../creation-tools/domain/creation-tool';
-import { AiProvidersService } from '../../ai-providers/ai-providers.service';
+import { AiProvidersService, ChatMessage } from '../../ai-providers/ai-providers.service';
 import { TemplatesService } from '../../templates/templates.service';
 import { Liquid } from 'liquidjs';
 
@@ -70,17 +70,49 @@ export class AiExecutionStrategy implements IExecutionStrategy {
     );
 
     // 2. Execute via AiProvidersService
-    // This will automatically loop up credentials for the workspace if available,
-    // or fallback to system/env keys.
-    const result = await this.aiProvidersService.chat(
-      prompt,
-      config.model,
-      config.provider,
-      undefined, // apiKey (auto-resolve)
-      context?.workspaceId,
-      undefined, // baseURL (auto-resolve)
-      config.useTools ?? false, // Enable tool usage like Google Search if configured
-    );
+    // Priority: Specific Config ID -> Fallback to Provider Key + Auto-Resolve
+    let result: string;
+
+    if (config.aiConfigId) {
+      // We have a specific config configuration
+      const scope = context?.workspaceId ? 'workspace' : 'user';
+      const scopeId = context?.workspaceId || context?.userId;
+
+      if (!scopeId) {
+        this.logger.warn(
+          'AiExecutionStrategy: aiConfigId provided but no context scope found (neither workspaceId nor userId). Falling back to basic chat logic.',
+        );
+        // Fallback or Error? fallback for now
+        result = await this.aiProvidersService.chat(
+          prompt,
+          config.model,
+          config.provider, // Fallback key
+          undefined,
+          context?.workspaceId,
+        );
+      } else {
+        const messages: ChatMessage[] = [{ role: 'user', content: prompt }];
+        result = await this.aiProvidersService.chatWithHistoryUsingProvider(
+          messages,
+          config.model,
+          config.aiConfigId,
+          scope,
+          scopeId,
+          config.parameters,
+        );
+      }
+    } else {
+      // Legacy behavior: use provider key (e.g. 'openai') and let system resolve
+      result = await this.aiProvidersService.chat(
+        prompt,
+        config.model,
+        config.provider,
+        undefined, // apiKey (auto-resolve)
+        context?.workspaceId,
+        undefined, // baseURL (auto-resolve)
+        config.useTools ?? false, // Enable tool usage like Google Search if configured
+      );
+    }
 
     return {
       provider: config.provider,

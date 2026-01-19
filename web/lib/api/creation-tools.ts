@@ -112,7 +112,8 @@ export interface BaseExecutionConfig {
 
 export interface AiExecutionConfig extends BaseExecutionConfig {
     type: 'ai-generation';
-    provider: 'openai' | 'anthropic' | 'gemini';
+    provider: string;
+    aiConfigId?: string;
     model: string;
     parameters?: Record<string, any>;
     promptTemplate: string;

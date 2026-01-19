@@ -232,16 +232,13 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                         value={formData.aiModelName || undefined}
                         onValueChange={(value) => onChange({ aiModelName: value })}
                       >
-                        <SelectTrigger className="h-11 bg-background/50 font-mono text-sm">
+                        <SelectTrigger className="h-11 bg-background/50 text-sm">
                           <SelectValue placeholder="Chọn model..." />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl shadow-2xl border-none">
+                        <SelectContent className="rounded-xl shadow-xl border-border/40">
                           {availableModels.map((m: any) => (
-                            <SelectItem key={m.id} value={m.id}>
-                              <div className="flex flex-col">
-                                <span className="font-bold">{m.displayName || m.name}</span>
-                                <span className="text-[10px] opacity-50 font-mono">{m.id}</span>
-                              </div>
+                            <SelectItem key={m.id} value={m.name}>
+                              {m.displayName || m.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -264,10 +261,9 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
 
                 <div className="space-y-4 p-5 rounded-2xl border border-border/40 bg-muted/20">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <Brain className="w-4 h-4 text-primary" />
                     <span className="text-sm font-black tracking-tight uppercase">Performance Tuning</span>
                   </div>
-                  <Separator className="bg-border/20" />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <span className="text-xs font-bold">Context Awareness</span>
@@ -281,67 +277,47 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                 </div>
               </div>
 
-              <div className="space-y-10 p-8 rounded-[2rem] border border-border/20 bg-muted/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-                  <Brain className="w-48 h-48" />
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                    Response Creativity
+                  </Label>
+                  <Badge variant="secondary" className="font-mono font-bold px-2 py-0.5 rounded-lg">
+                    {(formData.aiParameters?.temperature ?? 0.7).toFixed(1)}
+                  </Badge>
                 </div>
-
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                      Response Creativity
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <Info className="w-3.5 h-3.5 text-muted-foreground/60 hover:text-purple-500 transition-colors" />
-                          </TooltipTrigger>
-                          <TooltipContent className="rounded-xl p-4 border-border/40 max-w-[280px] bg-background shadow-2xl">
-                            <p className="text-xs font-medium leading-relaxed">
-                              Lower values make the model more <span className="text-purple-500 font-black underline">Precise</span>.
-                              Higher values make it more <span className="text-pink-500 font-black underline">Creative</span>.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </Label>
-                    <Badge className="font-mono font-bold px-2 py-0.5 rounded-lg bg-primary/10 text-primary border-none">
-                      {(formData.aiParameters?.temperature ?? 0.7).toFixed(1)}
-                    </Badge>
-                  </div>
-                  <Slider
-                    value={[formData.aiParameters?.temperature ?? 0.7]}
-                    min={0}
-                    max={2}
-                    step={0.1}
-                    onValueChange={([value]) => onChange({ aiParameters: { ...(formData.aiParameters || { temperature: 0.7, maxTokens: 1000 }), temperature: value } })}
-                    className="cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1 opacity-40">
-                    <span>Precise</span>
-                    <span>Balanced</span>
-                    <span>Creative</span>
-                  </div>
+                <Slider
+                  value={[formData.aiParameters?.temperature ?? 0.7]}
+                  min={0}
+                  max={1.2}
+                  step={0.1}
+                  onValueChange={([value]) => onChange({ aiParameters: { ...(formData.aiParameters || { temperature: 0.7, maxTokens: 1000 }), temperature: value } })}
+                  className="cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1 opacity-40">
+                  <span>Precise</span>
+                  <span>Creative</span>
                 </div>
+              </div>
 
-                <div className="space-y-3.5">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Max Response Length (Tokens)</Label>
-                    <Badge variant="outline" className="font-mono font-bold border-border/40">
-                      {(formData.aiParameters?.maxTokens || 0).toLocaleString()}
-                    </Badge>
-                  </div>
-                  <Input
-                    type="number"
-                    value={formData.aiParameters?.maxTokens || 0}
-                    onChange={(e) => onChange({ aiParameters: { ...(formData.aiParameters || { temperature: 0.7, maxTokens: 1000 }), maxTokens: parseInt(e.target.value) || 0 } })}
-                    max={128000}
-                    min={1}
-                    className="bg-background/40 h-11"
-                  />
-                  <p className="text-[10px] font-medium text-muted-foreground/60 flex items-center gap-1.5 px-1 uppercase tracking-tight">
-                    <Info className="w-3 h-3" />
-                    Maximum generation length per session
-                  </p>
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Max Response Length</Label>
+                  <Badge variant="secondary" className="font-mono font-bold">
+                    {(formData.aiParameters?.maxTokens || 1000).toLocaleString()}
+                  </Badge>
+                </div>
+                <Slider
+                  value={[formData.aiParameters?.maxTokens || 1000]}
+                  min={256}
+                  max={8192}
+                  step={128}
+                  onValueChange={([value]) => onChange({ aiParameters: { ...(formData.aiParameters || { temperature: 0.7, maxTokens: 1000 }), maxTokens: value } })}
+                  className="cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1 opacity-40">
+                  <span>Short</span>
+                  <span>Long</span>
                 </div>
               </div>
             </div>

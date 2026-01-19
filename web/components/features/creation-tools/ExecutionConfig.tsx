@@ -17,6 +17,11 @@ import {
     SelectTrigger,
     SelectValue
 } from '@/components/ui/Select';
+import { Slider } from '@/components/ui/Slider';
+import { Switch } from '@/components/ui/Switch';
+import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
+import { Brain } from 'lucide-react';
+
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check, Plus, X, Box } from 'lucide-react';
@@ -264,78 +269,197 @@ function VariablesHelper({ fields }: { fields: FormField[] }) {
 }
 
 function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onChange: (c: AiExecutionConfig) => void }) {
+    const { userConfigs, isLoading } = useAiProviders();
+    const [isManual, setIsManual] = useState(false);
+
+    const selectedConfig = userConfigs.find(c => c.id === config.aiConfigId || c.providerId === config.provider);
+    const availableModels = selectedConfig?.modelList || [];
+
+    // Ensure parameters exist
+    const parameters = config.parameters || { temperature: 0.7, maxTokens: 1000 };
+
     return (
-        <Card className="border-border/60 bg-card/40">
-            <CardContent className="space-y-5 p-5">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Provider</Label>
-                        <Input
-                            value={config.provider || ''}
-                            onChange={(e) => onChange({ ...config, provider: e.target.value as any })}
-                            placeholder="e.g. openai, anthropic, google"
-                            className="h-10"
-                        />
-                        <p className="text-xs text-muted-foreground">Enter the AI provider key</p>
+        <div className="space-y-6">
+            <Card className="border-border/60 bg-card/40">
+                <CardContent className="space-y-6 p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Brain className="size-4 text-primary" />
+                        <h3 className="text-xs font-bold uppercase tracking-widest">Model Intelligence</h3>
                     </div>
-                    <div className="space-y-2">
-                        <Label>Model</Label>
-                        <Input
-                            value={config.model || ''}
-                            onChange={(e) => onChange({ ...config, model: e.target.value })}
-                            placeholder="e.g. gpt-4o, claude-3-opus"
-                            className="h-10 font-mono text-sm"
-                        />
-                        <p className="text-xs text-muted-foreground">Enter the model name manually</p>
-                    </div>
-                </div>
 
-                <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                        <Label className="flex gap-2 items-center">
-                            Prompt Template
-                            <Badge variant="outline" className="text-xxs font-normal font-mono">LiquidJS Supported</Badge>
-                        </Label>
-                        <TemplateSelector onSelect={(template) => {
-                            if (template) {
-                                onChange({ ...config, promptTemplate: template });
-                            }
-                        }} />
-                    </div>
-                    <div className="relative">
-                        <Textarea
-                            value={config.promptTemplate}
-                            onChange={(e) => onChange({ ...config, promptTemplate: e.target.value })}
-                            className="font-mono text-sm min-h-[200px] resize-y"
-                            placeholder="Write a blog post about {{topic}}..."
-                        />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                        Use <code>{`{{ variable_name }}`}</code> to allow users to inject data from the form.
-                    </p>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">AI Provider Gateway</Label>
+                            <Select
+                                value={config.aiConfigId || ''}
+                                onValueChange={(val) => {
+                                    const cfg = userConfigs.find(c => c.id === val);
+                                    onChange({
+                                        ...config,
+                                        aiConfigId: val,
+                                        provider: cfg?.providerId || config.provider,
+                                        model: cfg?.modelList?.[0] || config.model
+                                    });
+                                }}
+                            >
+                                <SelectTrigger className="h-11 bg-background/50">
+                                    <SelectValue placeholder={isLoading ? "Loading gateways..." : "Select neural gateway"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {userConfigs.map((cfg) => (
+                                        <SelectItem key={cfg.id} value={cfg.id}>
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 uppercase opacity-60">
+                                                    {cfg.providerId}
+                                                </Badge>
+                                                <span className="font-medium text-sm">{cfg.displayName}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                    {userConfigs.length === 0 && !isLoading && (
+                                        <SelectItem value="none" disabled>No gateways configured</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                <div className="flex items-center space-x-3 p-4 rounded-xl border bg-primary/5 border-primary/10">
-                    <Checkbox
-                        id="include-template"
-                        checked={config.includeTemplate}
-                        onCheckedChange={(checked) => onChange({ ...config, includeTemplate: !!checked })}
-                    />
-                    <div className="grid gap-1.5 leading-none">
-                        <Label
-                            htmlFor="include-template"
-                            className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
-                        >
-                            Include Template Content
-                            <Badge variant="secondary" className="text-xxs h-4 px-1">Context</Badge>
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                            Automatically include the selected template's prompt and configuration in the execution payload.
-                        </p>
+                        <div className="space-y-2.5">
+                            <div className="flex justify-between items-center mb-0.5">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">Model Name</Label>
+                                <div className="flex items-center gap-2 mr-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                    <Switch
+                                        checked={isManual}
+                                        onCheckedChange={setIsManual}
+                                        className="scale-[0.6] data-[state=checked]:bg-primary"
+                                    />
+                                </div>
+                            </div>
+                            {isManual ? (
+                                <Input
+                                    value={config.model || ''}
+                                    onChange={(e) => onChange({ ...config, model: e.target.value })}
+                                    placeholder="e.g. gpt-4o, claude-3-opus"
+                                    className="h-11 bg-background/50 font-mono text-sm"
+                                />
+                            ) : (
+                                <Select
+                                    value={config.model || ''}
+                                    onValueChange={(val) => onChange({ ...config, model: val })}
+                                    disabled={!config.aiConfigId && availableModels.length === 0}
+                                >
+                                    <SelectTrigger className="h-11 bg-background/50">
+                                        <SelectValue placeholder="Select Model" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableModels.map((m) => (
+                                            <SelectItem key={m} value={m}>
+                                                <span className="text-sm">{m}</span>
+                                            </SelectItem>
+                                        ))}
+                                        {availableModels.length === 0 && (
+                                            <SelectItem value="none" disabled>Select provider first</SelectItem>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4 px-2">
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Creativity / Temperature</Label>
+                                <Badge variant="secondary" className="font-mono text-[10px] h-5 px-1.5">{parameters.temperature}</Badge>
+                            </div>
+                            <Slider
+                                value={[parameters.temperature]}
+                                min={0}
+                                max={1.2}
+                                step={0.1}
+                                onValueChange={([val]) => onChange({
+                                    ...config,
+                                    parameters: { ...parameters, temperature: val }
+                                })}
+                                className="py-4"
+                            />
+                            <div className="flex justify-between text-[9px] font-bold uppercase text-muted-foreground/40 px-0.5">
+                                <span>Precise</span>
+                                <span>Creative</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Max Response Tokens</Label>
+                                <Badge variant="secondary" className="font-mono text-[10px] h-5 px-1.5">{parameters.maxTokens}</Badge>
+                            </div>
+                            <Slider
+                                value={[parameters.maxTokens]}
+                                min={256}
+                                max={8192}
+                                step={128}
+                                onValueChange={([val]) => onChange({
+                                    ...config,
+                                    parameters: { ...parameters, maxTokens: val }
+                                })}
+                                className="py-4"
+                            />
+                            <div className="flex justify-between text-[9px] font-bold uppercase text-muted-foreground/40 px-0.5">
+                                <span>Short</span>
+                                <span>Long</span>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card/40">
+                <CardContent className="space-y-4 p-6">
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                            <Label className="flex gap-2 items-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                Prompt Template
+                                <Badge variant="outline" className="text-[9px] font-normal font-mono opacity-50">LiquidJS</Badge>
+                            </Label>
+                            <TemplateSelector onSelect={(template) => {
+                                if (template) {
+                                    onChange({ ...config, promptTemplate: template });
+                                }
+                            }} />
+                        </div>
+                        <div className="relative">
+                            <Textarea
+                                value={config.promptTemplate}
+                                onChange={(e) => onChange({ ...config, promptTemplate: e.target.value })}
+                                className="font-mono text-sm min-h-[200px] bg-background/30 border-muted-foreground/10 focus:border-primary/30 transition-all resize-y p-4"
+                                placeholder="Describe how the AI should process the input. Use {{field_name}} to inject user data."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 p-4 rounded-xl border bg-primary/5 border-primary/10">
+                        <Checkbox
+                            id="include-template"
+                            checked={config.includeTemplate}
+                            onCheckedChange={(checked) => onChange({ ...config, includeTemplate: !!checked })}
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                            <Label
+                                htmlFor="include-template"
+                                className="text-sm font-bold leading-none cursor-pointer flex items-center gap-2"
+                            >
+                                Include Template Context
+                                <Badge variant="secondary" className="text-[9px] h-4 px-1">Hybrid</Badge>
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                Merges this prompt with the tool's base configuration for enhanced context.
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     );
 }
 

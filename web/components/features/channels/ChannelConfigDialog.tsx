@@ -5,6 +5,7 @@ import * as z from 'zod'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
 import { Switch } from '@/components/ui/Switch'
+import { Label } from '@/components/ui/Label'
 import {
     Form,
     FormControl,
@@ -177,7 +178,7 @@ export function ChannelConfigDialog({
                                 {/* URLs Section - 2 Columns */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">OAuth Redirect URI</FormLabel>
+                                        <Label className="text-xs font-semibold uppercase text-muted-foreground">OAuth Redirect URI</Label>
                                         <div className="flex items-center gap-2">
                                             <Input readOnly value={redirectUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(redirectUrl)} className="shrink-0">
@@ -187,7 +188,7 @@ export function ChannelConfigDialog({
                                         <p className="text-[10px] text-muted-foreground">Paste into Facebook Login settings.</p>
                                     </div>
                                     <div className="space-y-2">
-                                        <FormLabel className="text-xs font-semibold uppercase text-muted-foreground">Webhook Callback URL</FormLabel>
+                                        <Label className="text-xs font-semibold uppercase text-muted-foreground">Webhook Callback URL</Label>
                                         <div className="flex items-center gap-2">
                                             <Input readOnly value={callbackUrl} className="bg-muted font-mono text-xs truncate h-9" />
                                             <Button type="button" size="icon" variant="outline" onClick={() => copyToClipboard(callbackUrl)} className="shrink-0">

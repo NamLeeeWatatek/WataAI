@@ -113,7 +113,7 @@ export default function BotDetailPage() {
                 name: bot.name,
                 description: bot.description || '',
                 systemPrompt: bot.systemPrompt || '',
-                aiProviderId: bot.aiProviderId || null,
+                aiProviderId: bot.aiConfigId || bot.aiProviderId || null,
                 aiModelName: bot.aiModelName || '',
                 aiParameters: {
                     temperature: bot.aiParameters?.temperature ?? 0.7,
