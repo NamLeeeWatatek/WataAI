@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
+import { ContactEntity } from '../../conversations/infrastructure/persistence/relational/entities/contact.entity';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -45,6 +46,8 @@ export class PublicBotService {
     private readonly conversationRepository: Repository<ConversationEntity>,
     @InjectRepository(MessageEntity)
     private readonly messageRepository: Repository<MessageEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepository: Repository<ContactEntity>,
     private readonly botExecutionService: BotExecutionService,
 
     private readonly widgetVersionService: WidgetVersionService,
@@ -96,7 +99,7 @@ export class PublicBotService {
       const allowed = this.isOriginAllowed(allowedOrigins, origin);
       if (!allowed) {
         this.logger.warn(
-          `Origin ${origin} not allowed for bot ${botId}. Allowed origins: ${allowedOrigins.join(', ')}`,
+          `Origin ${origin} not allowed for bot ${botId}.Allowed origins: ${allowedOrigins.join(', ')} `,
         );
         throw new ForbiddenException('Origin not allowed');
       }
@@ -156,14 +159,69 @@ export class PublicBotService {
       }
     }
 
+    let contactId: string | null = null;
+    const guestPhone = dto.metadata?.guestIdentity?.phone;
+
+    if (guestPhone) {
+      // Rate Limit Check: Max 5 conversations per phone per day
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const conversationCount = await this.conversationRepository
+        .createQueryBuilder('conversation')
+        .where('conversation.botId = :botId', { botId })
+        .andWhere("conversation.metadata -> 'guestIdentity' ->> 'phone' = :phone", { phone: guestPhone })
+        .andWhere('conversation.createdAt >= :today', { today })
+        .getCount();
+
+      if (conversationCount >= 5) {
+        this.logger.warn(`Rate limit exceeded for phone ${guestPhone} on bot ${botId} `);
+        throw new ForbiddenException('You have reached the daily limit for new conversations.');
+      }
+
+      // Find or Create Contact
+      let contact = await this.contactRepository.findOne({
+        where: {
+          phone: guestPhone,
+          workspaceId: bot.workspaceId
+        }
+      });
+
+      if (!contact) {
+        contact = this.contactRepository.create({
+          workspaceId: bot.workspaceId,
+          phone: guestPhone,
+          name: dto.metadata?.guestIdentity?.name || `Guest ${guestPhone.slice(-4)} `,
+          avatar: dto.metadata?.avatar,
+          metadata: {
+            source: 'public-bot-widget',
+            botId: botId,
+            firstSeen: new Date().toISOString()
+          }
+        });
+        await this.contactRepository.save(contact);
+        this.logger.log(`Created new contact ${contact.id} for phone ${guestPhone}`);
+      } else {
+        // Update name if provided and wasn't set or looks like a default
+        if (dto.metadata?.guestIdentity?.name && (!contact.name || contact.name.startsWith('Guest '))) {
+          contact.name = dto.metadata.guestIdentity.name;
+          await this.contactRepository.save(contact);
+        }
+      }
+      contactId = contact.id;
+    }
+
     const conversation = this.conversationRepository.create({
       botId,
       channelType: 'web',
       channelId: null,
       workspaceId: bot.workspaceId,
+      contactId: contactId, // Link to Contact Entity
       metadata: {
         ...dto.metadata,
-        contactName: dto.metadata?.name || null,
+        guestIdentity: dto.metadata?.guestIdentity, // Ensure this is preserved
+        contactName: dto.metadata?.guestIdentity?.name || dto.metadata?.name || null,
+        contactPhone: guestPhone || null, // Top-level access for easier viewing
         contactAvatar: dto.metadata?.avatar || null,
         userId: dto.userId,
         origin,
@@ -177,7 +235,7 @@ export class PublicBotService {
     await this.conversationRepository.save(conversation);
 
     this.logger.log(
-      `Created public conversation ${conversation.id} for bot ${botId} from origin ${origin}`,
+      `Created public conversation ${conversation.id} for bot ${botId} from origin ${origin} (Guest: ${guestPhone || 'anonymous'})`,
     );
 
     return {
@@ -216,7 +274,7 @@ export class PublicBotService {
     await this.messageRepository.save(userMessage);
 
     this.logger.log(
-      `User message saved: ${userMessage.id} in conversation ${conversationId}`,
+      `User message saved: ${userMessage.id} in conversation ${conversationId} `,
     );
 
     const history = await this.messageRepository.find({
@@ -247,7 +305,7 @@ export class PublicBotService {
       // Flatten context for logging or metadata if needed
       context = chatResult.sources.map((s: any) => s.content).join('\n\n');
     } catch (error) {
-      this.logger.error(`AI generation failed: ${error.message}`);
+      this.logger.error(`AI generation failed: ${error.message} `);
       aiContent =
         "I apologize, but I'm experiencing technical difficulties. Please try again later or contact support if the issue persists.";
     }
@@ -271,7 +329,7 @@ export class PublicBotService {
     });
 
     this.logger.log(
-      `Bot response saved: ${botMessage.id} in conversation ${conversationId}`,
+      `Bot response saved: ${botMessage.id} in conversation ${conversationId} `,
     );
 
     return {

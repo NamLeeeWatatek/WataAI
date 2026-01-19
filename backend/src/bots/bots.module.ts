@@ -11,6 +11,7 @@ import {
   ConversationEntity,
   MessageEntity,
 } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
+import { ContactEntity } from '../conversations/infrastructure/persistence/relational/entities/contact.entity';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
 import { BotsService } from './bots.service';
 import { BotsController } from './bots.controller';
@@ -51,6 +52,7 @@ import { WidgetAppearanceController } from './controllers/widget-appearance.cont
       ConversationEntity,
       MessageEntity,
       ChannelEntity,
+      ContactEntity,
     ]),
     forwardRef(() => WorkspacesModule),
     forwardRef(() => AiProvidersModule),
@@ -94,4 +96,4 @@ import { WidgetAppearanceController } from './controllers/widget-appearance.cont
     BotAppearanceService,
   ],
 })
-export class BotsModule {}
+export class BotsModule { }
