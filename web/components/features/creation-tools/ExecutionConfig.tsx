@@ -24,7 +24,7 @@ import { Brain } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check, Plus, X, Box } from 'lucide-react';
+import { Info, AlertTriangle, FileText, Loader2, BookOpen, Sparkles, Globe, Copy, Check, Plus, X, Box, Database } from 'lucide-react';
 import { Search } from '@/components/shared/Search';
 import { Button } from '@/components/ui/Button';
 import {
@@ -35,10 +35,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/Dialog';
 import { templatesApi } from '@/lib/api/templates';
+import { getKnowledgeBases } from '@/lib/api/knowledge-base';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { KnowledgeBase } from '@/lib/types/knowledge-base';
 
 
 interface ExecutionConfigProps {
@@ -416,6 +418,28 @@ function AiConfigEditor({ config, onChange }: { config: AiExecutionConfig, onCha
 
             <Card className="border-border/60 bg-card/40">
                 <CardContent className="space-y-4 p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Database className="size-4 text-primary" />
+                        <h3 className="text-xs font-bold uppercase tracking-widest">Knowledge Context</h3>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                            Knowledge Base Source
+                        </Label>
+                        <KbSelector
+                            value={config.knowledgeBaseId}
+                            onChange={(kbId) => onChange({ ...config, knowledgeBaseId: kbId })}
+                        />
+                        <p className="text-[10px] text-muted-foreground ml-1">
+                            Select a knowledge base to provide context for AI generation. The AI will use RAG to retrieve relevant information.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-border/60 bg-card/40">
+                <CardContent className="space-y-4 p-6">
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
                             <Label className="flex gap-2 items-center text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -776,5 +800,40 @@ function WorkflowConfigEditor({ config, onChange }: { config: any, onChange: (c:
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+function KbSelector({ value, onChange }: { value?: string, onChange: (val?: string) => void }) {
+    const { data: kbsResponse, isLoading } = useQuery({
+        queryKey: ['knowledge-bases-simple'],
+        queryFn: () => getKnowledgeBases({ page: 1, limit: 100 })
+    });
+
+    const kbs: KnowledgeBase[] = Array.isArray(kbsResponse)
+        ? kbsResponse
+        : (kbsResponse as any)?.data || [];
+
+    return (
+        <Select
+            value={value || 'none'}
+            onValueChange={(val) => onChange(val === 'none' ? undefined : val)}
+        >
+            <SelectTrigger className="h-11 bg-background/50">
+                <SelectValue placeholder={isLoading ? "Loading knowledge bases..." : "Select Knowledge Base (Optional)"} />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="none">
+                    <span className="text-muted-foreground italic">No Knowledge Base (Pure Generative)</span>
+                </SelectItem>
+                {kbs.map((kb: KnowledgeBase) => (
+                    <SelectItem key={kb.id} value={kb.id}>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: kb.color || '#3b82f6' }} />
+                            <span>{kb.name}</span>
+                        </div>
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
     );
 }
