@@ -41,7 +41,7 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) {}
+  ) { }
 
   async executePreview(
     toolId: string,
@@ -353,23 +353,49 @@ export class CreationJobsService {
     let imageUrl = '';
 
     if (job.outputData) {
-      if (typeof job.outputData.content === 'string') {
-        message = job.outputData.content;
-      } else if (typeof job.outputData.text === 'string') {
-        message = job.outputData.text;
+      const output = job.outputData as Record<string, any>;
+
+      // 1. Detect Image URL
+      if (typeof output.imageUrl === 'string') {
+        imageUrl = output.imageUrl;
+      } else if (typeof output.image === 'string') {
+        imageUrl = output.image;
+      } else if (typeof output.url === 'string' && output.url.startsWith('http')) {
+        imageUrl = output.url;
+      } else {
+        // Look for any field that looks like a URL pointing to an image or temp file
+        const possibleUrl = Object.values(output).find(
+          (v) =>
+            typeof v === 'string' &&
+            v.startsWith('http') &&
+            (v.match(/\.(jpeg|jpg|gif|png|webp)$/i) ||
+              v.includes('tempfile') ||
+              v.includes('storage')),
+        );
+        if (possibleUrl) imageUrl = possibleUrl as string;
+      }
+
+      // 2. Extract Message
+      if (typeof output.content === 'string') {
+        message = output.content;
+      } else if (typeof output.text === 'string') {
+        message = output.text;
       } else if (typeof job.outputData === 'string') {
         message = job.outputData;
       } else {
-        // Fallback: try to stringify or join values
-        message = Object.values(job.outputData)
-          .filter((v) => typeof v === 'string')
+        // Fallback: join strings but skip system info and already detected image URL
+        const skipKeywords = ['id', 'status', 'success', 'error', 'execution'];
+        message = Object.entries(output)
+          .filter(([key, val]) => {
+            if (typeof val !== 'string' || !val.trim()) return false;
+            if (val === imageUrl) return false;
+            if (skipKeywords.some((k) => key.toLowerCase().includes(k)))
+              return false;
+            if (val.toLowerCase() === 'success') return false;
+            return true;
+          })
+          .map(([_, val]) => val)
           .join('\n');
-      }
-
-      if (typeof job.outputData.imageUrl === 'string') {
-        imageUrl = job.outputData.imageUrl;
-      } else if (typeof job.outputData.image === 'string') {
-        imageUrl = job.outputData.image;
       }
     }
 

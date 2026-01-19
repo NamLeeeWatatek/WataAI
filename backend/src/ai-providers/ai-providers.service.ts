@@ -268,11 +268,13 @@ export class AiProvidersService {
     providerConfigId?: string,
     apiKey?: string,
     baseUrl?: string,
+    options?: Record<string, any>,
   ): Promise<{
     providerKey: string;
     apiKey: string;
     baseUrl?: string;
     modelName: string;
+    options?: Record<string, any>;
   }> {
     const {
       name: modelName,
@@ -288,6 +290,7 @@ export class AiProvidersService {
     let providerKey = '';
     let finalsApiKey = apiKey || '';
     let finalBaseUrl = baseUrl;
+    let finalOptions = options || {};
 
     if (finalConfigId && finalOwnerId && finalOwnerType) {
       let config: UserAiProviderConfig | WorkspaceAiProviderConfig | null =
@@ -308,6 +311,10 @@ export class AiProvidersService {
         providerKey = config.provider.key.toLowerCase();
         finalsApiKey = (config.config.apiKey as string) || finalsApiKey;
         finalBaseUrl = (config.config.baseUrl as string) || finalBaseUrl;
+        finalOptions = {
+          ...config.config.aiParameters,
+          ...finalOptions,
+        };
       }
     }
 
@@ -337,6 +344,7 @@ export class AiProvidersService {
       apiKey: finalsApiKey,
       baseUrl: finalBaseUrl,
       modelName,
+      options: finalOptions,
     };
   }
 
@@ -599,6 +607,7 @@ export class AiProvidersService {
     providerConfigId: string,
     scope: 'user' | 'workspace',
     scopeId: string,
+    options?: Record<string, any>,
   ): Promise<string> {
     let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
 
@@ -626,7 +635,15 @@ export class AiProvidersService {
       | string
       | undefined;
 
-    return this.dispatchChat(providerKey, messages, model, apiKey, baseUrl);
+    return this.dispatchChat(
+      providerKey,
+      messages,
+      model,
+      apiKey,
+      baseUrl,
+      undefined,
+      { ...config.config?.aiParameters, ...options },
+    );
   }
 
   private async dispatchChat(
@@ -636,6 +653,7 @@ export class AiProvidersService {
     apiKey: string,
     baseUrl?: string,
     useTools?: boolean,
+    options?: Record<string, any>,
   ): Promise<string> {
     if (providerKey === 'google') {
       // 'gemini' is normalized to 'google' by resolveProviderKey
@@ -644,14 +662,16 @@ export class AiProvidersService {
         model,
         apiKey,
         useTools,
+        options,
       );
     }
-    if (providerKey === 'openai') {
+    if (providerKey === 'openai' || providerKey === 'custom') {
       return this.aiModelService.chatWithOpenAIHistory(
         messages,
         model,
         apiKey,
         baseUrl,
+        options,
       );
     }
     if (providerKey === 'anthropic') {
@@ -659,6 +679,7 @@ export class AiProvidersService {
         messages,
         model,
         apiKey,
+        options,
       );
     }
     if (providerKey === 'ollama') {
@@ -667,6 +688,7 @@ export class AiProvidersService {
         model,
         baseUrl,
         apiKey,
+        options,
       );
     }
     if (providerKey === 'azure') {
@@ -674,16 +696,8 @@ export class AiProvidersService {
         messages,
         model,
         apiKey,
-        baseUrl, // maps to endpoint
-      );
-    }
-    if (providerKey === 'custom') {
-      // Re-use OpenAI logic for generic OpenAI-compatible providers (vLLM, etc)
-      return this.aiModelService.chatWithOpenAIHistory(
-        messages,
-        model,
-        apiKey,
         baseUrl,
+        options,
       );
     }
 
@@ -698,17 +712,20 @@ export class AiProvidersService {
     workspaceId?: string,
     baseUrl?: string,
     useTools?: boolean,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const {
       providerKey,
       apiKey: finalApiKey,
       baseUrl: finalBaseUrl,
       modelName,
+      options: finalOptions,
     } = await this.resolveConfigParams(
       model,
       providerConfigId,
       apiKey,
       baseUrl,
+      options,
     );
 
     const messages = [{ role: 'user', content: prompt } as ChatMessage];
@@ -720,6 +737,7 @@ export class AiProvidersService {
       finalApiKey,
       finalBaseUrl,
       useTools,
+      finalOptions,
     );
   }
 
@@ -729,17 +747,20 @@ export class AiProvidersService {
     providerConfigId?: string,
     apiKey?: string,
     baseUrl?: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     const {
       providerKey,
       apiKey: finalApiKey,
       baseUrl: finalBaseUrl,
       modelName,
+      options: finalOptions,
     } = await this.resolveConfigParams(
       model,
       providerConfigId,
       apiKey,
       baseUrl,
+      options,
     );
 
     return this.dispatchChatStream(
@@ -748,6 +769,8 @@ export class AiProvidersService {
       modelName,
       finalApiKey,
       finalBaseUrl,
+      undefined, // useTools not supported here
+      finalOptions,
     );
   }
 
@@ -757,6 +780,7 @@ export class AiProvidersService {
     providerConfigId: string,
     scope: 'user' | 'workspace',
     scopeId: string,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     let config: UserAiProviderConfig | WorkspaceAiProviderConfig;
 
@@ -790,6 +814,8 @@ export class AiProvidersService {
       model,
       apiKey,
       baseUrl,
+      undefined,
+      { ...config.config?.aiParameters, ...options },
     );
   }
 
@@ -800,6 +826,7 @@ export class AiProvidersService {
     apiKey: string,
     baseUrl?: string,
     useTools?: boolean,
+    options?: Record<string, any>,
   ): Promise<AsyncGenerator<string>> {
     if (providerKey === 'google') {
       return this.aiModelService.chatWithGoogleStream(
@@ -807,14 +834,16 @@ export class AiProvidersService {
         model,
         apiKey,
         useTools,
+        options,
       );
     }
-    if (providerKey === 'openai') {
+    if (providerKey === 'openai' || providerKey === 'custom') {
       return this.aiModelService.chatWithOpenAIStream(
         messages,
         model,
         apiKey,
         baseUrl,
+        options,
       );
     }
     if (providerKey === 'anthropic') {
@@ -822,6 +851,7 @@ export class AiProvidersService {
         messages,
         model,
         apiKey,
+        options,
       );
     }
     if (providerKey === 'ollama') {
@@ -830,6 +860,7 @@ export class AiProvidersService {
         model,
         baseUrl,
         apiKey,
+        options,
       );
     }
     if (providerKey === 'azure') {
@@ -838,14 +869,7 @@ export class AiProvidersService {
         model,
         apiKey,
         baseUrl,
-      );
-    }
-    if (providerKey === 'custom') {
-      return this.aiModelService.chatWithOpenAIStream(
-        messages,
-        model,
-        apiKey,
-        baseUrl,
+        options,
       );
     }
 

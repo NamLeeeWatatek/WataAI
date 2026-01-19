@@ -46,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) { }
+  ) {}
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);

@@ -17,11 +17,17 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { Label } from '@/components/ui/Label'
+import { Badge } from '@/components/ui/Badge'
+import { Slider } from '@/components/ui/Slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip'
+import { Separator } from '@/components/ui/Separator'
+import { Spinner } from '@/components/ui/Spinner'
 import type { KnowledgeBase } from '@/lib/types/knowledge-base'
 import { aiProvidersApi } from '@/lib/api/ai-providers'
 import type { AiModel } from '@/lib/types/ai-provider'
 import { handleFormError } from '@/lib/utils/form-errors'
-import { AlertCircle, BrainCircuit, ScanFace, Sliders, Database, Save, X } from 'lucide-react'
+import { AlertCircle, BrainCircuit, ScanFace, Sliders, Database, Save, X, Cpu, Info, Sparkles, Thermometer, Zap } from 'lucide-react'
 
 const kbFormSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -35,6 +41,10 @@ const kbFormSchema = z.object({
     useSystemAI: z.boolean().optional(),
     chunkSize: z.number().min(100, 'Chunk size must be at least 100').max(10000),
     chunkOverlap: z.number().min(0, 'Overlap cannot be negative').max(1000),
+    aiParameters: z.object({
+        temperature: z.number().min(0).max(2),
+        maxTokens: z.number().min(1).max(128000),
+    }),
 })
 
 export type KbFormValues = z.infer<typeof kbFormSchema>
@@ -63,6 +73,8 @@ export function KbSettingsForm({
     const [loadingRagModels, setLoadingRagModels] = useState(false)
     const [embeddingModels, setEmbeddingModels] = useState<AiModel[]>([])
     const [loadingEmbeddingModels, setLoadingEmbeddingModels] = useState(false)
+    const [isManualRag, setIsManualRag] = useState(false)
+    const [isManualEmbedding, setIsManualEmbedding] = useState(false)
 
     const form = useForm<KbFormValues>({
         resolver: zodResolver(kbFormSchema),
@@ -76,8 +88,12 @@ export function KbSettingsForm({
             embeddingConfigId: initialData?.embeddingConfigId || '',
             embeddingModel: initialData?.embeddingModel || '',
             useSystemAI: initialData?.useSystemAI || false,
-            chunkSize: initialData?.chunkSize ?? 1000,
-            chunkOverlap: initialData?.chunkOverlap ?? 200,
+            chunkSize: initialData?.chunkSize ?? 800,
+            chunkOverlap: initialData?.chunkOverlap ?? 150,
+            aiParameters: {
+                temperature: initialData?.aiParameters?.temperature ?? 0.7,
+                maxTokens: initialData?.aiParameters?.maxTokens ?? 1000,
+            },
         },
     })
 
@@ -99,8 +115,12 @@ export function KbSettingsForm({
                 embeddingConfigId: initialData.embeddingConfigId || '',
                 embeddingModel: initialData.embeddingModel || '',
                 useSystemAI: initialData.useSystemAI || false,
-                chunkSize: initialData.chunkSize ?? 1000,
-                chunkOverlap: initialData.chunkOverlap ?? 200,
+                chunkSize: initialData.chunkSize ?? 800,
+                chunkOverlap: initialData.chunkOverlap ?? 150,
+                aiParameters: {
+                    temperature: initialData.aiParameters?.temperature ?? 0.7,
+                    maxTokens: initialData.aiParameters?.maxTokens ?? 1000,
+                },
             })
         }
     }, [initialData, form])
@@ -350,28 +370,24 @@ export function KbSettingsForm({
 
                             {/* TAB 2: INTELLIGENCE */}
                             <TabsContent value="intelligence" className="space-y-8 mt-0 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
-
                                 <FormField
                                     control={form.control}
                                     name="useSystemAI"
                                     render={({ field }) => (
-                                        <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-muted/30 space-y-0">
+                                        <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-muted/30 space-y-0 border-indigo-500/10">
                                             <div className="space-y-1">
                                                 <FormLabel className="text-sm font-bold flex items-center gap-2">
-                                                    <BrainCircuit className="w-4 h-4 text-indigo-500" />
+                                                    <Cpu className="w-4 h-4 text-indigo-500" />
                                                     Use System Default AI
                                                 </FormLabel>
                                                 <p className="text-[11px] text-muted-foreground font-medium pr-4">
-                                                    Automatically use the system-configured AI models and keys. No personal API key required.
+                                                    Automatically use the system-wide AI settings. Highly recommended for most users.
                                                 </p>
                                             </div>
                                             <FormControl>
                                                 <Switch
                                                     checked={field.value}
-                                                    onCheckedChange={(val) => {
-                                                        field.onChange(val);
-                                                        // clear others if enabled? Optional.
-                                                    }}
+                                                    onCheckedChange={field.onChange}
                                                     className="data-[state=checked]:bg-indigo-500"
                                                 />
                                             </FormControl>
@@ -379,153 +395,242 @@ export function KbSettingsForm({
                                     )}
                                 />
 
-                                {form.watch('useSystemAI') ? (
-                                    <div className="p-8 text-center border rounded-xl border-dashed bg-muted/10">
-                                        <div className="mx-auto w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mb-4">
-                                            <BrainCircuit className="w-6 h-6 text-indigo-500" />
-                                        </div>
-                                        <h3 className="text-sm font-bold text-foreground">System AI Active</h3>
-                                        <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-2">
-                                            The knowledge base utilizes the system's global AI configuration.
-                                            Models are managed by the administrator.
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <>
-                                        {/* RAG Section */}
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-                                                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                                                    <BrainCircuit className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Generation Model</h3>
-                                                    <p className="text-[10px] text-muted-foreground font-medium">Powering the "Chat" capability</p>
-                                                </div>
+                                {!form.watch('useSystemAI') && (
+                                    <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
+                                        {/* Generation Settings */}
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-2 pb-2 border-b border-primary/10">
+                                                <BrainCircuit className="w-4 h-4 text-primary" />
+                                                <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Generation Intelligence</h3>
                                             </div>
 
-                                            <div className="grid grid-cols-1 gap-4 p-4 border rounded-xl bg-background/50 relative overflow-hidden group hover:border-indigo-500/30 transition-colors">
-                                                <div className="absolute top-0 right-0 p-2 opacity-5 font-black text-6xl text-indigo-500 pointer-events-none select-none">RAG</div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
+                                                    <Select
+                                                        value={form.watch('aiConfigId') || ''}
+                                                        onValueChange={(val) => {
+                                                            form.setValue('aiConfigId', val)
+                                                            form.setValue('ragModel', '')
+                                                        }}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-11 bg-background/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
+                                                                <SelectValue placeholder="Select Provider" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {availableProviders.map((p) => (
+                                                                <SelectItem key={p.configId} value={p.configId}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{p.providerKey}</Badge>
+                                                                        <span>{p.providerName}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name="aiConfigId"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
-                                                            <Select value={field.value || ""} onValueChange={(val) => {
-                                                                const currentVal = form.getValues('aiConfigId');
-                                                                field.onChange(val);
-                                                                if (val !== currentVal && currentVal) form.setValue('ragModel', '');
-                                                            }}>
+                                                <FormItem>
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Model Name</FormLabel>
+                                                        <div className="flex items-center gap-2 mr-1">
+                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                            <Switch
+                                                                checked={isManualRag}
+                                                                onCheckedChange={setIsManualRag}
+                                                                className="scale-[0.6] data-[state=checked]:bg-primary"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <FormControl>
+                                                        {isManualRag ? (
+                                                            <div className="relative">
+                                                                <Input
+                                                                    value={form.watch('ragModel') || ''}
+                                                                    onChange={(e) => form.setValue('ragModel', e.target.value)}
+                                                                    placeholder="e.g. gpt-4-turbo"
+                                                                    className="h-11 bg-background/50 border-primary/10 pr-10"
+                                                                />
+                                                                <Sparkles className="w-4 h-4 text-primary/40 absolute right-3 top-3.5" />
+                                                            </div>
+                                                        ) : (
+                                                            <Select
+                                                                value={form.watch('ragModel') || ''}
+                                                                onValueChange={(val) => form.setValue('ragModel', val)}
+                                                                disabled={!aiConfigId || loadingRagModels}
+                                                            >
                                                                 <FormControl>
-                                                                    <SelectTrigger className="h-10 bg-background/80">
-                                                                        <SelectValue>{getProviderName(field.value)}</SelectValue>
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    {availableProviders.map((p) => (
-                                                                        <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="ragModel"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chat Model</FormLabel>
-                                                            <Select value={field.value || ""} onValueChange={field.onChange} disabled={!aiConfigId}>
-                                                                <FormControl>
-                                                                    <SelectTrigger className="h-10 bg-background/80 disabled:opacity-50">
-                                                                        <SelectValue>{field.value || (loadingRagModels ? "Loading..." : "Select Model")}</SelectValue>
+                                                                    <SelectTrigger className="h-11 bg-background/50 border-primary/10">
+                                                                        <SelectValue placeholder={loadingRagModels ? "Loading models..." : "Select Model"} />
                                                                     </SelectTrigger>
                                                                 </FormControl>
                                                                 <SelectContent>
                                                                     {ragModels.map((m) => (
-                                                                        <SelectItem key={m.id || m.name} value={m.name}>{m.displayName || m.name}</SelectItem>
+                                                                        <SelectItem key={m.id} value={m.name}>
+                                                                            <div className="flex flex-col">
+                                                                                <span className="text-sm font-medium">{m.displayName || m.name}</span>
+                                                                                <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                            </div>
+                                                                        </SelectItem>
                                                                     ))}
                                                                 </SelectContent>
                                                             </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                        )}
+                                                    </FormControl>
+                                                </FormItem>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-6 rounded-2xl bg-primary/5 border border-primary/10 relative overflow-hidden">
+                                                <div className="space-y-5">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <Thermometer className="w-4 h-4 text-orange-500" />
+                                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Temperature</Label>
+                                                        </div>
+                                                        <Badge variant="outline" className="font-mono text-[10px] bg-background">
+                                                            {form.watch('aiParameters.temperature')?.toFixed(1)}
+                                                        </Badge>
+                                                    </div>
+                                                    <Slider
+                                                        value={[form.watch('aiParameters.temperature') || 0.7]}
+                                                        min={0}
+                                                        max={1.2}
+                                                        step={0.1}
+                                                        onValueChange={([v]) => form.setValue('aiParameters.temperature', v)}
+                                                    />
+                                                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                                                        <span>Precise</span>
+                                                        <span>Creative</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-5">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            <Zap className="w-4 h-4 text-yellow-500" />
+                                                            <Label className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Max Tokens</Label>
+                                                        </div>
+                                                        <Badge variant="outline" className="font-mono text-[10px] bg-background">
+                                                            {form.watch('aiParameters.maxTokens')}
+                                                        </Badge>
+                                                    </div>
+                                                    <Slider
+                                                        value={[form.watch('aiParameters.maxTokens') || 1000]}
+                                                        min={256}
+                                                        max={4096}
+                                                        step={128}
+                                                        onValueChange={([v]) => form.setValue('aiParameters.maxTokens', v)}
+                                                    />
+                                                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                                                        <span>Short</span>
+                                                        <span>Long</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Embedding Section */}
-                                        <div className="space-y-4">
-                                            <div className="flex items-center gap-2 pb-2 border-b border-border/50">
-                                                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                                    <Database className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Embedding Model</h3>
-                                                    <p className="text-[10px] text-muted-foreground font-medium">Converting text to vectors</p>
-                                                </div>
+                                        <Separator className="bg-primary/5" />
+
+                                        {/* Vector Settings */}
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-2 pb-2 border-b border-emerald-500/10">
+                                                <Database className="w-4 h-4 text-emerald-500" />
+                                                <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Vector Intelligence</h3>
                                             </div>
 
-                                            <div className="grid grid-cols-1 gap-4 p-4 border rounded-xl bg-background/50 relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
-                                                <div className="absolute top-0 right-0 p-2 opacity-5 font-black text-6xl text-emerald-500 pointer-events-none select-none">VEC</div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <FormItem>
+                                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
+                                                    <Select
+                                                        value={form.watch('embeddingConfigId') || ''}
+                                                        onValueChange={(val) => {
+                                                            form.setValue('embeddingConfigId', val)
+                                                            form.setValue('embeddingModel', '')
+                                                        }}
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10 hover:border-emerald-500/30 transition-all">
+                                                                <SelectValue placeholder="Select Provider" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {availableProviders.map((p) => (
+                                                                <SelectItem key={p.configId} value={p.configId}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-emerald-500/20 text-emerald-600">{p.providerKey}</Badge>
+                                                                        <span>{p.providerName}</span>
+                                                                    </div>
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </FormItem>
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name="embeddingConfigId"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
-                                                            <Select value={field.value || ""} onValueChange={(val) => {
-                                                                const currentVal = form.getValues('embeddingConfigId');
-                                                                field.onChange(val);
-                                                                if (val !== currentVal && currentVal) form.setValue('embeddingModel', '');
-                                                            }}>
+                                                <FormItem>
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
+                                                        <div className="flex items-center gap-2 mr-1">
+                                                            <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                            <Switch
+                                                                checked={isManualEmbedding}
+                                                                onCheckedChange={setIsManualEmbedding}
+                                                                className="scale-[0.6] data-[state=checked]:bg-emerald-500"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <FormControl>
+                                                        {isManualEmbedding ? (
+                                                            <div className="relative">
+                                                                <Input
+                                                                    value={form.watch('embeddingModel') || ''}
+                                                                    onChange={(e) => form.setValue('embeddingModel', e.target.value)}
+                                                                    placeholder="e.g. text-embedding-3-small"
+                                                                    className="h-11 bg-background/50 border-emerald-500/10 pr-10"
+                                                                />
+                                                                <Database className="w-4 h-4 text-emerald-500/40 absolute right-3 top-3.5" />
+                                                            </div>
+                                                        ) : (
+                                                            <Select
+                                                                value={form.watch('embeddingModel') || ''}
+                                                                onValueChange={(val) => form.setValue('embeddingModel', val)}
+                                                                disabled={!embeddingConfigId || loadingEmbeddingModels}
+                                                            >
                                                                 <FormControl>
-                                                                    <SelectTrigger className="h-10 bg-background/80">
-                                                                        <SelectValue>{getProviderName(field.value)}</SelectValue>
-                                                                    </SelectTrigger>
-                                                                </FormControl>
-                                                                <SelectContent>
-                                                                    {availableProviders.map((p) => (
-                                                                        <SelectItem key={p.configId} value={p.configId || ''}>{p.providerName}</SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="embeddingModel"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
-                                                            <Select value={field.value || ""} onValueChange={field.onChange} disabled={!embeddingConfigId}>
-                                                                <FormControl>
-                                                                    <SelectTrigger className="h-10 bg-background/80 disabled:opacity-50">
-                                                                        <SelectValue>{field.value || (loadingEmbeddingModels ? "Loading..." : "Select Model")}</SelectValue>
+                                                                    <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10">
+                                                                        <SelectValue placeholder={loadingEmbeddingModels ? "Loading..." : "Select Model"} />
                                                                     </SelectTrigger>
                                                                 </FormControl>
                                                                 <SelectContent>
                                                                     {embeddingModels.map((m) => (
-                                                                        <SelectItem key={m.id || m.name} value={m.name}>{m.displayName || m.name}</SelectItem>
+                                                                        <SelectItem key={m.id} value={m.name}>
+                                                                            <div className="flex flex-col">
+                                                                                <span className="text-sm font-medium">{m.displayName || m.name}</span>
+                                                                                <span className="text-[9px] text-muted-foreground truncate">{m.id}</span>
+                                                                            </div>
+                                                                        </SelectItem>
                                                                     ))}
                                                                 </SelectContent>
                                                             </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                        )}
+                                                    </FormControl>
+                                                </FormItem>
                                             </div>
                                         </div>
-                                    </>
+                                    </div>
+                                )}
+
+                                {form.watch('useSystemAI') && (
+                                    <div className="p-12 text-center border-2 border-dashed rounded-3xl bg-indigo-50/30 dark:bg-indigo-950/10 border-indigo-500/20 animate-in zoom-in-95 duration-500">
+                                        <div className="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500 to-primary rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/20 rotate-3">
+                                            <Sparkles className="w-8 h-8 text-white animate-pulse" />
+                                        </div>
+                                        <h3 className="text-lg font-black text-foreground mb-2">System Intelligence Active</h3>
+                                        <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                                            This engine is utilizing the global WataAI brain. Settings are optimized automatically for maximum performance and accuracy.
+                                        </p>
+                                    </div>
                                 )}
                             </TabsContent>
 

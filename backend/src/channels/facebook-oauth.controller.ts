@@ -38,7 +38,7 @@ export class FacebookOAuthController {
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Get('oauth/url')
   @ApiBearerAuth()

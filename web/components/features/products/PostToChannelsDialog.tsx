@@ -67,7 +67,7 @@ export function PostToChannelsDialog({
                 // We'll support scheduling in the future, for now it's immediate
             });
 
-            toast.success("Content scheduled for posting successfully!");
+            toast.success("Content posted successfully!");
             onOpenChange(false);
             setSelectedChannels([]);
         } catch (error: any) {

@@ -48,6 +48,13 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   ragModel?: string | null;
 
   @ApiProperty({ nullable: true })
+  @Column({ name: 'ai_parameters', type: 'jsonb', nullable: true })
+  aiParameters?: {
+    temperature?: number;
+    maxTokens?: number;
+  } | null;
+
+  @ApiProperty({ nullable: true })
   @Column({ name: 'embedding_config_id', type: 'uuid', nullable: true })
   @Index()
   embeddingConfigId?: string | null;
@@ -65,10 +72,10 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   })
   embeddingModel?: string | null;
 
-  @Column({ name: 'chunk_size', type: 'int', default: 1000 })
+  @Column({ name: 'chunk_size', type: 'int', default: 800 })
   chunkSize: number;
 
-  @Column({ name: 'chunk_overlap', type: 'int', default: 200 })
+  @Column({ name: 'chunk_overlap', type: 'int', default: 150 })
   chunkOverlap: number;
 
   @Column({ name: 'total_documents', type: 'int', default: 0 })
