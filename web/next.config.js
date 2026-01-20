@@ -22,7 +22,25 @@ const nextConfig = {
       // Basic CSP for dev; loosen as needed for analytics, fonts, etc.
       // In dev we avoid strict CSP to reduce friction
     ]
+
+    const publicBotHeaders = [
+      // Allow public bots to be embedded in iframes from any origin
+      { key: 'X-Frame-Options', value: 'ALLOWALL' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      // Restrict script sources to prevent unauthorized scripts
+      {
+        key: 'Content-Security-Policy',
+        value: "script-src 'self' 'unsafe-inline' 'unsafe-eval'; object-src 'none'; frame-ancestors *;"
+      },
+    ]
+
     return [
+      {
+        source: '/public/bots/:path*',
+        headers: publicBotHeaders,
+      },
       {
         source: '/:path*',
         headers: securityHeaders,
