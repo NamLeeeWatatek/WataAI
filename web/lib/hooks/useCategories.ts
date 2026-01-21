@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { categoriesApi, Category } from '@/lib/api/categories'
 import { CACHE_TIMES } from '@/lib/constants/app'
 
@@ -7,6 +7,7 @@ export const categoryKeys = {
   all: ['categories'] as const,
   lists: () => [...categoryKeys.all, 'list'] as const,
   list: (entityType: string) => [...categoryKeys.lists(), entityType] as const,
+  infinite: (entityType: string) => [...categoryKeys.lists(), 'infinite', entityType] as const,
 }
 
 export function useCategories(entityType: string) {
@@ -20,6 +21,19 @@ export function useCategories(entityType: string) {
     gcTime: CACHE_TIMES.LONG,
     enabled: !!entityType,
   })
+}
+
+export function useInfiniteCategories(entityType: string, limit = 10) {
+  return useInfiniteQuery({
+    queryKey: categoryKeys.infinite(entityType),
+    queryFn: ({ pageParam = 1 }) =>
+      categoriesApi.findAll({ type: entityType, limit, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.hasNextPage ? allPages.length + 1 : undefined;
+    },
+    enabled: !!entityType,
+  });
 }
 
 export function useAllCategories() {

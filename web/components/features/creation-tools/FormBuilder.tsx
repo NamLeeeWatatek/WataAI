@@ -248,7 +248,20 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                             }
                                             onChange({ ...config, steps: newSteps })
                                         }}
-                                        availableSteps={steps}
+                                        availableSteps={steps.slice(0, activeStepIndex).map(s => ({
+                                            id: s.id,
+                                            title: s.title,
+                                            fields: s.layout?.rows?.flatMap(r =>
+                                                r.zones.flatMap(z =>
+                                                    z.fieldRows.flatMap(fr => fr.fields)
+                                                )
+                                            ) || []
+                                        }))}
+                                        currentFields={currentStep.layout?.rows?.flatMap(r =>
+                                            r.zones.flatMap(z =>
+                                                z.fieldRows.flatMap(fr => fr.fields)
+                                            )
+                                        ) || []}
                                     />
                                 </div>
                             </div>

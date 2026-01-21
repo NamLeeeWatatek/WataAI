@@ -25,6 +25,7 @@ export interface UnifiedFileUploadProps {
     className?: string;
     description?: string;
     preview?: boolean;
+    aspectRatio?: number;
 }
 
 export function UnifiedFileUpload({
@@ -38,7 +39,8 @@ export function UnifiedFileUpload({
     bucket = 'images',
     className,
     description,
-    preview = true
+    preview = true,
+    aspectRatio
 }: UnifiedFileUploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [dragActive, setDragActive] = useState(false);
@@ -189,7 +191,7 @@ export function UnifiedFileUpload({
                 onDrop={handleDrop}
             >
                 {coverUrl ? (
-                    <AspectRatio ratio={21 / 9}>
+                    <AspectRatio ratio={aspectRatio || 2}>
                         <div className="relative w-full h-full">
                             {coverUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? (
                                 <video src={coverUrl} className="w-full h-full object-cover" controls />
@@ -237,7 +239,8 @@ export function UnifiedFileUpload({
                     </AspectRatio>
                 ) : (
                     <div
-                        className="flex flex-col items-center justify-center aspect-[21/9] cursor-pointer"
+                        className="flex flex-col items-center justify-center cursor-pointer"
+                        style={{ aspectRatio: (aspectRatio || 2).toString() }}
                         onClick={() => !disabled && fileInputRef.current?.click()}
                     >
                         {uploading ? (

@@ -20,10 +20,8 @@ interface ExecutionConfigEditorProps {
     stepId: string
     execution?: StepExecutionConfig
     onChange: (execution?: StepExecutionConfig) => void
-    availableSteps: Array<{ id: string; title: string }>
-    // We assume current step fields are also passed or can be inferred, 
-    // but for now we'll use structure similar to validation contexts
-    currentFields?: any[]
+    availableSteps: Array<{ id: string; title: string, fields?: string[] }>
+    currentFields?: string[]
 }
 
 export function ExecutionConfigEditor({
@@ -83,25 +81,38 @@ export function ExecutionConfigEditor({
     }
 
     const copyAllVariables = () => {
-        const variables = {
+        const payload: Record<string, any> = {
             globals: {
                 timestamp: '{{timestamp}}',
                 user_id: '{{user.id}}',
                 tool_id: '{{tool.id}}'
-            },
-            steps: availableSteps.reduce((acc, step) => {
-                acc[step.id] = {
-                    id: `{{prev.${step.id}.id}}`,
-                    result: `{{prev.${step.id}.result}}`,
-                    // approximate field placeholder
-                    field_name: `{{prev.${step.id}.FIELD_NAME}}`
-                }
-                return acc
-            }, {} as Record<string, any>)
+            }
+        };
+
+        // Current Step fields
+        if (currentFields.length > 0) {
+            currentFields.forEach(f => {
+                payload[f] = `{{${f}}}`;
+            });
         }
 
-        navigator.clipboard.writeText(JSON.stringify(variables, null, 2))
-        toast.success('Copied all variables structure to clipboard')
+        // Previous steps fields (flattened as per backend strategy)
+        availableSteps.forEach(step => {
+            if (step.fields && step.fields.length > 0) {
+                step.fields.forEach(f => {
+                    // Only add if not already present (current step fields might overlap or previous steps might overlap)
+                    if (!payload[f]) {
+                        payload[f] = `{{${f}}}`;
+                    }
+                });
+            } else {
+                // Fallback for steps without field info
+                payload[`step_${step.id}`] = `{{prev.${step.id}.result}}`;
+            }
+        });
+
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+        toast.success('Copied recommended JSON payload to clipboard')
     }
 
     return (
@@ -256,7 +267,7 @@ export function ExecutionConfigEditor({
                                         size="sm"
                                         className="h-6 w-6 p-0 hover:bg-primary/10"
                                         onClick={copyAllVariables}
-                                        title="Copy all as JSON"
+                                        title="Copy recommended payload"
                                     >
                                         <Copy className="w-3.5 h-3.5" />
                                     </Button>
@@ -266,16 +277,15 @@ export function ExecutionConfigEditor({
                                 </p>
 
                                 <ScrollArea className="h-[350px] pr-4">
-                                    <div className="space-y-4">
-                                        {/* Current Step (Placeholder if we had access to dynamic fields) */}
+                                    <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Helper Globals</p>
+                                            <p className="text-[10px] font-black text-muted-foreground uppercase opacity-70 tracking-widest">Global Context</p>
                                             <div className="flex flex-wrap gap-2">
                                                 {['{{timestamp}}', '{{user.id}}', '{{tool.id}}'].map(v => (
                                                     <Badge
                                                         key={v}
                                                         variant="outline"
-                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors font-mono text-[10px]"
+                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2 border-primary/20 bg-primary/5"
                                                         onClick={() => copyVariable(v)}
                                                     >
                                                         {v}
@@ -284,41 +294,61 @@ export function ExecutionConfigEditor({
                                             </div>
                                         </div>
 
+                                        {/* Current Step (Explicitly listed as requested by user) */}
+                                        <div className="space-y-2 p-3 rounded-lg border border-primary/10 bg-primary/5">
+                                            <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
+                                                <Zap className="w-3 h-3" /> Current Step Fields
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {currentFields.map(f => (
+                                                    <Badge
+                                                        key={f}
+                                                        variant="outline"
+                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
+                                                        onClick={() => copyVariable(`{{${f}}}`)}
+                                                    >
+                                                        {`{{${f}}}`}
+                                                    </Badge>
+                                                ))}
+                                                {currentFields.length === 0 && (
+                                                    <p className="text-[10px] text-muted-foreground italic">No fields in this step</p>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         {/* Previous Steps */}
                                         {availableSteps.map(step => (
                                             <div key={step.id} className="space-y-2">
-                                                <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70 truncate max-w-[200px]">
+                                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate max-w-[200px]">
                                                     Step: {step.title}
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {['id', 'result'].map(field => {
-                                                        const v = `{{prev.${step.id}.${field}}}`
-                                                        return (
-                                                            <Badge
-                                                                key={v}
-                                                                variant="outline"
-                                                                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors font-mono text-[10px]"
-                                                                onClick={() => copyVariable(v)}
-                                                            >
-                                                                {v}
-                                                            </Badge>
-                                                        )
-                                                    })}
-                                                    {/* Ideally we would list actual fields from that step here */}
+                                                    {(step.fields || []).map(f => (
+                                                        <Badge
+                                                            key={f}
+                                                            variant="outline"
+                                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
+                                                            onClick={() => copyVariable(`{{${f}}}`)}
+                                                            title={`Previous step field: ${f}`}
+                                                        >
+                                                            {`{{${f}}}`}
+                                                        </Badge>
+                                                    ))}
                                                     <Badge
                                                         variant="outline"
-                                                        className="cursor-pointer border-dashed text-muted-foreground hover:bg-muted font-mono text-[10px]"
-                                                        onClick={() => copyVariable(`{{prev.${step.id}.FIELD_NAME}}`)}
+                                                        className="cursor-pointer border-dashed text-muted-foreground/60 hover:bg-muted font-mono text-[10px] py-1 px-2 opacity-50 hover:opacity-100"
+                                                        onClick={() => copyVariable(`{{prev.${step.id}.result}}`)}
+                                                        title="Full step result object"
                                                     >
-                                                        {`{{prev.${step.id}.FIELD_NAME}}`}
+                                                        {`{{prev.${step.id}.result}}`}
                                                     </Badge>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {availableSteps.length === 0 && (
-                                            <p className="text-xs text-muted-foreground italic">
-                                                No previous steps available to reference.
+                                            <p className="text-xs text-muted-foreground italic text-center py-4 bg-muted/20 rounded-lg">
+                                                No previous steps available
                                             </p>
                                         )}
                                     </div>
@@ -331,3 +361,4 @@ export function ExecutionConfigEditor({
         </Card>
     )
 }
+
