@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
@@ -146,12 +147,15 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                 onCloseSidebar ? "border-r-0" : ""
             )}>
                 {/* Brand Header */}
-                <div className="flex h-16 shrink-0 items-center justify-between px-6">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center ring-1 ring-primary/20 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                            <Sparkles className="w-6 h-6 text-primary" />
-                        </div>
-                        <span className="text-2xl font-black tracking-tighter text-foreground font-display">Wata AI</span>
+                <div className="flex h-16 shrink-0 items-center px-6">
+                    <div className="relative w-48 h-12 transition-transform duration-500 hover:scale-105">
+                        <Image
+                            src="/images/logo.svg"
+                            alt="WataAI Logo"
+                            fill
+                            className="object-contain object-left"
+                            priority
+                        />
                     </div>
                 </div>
 

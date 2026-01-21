@@ -12,6 +12,7 @@ import { MessageSquare, Palette, Settings2, Save, Send, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import { BotWidgetPosition, BotWidgetButtonSize } from '@/lib/types/bots';
+import { Slider } from '@/components/ui/Slider';
 
 interface WidgetAppearanceSettingsData {
     primaryColor?: string | null;
@@ -22,11 +23,14 @@ interface WidgetAppearanceSettingsData {
     showAvatar?: boolean;
     showTimestamp?: boolean;
     widgetEnabled?: boolean;
-    // UI specific only (from metadata or extended config)
+    // UI specific & Extended
     backgroundColor?: string;
     botMessageColor?: string;
     botMessageTextColor?: string;
     fontFamily?: string;
+    borderRadius?: number;
+    glassmorphism?: boolean;
+    headerStyle?: 'solid' | 'minimal' | 'gradient';
 }
 
 interface Props {
@@ -49,6 +53,9 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
         placeholderText: 'Type your message...',
         showAvatar: true,
         showTimestamp: true,
+        borderRadius: 16,
+        glassmorphism: true,
+        headerStyle: 'solid',
         widgetEnabled: true,
     });
 
@@ -203,6 +210,50 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div className="space-y-6 pt-6 border-t border-border/10">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-primary/10 rounded-lg">
+                                                <Palette className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <h3 className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground/80">Container Styling</h3>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Glassmorphism Effect</Label>
+                                                <Switch
+                                                    checked={settings.glassmorphism}
+                                                    onCheckedChange={(val) => updateSetting('glassmorphism', val)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Edge Roundness ({settings.borderRadius}px)</Label>
+                                            <Slider
+                                                value={[settings.borderRadius || 16]}
+                                                min={0}
+                                                max={32}
+                                                step={4}
+                                                onValueChange={(val) => updateSetting('borderRadius', val[0])}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/70">Header Layout</Label>
+                                            <Select value={settings.headerStyle || 'solid'} onValueChange={(val) => updateSetting('headerStyle', val)}>
+                                                <SelectTrigger className="h-10 bg-background/50">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-2xl border-none shadow-2xl">
+                                                    <SelectItem value="solid" className="font-bold">Classic Solid</SelectItem>
+                                                    <SelectItem value="minimal" className="font-bold">Minimalist</SelectItem>
+                                                    <SelectItem value="gradient" className="font-bold">Futuristic Gradient</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
                                 </TabsContent>
 
                                 <TabsContent value="messaging" className="mt-0 space-y-8">
@@ -319,8 +370,6 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                 </TabsContent>
                             </div>
                         </ScrollArea>
-
-
                     </Card>
                 </Tabs>
             </div>
@@ -328,7 +377,6 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
             {/* Right Column: Preview */}
             <div className="flex-1 w-full xl:sticky xl:top-8 space-y-8">
                 <Card className="p-12 relative overflow-hidden flex items-center justify-center group/preview border-none shadow-2xl min-h-[600px] 2xl:min-h-[750px] bg-muted/5 rounded-[3rem]">
-                    {/* Simulator UI logic same as before but using fixed variables */}
                     <div className="absolute top-6 left-6 flex items-center gap-3">
                         <div className="flex gap-1.5">
                             <div className="w-2 h-2 rounded-full bg-red-400" />
@@ -369,18 +417,28 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                     left: settings.widgetPosition?.includes('left') ? '20px' : 'auto',
                                     width: '310px',
                                     height: '420px',
-                                    borderRadius: '24px',
-                                    backgroundColor: settings.backgroundColor,
-                                    border: '1px solid rgba(0,0,0,0.05)',
-                                    zIndex: 100
+                                    borderRadius: `${settings.borderRadius}px`,
+                                    backgroundColor: settings.glassmorphism ? `${settings.backgroundColor}cc` : settings.backgroundColor,
+                                    border: settings.glassmorphism ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
+                                    zIndex: 100,
+                                    backdropFilter: settings.glassmorphism ? 'blur(16px)' : 'none',
                                 }}
                             >
-                                <div className="px-5 py-4 flex items-center justify-between text-white shadow-xl" style={{ backgroundColor: settings.primaryColor || '#667eea' }}>
+                                <div
+                                    className={cn(
+                                        "px-5 py-4 flex items-center justify-between transition-all",
+                                        settings.headerStyle === 'minimal' ? "text-foreground bg-white border-b" : "text-white shadow-xl"
+                                    )}
+                                    style={{
+                                        backgroundColor: settings.headerStyle === 'minimal' ? 'white' : (settings.headerStyle === 'gradient' ? 'transparent' : (settings.primaryColor || '#667eea')),
+                                        backgroundImage: settings.headerStyle === 'gradient' ? `linear-gradient(135deg, ${settings.primaryColor}, #805ad5)` : 'none'
+                                    }}
+                                >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center text-[10px] font-black uppercase">AI</div>
+                                        <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center text-[10px] font-black uppercase", settings.headerStyle === 'minimal' ? "bg-primary/10 text-primary" : "bg-white/20")}>AI</div>
                                         <div className="text-sm font-black tracking-tight">AI Protocol</div>
                                     </div>
-                                    <div className="w-8 h-8 rounded-xl bg-black/10 flex items-center justify-center" onClick={() => setIsPreviewOpen(false)}>
+                                    <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer", settings.headerStyle === 'minimal' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-black/10 hover:bg-black/20")} onClick={() => setIsPreviewOpen(false)}>
                                         <X className="w-4 h-4" />
                                     </div>
                                 </div>
@@ -412,10 +470,10 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                     height: settings.widgetButtonSize === 'large' ? '68px' : settings.widgetButtonSize === 'small' ? '50px' : '60px',
                                     backgroundColor: settings.primaryColor || '#667eea',
                                     borderRadius: '24px',
-                                    color: '#ffffff'
+                                    color: '#ffffff',
                                 }}
                             >
-                                {isPreviewOpen ? <X className="w-7 h-7" /> : <MessageSquare className="w-7 h-7" />}
+                                <MessageSquare size={settings.widgetButtonSize === 'large' ? 32 : settings.widgetButtonSize === 'small' ? 24 : 28} />
                             </button>
                         </div>
                     </div>

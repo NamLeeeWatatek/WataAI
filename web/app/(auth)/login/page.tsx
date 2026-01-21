@@ -17,6 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
+import { GoogleIcon } from '@/components/shared/icons/Logos'
 
 const loginSchema = (t: any) => z.object({
     email: z.string().email(t('validation.invalid')),
@@ -124,7 +125,7 @@ function LoginPageContent() {
                             onClick={() => handleSocialLogin('google')}
                             disabled={isBusy}
                         >
-                            <Chrome className="mr-2 h-4 w-4" />
+                            <GoogleIcon className="mr-2 h-4 w-4" />
                             Google
                         </Button>
                     </div>

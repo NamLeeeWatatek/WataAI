@@ -151,24 +151,7 @@ export default function CreationToolsPage() {
                                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-muted/10 group-hover:from-primary/10 transition-colors duration-500" />
                                     )}
 
-                                    {/* Subtle Floating Glass Icon - Moved to side to show more image */}
-                                    <div className="absolute bottom-4 right-4 z-10">
-                                        <div className="p-3 rounded-2xl bg-background/60 backdrop-blur-xl border border-white/20 shadow-lg group-hover:bg-primary group-hover:border-primary transition-all duration-300">
-                                            {tool.icon && (icons as any)[tool.icon] ? (
-                                                (() => {
-                                                    const ToolIcon = (icons as any)[tool.icon];
-                                                    return <ToolIcon className="w-5 h-5 text-foreground group-hover:text-white transition-colors" />;
-                                                })()
-                                            ) : (
-                                                <icons.Sparkles className="w-5 h-5 text-foreground" />
-                                            )}
-                                        </div>
 
-                                        {/* Small Type Label */}
-                                        <div className="absolute -top-2 -right-2 p-1.5 rounded-lg bg-primary text-white shadow-lg scale-90">
-                                            {analysis.type === 'video' ? <icons.Play className="w-2.5 h-2.5 fill-current" /> : (analysis.type === 'image' ? <icons.Camera className="w-2.5 h-2.5" /> : <icons.FileText className="w-2.5 h-2.5" />)}
-                                        </div>
-                                    </div>
 
                                     {/* Status Badge */}
                                     <div className="absolute top-4 left-4 z-20">
@@ -180,32 +163,18 @@ export default function CreationToolsPage() {
                                     </div>
                                 </div>
 
-                                {/* Refined Content Area - Clean & Airy */}
-                                <div className="flex flex-col flex-1 p-6 pt-7">
-                                    <div className="mb-6">
-                                        <h3 className="text-lg font-bold tracking-tight text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                                <div className="flex flex-col flex-1 p-5">
+                                    <div className="mb-4">
+                                        <h3 className="text-base font-bold tracking-tight text-foreground mb-1 line-clamp-1 group-hover:text-primary transition-colors">
                                             {tool.name}
                                         </h3>
-                                        <p className="text-[13px] text-muted-foreground leading-relaxed line-clamp-2 h-10 font-medium">
+                                        <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 min-h-[2.5em] font-medium">
                                             {analysis.description}
                                         </p>
                                     </div>
 
-                                    {/* Logic Data - Compact & Minimal */}
-                                    <div className="mb-8 flex items-center gap-3">
-                                        <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-muted/30 border border-border/40">
-                                            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase">In</span>
-                                            <span className="text-[10px] font-bold text-foreground/70">{analysis.input}</span>
-                                        </div>
-                                        <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-primary/5 border border-primary/10">
-                                            <span className="text-[9px] font-bold text-primary/40 uppercase">Out</span>
-                                            <span className="text-[10px] font-bold text-primary/70">{analysis.output}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Standardized CTA */}
                                     <Button
-                                        className="w-full h-11 rounded-2xl font-bold uppercase tracking-[0.1em] text-[10px] bg-secondary hover:bg-primary hover:text-white transition-all duration-300"
+                                        className="w-full h-9 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-secondary hover:bg-primary hover:text-white transition-all duration-300 mt-auto shadow-sm"
                                     >
                                         {analysis.cta}
                                     </Button>

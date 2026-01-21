@@ -70,6 +70,9 @@ export interface Bot {
   widgetButtonSize?: BotWidgetButtonSize
   showAvatar?: boolean
   showTimestamp?: boolean
+  borderRadius?: number
+  glassmorphism?: boolean
+  headerStyle?: 'solid' | 'minimal' | 'gradient'
 
   // Origins
   allowedOrigins?: string[] | null
@@ -113,6 +116,9 @@ export interface CreateBotDto {
   primaryColor?: string
   widgetPosition?: BotWidgetPosition
   widgetButtonSize?: BotWidgetButtonSize
+  borderRadius?: number
+  glassmorphism?: boolean
+  headerStyle?: 'solid' | 'minimal' | 'gradient'
 }
 
 export type UpdateBotDto = Partial<CreateBotDto>
@@ -181,6 +187,9 @@ export interface BotWidgetTheme {
   buttonSize: BotWidgetButtonSize
   showAvatar: boolean
   showTimestamp: boolean
+  borderRadius?: number
+  glassmorphism?: boolean
+  headerStyle?: 'solid' | 'minimal' | 'gradient'
 }
 
 export interface BotWidgetConfig {

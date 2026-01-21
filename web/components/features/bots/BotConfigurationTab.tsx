@@ -5,6 +5,7 @@ import { aiProvidersApi } from '@/lib/api/ai-providers';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { UnifiedFileUpload } from '@/components/shared/UnifiedFileUpload';
 import { Label } from '@/components/ui/Label';
 import { Textarea } from '@/components/ui/Textarea';
 import { Switch } from '@/components/ui/Switch';
@@ -19,6 +20,7 @@ import { BotStatus } from '@/lib/types/bots';
 interface BotFormData {
   name: string;
   description: string;
+  avatarUrl: string | null;
   systemPrompt: string;
   aiProviderId: string | null;
   aiModelName: string;
@@ -35,9 +37,10 @@ interface BotConfigurationTabProps {
   formData: BotFormData;
   onChange: (updates: Partial<BotFormData>) => void;
   workspaceId?: string;
+  totalServed?: number;
 }
 
-export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConfigurationTabProps) {
+export function BotConfigurationTab({ formData, onChange, workspaceId, totalServed = 0 }: BotConfigurationTabProps) {
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isManual, setIsManual] = useState(false);
@@ -121,6 +124,32 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
           <CardContent className="grid gap-8 pt-2">
             <div className="grid gap-6">
               <div className="space-y-2.5">
+                <Label htmlFor="avatar" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Bot Avatar</Label>
+                <div className="flex gap-6 items-center">
+                  <UnifiedFileUpload
+                    variant="avatar"
+                    value={formData.avatarUrl}
+                    onChange={(value) => {
+                      if (typeof value === 'string') onChange({ avatarUrl: value });
+                      else if (Array.isArray(value) && value.length > 0) onChange({ avatarUrl: value[0] });
+                      else onChange({ avatarUrl: null });
+                    }}
+                    maxSize={2 * 1024 * 1024}
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                    className="h-24 w-24"
+                  />
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground/80 lowercase">
+                      Supported formats: .png, .jpg, .webp
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/60 italic">
+                      Max file size: 2MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
                 <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Bot Name</Label>
                 <Input
                   id="name"
@@ -130,6 +159,7 @@ export function BotConfigurationTab({ formData, onChange, workspaceId }: BotConf
                   className="bg-background/50"
                 />
               </div>
+
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">Protocol Status</Label>

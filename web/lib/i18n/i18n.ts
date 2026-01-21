@@ -5,20 +5,27 @@
 
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import HttpApi from 'i18next-http-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
+
+// Import translation files directly to bundling them and prevent hydration flicker
+import translationEN from '../../public/locales/en/translation.json'
+import translationVI from '../../public/locales/vi/translation.json'
+
+const resources = {
+  en: {
+    translation: translationEN,
+  },
+  vi: {
+    translation: translationVI,
+  },
+}
 
 // i18n configuration
 i18n
-  .use(HttpApi) // Load translations from server
   .use(LanguageDetector) // Detect language from browser/localStorage
   .use(initReactI18next) // Bind with React
   .init({
-    // backend options
-    backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
-    },
-
+    resources,
     // Language detection options
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag', 'path', 'subdomain'],
@@ -39,7 +46,7 @@ i18n
 
     // React i18next options
     react: {
-      useSuspense: false, // Disable Suspense for SSR compatibility
+      useSuspense: false, // Set to false since we are using Next.js
     },
 
     // Debugging (enable in development)

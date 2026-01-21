@@ -1,14 +1,12 @@
-'use client';
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getBotConversations,
     getBotConversation,
-    archiveBotConversation,
-    deleteBotConversation,
-    takeoverConversation,
-    handbackConversation,
+    getBotConversationMessages,
+    addBotConversationMessage,
     syncFacebookConversations,
+    takeoverConversation as takeoverApi,
+    handbackConversation as handbackApi,
     GetConversationsParams
 } from '@/lib/api/conversations';
 import toast from '@/lib/toast';
@@ -19,51 +17,36 @@ export const botConversationKeys = {
     list: (params: GetConversationsParams) => [...botConversationKeys.lists(), params] as const,
     details: () => [...botConversationKeys.all, 'detail'] as const,
     detail: (id: string) => [...botConversationKeys.details(), id] as const,
+    messages: (id: string) => [...botConversationKeys.detail(id), 'messages'] as const,
 };
 
-export function useBotConversations(params: GetConversationsParams = {}) {
+export function useBotConversations(params?: GetConversationsParams) {
     const queryClient = useQueryClient();
 
     const query = useQuery({
-        queryKey: botConversationKeys.list(params),
-        queryFn: async () => {
-            const data: any = await getBotConversations(params);
-
-            // Handle different response formats (paginated vs array)
-            if (Array.isArray(data)) {
-                return { items: data, total: data.length };
-            }
-            if (data?.items) {
-                return { items: data.items, total: data.total || data.items.length };
-            }
-            if (data?.data) {
-                return { items: data.data, total: data.total || data.data.length };
-            }
-            return { items: [], total: 0 };
-        },
+        queryKey: botConversationKeys.list(params || {}),
+        queryFn: () => getBotConversations(params),
+        enabled: !!params?.botId || params?.source === 'widget',
     });
 
     const syncMutation = useMutation({
         mutationFn: ({ channelId, syncParams }: { channelId: string; syncParams: any }) =>
             syncFacebookConversations(channelId, syncParams),
-        onSuccess: (data) => {
-            if (data.success) {
-                toast.success(`Synced ${data.synced} conversation(s) from Facebook`);
-                queryClient.invalidateQueries({ queryKey: botConversationKeys.lists() });
-            } else {
-                toast.error('Failed to sync conversations');
-            }
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: botConversationKeys.lists() });
+            toast.success('Conversations synchronized');
         },
-        onError: (error: any) => {
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to sync conversations';
-            toast.error(errorMessage);
+        onError: () => {
+            toast.error('Failed to sync conversations');
         }
     });
 
     return {
-        ...query,
         conversations: query.data?.items || [],
         total: query.data?.total || 0,
+        isLoading: query.isLoading,
+        isError: query.isError,
+        refetch: query.refetch,
         syncConversations: syncMutation.mutateAsync,
         isSyncing: syncMutation.isPending,
     };
@@ -72,69 +55,58 @@ export function useBotConversations(params: GetConversationsParams = {}) {
 export function useBotConversation(id: string) {
     const queryClient = useQueryClient();
 
-    const query = useQuery({
+    const detailQuery = useQuery({
         queryKey: botConversationKeys.detail(id),
         queryFn: () => getBotConversation(id),
         enabled: !!id,
     });
 
-    const archiveMutation = useMutation({
-        mutationFn: () => archiveBotConversation(id),
-        onSuccess: () => {
-            toast.success('Conversation archived');
-            queryClient.invalidateQueries({ queryKey: botConversationKeys.all });
-        },
-        onError: () => toast.error('Failed to archive conversation'),
+    const messagesQuery = useQuery({
+        queryKey: botConversationKeys.messages(id),
+        queryFn: () => getBotConversationMessages(id),
+        enabled: !!id,
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: () => deleteBotConversation(id),
+    const sendMessageMutation = useMutation({
+        mutationFn: (data: any) => addBotConversationMessage(id, data),
         onSuccess: () => {
-            toast.success('Conversation deleted');
-            queryClient.invalidateQueries({ queryKey: botConversationKeys.all });
+            queryClient.invalidateQueries({ queryKey: botConversationKeys.messages(id) });
         },
-        onError: () => toast.error('Failed to delete conversation'),
-    });
-
-    const sendMutation = useMutation({
-        mutationFn: (data: { content: string; role: any }) =>
-            import('@/lib/api/conversations').then(api => api.addBotConversationMessage(id, { content: data.content, role: data.role })),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: botConversationKeys.detail(id) });
-        },
-        onError: () => toast.error('Failed to send message'),
+        onError: () => {
+            toast.error('Failed to send message');
+        }
     });
 
     const takeoverMutation = useMutation({
-        mutationFn: () => takeoverConversation(id),
+        mutationFn: () => takeoverApi(id),
         onSuccess: () => {
-            toast.success('You are now handling this conversation');
             queryClient.invalidateQueries({ queryKey: botConversationKeys.detail(id) });
-        },
-        onError: () => toast.error('Failed to take over conversation'),
+            toast.success('Conversation taken over');
+        }
     });
 
     const handbackMutation = useMutation({
-        mutationFn: () => handbackConversation(id),
+        mutationFn: () => handbackApi(id),
         onSuccess: () => {
-            toast.success('Bot will resume auto-reply');
             queryClient.invalidateQueries({ queryKey: botConversationKeys.detail(id) });
-        },
-        onError: () => toast.error('Failed to hand back conversation'),
+            toast.success('Handed back to bot');
+        }
     });
 
     return {
-        ...query,
-        conversation: query.data,
-        archiveConversation: archiveMutation.mutateAsync,
-        deleteConversation: deleteMutation.mutateAsync,
-        sendMessage: sendMutation.mutateAsync,
-        isArchiving: archiveMutation.isPending,
-        isDeleting: deleteMutation.isPending,
-        isSending: sendMutation.isPending,
+        conversation: detailQuery.data,
+        messages: messagesQuery.data?.messages || [],
+        isLoading: detailQuery.isLoading || messagesQuery.isLoading,
+        isError: detailQuery.isError || messagesQuery.isError,
+        refetch: () => {
+            detailQuery.refetch();
+            messagesQuery.refetch();
+        },
+        sendMessage: sendMessageMutation.mutateAsync,
+        isSending: sendMessageMutation.isPending,
         takeoverConversation: takeoverMutation.mutateAsync,
-        handbackConversation: handbackMutation.mutateAsync,
         isTakingOver: takeoverMutation.isPending,
+        handbackConversation: handbackMutation.mutateAsync,
         isHandingBack: handbackMutation.isPending,
     };
 }

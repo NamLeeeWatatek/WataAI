@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
     HeroSection,
     FeatureBentoGrid,
@@ -25,9 +26,9 @@ export default function MarketingPage() {
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
                             Join thousands of companies using WataAI to automate 10M+ conversations monthly.
                         </p>
-                        <a href="/register" className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-primary rounded-full hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25 hover:scale-105">
+                        <Link href={"/register" as any} className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-primary rounded-full hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/25 hover:scale-105">
                             Start Verification Free
-                        </a>
+                        </Link>
                     </div>
                 </section>
             </main>
