@@ -3,10 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BotEntity } from './infrastructure/persistence/relational/entities/bot.entity';
 import { ConversationEntity } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
-import {
-  ConversationStatus,
-  MessageRole,
-} from '../conversations/conversations.enum';
+import {} from '../conversations/conversations.enum';
 import { BotStatus } from './bots.enum';
 
 @Injectable()
@@ -50,8 +47,7 @@ export class BotInteractionService {
     message: string,
     metadata?: Record<string, any>,
   ) {
-    const { bot, publishedFlow, knowledgeBases } =
-      await this.getBotForInteraction(botId);
+    const { bot, knowledgeBases } = await this.getBotForInteraction(botId);
 
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId, botId },

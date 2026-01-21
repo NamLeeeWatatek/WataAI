@@ -17,11 +17,13 @@ export class FacebookProvider implements ChannelProvider {
   private readonly apiVersion = 'v24.0';
 
   constructor(private configService: ConfigService) {
-    this.pageAccessToken = this.configService.get<string>(
-      'FACEBOOK_PAGE_ACCESS_TOKEN',
-      '',
-    );
-    this.appSecret = this.configService.get<string>('FACEBOOK_APP_SECRET', '');
+    this.pageAccessToken =
+      this.configService.get<string>('FACEBOOK_PAGE_ACCESS_TOKEN', {
+        infer: true,
+      }) || '';
+    this.appSecret =
+      this.configService.get<string>('FACEBOOK_APP_SECRET', { infer: true }) ||
+      '';
   }
 
   setCredentials(pageAccessToken: string, appSecret: string): void {

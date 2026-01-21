@@ -12,7 +12,7 @@ import { InstagramService } from '../channels/providers/instagram.service';
 import { TelegramService } from '../channels/providers/telegram.service';
 import { KBRagService } from '../knowledge-base/services/kb-rag.service';
 import { AiProvidersService } from '../ai-providers/ai-providers.service';
-import { I18nContext, I18nService } from 'nestjs-i18n';
+import { I18nService } from 'nestjs-i18n';
 
 export interface IncomingMessage {
   channel: string;
@@ -110,7 +110,7 @@ export class BotExecutionService {
       "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English.";
 
     // Add RAG Context
-    const lang = I18nContext.current()?.lang;
+    // const lang = I18nContext.current()?.lang;
     if (ragContextString) {
       systemPrompt += `\n\nUse the following context from the knowledge base to answer questions:\n\n${ragContextString}`;
     }

@@ -6,11 +6,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
-import {
-  BaseQueryDto,
-  BaseFilterDto,
-  BaseSortDto,
-} from '../../utils/dto/base-query.dto';
+import { BaseFilterDto, BaseSortDto } from '../../utils/dto/base-query.dto';
 import { KnowledgeBaseEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 
 export class FilterKnowledgeBaseDto extends BaseFilterDto {
@@ -57,7 +53,7 @@ export class QueryKnowledgeBaseDto {
       return plainToInstance(FilterKnowledgeBaseDto, value);
     try {
       return plainToInstance(FilterKnowledgeBaseDto, JSON.parse(value));
-    } catch (e) {
+    } catch (_) {
       return undefined;
     }
   })
@@ -76,7 +72,7 @@ export class QueryKnowledgeBaseDto {
       return plainToInstance(SortKnowledgeBaseDto, value);
     try {
       return plainToInstance(SortKnowledgeBaseDto, JSON.parse(value));
-    } catch (e) {
+    } catch (_) {
       return undefined;
     }
   })

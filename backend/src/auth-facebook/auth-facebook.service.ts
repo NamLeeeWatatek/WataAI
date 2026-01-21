@@ -170,7 +170,7 @@ export class AuthFacebookService {
 
       const data = await response.json();
       return data.access_token;
-    } catch (error) {
+    } catch {
       throw new HttpException(
         'Failed to exchange token',
         HttpStatus.BAD_REQUEST,

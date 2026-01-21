@@ -184,6 +184,7 @@ export class TemplatesService {
     ids: Template['id'][],
     updateTemplateDto: UpdateTemplateDto,
   ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { category, categoryId, ...rest } = updateTemplateDto;
     return this.templatesRepository.bulkUpdate(ids, {
       ...rest,
@@ -221,14 +222,22 @@ export class TemplatesService {
     for (const raw of templatesData) {
       // Clean up raw data to ensure it fits CreateTemplateDto
       // We strip ID, dates, and ownership to treat as new copies
+
       const {
         id: _id_unused,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _id: _mongo_id_unused,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         createdAt: _createdAt,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         updatedAt: _updatedAt,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deletedAt: _deletedAt,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         createdBy: _createdBy,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         workspaceId: _wsId,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         category: _category, // Relation needs special handling
         ...rest
       } = raw;

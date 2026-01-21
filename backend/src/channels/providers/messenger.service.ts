@@ -1,5 +1,5 @@
 ﻿import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelConnectionEntity } from '../../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
@@ -23,7 +23,6 @@ export class MessengerService {
   private readonly apiVersion = 'v24.0';
 
   constructor(
-    private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
   ) {}

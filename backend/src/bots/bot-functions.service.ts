@@ -55,12 +55,14 @@ export class BotFunctionsService {
   }
 
   async findAll(botId: string) {
+    await Promise.resolve();
     return Array.from(this.functions.values())
       .filter((f) => f.botId === botId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async findOne(id: string) {
+    await Promise.resolve();
     const botFunction = this.functions.get(id);
     if (!botFunction) {
       throw new NotFoundException('Bot function not found');
@@ -221,6 +223,7 @@ Please provide helpful suggestions for this task.`;
     botFunction: BotFunction,
     executeDto: ExecuteBotFunctionDto,
   ) {
+    await Promise.resolve();
     this.logger.log(`Executing custom function: ${botFunction.name}`);
 
     return {

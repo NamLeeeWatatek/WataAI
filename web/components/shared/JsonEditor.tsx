@@ -10,16 +10,27 @@ interface JsonEditorProps {
 }
 
 export function JsonEditor({ value, onChange, placeholder, rows = 4 }: JsonEditorProps) {
-    const [text, setText] = useState('')
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
+    // Initialize text state based on value prop
+    const [text, setText] = useState(() => {
         if (typeof value === 'string') {
-            setText(value)
+            return value;
         } else {
-            setText(JSON.stringify(value || {}, null, 2))
+            return JSON.stringify(value || {}, null, 2);
         }
-    }, [value])
+    });
+
+    useEffect(() => {
+        const newText = typeof value === 'string'
+            ? value
+            : JSON.stringify(value || {}, null, 2);
+
+        // Only update if the text has actually changed to avoid unnecessary re-renders
+        if (newText !== text) {
+            setText(newText);
+        }
+    }, [value, text])
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newText = e.target.value

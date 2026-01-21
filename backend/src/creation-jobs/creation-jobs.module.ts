@@ -24,7 +24,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     forwardRef(() => WorkspacesModule),
     forwardRef(() => ExecutionModule),
     PermissionsModule,
-    CreationToolsModule,
+    forwardRef(() => CreationToolsModule),
     ChannelsModule,
     IntegrationsModule,
   ],

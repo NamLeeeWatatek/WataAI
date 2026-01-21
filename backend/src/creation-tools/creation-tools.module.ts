@@ -7,6 +7,9 @@ import { FilesModule } from '../files/files.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { forwardRef } from '@nestjs/common';
+import { ExecutionModule } from '../execution/execution.module';
+
+import { CreationJobsModule } from '../creation-jobs/creation-jobs.module';
 
 @Module({
   imports: [
@@ -15,6 +18,8 @@ import { forwardRef } from '@nestjs/common';
     FilesModule,
     forwardRef(() => WorkspacesModule),
     PermissionsModule,
+    forwardRef(() => ExecutionModule),
+    forwardRef(() => CreationJobsModule),
   ],
   controllers: [CreationToolsController],
   providers: [CreationToolsService],

@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FileEntity } from '../entities/file.entity';
-import { In, Repository, LessThan } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { FileRepository } from '../../file.repository';
 
 import { FileMapper } from '../mappers/file.mapper';

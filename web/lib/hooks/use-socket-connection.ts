@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { io, Socket, ManagerOptions, SocketOptions } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 
@@ -193,7 +193,8 @@ export function useSocketConnection({
     }
   }, [session?.accessToken]);
 
-  return {
+  // Use useMemo to avoid accessing ref during render
+  const socketConnection = useMemo(() => ({
     socket: socketRef.current,
     isConnected,
     isConnecting,
@@ -204,5 +205,7 @@ export function useSocketConnection({
     emit,
     on,
     off,
-  };
+  }), [isConnected, isConnecting, error, connect, disconnect, reconnect, emit, on, off]);
+
+  return socketConnection;
 }

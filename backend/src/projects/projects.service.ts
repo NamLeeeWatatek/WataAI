@@ -3,7 +3,7 @@ import { ProjectRepository } from './infrastructure/persistence/project.reposito
 import { Project } from './domain/project';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { NullableType } from '../utils/types/nullable.type';
-import { DeepPartial } from '../utils/types/deep-partial.type';
+
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 

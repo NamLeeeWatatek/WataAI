@@ -3,10 +3,7 @@ import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  KbDocumentEntity,
-  KnowledgeBaseEntity,
-} from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
+import { KbDocumentEntity } from '../infrastructure/persistence/relational/entities/knowledge-base.entity';
 import { KBChunkEntity } from '../infrastructure/persistence/relational/entities/kb-chunk.entity';
 import { KBEmbeddingsService } from './kb-embeddings.service';
 import { KBProcessingQueueService } from './kb-processing-queue.service';
@@ -277,6 +274,7 @@ export class KBProcessor extends WorkerHost {
     if (status === 'cancelled') {
       throw new Error('Job cancelled by user');
     }
+    await Promise.resolve();
   }
 
   private async handleCrawlWebsite(job: Job<any>) {

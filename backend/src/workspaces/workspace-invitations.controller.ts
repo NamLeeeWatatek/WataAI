@@ -8,12 +8,7 @@ import {
   HttpStatus,
   Param,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiBearerAuth,
-  ApiOperation,
-  ApiOkResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';

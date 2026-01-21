@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { z } from 'zod';
-import {
-  FormConfig,
-  FormField,
-} from '../../creation-tools/domain/creation-tool';
+import { FormConfig } from '../../creation-tools/domain/creation-tool';
 
 @Injectable()
 export class ExecutionValidationService {

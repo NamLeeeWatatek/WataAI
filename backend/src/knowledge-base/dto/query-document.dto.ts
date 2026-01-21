@@ -54,7 +54,7 @@ export class QueryDocumentDto {
     if (typeof value === 'string') {
       try {
         return JSON.parse(value);
-      } catch (e) {
+      } catch (_) {
         return value;
       }
     }
@@ -70,7 +70,7 @@ export class QueryDocumentDto {
     if (typeof value === 'string') {
       try {
         return JSON.parse(value);
-      } catch (e) {
+      } catch (_) {
         return value;
       }
     }

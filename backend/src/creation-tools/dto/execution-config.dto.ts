@@ -40,7 +40,7 @@ export class AiExecutionConfigDto {
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   promptTemplate: string;
 
   @ApiPropertyOptional()
@@ -61,7 +61,7 @@ export class HttpExecutionConfigDto {
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   urlTemplate: string;
 
   @ApiProperty({ enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] })

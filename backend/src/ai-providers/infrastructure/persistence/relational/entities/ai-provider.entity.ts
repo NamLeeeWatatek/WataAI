@@ -10,9 +10,7 @@
   JoinColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { WorkspaceEntity } from '../../../../../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
-import { EncryptionTransformer } from '../../../../../utils/transformers/encryption.transformer';
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { AiProviderOwnerType } from '../../../../ai-providers.enum';
 import { AiModelEntity } from './ai-model.entity';

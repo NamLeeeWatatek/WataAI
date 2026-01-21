@@ -32,7 +32,7 @@ export class WidgetVersionService {
     private readonly botRepo: Repository<BotEntity>,
     @Inject(CACHE_MANAGER)
     private cacheManager: Cache,
-  ) {}
+  ) { }
 
   async getActiveVersion(botId: string): Promise<WidgetVersionEntity | null> {
     const cacheKey = `widget:active:${botId}`;
@@ -83,9 +83,9 @@ export class WidgetVersionService {
   async getVersion(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -101,9 +101,9 @@ export class WidgetVersionService {
   async createVersion(
     botId: string,
     dto: CreateWidgetVersionDto,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     if (!this.isValidVersion(dto.version)) {
       throw new BadRequestException(
@@ -140,9 +140,9 @@ export class WidgetVersionService {
     botId: string,
     versionId: string,
     dto: UpdateWidgetVersionDto,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -177,10 +177,10 @@ export class WidgetVersionService {
   async updateActiveVersionConfig(
     botId: string,
     configUpdate: Partial<any>,
-    userId: string,
+    _userId: string,
     changelog?: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const activeVersion = await this.getActiveVersion(botId);
 
@@ -231,15 +231,15 @@ export class WidgetVersionService {
 
     await this.versionRepo.save(version);
 
-    return this.publishVersion(botId, version.id, userId);
+    return this.publishVersion(botId, version.id, _userId);
   }
 
   async publishVersion(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -265,7 +265,7 @@ export class WidgetVersionService {
     version.status = 'published';
     version.isActive = true;
     version.publishedAt = new Date();
-    version.publishedBy = userId;
+    version.publishedBy = _userId;
 
     await this.versionRepo.save(version);
 
@@ -275,7 +275,7 @@ export class WidgetVersionService {
     await this.deploymentRepo.save({
       botId,
       widgetVersionId: versionId,
-      deployedBy: userId,
+      deployedBy: _userId,
       deploymentType: 'publish',
       previousVersionId: currentActive?.id,
       status: 'deployed',
@@ -291,9 +291,9 @@ export class WidgetVersionService {
     botId: string,
     versionId: string,
     dto: RollbackWidgetVersionDto,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetVersionResponseDto> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const targetVersion = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -326,7 +326,7 @@ export class WidgetVersionService {
     await this.deploymentRepo.save({
       botId,
       widgetVersionId: versionId,
-      deployedBy: userId,
+      deployedBy: _userId,
       deploymentType: 'rollback',
       previousVersionId: currentActive?.id,
       rollbackReason: dto.reason,
@@ -342,9 +342,9 @@ export class WidgetVersionService {
   async archiveVersion(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<void> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -365,9 +365,9 @@ export class WidgetVersionService {
   async deleteVersion(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<void> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -386,9 +386,9 @@ export class WidgetVersionService {
 
   async getDeploymentHistory(
     botId: string,
-    userId: string,
+    _userId: string,
   ): Promise<WidgetDeploymentResponseDto[]> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const deployments = await this.deploymentRepo.find({
       where: { botId },
@@ -415,7 +415,7 @@ export class WidgetVersionService {
 
   private async validateBotAccess(
     botId: string,
-    userId: string,
+    _userId: string,
   ): Promise<void> {
     const bot = await this.botRepo.findOne({
       where: { id: botId },
@@ -472,13 +472,13 @@ export class WidgetVersionService {
   async getEmbedCode(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<{
     scriptTag: string;
     iframeTag: string;
     testUrl: string;
   }> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },
@@ -527,13 +527,13 @@ export class WidgetVersionService {
   async getPreviewUrl(
     botId: string,
     versionId: string,
-    userId: string,
+    _userId: string,
   ): Promise<{
     previewUrl: string;
     version: string;
     config: any;
   }> {
-    await this.validateBotAccess(botId, userId);
+    await this.validateBotAccess(botId, _userId);
 
     const version = await this.versionRepo.findOne({
       where: { id: versionId, botId },

@@ -9,7 +9,6 @@ import {
   IsArray,
   IsObject,
   ValidateNested,
-  IsUrl,
   IsNumber,
 } from 'class-validator';
 import { Transform, plainToInstance } from 'class-transformer';
@@ -293,7 +292,7 @@ export class QueryAiModelDto {
       return plainToInstance(FilterAiModelDto, value);
     try {
       return plainToInstance(FilterAiModelDto, JSON.parse(value));
-    } catch (e) {
+    } catch {
       return undefined;
     }
   })
@@ -312,7 +311,7 @@ export class QueryAiModelDto {
       return plainToInstance(SortAiModelDto, value);
     try {
       return plainToInstance(SortAiModelDto, JSON.parse(value));
-    } catch (e) {
+    } catch (_) {
       return undefined;
     }
   })

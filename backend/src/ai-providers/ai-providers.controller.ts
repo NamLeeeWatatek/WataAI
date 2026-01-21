@@ -11,7 +11,6 @@
   Query,
   HttpCode,
   HttpStatus,
-  Inject,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -45,7 +44,6 @@ import {
   SystemAiSettings,
 } from './domain/ai-provider';
 
-import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Permissions } from '../permissions/decorators/permissions.decorator';
@@ -316,6 +314,7 @@ export class AiProvidersController {
   @Post('verify')
   @ApiOperation({ summary: 'Verify an API key without saving' })
   async verifyApiKey(@Body() dto: VerifyApiKeyDto) {
+    await this.aiProvidersService.verifyApiKey(dto);
     return { valid: true, message: 'API key verification endpoint' };
   }
 

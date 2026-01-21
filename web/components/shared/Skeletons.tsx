@@ -52,36 +52,44 @@ export function TableSkeleton() {
 
 export function FormSkeleton() {
     return (
-        <div className="flex h-full">
-            {/* Sidebar Skeleton */}
-            <div className="w-[280px] shrink-0 border-r border-border/40 bg-card p-5 space-y-6 hidden lg:block">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
-                    <div className="w-32 h-4 bg-muted animate-pulse" />
-                </div>
-                <div className="space-y-3">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="h-12 w-full rounded-xl bg-muted/50 animate-pulse" />
-                    ))}
-                </div>
-            </div>
-
-            {/* Main Content Skeleton */}
-            <div className="flex-1 p-6 lg:p-12 space-y-8">
-                <div className="space-y-4 mb-8">
-                    <div className="h-8 w-1/3 bg-muted rounded animate-pulse" />
-                    <div className="h-4 w-1/2 bg-muted/50 rounded animate-pulse" />
+        <div className="w-full max-w-7xl mx-auto py-2 lg:py-4 flex flex-col h-full animate-in fade-in duration-500">
+            <div className="bg-card border border-border/60 rounded-[32px] shadow-2xl shadow-black/5 overflow-hidden flex flex-col h-auto w-full">
+                {/* Header / Steps Skeleton */}
+                <div className="px-8 lg:px-12 py-5 bg-secondary/5 border-b border-border/40 flex justify-between items-center h-20">
+                    <div className="flex gap-4 w-full max-w-xl mx-auto justify-between">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="flex gap-3 items-center opacity-50">
+                                <Skeleton className="w-8 h-8 rounded-full" />
+                                <Skeleton className="h-3 w-16 hidden md:block" />
+                                {i < 3 && <div className="h-[2px] w-12 bg-border/40 hidden md:block" />}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="space-y-2">
-                            <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                            <div className="h-12 w-full rounded-xl bg-muted/30 animate-pulse border border-border/50" />
-                        </div>
-                    ))}
+                {/* Content Skeleton */}
+                <div className="p-8 lg:p-12 space-y-8">
+                    {/* Description */}
+                    <div className="flex justify-center mb-8">
+                        <Skeleton className="h-4 w-1/2 rounded-full" />
+                    </div>
+
+                    {/* Form Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="space-y-3">
+                                <Skeleton className="h-3 w-24 rounded-full" />
+                                <Skeleton className="h-14 w-full rounded-2xl" />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="flex gap-4 mt-12 pt-4 border-t border-border/20">
+                        <Skeleton className="h-14 w-32 rounded-2xl" />
+                        <Skeleton className="h-14 flex-1 rounded-2xl" />
+                    </div>
                 </div>
-                <div className="h-48 w-full rounded-xl bg-muted/30 animate-pulse border border-border/50" />
             </div>
         </div>
     )

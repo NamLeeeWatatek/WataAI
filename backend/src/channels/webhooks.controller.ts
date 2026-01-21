@@ -9,7 +9,6 @@
   Logger,
   Inject,
   forwardRef,
-  UseInterceptors,
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -91,10 +90,10 @@ export class WebhooksController {
         message: 'Webhook received',
         data: message,
       };
-    } catch (error) {
+    } catch (_) {
       return {
         success: false,
-        error: error.message,
+        error: _.message,
       };
     }
   }
@@ -120,7 +119,7 @@ export class WebhooksController {
       }
 
       return challenge;
-    } catch (error) {
+    } catch (_) {
       return 'Forbidden';
     }
   }
@@ -182,12 +181,12 @@ export class WebhooksController {
       this.logger.log('✅ Webhook queued for processing');
 
       return result;
-    } catch (error) {
+    } catch (_) {
       this.logger.error(
-        `Facebook webhook error: ${error.message}`,
-        error.stack,
+        `Facebook webhook error: ${_.message}`,
+        _.stack,
       );
-      return { success: false, error: error.message };
+      return { success: false, error: _.message };
     }
   }
 
@@ -246,7 +245,9 @@ export class WebhooksController {
       }
       // Fallback to environment variable
       if (!appSecret) {
-        appSecret = this.configService.get<string>('FACEBOOK_APP_SECRET');
+        appSecret = this.configService.get<string>('FACEBOOK_APP_SECRET', {
+          infer: true,
+        });
         if (appSecret) {
           this.logger.log('✅ Using App Secret from environment variable');
         } else {
@@ -302,8 +303,8 @@ export class WebhooksController {
       }
 
       return isValid;
-    } catch (error) {
-      this.logger.error(`❌ Signature verification error: ${error.message}`);
+    } catch (_) {
+      this.logger.error(`❌ Signature verification error: ${_.message}`);
       return false;
     }
   }
@@ -334,9 +335,9 @@ export class WebhooksController {
       });
 
       return result;
-    } catch (error) {
-      this.logger.error(`Instagram webhook error: ${error.message}`);
-      return { success: false, error: error.message };
+    } catch (_) {
+      this.logger.error(`Instagram webhook error: ${_.message}`);
+      return { success: false, error: _.message };
     }
   }
 
@@ -352,9 +353,9 @@ export class WebhooksController {
       });
 
       return result;
-    } catch (error) {
-      this.logger.error(`Telegram webhook error: ${error.message}`);
-      return { success: false, error: error.message };
+    } catch (_) {
+      this.logger.error(`Telegram webhook error: ${_.message}`);
+      return { success: false, error: _.message };
     }
   }
 }

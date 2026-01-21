@@ -32,7 +32,6 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
-import { DatabaseConfig } from './database/config/database-config.type';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { AiProvidersModule } from './ai-providers/ai-providers.module';
 import { BotsModule } from './bots/bots.module';
@@ -95,14 +94,14 @@ import { WorkflowsModule } from './workflows/workflows.module';
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: async (configService: ConfigService<AllConfigType>) => ({
         store: await redisStore({
           socket: {
-            host: configService.get('queue.host'),
-            port: configService.get('queue.port'),
+            host: configService.get('queue.host', { infer: true }),
+            port: configService.get('queue.port', { infer: true }),
           },
-          password: configService.get('queue.password'),
-          url: configService.get('queue.url'),
+          password: configService.get('queue.password', { infer: true }),
+          url: configService.get('queue.url', { infer: true }),
           ttl: 300 * 1000, // cache-manager v5+ uses milliseconds
         }),
       }),
@@ -111,12 +110,12 @@ import { WorkflowsModule } from './workflows/workflows.module';
     ScheduleModule.forRoot(), // Initialize ScheduleModule for Cron
     infrastructureDatabaseModule,
     BullModule.forRootAsync({
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService<AllConfigType>) => ({
         connection: {
-          host: configService.get('queue.host'),
-          port: configService.get('queue.port'),
-          password: configService.get('queue.password'),
-          url: configService.get('queue.url'), // Support parsed URL if present
+          host: configService.get('queue.host', { infer: true }),
+          port: configService.get('queue.port', { infer: true }),
+          password: configService.get('queue.password', { infer: true }),
+          url: configService.get('queue.url', { infer: true }), // Support parsed URL if present
         },
       }),
       inject: [ConfigService],

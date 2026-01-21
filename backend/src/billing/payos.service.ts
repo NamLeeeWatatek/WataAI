@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const PayOSLib = require('@payos/node');
 import { CheckoutResult, PaymentProvider } from './payment-provider.interface';
 
@@ -12,9 +13,15 @@ export class PayOSService implements PaymentProvider, OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const clientId = this.configService.get<string>('PAYOS_CLIENT_ID');
-    const apiKey = this.configService.get<string>('PAYOS_API_KEY');
-    const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY');
+    const clientId = this.configService.get<string>('PAYOS_CLIENT_ID', {
+      infer: true,
+    });
+    const apiKey = this.configService.get<string>('PAYOS_API_KEY', {
+      infer: true,
+    });
+    const checksumKey = this.configService.get<string>('PAYOS_CHECKSUM_KEY', {
+      infer: true,
+    });
 
     if (!clientId || !apiKey || !checksumKey) {
       this.logger.warn('PayOS keys not set. Local payments disabled.');
@@ -64,7 +71,7 @@ export class PayOSService implements PaymentProvider, OnModuleInit {
     };
   }
 
-  verifyWebhook(payload: any, signature?: string): any {
+  verifyWebhook(payload: any, _?: string): any {
     if (!this.payOS) throw new Error('PayOS not configured');
     // PayOS verifies data integrity via checksum in the payload, not just a signature header
     return this.payOS.verifyPaymentWebhookData(payload);

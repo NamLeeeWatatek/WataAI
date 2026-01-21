@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AiProviderConfigRepository } from '../infrastructure/persistence/ai-provider-config.repository';
-import { EncryptionService } from '../../shared/services/encryption.service';
 import { AiEncryptionService } from './ai-encryption.service';
 import {
   CreateUserAiProviderConfigDto,

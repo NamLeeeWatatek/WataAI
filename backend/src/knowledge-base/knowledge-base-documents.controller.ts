@@ -104,7 +104,7 @@ function fixEncoding(filename: string): string {
 
     // Normalization helps with composed/decomposed characters
     return decoded.normalize('NFC');
-  } catch (error) {
+  } catch (_) {
     // If decoding fails, it wasn't valid UTF-8 bytes, so return original
     return filename;
   }
@@ -341,10 +341,10 @@ export class KnowledgeBaseDocumentsController {
       );
       fileUrl = uploadResult.fileUrl;
       fileId = uploadResult.fileId;
-    } catch (error) {
+    } catch (_) {
       return {
         success: false,
-        error: `Failed to upload file to storage: ${error.message}`,
+        error: `Failed to upload file to storage: ${_.message}`,
       };
     }
 

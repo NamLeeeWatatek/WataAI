@@ -651,7 +651,7 @@ export class AuthService {
         sessionId: payload.sessionId,
         hash: payload.hash,
       });
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

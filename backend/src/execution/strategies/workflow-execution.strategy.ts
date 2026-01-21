@@ -10,7 +10,6 @@ import { AiExecutionStrategy } from './ai-execution.strategy';
 import { HttpExecutionStrategy } from './http-execution.strategy';
 import { Liquid } from 'liquidjs';
 import { CreationJobsService } from '../../creation-jobs/creation-jobs.service';
-import { CreationJobStatus } from '../../creation-jobs/domain/creation-jobs';
 
 @Injectable()
 export class WorkflowExecutionStrategy implements IExecutionStrategy {

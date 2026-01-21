@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -84,6 +84,7 @@ export class KBRagService {
   ): Promise<
     AsyncGenerator<{ type: 'source' | 'token' | 'error'; data: any }>
   > {
+    await Promise.resolve();
     return this._generateAnswerStream(
       question,
       knowledgeBaseId,
@@ -261,6 +262,7 @@ export class KBRagService {
 
   private async expandContext(chunks: ChunkSource[]): Promise<ChunkSource[]> {
     // Placeholder for context expansion logic if it was used in original
+    await Promise.resolve();
     return chunks;
   }
 
@@ -450,12 +452,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiConfigId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiConfigId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -516,17 +518,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiConfigId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiConfigId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {

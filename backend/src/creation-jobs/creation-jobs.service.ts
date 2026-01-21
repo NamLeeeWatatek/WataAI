@@ -80,6 +80,93 @@ export class CreationJobsService {
     return result;
   }
 
+  async executeJobStep(
+    toolId: string,
+    stepId: string,
+    inputData: Record<string, any>,
+    context: { workspaceId: string; userId: string },
+    existingJobId?: string,
+  ): Promise<any> {
+    const tool = await this.creationToolsService.findById(toolId);
+    if (!tool) {
+      throw new NotFoundException(`Creation Tool with ID ${toolId} not found`);
+    }
+
+    const step = tool.formConfig.steps.find((s) => s.id === stepId);
+    if (!step) {
+      throw new NotFoundException(`Step with ID ${stepId} not found`);
+    }
+
+    // 1. Find or Create Job (Draft Mode)
+    let job: CreationJob;
+    if (existingJobId) {
+      const foundJob = await this.creationJobsRepository.findById(
+        existingJobId,
+        context.workspaceId,
+      );
+      if (!foundJob) {
+        throw new NotFoundException(`Job with ID ${existingJobId} not found`);
+      }
+      job = foundJob;
+    } else {
+      // Create new Draft Job
+      const newJob = new CreationJob();
+      newJob.status = CreationJobStatus.DRAFT; // You might need to add DRAFT to allowed statuses if strict
+      newJob.creationToolId = toolId;
+      newJob.inputData = inputData;
+      newJob.workspaceId = context.workspaceId;
+      newJob.createdBy = context.userId;
+      newJob.progress = 0;
+      job = await this.creationJobsRepository.create(newJob);
+    }
+
+    // 2. Prepare Inputs (Merge current step inputs with job history)
+    // We update the job's global input data with the new step data
+    const updatedInputData = {
+      ...(job.inputData || {}),
+      ...inputData,
+    };
+
+    // 3. Execute Step (if it has execution config)
+    let executionResult = null;
+    if (step.execution) {
+      // Validate inputs for this step specifically?
+      // For now, we assume the frontend sends valid data for the step.
+
+      const strategy = this.strategyResolver.resolve(step.execution.type);
+
+      // We pass the ACCUMULATED results? Or just the inputs?
+      // Usually execution needs inputs + previous results.
+
+      executionResult = await strategy.execute(
+        step.execution,
+        updatedInputData,
+        { ...context, toolId, stepId, jobId: job.id } as any,
+      );
+    }
+
+    const updatedOutputData = {
+      ...(job.outputData || {}),
+      [stepId]: executionResult,
+      ...(executionResult || {}),
+      latest: executionResult,
+    };
+
+    // Update the job persistent record
+    await this.creationJobsRepository.update(job.id, context.workspaceId, {
+      inputData: updatedInputData,
+      outputData: updatedOutputData,
+      updatedAt: new Date(),
+    });
+
+    return {
+      jobId: job.id,
+      stepId,
+      result: executionResult,
+      status: job.status,
+    };
+  }
+
   async create(
     createDto: CreateCreationJobDto,
     userId?: string,

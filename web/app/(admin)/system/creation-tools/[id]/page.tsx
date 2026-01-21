@@ -26,28 +26,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Label } from '@/components/ui/Label';
 import { Loader2, ArrowLeft, Save, LayoutTemplate, Settings, Play, Sparkles, Plus, Edit2, Trash2 } from 'lucide-react';
 import { FormBuilder } from '@/components/features/creation-tools/FormBuilder';
-import { ExecutionConfig } from '@/components/features/creation-tools/ExecutionConfig';
 import { toolKeys } from '@/lib/hooks/features/useCreationTools';
-
-// Templates Imports
-import { useTemplates } from '@/lib/hooks/useTemplates';
-import { useWorkspace } from '@/lib/hooks/useWorkspace';
-import { Template, CreateTemplateDto, UpdateTemplateDto } from '@/lib/types/template';
-import { TemplateCardMedia } from '@/components/features/templates/TemplateCardMedia';
-import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/AlertDialog';
 import { cn, slugify } from '@/lib/utils';
-import { Pagination } from '@/components/shared/Pagination';
-import { Badge } from '@/components/ui/Badge';
 
 
 // --- Schema ---
@@ -229,10 +209,6 @@ export default function EditCreationToolPage() {
                                 <TabsTrigger value="form" variant="pills">
                                     <LayoutTemplate className="w-4 h-4 mr-2" />
                                     Form Builder
-                                </TabsTrigger>
-                                <TabsTrigger value="execution" variant="pills">
-                                    <Play className="w-4 h-4 mr-2" />
-                                    Execution Flow
                                 </TabsTrigger>
                             </TabsList>
                         </TabsHeader>
@@ -431,25 +407,6 @@ export default function EditCreationToolPage() {
                                                     />
                                                 </div>
                                             </FormItem>
-                                        )}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* TAB 3: Execution Flow */}
-                        <TabsContent value="execution">
-                            <Card>
-                                <CardContent className="pt-6">
-                                    <FormField
-                                        control={control}
-                                        name="executionFlow"
-                                        render={({ field }) => (
-                                            <ExecutionConfig
-                                                config={field.value}
-                                                onChange={field.onChange}
-                                                availableFields={form.getValues('formConfig').fields}
-                                            />
                                         )}
                                     />
                                 </CardContent>

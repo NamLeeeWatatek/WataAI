@@ -1,15 +1,5 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsString,
-  IsNumber,
-  IsObject,
-  IsOptional,
-  IsIn,
-  Matches,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsString, IsObject, IsOptional, Matches } from 'class-validator';
 
 /**
  * Create Widget Version DTO

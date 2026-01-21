@@ -1,5 +1,5 @@
 ﻿import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChannelConnectionEntity } from '../../integrations/infrastructure/persistence/relational/entities/channel-connection.entity';
@@ -10,7 +10,6 @@ export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
 
   constructor(
-    private configService: ConfigService,
     @InjectRepository(ChannelConnectionEntity)
     private connectionRepository: Repository<ChannelConnectionEntity>,
   ) {}
@@ -76,7 +75,7 @@ export class TelegramService {
           this.logger.error(
             `Telegram API detailed error: ${JSON.stringify(errorBody)}`,
           );
-        } catch (e) {
+        } catch {
           /* ignore json parse error */
         }
       }

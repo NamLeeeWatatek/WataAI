@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FileRepository } from '../../persistence/file.repository';
-import { Client, ItemBucketMetadata } from 'minio';
+import { Client } from 'minio';
 import { FileUploadDto } from './dto/file.dto';
 import { FileType } from '../../../domain/file';
 import { ConfigService } from '@nestjs/config';

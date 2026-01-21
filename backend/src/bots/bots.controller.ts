@@ -17,7 +17,6 @@ import {
   ApiTags,
   ApiBearerAuth,
   ApiOperation,
-  ApiQuery,
   ApiParam,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -71,7 +70,6 @@ export class BotsController {
   @SerializeOptions({ groups: ['admin'] })
   async findAll(
     @Query() query: QueryBotDto,
-    @Request() req,
     @CurrentWorkspace() workspaceId: string,
   ): Promise<InfinityPaginationResponseDto<Bot>> {
     const page = query?.page ?? 1;

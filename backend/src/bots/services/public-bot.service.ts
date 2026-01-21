@@ -16,7 +16,6 @@ import {
 } from '../../conversations/infrastructure/persistence/relational/entities/conversation.entity';
 import {
   ConversationStatus,
-  ConversationSource,
   MessageRole,
 } from '../../conversations/conversations.enum';
 import { BotStatus } from '../bots.enum';

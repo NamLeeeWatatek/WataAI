@@ -17,7 +17,7 @@ export class AuditInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
-    const { method, url, user, body, ip, headers } = request;
+    const { method, url, ip, headers } = request;
     const userAgent = headers['user-agent'];
 
     // Only log write operations
@@ -26,9 +26,9 @@ export class AuditInterceptor implements NestInterceptor {
         tap({
           next: (data) => {
             // Wait for response to ensure operation was successful
-            this.logAction(context, request, data, ip, userAgent);
+            void this.logAction(context, request, data, ip, userAgent);
           },
-          error: (error) => {
+          error: () => {
             // Optional: log failed attempts too
             this.logger.debug(`Operation failed: ${method} ${url}`);
           },

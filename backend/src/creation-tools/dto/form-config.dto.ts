@@ -12,6 +12,11 @@ import {
   ValidateNested,
   IsIn,
 } from 'class-validator';
+import { ExecutionType } from '../domain/creation-tool';
+import {
+  AiExecutionConfigDto,
+  HttpExecutionConfigDto,
+} from './execution-config.dto';
 
 export class ValidationDto {
   @ApiPropertyOptional()
@@ -71,6 +76,7 @@ export const FORM_FIELD_TYPES = [
   'template-selector',
   'page-selector',
   'result-preview',
+  'canvas-editor',
 ] as const;
 
 export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];
@@ -124,6 +130,13 @@ export class FormFieldDto {
     operator: 'equals' | 'not-equals' | 'contains';
     value: any;
   };
+
+  @ApiPropertyOptional({
+    description: 'Configuration for complex field types like canvas-editor',
+  })
+  @IsOptional()
+  @IsObject()
+  config?: Record<string, any>;
 }
 
 // --- New Layout Structure ---
@@ -184,6 +197,52 @@ export class StepLayoutDto {
   rows: LayoutRowDto[];
 }
 
+export class StepExecutionConfigDto {
+  @ApiProperty({
+    enum: [ExecutionType.AI_GENERATION, ExecutionType.HTTP_WEBHOOK],
+    description: 'Execution type for this step',
+  })
+  @IsEnum(ExecutionType)
+  @IsIn([ExecutionType.AI_GENERATION, ExecutionType.HTTP_WEBHOOK])
+  type: ExecutionType.AI_GENERATION | ExecutionType.HTTP_WEBHOOK;
+
+  @ApiProperty({
+    enum: ['immediate', 'onApproval', 'manual'],
+    description: 'When to trigger execution',
+  })
+  @IsString()
+  @IsIn(['immediate', 'onApproval', 'manual'])
+  trigger: 'immediate' | 'onApproval' | 'manual';
+
+  @ApiPropertyOptional({
+    description: 'Input data sources configuration',
+  })
+  @IsOptional()
+  @IsObject()
+  inputSources?: {
+    fromSteps?: string[];
+    fromFields?: string[];
+  };
+
+  @ApiProperty({
+    type: Object,
+    description: 'Execution configuration (AI or HTTP)',
+  })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => Object, {
+    keepDiscriminatorProperty: true,
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: AiExecutionConfigDto, name: ExecutionType.AI_GENERATION },
+        { value: HttpExecutionConfigDto, name: ExecutionType.HTTP_WEBHOOK },
+      ],
+    },
+  })
+  config: AiExecutionConfigDto | HttpExecutionConfigDto;
+}
+
 export class FormStepDto {
   @ApiProperty()
   @IsString()
@@ -204,6 +263,22 @@ export class FormStepDto {
   @ValidateNested()
   @Type(() => StepLayoutDto)
   layout: StepLayoutDto;
+
+  @ApiPropertyOptional({
+    type: StepExecutionConfigDto,
+    description: 'Optional execution config for this step',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => StepExecutionConfigDto)
+  execution?: StepExecutionConfigDto;
+
+  @ApiPropertyOptional({
+    description: 'Whether to pause for user approval after this step',
+  })
+  @IsOptional()
+  @IsBoolean()
+  requiresApproval?: boolean;
 }
 
 export class FormConfigDto {
