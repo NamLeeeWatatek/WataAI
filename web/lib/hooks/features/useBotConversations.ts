@@ -7,6 +7,8 @@ import {
     syncFacebookConversations,
     takeoverConversation as takeoverApi,
     handbackConversation as handbackApi,
+    archiveBotConversation,
+    deleteBotConversation,
     GetConversationsParams
 } from '@/lib/api/conversations';
 import toast from '@/lib/toast';
@@ -93,6 +95,29 @@ export function useBotConversation(id: string) {
         }
     });
 
+    const archiveMutation = useMutation({
+        mutationFn: () => archiveBotConversation(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: botConversationKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: botConversationKeys.lists() });
+            toast.success('Conversation archived');
+        },
+        onError: () => {
+            toast.error('Failed to archive conversation');
+        }
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: () => deleteBotConversation(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: botConversationKeys.lists() });
+            toast.success('Conversation deleted');
+        },
+        onError: () => {
+            toast.error('Failed to delete conversation');
+        }
+    });
+
     return {
         conversation: detailQuery.data,
         messages: messagesQuery.data?.messages || [],
@@ -108,5 +133,9 @@ export function useBotConversation(id: string) {
         isTakingOver: takeoverMutation.isPending,
         handbackConversation: handbackMutation.mutateAsync,
         isHandingBack: handbackMutation.isPending,
+        archiveConversation: archiveMutation.mutateAsync,
+        isArchiving: archiveMutation.isPending,
+        deleteConversation: deleteMutation.mutateAsync,
+        isDeleting: deleteMutation.isPending,
     };
 }
