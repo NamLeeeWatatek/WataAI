@@ -24,7 +24,7 @@ export class OAuthController {
     private readonly oauthService: OAuthService,
     private readonly channelsService: ChannelsService,
     private readonly integrationsService: IntegrationsService,
-  ) {}
+  ) { }
 
   @Get('login/:provider')
   @ApiBearerAuth()
@@ -103,16 +103,6 @@ export class OAuthController {
   ) {
     let userId = req.user?.id;
     let workspaceId: string | undefined;
-
-    console.log(
-      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
-    );
-    console.log(
-      `[OAuth CALLBACK DEBUG] Provider: ${provider}, Received State: ${state}`,
-    );
-    console.log(
-      '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
-    );
 
     if (state) {
       const parts = state.split(':');

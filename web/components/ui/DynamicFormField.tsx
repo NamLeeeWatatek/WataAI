@@ -24,7 +24,11 @@ import { FieldPageSelector } from './form-fields/FieldPageSelector'
 import { FieldResultPreview } from './form-fields/FieldResultPreview'
 import { JsonEditor } from '../shared/JsonEditor'
 import { KeyValueEditor } from '../shared/KeyValueEditor'
-import { CanvasEditorField } from './fields/CanvasEditorField'
+import dynamic from 'next/dynamic'
+const CanvasEditorField = dynamic(() => import('./fields/CanvasEditorField').then(mod => mod.CanvasEditorField), {
+    ssr: false,
+    loading: () => <div className="h-[500px] w-full animate-pulse bg-muted rounded-xl" />
+})
 
 interface OptionItem {
     label: string

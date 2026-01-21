@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import Spline from '@splinetool/react-spline';
+import dynamic from 'next/dynamic';
+
+const Spline = dynamic(() => import('@splinetool/react-spline'), {
+    ssr: false,
+    loading: () => null, // We handle loading state in-component
+});
 
 import { ArrowRightLeft } from 'lucide-react';
 

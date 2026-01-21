@@ -5,28 +5,19 @@
 
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import HttpApi from 'i18next-http-backend'
 import LanguageDetector from 'i18next-browser-languagedetector'
-
-// Import translations directly with type assertion
-import enTranslation from '../../public/locales/en/translation.json';
-import viTranslation from '../../public/locales/vi/translation.json';
-
-// Resource bundle
-const resources = {
-  en: {
-    translation: enTranslation,
-  },
-  vi: {
-    translation: viTranslation,
-  },
-}
 
 // i18n configuration
 i18n
+  .use(HttpApi) // Load translations from server
   .use(LanguageDetector) // Detect language from browser/localStorage
   .use(initReactI18next) // Bind with React
   .init({
-    resources,
+    // backend options
+    backend: {
+      loadPath: '/locales/{{lng}}/translation.json',
+    },
 
     // Language detection options
     detection: {
