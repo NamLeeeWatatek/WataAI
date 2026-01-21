@@ -10,6 +10,7 @@ import { SessionProvider } from 'next-auth/react'
 
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 import { SessionWatcher } from '@/components/providers/SessionWatcher'
+import { LazyMotion, domMax } from 'framer-motion'
 
 const inter = Inter({
     subsets: ['latin'],
@@ -48,7 +49,9 @@ export default function RootLayout({
                                 <ThemeProviderWrapper>
                                     <ErrorBoundary>
                                         <SessionWatcher />
-                                        {children}
+                                        <LazyMotion features={domMax}>
+                                            {children}
+                                        </LazyMotion>
                                     </ErrorBoundary>
                                     <Toaster />
                                 </ThemeProviderWrapper>
