@@ -51,7 +51,8 @@ RUN apk add --no-cache \
     libjpeg-turbo \
     giflib \
     librsvg \
-    pixman
+    pixman \
+    bash
 
 # Copy production dependencies
 COPY --from=deps /usr/src/app/node_modules ./node_modules
