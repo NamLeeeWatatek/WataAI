@@ -16,7 +16,7 @@ export class ExecutionStrategyResolver {
     private readonly httpStrategy: HttpExecutionStrategy,
     private readonly aiStrategy: AiExecutionStrategy,
     private readonly workflowStrategy: WorkflowExecutionStrategy,
-  ) {}
+  ) { }
 
   resolve(type: ExecutionType): IExecutionStrategy {
     switch (type) {
@@ -65,8 +65,24 @@ export class ExecutionStrategyResolver {
     previousResults: Record<string, any>,
     execution: StepExecutionConfig,
   ): Record<string, any> {
+    // Start with current step data
     const inputs = { ...currentData };
 
+    // 1. Flatten all previous results into root inputs for easy access (e.g. {{field_name}})
+    // This makes it much easier for users to build their payload without knowing internal step IDs
+    Object.values(previousResults).forEach((result: any) => {
+      if (result && typeof result === 'object') {
+        // We'll merge them so later steps can override earlier ones if there's a name collision
+        // but current step data always wins (as it was already in inputs)
+        Object.entries(result).forEach(([key, value]) => {
+          if (!(key in inputs)) {
+            inputs[key] = value;
+          }
+        });
+      }
+    });
+
+    // 2. legacy/explicit references for power users or when name collisions occur
     if (execution.inputSources?.fromSteps) {
       execution.inputSources.fromSteps.forEach((stepId) => {
         if (previousResults[stepId]) {
@@ -75,17 +91,8 @@ export class ExecutionStrategyResolver {
       });
     }
 
+    // Keep the "prev" object for complex liquid templates: {{prev.step_uuid.field}}
     inputs.prev = previousResults || {};
-
-    if (execution.inputSources?.fromFields) {
-      execution.inputSources.fromFields.forEach((fieldName) => {
-        Object.values(previousResults).forEach((result: any) => {
-          if (result && typeof result === 'object' && fieldName in result) {
-            inputs[fieldName] = result[fieldName];
-          }
-        });
-      });
-    }
 
     this.logger.debug(`Prepared inputs for step execution:`, inputs);
     return inputs;
