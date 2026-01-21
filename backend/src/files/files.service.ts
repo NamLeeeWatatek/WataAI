@@ -50,7 +50,7 @@ export class FilesService {
       if (fileIdMatch) {
         await this.confirm(fileIdMatch[0]);
       }
-    } catch (error) {
+    } catch (_) {
       // Fallback for malformed URLs
       const fileIdMatch = url.match(this.uuidRegex);
       if (fileIdMatch) {

@@ -21,7 +21,7 @@ import { CreateStylePresetDto } from './dto/create-style-preset.dto';
 import { UpdateStylePresetDto } from './dto/update-style-preset.dto';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 import { Workspace } from '../workspaces/domain/workspace';
-import { IPaginationOptions } from '../utils/types/pagination-options';
+
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()

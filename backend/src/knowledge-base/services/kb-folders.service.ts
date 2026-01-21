@@ -26,10 +26,10 @@ export class KBFoldersService {
     private readonly kbDocumentsService: KBDocumentsService,
   ) {}
 
-  async create(userId: string, createDto: CreateFolderDto) {
+  async create(_userId: string, createDto: CreateFolderDto) {
     const kb = await this.kbManagementService.findOne(
       createDto.knowledgeBaseId,
-      userId,
+      _userId,
     );
 
     // Check for duplicate names at the same level
@@ -54,15 +54,15 @@ export class KBFoldersService {
       ...createDto,
       workspaceId: kb.workspaceId,
       parentId: createDto.parentFolderId,
-      createdBy: userId,
+      createdBy: _userId,
     };
 
     const folder = this.folderRepository.create(folderData);
     return this.folderRepository.save(folder);
   }
 
-  async findAll(kbId: string, userId: string) {
-    await this.kbManagementService.findOne(kbId, userId);
+  async findAll(kbId: string, _userId: string) {
+    await this.kbManagementService.findOne(kbId, _userId);
 
     return this.folderRepository.find({
       where: { knowledgeBaseId: kbId },
@@ -71,7 +71,7 @@ export class KBFoldersService {
     });
   }
 
-  async findOne(folderId: string, userId: string) {
+  async findOne(folderId: string, _userId: string) {
     const folder = await this.folderRepository.findOne({
       where: { id: folderId },
       relations: ['knowledgeBase', 'children', 'documents'],
@@ -81,13 +81,13 @@ export class KBFoldersService {
       throw new NotFoundException('Folder not found');
     }
 
-    await this.kbManagementService.findOne(folder.knowledgeBaseId, userId);
+    await this.kbManagementService.findOne(folder.knowledgeBaseId, _userId);
 
     return folder;
   }
 
-  async update(folderId: string, userId: string, updateDto: UpdateFolderDto) {
-    const folder = await this.findOne(folderId, userId);
+  async update(folderId: string, _userId: string, updateDto: UpdateFolderDto) {
+    const folder = await this.findOne(folderId, _userId);
 
     if (updateDto.name && updateDto.name !== folder.name) {
       const parentId =
@@ -117,15 +117,15 @@ export class KBFoldersService {
     return this.folderRepository.save(folder);
   }
 
-  async remove(folderId: string, userId: string) {
-    const folder = await this.findOne(folderId, userId);
+  async remove(folderId: string, _userId: string) {
+    const folder = await this.findOne(folderId, _userId);
 
     // 1. Delete subfolders recursively
     const subfolders = await this.folderRepository.find({
       where: { parentId: folderId },
     });
     for (const subfolder of subfolders) {
-      await this.remove(subfolder.id, userId);
+      await this.remove(subfolder.id, _userId);
     }
 
     // 2. Delete documents in this folder (handles chunks and vectors)
@@ -133,7 +133,7 @@ export class KBFoldersService {
       where: { folderId: folderId },
     });
     for (const doc of documents) {
-      await this.kbDocumentsService.remove(doc.id, userId);
+      await this.kbDocumentsService.remove(doc.id, _userId);
     }
 
     // 3. Remove the folder itself
@@ -141,8 +141,8 @@ export class KBFoldersService {
     return { success: true };
   }
 
-  async getTree(kbId: string, userId: string) {
-    await this.kbManagementService.findOne(kbId, userId);
+  async getTree(kbId: string, _userId: string) {
+    await this.kbManagementService.findOne(kbId, _userId);
 
     const folders = await this.folderRepository.find({
       where: { knowledgeBaseId: kbId },
@@ -181,10 +181,10 @@ export class KBFoldersService {
   async findAllByParent(
     kbId: string,
     parentId: string | null,
-    userId: string,
+    _userId: string,
     search?: string,
   ) {
-    await this.kbManagementService.findOne(kbId, userId);
+    await this.kbManagementService.findOne(kbId, _userId);
 
     const query = this.folderRepository
       .createQueryBuilder('folder')
@@ -205,7 +205,7 @@ export class KBFoldersService {
     return query.getMany();
   }
 
-  async getBreadcrumbs(folderId: string, userId: string): Promise<any[]> {
+  async getBreadcrumbs(folderId: string, _userId: string): Promise<any[]> {
     const breadcrumbs: any[] = [];
     let currentId: string | null = folderId;
 

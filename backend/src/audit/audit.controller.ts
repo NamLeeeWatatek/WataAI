@@ -15,11 +15,9 @@ import {
   ApiOperation,
   ApiParam,
   ApiQuery,
-  ApiOkResponse,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AuditService } from './audit.service';
-import { AuditLog, DataAccessLog } from './domain/audit';
 import { Roles } from '../roles/roles.decorator';
 import { RolesGuard } from '../roles/roles.guard';
 

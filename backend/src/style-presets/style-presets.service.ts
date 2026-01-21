@@ -3,7 +3,7 @@ import { StylePresetRepository } from './infrastructure/persistence/style-preset
 import { StylePreset } from './domain/style-preset';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { NullableType } from '../utils/types/nullable.type';
-import { DeepPartial } from '../utils/types/deep-partial.type';
+
 import { CreateStylePresetDto } from './dto/create-style-preset.dto';
 import { UpdateStylePresetDto } from './dto/update-style-preset.dto';
 

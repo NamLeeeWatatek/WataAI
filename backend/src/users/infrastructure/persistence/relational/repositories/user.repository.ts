@@ -8,7 +8,6 @@ import { User } from '../../../../domain/user';
 import { UserRepository } from '../../user.repository';
 import { UserMapper } from '../mappers/user.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
-import { RoleEnum } from '../../../../../roles/roles.enum';
 
 @Injectable()
 export class UsersRelationalRepository implements UserRepository {

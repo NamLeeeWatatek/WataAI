@@ -24,6 +24,7 @@ import { FieldPageSelector } from './form-fields/FieldPageSelector'
 import { FieldResultPreview } from './form-fields/FieldResultPreview'
 import { JsonEditor } from '../shared/JsonEditor'
 import { KeyValueEditor } from '../shared/KeyValueEditor'
+import { CanvasEditorField } from './fields/CanvasEditorField'
 
 interface OptionItem {
     label: string
@@ -66,6 +67,14 @@ const fieldRegistry: Record<string, React.ComponentType<DynamicFormFieldProps>> 
     'multi-select': FieldMultiSelect,
     'page-selector': FieldPageSelector,
     'result-preview': FieldResultPreview,
+    'canvas-editor': (props) => (
+        <CanvasEditorField
+            field={props.field as any} // NodeProperty extends FormField but TS needs assertion
+            value={props.value}
+            onChange={(val) => props.onChange(props.field.name, val)}
+            previousStepResults={(props.allValues?.prev as Record<string, any>) || undefined}
+        />
+    ),
     'radio': (props) => {
         const { field, value, onChange } = props
         // Ensure field.options is always an array for mapping

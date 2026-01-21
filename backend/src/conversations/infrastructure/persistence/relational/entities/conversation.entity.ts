@@ -13,7 +13,7 @@
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { BotEntity } from '../../../../../bots/infrastructure/persistence/relational/entities/bot.entity';
-import { WorkspaceEntity } from '../../../../../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
+
 import { ContactEntity } from './contact.entity';
 import {
   ConversationStatus,

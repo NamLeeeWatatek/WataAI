@@ -73,8 +73,8 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
 
     // Handle Selection
     const handleSelect = (template: Template) => {
-        // Update own value
-        onChange?.(template.id);
+        // Update own value: Pass thumbnail URL (image link) instead of ID
+        onChange?.(template.thumbnailUrl || '');
 
         // Prefill other fields
         if (template.prefilledData) {
@@ -155,7 +155,7 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
                                 onClick={() => handleSelect(template)}
                                 className={cn(
                                     "group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300",
-                                    value === template.id
+                                    value === template.thumbnailUrl
                                         ? "border-primary"
                                         : "border-transparent bg-muted/20 hover:border-primary/30"
                                 )}
@@ -181,7 +181,7 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
                                     )}
                                 </div>
 
-                                {value === template.id && (
+                                {value === template.thumbnailUrl && (
                                     <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-in zoom-in spin-in-90 duration-300 z-10">
                                         <Check className="w-5 h-5 text-primary-foreground stroke-[3]" />
                                     </div>

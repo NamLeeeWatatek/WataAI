@@ -5,16 +5,13 @@
   UnprocessableEntityException,
   Logger,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { FileRepository } from '../../persistence/file.repository';
-import { FilesService } from '../../../files.service';
 
 import { FileUploadDto } from './dto/file.dto';
 import crypto from 'crypto';
 import {
   PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
   S3Client,
   HeadBucketCommand,

@@ -168,7 +168,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
             description={tool.categories?.[0]?.name || 'AI Creation Tool'}
             className="bg-transparent"
         >
-            <div className="w-full max-w-4xl mx-auto py-2 lg:py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="w-full max-w-7xl mx-auto py-2 lg:py-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="bg-card border border-border/60 rounded-[32px] shadow-2xl shadow-black/5 overflow-hidden flex flex-col h-auto">
                     {/* Unified Header with Steps */}
                     {showSteps && (

@@ -3,7 +3,6 @@
   NotFoundException,
   BadRequestException,
   Logger,
-  InternalServerErrorException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { NullableType } from '../utils/types/nullable.type';
@@ -15,6 +14,7 @@ import {
   UpdateWorkspaceAiProviderConfigDto,
   UpdateSystemAiSettingsDto,
   QueryAiModelDto,
+  VerifyApiKeyDto,
 } from './dto/ai-provider.dto';
 import { infinityPagination } from '../utils/infinity-pagination';
 import { InfinityPaginationResponseDto } from '../utils/dto/infinity-pagination-response.dto';
@@ -25,7 +25,6 @@ import {
   AiUsageLog,
   AiUsageStats,
   ChatMessage,
-  SystemAiSettings,
   AiModel,
   AiModelType,
 } from './domain/ai-provider';
@@ -148,6 +147,22 @@ export class AiProvidersService {
     });
 
     return true;
+  }
+
+  // Standalone verification
+  async verifyApiKey(dto: VerifyApiKeyDto): Promise<void> {
+    try {
+      await this.aiModelService.verifyConnection(
+        dto.providerName,
+        dto.config as unknown as Record<string, unknown>,
+      );
+    } catch (error) {
+      throw new BadRequestException(
+        `Verification failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   // --- Workspace Configuration (Delegate to Config) ---
@@ -1283,13 +1298,13 @@ INSTRUCTIONS:
     return this.systemAiSettingsRepository.updateSystemSettings(dto);
   }
 
-  async getWorkspaceProviders(workspaceId: string): Promise<AiProvider[]> {
+  async getWorkspaceProviders(_workspaceId: string): Promise<AiProvider[]> {
     // Logic to filter available providers? Or just return all available?
     // Usually all providers are available to add.
     return this.getAvailableProviders();
   }
 
-  async getUserProviders(userId: string): Promise<AiProvider[]> {
+  async getUserProviders(_userId: string): Promise<AiProvider[]> {
     return this.getAvailableProviders();
   }
 

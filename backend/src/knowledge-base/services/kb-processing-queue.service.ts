@@ -33,7 +33,7 @@ export class KBProcessingQueueService implements OnModuleInit {
     @InjectQueue('kb-processing') private readonly kbQueue: Queue,
     @InjectRepository(KbDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     this.logger.log('🔄 Checking for stuck jobs on startup...');

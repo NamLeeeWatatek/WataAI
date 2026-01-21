@@ -180,7 +180,7 @@ export class KBDocumentsService {
       await this.filesService.confirmFromUrl(savedDoc.fileUrl);
     }
 
-    const jobId = await this.processingQueue.addJob(
+    await this.processingQueue.addJob(
       savedDoc.id,
       createDto.knowledgeBaseId,
       'embedding',
@@ -215,7 +215,6 @@ export class KBDocumentsService {
     filterOptions,
     sortOptions,
     paginationOptions,
-    userId,
   }: {
     kbId: string;
     filterOptions?: FilterDocumentDto | null;
@@ -278,7 +277,7 @@ export class KBDocumentsService {
     return data;
   }
 
-  async findOne(documentId: string, userId: string) {
+  async findOne(documentId: string, _userId: string) {
     const document = await this.documentRepository.findOne({
       where: { id: documentId },
       relations: ['knowledgeBase'],

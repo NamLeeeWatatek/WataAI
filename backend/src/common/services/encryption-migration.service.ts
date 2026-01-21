@@ -56,9 +56,9 @@ export class EncryptionMigrationService {
       decrypted += decipher.final('utf8');
 
       return decrypted;
-    } catch (error) {
-      this.logger.error('Failed to decrypt with CBC', error);
-      throw error;
+    } catch (_) {
+      this.logger.error('Failed to decrypt with CBC', _);
+      throw _;
     }
   }
 
@@ -95,8 +95,8 @@ export class EncryptionMigrationService {
         `✅ Migrated provider ${provider.id} (${provider.providerId})`,
       );
       return true;
-    } catch (error) {
-      this.logger.error(`❌ Failed to migrate provider ${provider.id}`, error);
+    } catch (_) {
+      this.logger.error(`❌ Failed to migrate provider ${provider.id}`, _);
       return false;
     }
   }
@@ -123,7 +123,7 @@ export class EncryptionMigrationService {
         } else {
           skipped++;
         }
-      } catch (error) {
+      } catch (_) {
         failed++;
       }
     }

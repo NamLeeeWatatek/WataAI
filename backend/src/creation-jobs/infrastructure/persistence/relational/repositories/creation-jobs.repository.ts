@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Between } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { CreationJobEntity } from '../entities/creation-jobs.entity';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { CreationJob } from '../../../../domain/creation-jobs';

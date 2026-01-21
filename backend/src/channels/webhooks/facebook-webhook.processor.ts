@@ -3,7 +3,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   BaseMessageProcessor,
   MessageProcessingContext,
-  WebhookProcessingResult,
 } from './webhook-processor.base';
 import { WebhookQueueService } from './webhook-queue.service';
 import { ChannelsService } from '../channels.service';

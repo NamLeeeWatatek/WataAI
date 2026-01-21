@@ -6,7 +6,7 @@
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { NotificationEntity } from './infrastructure/persistence/relational/entities/notification.entity';
 import { NotificationsGateway } from './notifications.gateway';
 

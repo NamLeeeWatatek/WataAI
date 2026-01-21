@@ -57,7 +57,7 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) {}
+  ) { }
 
   async create(
     createDto: CreateConversationDto & {
@@ -333,7 +333,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (error) {}
+        } catch (_) { }
 
         return {
           ...item,
@@ -460,7 +460,7 @@ export class ConversationsService {
       }
     }
 
-    const message = this.messageRepository.create({
+    const _message = this.messageRepository.create({
       ...createDto,
       conversationId,
       workspaceId,
@@ -468,7 +468,7 @@ export class ConversationsService {
       metadata: createDto.metadata || {},
     });
 
-    const savedMessage = await this.messageRepository.save(message);
+    const savedMessage = await this.messageRepository.save(_message);
 
     // Emit real-time event to WebSocket clients
     this.conversationsGateway.emitNewMessage(conversationId, savedMessage);
@@ -482,7 +482,7 @@ export class ConversationsService {
       (conversation.type === 'discovery' ||
         conversation.metadata?.discoveryEnabled)
     ) {
-      this.handleRagDiscovery(conversation, savedMessage);
+      void this.handleRagDiscovery(conversation, savedMessage);
     }
 
     // âœ… Increment Quota usage
@@ -501,10 +501,10 @@ export class ConversationsService {
           conversation,
           createDto.content,
         );
-      } catch (error) {
+      } catch (_) {
         // Log error but don't fail the request - message is already saved
         this.logger.error(
-          `Failed to send message to external channel: ${error.message}`,
+          `Failed to send message to external channel: ${_.message}`,
         );
       }
     }
@@ -588,10 +588,10 @@ export class ConversationsService {
           `â Œ Failed to send message to ${conversation.channelType}: ${result.error}`,
         );
       }
-    } catch (error) {
+    } catch (_) {
       this.logger.error(
-        `Error sending message to external channel: ${error.message}`,
-        error.stack,
+        `Error sending message to external channel: ${_.message}`,
+        _.stack,
       );
     }
   }
@@ -665,7 +665,7 @@ export class ConversationsService {
         });
       }
     } catch (error) {
-      this.logger.error(`â Œ RAG Discovery failed: ${error.message}`);
+      this.logger.error(`❌ RAG Discovery failed: ${error.message}`);
     }
   }
 
@@ -712,9 +712,9 @@ Message: ${currentMessage}`;
         searchQuery: queryValue.replace(/^"|"$/g, ''),
         needsKB: action === 'SEARCH',
       };
-    } catch (error) {
+    } catch (_) {
       this.logger.warn(
-        `Failed to rewrite query: ${error.message}. Defaulting to SEARCH.`,
+        `Failed to rewrite query: ${_.message}. Defaulting to SEARCH.`,
       );
       return { searchQuery: currentMessage, needsKB: true };
     }
@@ -773,15 +773,15 @@ Message: ${currentMessage}`;
   }
 
   async getMessage(conversationId: string, messageId: string) {
-    const message = await this.messageRepository.findOne({
+    const _message = await this.messageRepository.findOne({
       where: { id: messageId, conversationId },
     });
 
-    if (!message) {
+    if (!_message) {
       throw new NotFoundException('Message not found');
     }
 
-    return message;
+    return _message;
   }
 
   async updateMessageFeedback(
@@ -789,13 +789,13 @@ Message: ${currentMessage}`;
     messageId: string,
     dto: MessageFeedbackDto,
   ) {
-    const message = await this.getMessage(conversationId, messageId);
+    const _message = await this.getMessage(conversationId, messageId);
 
-    if (dto.feedback !== undefined) message.feedback = dto.feedback || null;
+    if (dto.feedback !== undefined) _message.feedback = dto.feedback || null;
     if (dto.feedbackComment !== undefined)
-      message.feedbackComment = dto.feedbackComment;
+      _message.feedbackComment = dto.feedbackComment;
 
-    return this.messageRepository.save(message);
+    return this.messageRepository.save(_message);
   }
 
   async createMessageFeedback(
@@ -817,7 +817,7 @@ Message: ${currentMessage}`;
 
       // ✅ FIX: Emit event for real-time feedback update notification
       // Get message to find conversation
-      const message = await this.getMessage(
+      const _message = await this.getMessage(
         existing.messageId.split('-')[0], // This is a placeholder - actual logic needs proper relation
         messageId,
       );

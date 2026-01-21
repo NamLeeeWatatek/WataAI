@@ -47,7 +47,7 @@ export class ConversationsGateway
     // âœ… Support both object and string format
     const conversationId =
       typeof data === 'string' ? data : data.conversationId;
-    client.join(`conversation:${conversationId}`);
+    void client.join(`conversation:${conversationId}`);
     this.logger.log(
       `Client ${client.id} joined conversation ${conversationId}`,
     );
@@ -66,7 +66,7 @@ export class ConversationsGateway
     // âœ… Support both object and string format
     const conversationId =
       typeof data === 'string' ? data : data.conversationId;
-    client.leave(`conversation:${conversationId}`);
+    void client.leave(`conversation:${conversationId}`);
     this.logger.log(`Client ${client.id} left conversation ${conversationId}`);
     return { event: 'left', conversationId };
   }

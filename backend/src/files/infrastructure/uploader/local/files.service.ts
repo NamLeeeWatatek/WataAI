@@ -15,7 +15,7 @@ export class FilesLocalService implements FileDriver {
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
     private readonly fileRepository: FileRepository,
-  ) {}
+  ) { }
 
   async create(file: Express.Multer.File): Promise<{ file: FileType }> {
     if (!file) {

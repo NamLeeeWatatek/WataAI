@@ -112,7 +112,7 @@ export class AiConversationsService {
             sources: chatResult.sources,
           } as any,
         });
-      } catch (error) {
+      } catch (_) {
         // Fallback error message
         conversation.messages.push({
           role: MessageRole.ASSISTANT,

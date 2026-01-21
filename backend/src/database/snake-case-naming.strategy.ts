@@ -47,7 +47,9 @@ export class SnakeCaseNamingStrategy
         '_' +
         firstPropertyName.replace(/\./gi, '_') +
         '_' +
-        secondTableName,
+        secondTableName +
+        '_' +
+        secondPropertyName, // Ensure it's used
     );
   }
 

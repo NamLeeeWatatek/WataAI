@@ -13,13 +13,11 @@ import {
 import { CreateGenerationJobDto } from './dto/create-generation-job.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
+
 import { GenerationJobsService } from './generation-jobs.service';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 import { Workspace } from '../workspaces/domain/workspace';
-import { IPaginationOptions } from '../utils/types/pagination-options';
+
 import { infinityPagination } from '../utils/infinity-pagination';
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';

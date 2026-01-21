@@ -6,7 +6,6 @@ import {
   ValidateNested,
   IsBoolean,
   IsArray,
-  IsEnum,
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { User } from '../domain/user';

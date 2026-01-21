@@ -1,26 +1,19 @@
 ﻿import {
   Column,
-  CreateDateColumn,
   DeleteDateColumn,
   Entity,
   Index,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
   JoinColumn,
   OneToOne,
 } from 'typeorm';
-import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { WorkspaceEntity } from '../../../../../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
+
 import { WorkspaceOwnedEntity } from '../../../../../utils/workspace-owned.entity';
 import { WidgetVersionEntity } from './widget-version.entity';
 import { AiProviderConfigEntity } from '../../../../../ai-providers/infrastructure/persistence/relational/entities/ai-provider.entity';
-import {
-  BotStatus,
-  BotWidgetPosition,
-  BotWidgetButtonSize,
-} from '../../../../bots.enum';
+import { BotStatus } from '../../../../bots.enum';
 
 @Entity({ name: 'bot' })
 export class BotEntity extends WorkspaceOwnedEntity {

@@ -32,8 +32,10 @@ export function useCreationJobs(initialParams: {
 
     // Reset to page 1 when search changes
     useEffect(() => {
-        setPage(1);
-    }, [debouncedSearch]);
+        if (page !== 1) {
+            setPage(1);
+        }
+    }, [debouncedSearch, page]);
 
     const queryParams = {
         page,

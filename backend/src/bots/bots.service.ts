@@ -1,10 +1,7 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
-  Inject,
-  forwardRef,
   Logger,
 } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
@@ -318,7 +315,7 @@ export class BotsService {
     }
 
     Object.assign(bot, botUpdate);
-    const savedBot = await this.botRepository.save(bot);
+    await this.botRepository.save(bot);
 
     // 3. Update active widget version if visual fields are present
     const hasVisualUpdates = [

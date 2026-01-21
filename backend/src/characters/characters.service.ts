@@ -3,7 +3,7 @@ import { CharacterRepository } from './infrastructure/persistence/character.repo
 import { Character } from './domain/character';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { NullableType } from '../utils/types/nullable.type';
-import { DeepPartial } from '../utils/types/deep-partial.type';
+
 import { CreateCharacterDto } from './dto/create-character.dto';
 import { UpdateCharacterDto } from './dto/update-character.dto';
 

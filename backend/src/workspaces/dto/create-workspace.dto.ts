@@ -6,7 +6,7 @@ import {
   IsEnum,
   Matches,
 } from 'class-validator';
-import { Workspace } from '../domain/workspace';
+
 import { WorkspacePlan } from '../enums/workspace-plan.enum';
 
 export class CreateWorkspaceDto {

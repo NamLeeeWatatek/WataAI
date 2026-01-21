@@ -20,7 +20,6 @@ export class RecursiveCharacterTextSplitter {
 
   async splitText(text: string): Promise<string[]> {
     const finalChunks: string[] = [];
-    const goodSplits: string[] = [];
 
     // Determine the separator to use
     let separator = this.separators[this.separators.length - 1];

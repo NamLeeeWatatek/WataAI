@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  BadRequestException,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 
@@ -15,7 +10,9 @@ export class StripeService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const apiKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    const apiKey = this.configService.get<string>('STRIPE_SECRET_KEY', {
+      infer: true,
+    });
     if (!apiKey) {
       this.logger.warn('STRIPE_SECRET_KEY not set. Billing disabled.');
       return;
@@ -50,7 +47,7 @@ export class StripeService implements OnModuleInit {
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${returnUrl}?session_id = { CHECKOUT_SESSION_ID }`,
       cancel_url: returnUrl,
       subscription_data: {
         metadata: { workspaceId },
@@ -80,7 +77,9 @@ export class StripeService implements OnModuleInit {
     signature: string,
   ): Stripe.Event {
     if (!this.stripe) throw new Error('Stripe not configured');
-    const secret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    const secret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET', {
+      infer: true,
+    });
     if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET not configured');
 
     return this.stripe.webhooks.constructEvent(payload, signature, secret);

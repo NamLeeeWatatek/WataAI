@@ -22,10 +22,6 @@ interface PDFData {
   Pages: PDFPage[];
 }
 
-interface PDFParserError {
-  parserError: string;
-}
-
 interface PDFTextItem {
   str: string; // The text content
   dir: string; // Text direction
@@ -156,7 +152,7 @@ export class KBTextExtractorService {
                             encoded,
                           );
                           text += redecoded + ' ';
-                        } catch (decodeError) {
+                        } catch {
                           // Fallback to original if decode fails
                           this.logger.warn(
                             `Failed to decode text segment: ${run.T}`,
@@ -275,7 +271,7 @@ export class KBTextExtractorService {
                 if (textContent.includes('%')) {
                   textContent = decodeURIComponent(textContent);
                 }
-              } catch (e) {
+              } catch {
                 // Keep original if decode fails
               }
 
@@ -330,7 +326,7 @@ export class KBTextExtractorService {
           text = decoded;
         }
       }
-    } catch (e) {
+    } catch {
       // Ignore decode errors
     }
 

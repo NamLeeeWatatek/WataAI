@@ -7,7 +7,7 @@ import { KbProcessingStatus } from '../knowledge-base.enum';
 import { KBProcessingQueueService } from './kb-processing-queue.service';
 import { KBManagementService } from './kb-management.service';
 import { KBEmbeddingsService } from './kb-embeddings.service';
-import { sanitizeText, sanitizeMetadata } from '../utils/text-sanitizer';
+import { sanitizeMetadata } from '../utils/text-sanitizer';
 import { AuditService } from '../../audit/audit.service';
 import { MarkdownProcessorUtil } from '../utils/markdown-processor.util';
 import axios from 'axios';
@@ -124,7 +124,7 @@ export class KBCrawlerService {
           try {
             const absoluteUrl = new URL(href, url).href;
             links.push(absoluteUrl);
-          } catch (e) {
+          } catch (_) {
             // Ignore invalid URLs
           }
         }
@@ -301,7 +301,7 @@ export class KBCrawlerService {
                   if (linkDomain === baseDomain && !visitedUrls.has(link)) {
                     urlsToCrawl.push({ url: link, depth: depth + 1 });
                   }
-                } catch (e) {
+                } catch (_) {
                   // Invalid URL, skip
                 }
               });

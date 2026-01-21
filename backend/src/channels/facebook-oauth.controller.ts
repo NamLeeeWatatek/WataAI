@@ -11,7 +11,6 @@
   Logger,
   NotFoundException,
   BadRequestException,
-  InternalServerErrorException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';

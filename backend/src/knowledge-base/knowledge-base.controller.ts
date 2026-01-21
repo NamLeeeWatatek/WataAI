@@ -89,7 +89,7 @@ export class KnowledgeBaseController {
       filterOptions: { ...filters, workspaceId },
       sortOptions: query?.sort || undefined,
       paginationOptions: { page, limit },
-      userId: req.user.id,
+      _userId: req.user.id,
     });
 
     return infinityPagination(data, { page, limit }, total);
@@ -423,8 +423,6 @@ export class KnowledgeBaseController {
         await this.embeddingsService.generateQueryEmbedding(probeText);
       const dimension = embedding.length;
 
-      this.embeddingsService.probeDimension; // Just verifying it exists
-
       // 2. Recreate collection
       await this.vectorService.recreateCollection(dimension);
 
@@ -449,8 +447,6 @@ export class KnowledgeBaseController {
     @Request() req,
     @Body() body: ChatWithKnowledgeBaseDto,
   ) {
-    const userId = req.user.id;
-
     try {
       const result = await this.kbRagService.chatWithBotAndRAG(
         body.message,

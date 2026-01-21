@@ -26,7 +26,6 @@ import {
   RollbackWidgetVersionDto,
   WidgetVersionResponseDto,
   WidgetVersionListItemDto,
-  WidgetDeploymentResponseDto,
 } from '../dto/widget-version.dto';
 
 import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.guard';

@@ -26,7 +26,8 @@ export interface FormField {
     | 'multi-select'
     | 'template-selector'
     | 'page-selector'
-    | 'result-preview';
+    | 'result-preview'
+    | 'canvas-editor';
   label: string;
   placeholder?: string;
   description?: string;
@@ -38,6 +39,9 @@ export interface FormField {
     value: any;
     icon?: string;
   }>;
+
+  // Configuration for complex field types (e.g., canvas-editor)
+  config?: Record<string, any>;
 
   // Validation rules
   validation?: {
@@ -59,7 +63,26 @@ export interface FormField {
 }
 
 /**
- * Form configuration interface
+ * Step-level execution configuration
+ */
+export interface StepExecutionConfig {
+  type: ExecutionType.AI_GENERATION | ExecutionType.HTTP_WEBHOOK;
+
+  // When to trigger execution
+  trigger: 'immediate' | 'onApproval' | 'manual';
+
+  // Input data sources
+  inputSources?: {
+    fromSteps?: string[]; // IDs of previous steps to combine data from
+    fromFields?: string[]; // Specific field names to include
+  };
+
+  // The actual execution configuration
+  config: AiExecutionConfig | HttpExecutionConfig;
+}
+
+/**
+ * Form Step with optional execution
  */
 export interface FormStep {
   id: string;
@@ -79,6 +102,12 @@ export interface FormStep {
       }>;
     }>;
   };
+
+  // NEW: Optional execution config per step
+  execution?: StepExecutionConfig;
+
+  // Whether to pause for user approval after this step
+  requiresApproval?: boolean;
 }
 
 /**
@@ -186,11 +215,12 @@ export class CreationTool {
   @ApiProperty({ type: Object, description: 'Dynamic form configuration' })
   formConfig: FormConfig;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Object,
-    description: 'Execution workflow configuration',
+    description:
+      'Global execution workflow configuration (optional - can use step-level execution instead)',
   })
-  executionFlow: ExecutionFlow;
+  executionFlow?: ExecutionFlow;
 
   @ApiProperty({ type: Boolean, default: true })
   isActive: boolean;

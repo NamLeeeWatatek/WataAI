@@ -4,7 +4,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsObject,
   IsBoolean,
   IsNumber,
   ValidateNested,
@@ -70,11 +69,12 @@ export class CreateCreationToolDto {
   @Type(() => FormConfigDto)
   formConfig: FormConfigDto;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: Object,
-    description: 'Execution flow configuration',
+    description:
+      'Global execution flow configuration (optional - can use step-level execution instead)',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @ValidateNested()
   @Type(() => Object, {
     keepDiscriminatorProperty: true,

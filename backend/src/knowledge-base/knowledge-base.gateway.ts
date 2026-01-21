@@ -5,8 +5,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+
 import { Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 

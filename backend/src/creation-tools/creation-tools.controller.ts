@@ -11,6 +11,7 @@ import {
   HttpStatus,
   HttpCode,
   SerializeOptions,
+  Request,
 } from '@nestjs/common';
 import { CreateCreationToolDto } from './dto/create-creation-tool.dto';
 import { UpdateCreationToolDto } from './dto/update-creation-tool.dto';
@@ -32,13 +33,13 @@ import { QueryCreationToolDto } from './dto/query-creation-tool.dto';
 import { CreationTool } from './domain/creation-tool';
 import { CreationToolsService } from './creation-tools.service';
 import { infinityPagination } from '../utils/infinity-pagination';
-import { Roles } from '../roles/roles.decorator';
-import { RoleEnum } from '../roles/roles.enum';
-import { RolesGuard } from '../roles/roles.guard';
+
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Permissions } from '../permissions/decorators/permissions.decorator';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
+import { ExecutionStrategyResolver } from '../execution/execution-strategy.resolver';
+import { CreationJobsService } from '../creation-jobs/creation-jobs.service';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
@@ -48,7 +49,11 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
   version: '1',
 })
 export class CreationToolsController {
-  constructor(private readonly service: CreationToolsService) {}
+  constructor(
+    private readonly service: CreationToolsService,
+    private readonly executionResolver: ExecutionStrategyResolver,
+    private readonly creationJobsService: CreationJobsService,
+  ) {}
 
   @ApiCreatedResponse({ type: CreationTool })
   @ApiOperation({ summary: 'Create new creation tool' })
@@ -136,6 +141,20 @@ export class CreationToolsController {
     @Param('id') id: CreationTool['id'],
     @Body() updateDto: UpdateCreationToolDto,
   ): Promise<CreationTool> {
+    if (updateDto.formConfig && (updateDto.formConfig as any).steps) {
+      console.log(
+        'DEBUG: Updating tool steps execution:',
+        JSON.stringify(
+          (updateDto.formConfig as any).steps.map((s) => ({
+            id: s.id,
+            hasExecution: !!s.execution,
+            executionType: s.execution?.type,
+          })),
+          null,
+          2,
+        ),
+      );
+    }
     return this.service.update(id, updateDto);
   }
 
@@ -184,5 +203,52 @@ export class CreationToolsController {
     @Body() data: { tools: any[] },
   ): Promise<{ success: number; failed: number }> {
     return this.service.importTools(data.tools);
+  }
+
+  @ApiOperation({ summary: 'Execute a specific step (Draft Mode)' })
+  @ApiOkResponse({ description: 'Step execution result with Job ID' })
+  @Permissions('tool:Execute')
+  @Post(':id/steps/:stepId/execute')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+    description: 'Tool ID',
+  })
+  @ApiParam({
+    name: 'stepId',
+    type: String,
+    required: true,
+    description: 'Step ID',
+  })
+  async executeStep(
+    @Param('id') toolId: string,
+    @Param('stepId') stepId: string,
+    @Body()
+    body: {
+      stepData: Record<string, any>;
+      previousResults?: Record<string, any>;
+      jobId?: string;
+    },
+    @CurrentWorkspace() workspaceId: string,
+    @Request() req: any,
+  ): Promise<any> {
+    // Delegate to CreationJobsService to handle persistence (Draft Job)
+    const result = await this.creationJobsService.executeJobStep(
+      toolId,
+      stepId,
+      body.stepData,
+      { workspaceId, userId: req.user?.id },
+      body.jobId,
+    );
+
+    return {
+      success: true,
+      stepId,
+      result: result.result, // The execution result
+      jobId: result.jobId, // The persistent Job ID
+      executedAt: new Date().toISOString(),
+    };
   }
 }

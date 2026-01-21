@@ -113,7 +113,7 @@ export class AiEncryptionService {
             decryptedObject.baseUrl,
           );
         }
-      } catch (error) {
+      } catch {
         // Not encrypted or wrong format
       }
     }

@@ -57,7 +57,7 @@ export class SubscriptionsService {
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
   }) {
-    const plan = await this.getPlan(data.planId);
+    await this.getPlan(data.planId);
 
     const currentPeriodEnd = new Date();
     currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
@@ -126,7 +126,7 @@ export class SubscriptionsService {
           storageUsedGb: 0,
         });
         await this.quotaRepo.save(quota);
-      } catch (e) {
+      } catch {
         // Handle race condition if two requests try to create the same quota entry
         quota = (await this.quotaRepo.findOne({
           where: { workspaceId, periodStart },

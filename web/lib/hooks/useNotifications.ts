@@ -53,10 +53,10 @@ export function useNotifications(): UseNotificationsReturn {
     const isSupported = typeof window !== 'undefined' && 'Notification' in window;
 
     useEffect(() => {
-        if (isSupported) {
+        if (isSupported && permission !== Notification.permission) {
             setPermission(Notification.permission);
         }
-    }, [isSupported]);
+    }, [isSupported, permission]);
 
     const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
         if (!isSupported) {

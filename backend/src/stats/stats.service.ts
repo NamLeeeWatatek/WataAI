@@ -136,7 +136,7 @@ export class StatsService {
         status: 'operational',
         uptime: '99.99%',
       });
-    } catch (e) {
+    } catch {
       services.push({ name: 'Database', status: 'down', uptime: '0%' });
     }
 

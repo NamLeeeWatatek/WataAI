@@ -18,15 +18,20 @@ export function KeyValueEditor({
     placeholder = { key: 'Key', value: 'Value' },
     className
 }: KeyValueEditorProps) {
-    const [entries, setEntries] = useState<[string, string][]>([])
+    // Initialize entries state based on value prop
+    const [entries, setEntries] = useState<[string, string][]>(() => {
+        return value ? Object.entries(value) : [];
+    });
 
     useEffect(() => {
-        if (value) {
-            setEntries(Object.entries(value))
-        } else {
-            setEntries([])
+        const newEntries = value ? Object.entries(value) : [];
+
+        // Only update if entries have actually changed
+        const entriesChanged = JSON.stringify(newEntries) !== JSON.stringify(entries);
+        if (entriesChanged) {
+            setEntries(newEntries);
         }
-    }, [value])
+    }, [value, entries])
 
     const handleAdd = () => {
         const newEntries = [...entries, ['', ''] as [string, string]]

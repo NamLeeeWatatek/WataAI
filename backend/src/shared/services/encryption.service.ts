@@ -11,8 +11,12 @@ export class EncryptionService {
   private readonly encryptionKey: Buffer;
 
   constructor(private configService: ConfigService) {
-    const secret = this.configService.get<string>('ENCRYPTION_SECRET');
-    const legacyKey = this.configService.get<string>('ENCRYPTION_KEY');
+    const secret = this.configService.get<string>('ENCRYPTION_SECRET', {
+      infer: true,
+    });
+    const legacyKey = this.configService.get<string>('ENCRYPTION_KEY', {
+      infer: true,
+    });
 
     if (secret && secret.length >= 32) {
       // Preferred: Derive a 256-bit key from the secret

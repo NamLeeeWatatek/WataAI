@@ -430,7 +430,9 @@ export class KBEmbeddingsService {
           model: 'text-embedding-004',
           requiresApiKey: true,
         };
-      } catch (e) {}
+      } catch {
+        // Ignored
+      }
     }
     // ... rest
 
@@ -572,7 +574,7 @@ export class KBEmbeddingsService {
   private async getEmbeddingProvider(
     userId?: string,
     workspaceId?: string,
-    kbId?: string,
+    _kbId?: string,
   ): Promise<{ provider: string; model: string }> {
     // Reuse getProviderConfig logic
     const config = await this.resolveEmbeddingConfig(

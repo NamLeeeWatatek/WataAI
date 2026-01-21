@@ -21,7 +21,7 @@ import { CreateCharacterDto } from './dto/create-character.dto';
 import { UpdateCharacterDto } from './dto/update-character.dto';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 import { Workspace } from '../workspaces/domain/workspace';
-import { IPaginationOptions } from '../utils/types/pagination-options';
+
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()

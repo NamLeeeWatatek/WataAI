@@ -16,6 +16,7 @@ export enum CreationJobStatus {
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
+  DRAFT = 'DRAFT',
   CANCELED = 'CANCELED',
 }
 

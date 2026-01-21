@@ -17,7 +17,7 @@ import {
   ConversationEntity,
   MessageEntity,
 } from '../conversations/infrastructure/persistence/relational/entities/conversation.entity';
-import { BotsModule } from '../bots/bots.module';
+
 import { ConversationsModule } from '../conversations/conversations.module';
 import { ChannelEventListener } from './listeners/channel-event.listener';
 import { FacebookWebhookProcessor } from './webhooks/facebook-webhook.processor';

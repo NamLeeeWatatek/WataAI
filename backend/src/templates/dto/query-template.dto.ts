@@ -4,8 +4,7 @@ import {
   IsOptional,
   IsString,
   ValidateNested,
-  IsBoolean,
-  IsArray,
+  IsBoolean, // Added IsBoolean as it is used in FilterTemplateDto
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { Template } from '../domain/template';

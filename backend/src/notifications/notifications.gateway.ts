@@ -88,7 +88,7 @@ export class NotificationsGateway
     this.logger.debug(`Current connections: ${this.getConnectionStats()}`);
 
     // Send initial unread count
-    this.sendUnreadCount(userId);
+    void this.sendUnreadCount(userId);
   }
 
   handleDisconnect(client: Socket) {
@@ -182,7 +182,7 @@ export class NotificationsGateway
     @MessageBody() data: { workspaceId: string },
   ) {
     const userId = client.handshake.query.userId as string;
-    client.join(`workspace:${data.workspaceId}`);
+    void client.join(`workspace:${data.workspaceId}`);
     this.logger.log(
       `User ${userId} subscribed to workspace ${data.workspaceId}`,
     );
@@ -194,7 +194,7 @@ export class NotificationsGateway
     @MessageBody() data: { workspaceId: string },
   ) {
     const userId = client.handshake.query.userId as string;
-    client.leave(`workspace:${data.workspaceId}`);
+    void client.leave(`workspace:${data.workspaceId}`);
     this.logger.log(
       `User ${userId} unsubscribed from workspace ${data.workspaceId}`,
     );
@@ -216,6 +216,6 @@ export class NotificationsGateway
   }
 
   broadcastUnreadCountUpdate(userId: string) {
-    this.sendUnreadCount(userId);
+    void this.sendUnreadCount(userId);
   }
 }

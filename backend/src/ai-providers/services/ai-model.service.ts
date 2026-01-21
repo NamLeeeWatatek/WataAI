@@ -244,6 +244,7 @@ export class AiModelService {
     const relevantMessages = messages.filter((m) => m.role !== 'system');
     if (relevantMessages.length === 0) {
       async function* empty() {
+        await Promise.resolve();
         return;
       }
       return empty();
@@ -480,7 +481,7 @@ export class AiModelService {
               if (json.message?.content) {
                 yield json.message.content;
               }
-            } catch (e) {
+            } catch {
               // Ignore parse errors for partial chunks
             }
           }
@@ -661,7 +662,7 @@ export class AiModelService {
               }
               // If it returned false (meaning it looks like v1 path), we update url
               url = altUrl;
-            } catch (retryError) {
+            } catch {
               // Try host.docker.internal as last resort for Docker environments
               const dockerUrl = url.replace(
                 'localhost',
@@ -671,7 +672,7 @@ export class AiModelService {
                 const isNative = await checkOllama(dockerUrl);
                 if (isNative) return;
                 url = dockerUrl;
-              } catch (finalError) {
+              } catch {
                 throw error;
               }
             }

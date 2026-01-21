@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CreationTool } from '../../creation-tools/domain/creation-tool';
 
 export enum CreationJobStatus {
+  DRAFT = 'DRAFT',
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',

@@ -18,7 +18,7 @@ import { KnowledgeBaseModule } from '../knowledge-base/knowledge-base.module';
   imports: [
     ExecutionQueueModule,
     HttpModule,
-    CreationToolsModule,
+    forwardRef(() => CreationToolsModule),
     CreationJobsModule,
     AiProvidersModule,
     TemplatesModule,

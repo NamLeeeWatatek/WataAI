@@ -31,14 +31,14 @@ export class KBManagementService {
     @InjectRepository(KnowledgeBaseDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
     private readonly kbDocumentsService: KBDocumentsService,
-  ) {}
+  ) { }
 
-  async create(userId: string, createDto: CreateKnowledgeBaseDto) {
+  async create(_userId: string, createDto: CreateKnowledgeBaseDto) {
     const kb = this.kbRepository.create({
       ...createDto,
       workspaceId: createDto.workspaceId,
     });
-    kb.createdBy = userId;
+    kb.createdBy = _userId;
     return this.kbRepository.save(kb);
   }
 
@@ -46,12 +46,12 @@ export class KBManagementService {
     filterOptions,
     sortOptions,
     paginationOptions,
-    userId,
+    _userId,
   }: {
     filterOptions?: FilterKnowledgeBaseDto | null;
     sortOptions?: SortKnowledgeBaseDto[] | null;
     paginationOptions: IPaginationOptions;
-    userId: string;
+    _userId: string;
   }): Promise<{ data: any[]; total: number }> {
     const query = this.kbRepository.createQueryBuilder('kb');
 
@@ -65,11 +65,11 @@ export class KBManagementService {
     const workspaceId = filterOptions?.workspaceId;
     if (workspaceId) {
       query.where(
-        '(kb.workspaceId = :workspaceId OR (kb.workspaceId IS NULL AND kb.createdBy = :userId))',
-        { workspaceId, userId },
+        '(kb.workspaceId = :workspaceId OR (kb.workspaceId IS NULL AND kb.createdBy = :_userId))',
+        { workspaceId, _userId },
       );
     } else {
-      query.where('kb.createdBy = :userId', { userId });
+      query.where('kb.createdBy = :_userId', { _userId });
     }
 
     if (filterOptions?.search) {
@@ -104,16 +104,16 @@ export class KBManagementService {
     return { data: results, total };
   }
 
-  async findAll(userId: string, workspaceId?: string) {
+  async findAll(_userId: string, workspaceId?: string) {
     const { data } = await this.findManyWithPagination({
       filterOptions: { workspaceId },
       paginationOptions: { page: 1, limit: 100 }, // Large limit for original findAll
-      userId,
+      _userId,
     });
     return data;
   }
 
-  async findOne(id: string, userId: string) {
+  async findOne(id: string, _userId: string) {
     const kb = await this.kbRepository.findOne({
       where: { id },
       relations: [
@@ -133,14 +133,14 @@ export class KBManagementService {
     return kb;
   }
 
-  async update(id: string, userId: string, updateDto: UpdateKnowledgeBaseDto) {
-    const kb = await this.findOne(id, userId);
+  async update(id: string, _userId: string, updateDto: UpdateKnowledgeBaseDto) {
+    const kb = await this.findOne(id, _userId);
     Object.assign(kb, updateDto);
     return this.kbRepository.save(kb);
   }
 
-  async remove(id: string, userId: string) {
-    const kb = await this.findOne(id, userId);
+  async remove(id: string, _userId: string) {
+    const kb = await this.findOne(id, _userId);
 
     // 1. Delete all documents in this knowledge base (handles chunks and vectors)
     const documents = await this.documentRepository.find({
@@ -149,7 +149,7 @@ export class KBManagementService {
 
     for (const doc of documents) {
       try {
-        await this.kbDocumentsService.remove(doc.id, userId);
+        await this.kbDocumentsService.remove(doc.id, _userId);
       } catch (error) {
         this.logger.error(
           `Failed to delete document ${doc.id} during KB removal:`,
@@ -163,8 +163,8 @@ export class KBManagementService {
     return { success: true };
   }
 
-  async assignAgent(kbId: string, userId: string, assignDto: AssignAgentDto) {
-    await this.findOne(kbId, userId);
+  async assignAgent(kbId: string, _userId: string, assignDto: AssignAgentDto) {
+    await this.findOne(kbId, _userId);
 
     const existing = await this.agentKbRepository.findOne({
       where: {
@@ -192,8 +192,8 @@ export class KBManagementService {
     return this.agentKbRepository.save(mapping);
   }
 
-  async unassignAgent(kbId: string, userId: string, agentId: string) {
-    await this.findOne(kbId, userId);
+  async unassignAgent(kbId: string, _userId: string, agentId: string) {
+    await this.findOne(kbId, _userId);
 
     const mapping = await this.agentKbRepository.findOne({
       where: {
@@ -210,8 +210,8 @@ export class KBManagementService {
     return { success: true };
   }
 
-  async getAgentAssignments(kbId: string, userId: string) {
-    await this.findOne(kbId, userId);
+  async getAgentAssignments(kbId: string, _userId: string) {
+    await this.findOne(kbId, _userId);
 
     return this.agentKbRepository.find({
       where: { knowledgeBaseId: kbId },
@@ -219,8 +219,8 @@ export class KBManagementService {
     });
   }
 
-  async getStats(kbId: string, userId: string) {
-    const kb = await this.findOne(kbId, userId);
+  async getStats(kbId: string, _userId: string) {
+    const kb = await this.findOne(kbId, _userId);
 
     // Calculate actual document count
     const docCount = await this.kbRepository

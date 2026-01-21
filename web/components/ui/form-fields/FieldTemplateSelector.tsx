@@ -118,11 +118,11 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {templates.map((opt) => {
-                        const isSelected = selectValue === opt.id;
+                        const isSelected = selectValue === opt.thumbnailUrl;
                         return (
                             <div
                                 key={opt.id}
-                                onClick={() => onChange(field.name, opt.id)}
+                                onClick={() => onChange(field.name, opt.thumbnailUrl || '')}
                                 className={cn(
                                     "cursor-pointer group relative flex flex-col items-start gap-3 rounded-2xl border-2 p-4 text-left text-sm transition-all duration-300",
                                     "hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98]",

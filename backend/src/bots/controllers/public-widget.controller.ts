@@ -106,11 +106,11 @@ export class PublicWidgetController {
   })
   @ApiParam({ name: 'botId', type: 'string' })
   @ApiParam({ name: 'version', type: 'string' })
-  async getStyles(
-    @Param('botId') botId: string,
-    @Param('version') version: string,
+  getStyles(
+    @Param('botId') _botId: string,
+    @Param('version') _version: string,
     @Res() res: Response,
-  ): Promise<void> {
+  ): void {
     const stylesPath = path.join(process.cwd(), 'public', 'widget-styles.css');
 
     if (!fs.existsSync(stylesPath)) {

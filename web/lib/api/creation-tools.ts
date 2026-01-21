@@ -11,7 +11,7 @@ export interface CreationTool {
     categories?: Category[];
     categoryIds?: string[];
     formConfig: FormConfig;
-    executionFlow: ExecutionFlow;
+    executionFlow?: ExecutionFlow; // Optional - can use step-level execution
     isActive: boolean;
     metadata?: Record<string, any>;
     workspaceId?: string;
@@ -44,11 +44,24 @@ export interface StepLayout {
     rows: LayoutRow[];
 }
 
+// Step-level execution configuration
+export interface StepExecutionConfig {
+    type: 'ai-generation' | 'http-webhook';
+    trigger: 'immediate' | 'onApproval' | 'manual';
+    inputSources?: {
+        fromSteps?: string[];
+        fromFields?: string[];
+    };
+    config: AiExecutionConfig | HttpExecutionConfig;
+}
+
 export interface FormStep {
     id: string;
     title: string;
     description?: string;
     layout: StepLayout;
+    execution?: StepExecutionConfig; // NEW: Optional step execution
+    requiresApproval?: boolean; // NEW: Pause after this step
 }
 
 export interface FormConfig {
@@ -80,13 +93,15 @@ export interface FormField {
     | 'template-selector'
     | 'multi-select'
     | 'page-selector'
-    | 'result-preview';
+    | 'result-preview'
+    | 'canvas-editor';
     label: string;
     placeholder?: string;
     description?: string;
     defaultValue?: any;
     options?: string | Array<{ label: string; value: any; icon?: string }>;
     multiple?: boolean;
+    config?: Record<string, any>; // For canvas-editor and other complex fields
     validation?: {
         required?: boolean;
         min?: number;
@@ -127,7 +142,7 @@ export interface HttpExecutionConfig extends BaseExecutionConfig {
     urlTemplate: string;
     method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
     headers?: Record<string, string>;
-    bodyTemplate?: string;
+    bodyTemplate?: string | Record<string, any>;
     timeoutMs?: number;
     retryCount?: number;
     successCondition?: string;
@@ -198,5 +213,19 @@ export const creationToolsApi = {
     },
     importTools: async (tools: any[]): Promise<{ success: number; failed: number }> => {
         return await axiosClient.post('/creation-tools/import', { tools });
+    },
+
+    executeStep: async (
+        toolId: string,
+        stepId: string,
+        stepData: Record<string, any>,
+        previousResults?: Record<string, any>,
+        jobId?: string
+    ): Promise<any> => {
+        return await axiosClient.post(`/creation-tools/${toolId}/steps/${stepId}/execute`, {
+            stepData,
+            previousResults,
+            jobId
+        });
     },
 };

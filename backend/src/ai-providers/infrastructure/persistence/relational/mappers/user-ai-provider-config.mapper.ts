@@ -1,11 +1,5 @@
-import {
-  UserAiProviderConfig,
-  AiProvider,
-} from '../../../../domain/ai-provider';
-import {
-  AiProviderConfigEntity,
-  AiProviderEntity,
-} from '../entities/ai-provider.entity';
+import { UserAiProviderConfig } from '../../../../domain/ai-provider';
+import { AiProviderConfigEntity } from '../entities/ai-provider.entity';
 import { AiProviderMapper } from './ai-provider.mapper';
 import { AiModelMapper } from './ai-model.mapper';
 import { AiProviderOwnerType } from '../../../../ai-providers.enum';

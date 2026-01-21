@@ -8,11 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
-import {
-  BaseQueryDto,
-  BaseFilterDto,
-  BaseSortDto,
-} from '../../utils/dto/base-query.dto';
+import { BaseFilterDto, BaseSortDto } from '../../utils/dto/base-query.dto';
 import { Bot } from '../domain/bot';
 
 export class FilterBotDto extends BaseFilterDto {
@@ -73,7 +69,7 @@ export class QueryBotDto {
     if (typeof value === 'object') return plainToInstance(FilterBotDto, value);
     try {
       return plainToInstance(FilterBotDto, JSON.parse(value));
-    } catch (e) {
+    } catch (_) {
       return undefined;
     }
   })
@@ -91,7 +87,7 @@ export class QueryBotDto {
     if (typeof value === 'object') return plainToInstance(SortBotDto, value);
     try {
       return plainToInstance(SortBotDto, JSON.parse(value));
-    } catch (e) {
+    } catch (_) {
       return undefined;
     }
   })
