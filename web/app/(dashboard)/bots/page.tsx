@@ -211,9 +211,6 @@ export default function BotsPage() {
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-5">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex items-center justify-center border border-primary/20 transition-transform duration-500 group-hover:scale-110 shadow-inner">
-                                                    <Icon className="w-7 h-7 text-primary drop-shadow-md" />
-                                                </div>
                                                 <div className="min-w-0">
                                                     <h3 className="font-bold text-lg leading-tight truncate">{bot.name}</h3>
                                                     <Badge
@@ -253,6 +250,8 @@ export default function BotsPage() {
                                         <p className="text-xs font-medium text-muted-foreground line-clamp-2 min-h-[32px] leading-relaxed">
                                             {bot.description || 'Advanced neural architecture tailored for complex workflow orchestration.'}
                                         </p>
+
+
 
                                         {bot.tags && bot.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-1.5 mt-4">

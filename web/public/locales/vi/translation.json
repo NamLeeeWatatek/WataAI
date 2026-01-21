@@ -30,6 +30,68 @@
     "startForFree": "Bắt đầu miễn phí",
     "contactSales": "Liên hệ bán hàng"
   },
+  "marketing": {
+    "nav": {
+      "features": "Tính năng",
+      "howItWorks": "Cách hoạt động",
+      "pricing": "Bảng giá",
+      "login": "Đăng nhập",
+      "startFree": "Bắt đầu"
+    },
+    "hero": {
+      "badge": "Thế hệ AI mới đã xuất hiện",
+      "titlePart1": "Bộ não vận hành bởi AI cho ",
+      "titlePart2": "mọi kênh khách hàng.",
+      "description": "Tự động hóa các tương tác kinh doanh phức tạp trên Facebook, Zalo và Web. Xây dựng trợ lý thông minh học từ dữ liệu của bạn chỉ trong vài giây.",
+      "ctaStart": "Bắt đầu miễn phí",
+      "ctaVerify": "Xác thực ngay"
+    },
+    "heroFeatures": {
+      "instant": {
+        "title": "Phản hồi tức thì",
+        "desc": "Tự động hóa 90% câu hỏi thường gặp với độ chính xác cao."
+      },
+      "secure": {
+        "title": "An toàn & Bảo mật",
+        "desc": "Dữ liệu của bạn được mã hóa và bảo mật theo tiêu chuẩn doanh nghiệp."
+      },
+      "fast": {
+        "title": "Triển khai nhanh",
+        "desc": "Kết nối và vận hành chỉ trong vài phút, không cần lập trình."
+      }
+    },
+    "connectors": {
+      "badge": "Tích hợp",
+      "titlePart1": "Kết nối ",
+      "titlePart2": "mọi nơi.",
+      "description": "WataAI đóng vai trò như bộ não trung tâm cho doanh nghiệp của bạn. Kết nối các kênh hiện có chỉ trong vài giây và để AI của chúng tôi xử lý lưu lượng truy cập."
+    },
+    "featuresBento": {
+      "titlePart1": "Mọi thứ bạn cần để ",
+      "titlePart2": "tự động hóa & đột phá.",
+      "description": "Một bộ công cụ hoàn chỉnh để doanh nghiệp hiện đại tự động hóa tương tác khách hàng mà không cần viết một dòng code nào.",
+      "omnichannel": {
+        "title": "Chatbot đa kênh",
+        "desc": "Xây dựng một lần, triển khai mọi nơi. Hỗ trợ Facebook, Zalo và Web Widget ngay lập tức."
+      },
+      "inbox": {
+        "title": "Hộp thư hợp nhất",
+        "desc": "Quản lý tất cả cuộc hội thoại của khách hàng trong một bảng điều khiển tập trung duy nhất."
+      },
+      "analytics": {
+        "title": "Phân tích thông minh",
+        "desc": "Hiểu sâu hơn về hiệu suất của bot và mức độ tương tác của người dùng."
+      },
+      "builder": {
+        "title": "Kéo thả 0 code",
+        "desc": "Trình tạo luồng trực quan. Chỉ cần bạn có thể vẽ ra, bạn có thể xây dựng nó."
+      },
+      "security": {
+        "title": "Bảo mật doanh nghiệp",
+        "desc": "Mã hóa cấp ngân hàng và kiểm soát truy cập dựa trên vai trò."
+      }
+    }
+  },
   "dashboard": {
     "title": "Bảng điều khiển",
     "welcomeBack": "Chào mừng trở lại! Đây là tổng quan của bạn.",
@@ -100,7 +162,8 @@
       "inactive": "Ngưng hoạt động",
       "activity": "Hoạt động",
       "users": "Người dùng"
-    }
+    },
+    "deployment": "Triển khai"
   },
   "sidebar": {
     "groups": {
@@ -139,7 +202,14 @@
     "models": "Mô hình",
     "settings": "Cài đặt AI",
     "configuration": "Cấu hình",
-    "selectModel": "Chọn mô hình AI"
+    "selectModel": "Chọn mô hình AI",
+    "snapshotVersion": "Tạo phiên bản",
+    "createSnapshot": "Tạo phiên bản mới",
+    "createSnapshotDesc": "Tạo một bản chụp cố định của cấu hình giao diện hiện tại.",
+    "versionIdentifier": "Tên phiên bản",
+    "changelog": "Nhật ký thay đổi",
+    "changelogPlaceholder": "Mô tả các thay đổi trong phiên bản này...",
+    "create": "Tạo Snapshot"
   },
   "common": {
     "save": "Lưu",

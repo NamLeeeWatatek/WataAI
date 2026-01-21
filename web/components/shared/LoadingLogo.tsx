@@ -16,48 +16,34 @@ export function LoadingLogo({
   className,
 }: LoadingLogoProps) {
 
-  // Container dimensions (Square aspect ratio)
-  const boxSizes = {
-    xs: 'w-10 h-10',
-    sm: 'w-12 h-12',
-    md: 'w-16 h-16',
-    lg: 'w-24 h-24',
-    xl: 'w-32 h-32'
-  }
-
-  // Icon dimensions
+  // Icon dimensions - Increased sizes
   const iconSizes = {
-    xs: 'w-5 h-5',
-    sm: 'w-6 h-6',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-    xl: 'w-16 h-16'
+    xs: 32,
+    sm: 48,
+    md: 64,
+    lg: 96,
+    xl: 128
   }
 
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-4", className)}>
-      {/* Magic Border Container */}
-      <div className={cn("relative flex items-center justify-center rounded-2xl overflow-hidden", boxSizes[size])}>
+    <div className={cn("flex flex-col items-center justify-center gap-6", className)}>
+      <div className="relative flex items-center justify-center">
+        {/* Simple Glow Effect */}
+        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse-slow" />
 
-        {/* Spinning Gradient Background Layer */}
-        <div className="absolute inset-[-50%] flex items-center justify-center">
-          <div className="w-[200%] h-[200%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,hsl(var(--primary))_50%,transparent_100%)] opacity-100" />
-        </div>
-
-        {/* Inner Mask Layer */}
-        <div className="absolute inset-[2px] rounded-[14px] bg-background/90 backdrop-blur-3xl flex items-center justify-center z-10 shadow-inner">
-          {/* Subtle Inner Highlight */}
-          <div className="absolute inset-0 rounded-[14px] border border-white/5" />
-
-          {/* Brand Icon */}
-          <Sparkles className={cn(
-            iconSizes[size],
-            "text-primary fill-primary/20 animate-pulse"
-          )} />
-        </div>
+        <img
+          src="/images/logo.svg"
+          alt="Wata AI"
+          className="relative z-10 object-contain drop-shadow-2xl animate-in fade-in zoom-in duration-700"
+          style={{
+            width: iconSizes[size] * 3, // Make it significantly wider since it's a full logo
+            height: iconSizes[size]
+          }}
+        />
       </div>
+
       {text && (
-        <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-wide">
+        <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-widest uppercase">
           {text}
         </p>
       )}

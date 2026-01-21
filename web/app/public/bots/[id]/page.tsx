@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation'
 
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
-import { MessageCircle, X, Send, User } from 'lucide-react'
+import { MessageCircle, X, Send, User, Bot } from 'lucide-react'
+import Image from 'next/image'
 
 interface GuestIdentity {
     name: string;
@@ -49,51 +50,67 @@ export default function PublicBotPage() {
         }
     }, [bot]);
 
-    // Check for existing identity
+    // Check for existing identity and resume if possible
     useEffect(() => {
         if (!isOpen) return;
         const stored = localStorage.getItem(`guest_identity_${botId}`)
-        if (stored) {
+        if (stored && !guestIdentity) {
             try {
-                setGuestIdentity(JSON.parse(stored))
+                const identity = JSON.parse(stored);
+                setGuestIdentity(identity);
+                setShowIdentityForm(false);
+
+                // Resume conversation silently if identity exists
+                const resumeConversation = async () => {
+                    try {
+                        const data = await createConv({
+                            url: window.location.href,
+                            userAgent: navigator.userAgent,
+                            guest: identity,
+                            resumed: true
+                        });
+                        setConversationId(data.conversationId);
+                    } catch (err) { }
+                };
+                resumeConversation();
             } catch (e) {
                 setShowIdentityForm(true)
             }
-        } else {
+        } else if (!guestIdentity) {
             setShowIdentityForm(true)
         }
-    }, [isOpen, botId]);
+    }, [isOpen, botId, guestIdentity]);
 
-    // Initialize conversation only if identity exists or form is bypassed/optional 
-    // (For this request, we assume mandatory if form is shown)
-    useEffect(() => {
-        const initConversation = async () => {
-            if (!guestIdentity) return;
-
-            try {
-                const data = await createConv({
-                    url: window.location.href,
-                    userAgent: navigator.userAgent,
-                    guest: guestIdentity // Pass guest info
-                });
-                setConversationId(data.conversationId);
-            } catch (err) { }
-        };
-        initConversation();
-    }, [botId, guestIdentity]);
-
-    const handleIdentitySubmit = (e: React.FormEvent) => {
+    const handleIdentitySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!identityPhone.trim()) return;
+        if (!identityPhone.trim() || loading) return;
 
+        setLoading(true);
         const identity = {
             name: identityName,
             phone: identityPhone
         };
 
-        localStorage.setItem(`guest_identity_${botId}`, JSON.stringify(identity));
-        setGuestIdentity(identity);
-        setShowIdentityForm(false);
+        try {
+            // 1. Save locally for session resumption (UX)
+            localStorage.setItem(`guest_identity_${botId}`, JSON.stringify(identity));
+
+            // 2. CREATE CONVERSATION ON BACKEND IMMEDIATELY (Real storage)
+            const data = await createConv({
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                guest: identity,
+                capturedAt: new Date().toISOString()
+            });
+
+            setGuestIdentity(identity);
+            setConversationId(data.conversationId);
+            setShowIdentityForm(false);
+        } catch (err) {
+            console.error('Failed to register lead:', err);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const handleSend = async () => {
@@ -132,6 +149,11 @@ export default function PublicBotPage() {
     const buttonSize = bot.theme?.buttonSize === 'large' ? '64px' :
         bot.theme?.buttonSize === 'small' ? '48px' : '56px'
 
+    // Extended theme properties
+    const borderRadius = bot.theme?.borderRadius ?? 16
+    const glassmorphism = bot.theme?.glassmorphism ?? false
+    const headerStyle = bot.theme?.headerStyle ?? 'solid'
+
     return (
         <>
             <style jsx global>{`
@@ -143,38 +165,48 @@ export default function PublicBotPage() {
                 body {
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                     overflow: hidden;
+                    background: #fdfdfd;
                 }
             `}</style>
 
 
+            {/* Background Preview (Marketing Website) - Clear and interactive as requested */}
+            <div className="fixed inset-0 z-0 overflow-hidden">
+                <iframe
+                    src="/"
+                    className="w-full h-full"
+                    style={{ border: 'none' }}
+                    title="Marketing Preview"
+                />
+            </div>
 
             {/* Chat Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
                     position: 'fixed',
-                    [position.includes('right') ? 'right' : 'left']: '20px',
-                    [position.includes('bottom') ? 'bottom' : 'top']: '20px',
+                    [position.includes('right') ? 'right' : 'left']: '32px',
+                    [position.includes('bottom') ? 'bottom' : 'top']: '32px',
                     width: buttonSize,
                     height: buttonSize,
                     borderRadius: '50%',
                     background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
                     border: 'none',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    boxShadow: `0 8px 24px ${primaryColor}40`,
+                    transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s',
                     zIndex: 999999,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                 }}
                 onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.1)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)'
+                    e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)'
+                    e.currentTarget.style.boxShadow = `0 12px 32px ${primaryColor}60`
                 }}
                 onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'
+                    e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
+                    e.currentTarget.style.boxShadow = `0 8px 24px ${primaryColor}40`
                 }}
             >
                 <div className="text-white">
@@ -190,57 +222,78 @@ export default function PublicBotPage() {
             {isOpen && (
                 <div style={{
                     position: 'fixed',
-                    [position.includes('right') ? 'right' : 'left']: '20px',
-                    [position.includes('bottom') ? 'bottom' : 'top']: `calc(20px + ${buttonSize} + 20px)`,
-                    width: '380px',
-                    maxWidth: 'calc(100vw - 40px)',
-                    height: '600px',
-                    maxHeight: 'calc(100vh - 140px)',
-                    background: 'white',
-                    borderRadius: '16px',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    [position.includes('right') ? 'right' : 'left']: '32px',
+                    [position.includes('bottom') ? 'bottom' : 'top']: `calc(32px + ${buttonSize} + 20px)`,
+                    width: '400px',
+                    maxWidth: 'calc(100vw - 64px)',
+                    height: '650px',
+                    maxHeight: 'calc(100vh - 160px)',
+                    background: glassmorphism ? 'rgba(255, 255, 255, 0.85)' : 'white',
+                    backdropFilter: glassmorphism ? 'blur(20px)' : 'none',
+                    borderRadius: `${borderRadius}px`,
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                     display: 'flex',
                     flexDirection: 'column',
                     zIndex: 999998,
                     overflow: 'hidden',
+                    animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}>
                     {/* Header */}
                     <div style={{
-                        background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
-                        color: 'white',
-                        padding: '16px',
+                        background: headerStyle === 'minimal' ? 'white' : (headerStyle === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, 40)})` : primaryColor),
+                        color: headerStyle === 'minimal' ? '#1f2937' : 'white',
+                        padding: '24px 20px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px',
                         flexShrink: 0,
+                        borderBottom: headerStyle === 'minimal' ? '1px solid #eee' : 'none',
+                        boxShadow: headerStyle === 'minimal' ? 'none' : '0 4px 12px rgba(0,0,0,0.05)'
                     }}>
+                        <div style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '12px',
+                            background: headerStyle === 'minimal' ? `${primaryColor}10` : 'rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            overflow: 'hidden'
+                        }}>
+                            {bot.avatarUrl ? (
+                                <Image
+                                    src={bot.avatarUrl}
+                                    alt={bot.name}
+                                    width={48}
+                                    height={48}
+                                    className="object-cover w-full h-full"
+                                />
+                            ) : (
+                                <Bot size={28} color={headerStyle === 'minimal' ? primaryColor : 'white'} />
+                            )}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>
                                 {bot.name}
                             </h3>
-                            {bot.description && (
-                                <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.9, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {bot.description}
-                                </p>
-                            )}
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
                             style={{
-                                background: 'rgba(255,255,255,0.2)',
+                                background: headerStyle === 'minimal' ? '#f3f4f6' : 'rgba(0,0,0,0.1)',
                                 border: 'none',
-                                borderRadius: '6px',
-                                padding: '6px',
+                                borderRadius: '10px',
+                                padding: '8px',
                                 cursor: 'pointer',
-                                color: 'white',
+                                color: headerStyle === 'minimal' ? '#4b5563' : 'white',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                transition: 'background 0.2s',
+                                transition: 'all 0.2s',
                                 flexShrink: 0,
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
                         >
                             <X size={20} />
                         </button>
@@ -251,7 +304,7 @@ export default function PublicBotPage() {
                         flex: 1,
                         overflowY: 'auto',
                         padding: '0',
-                        background: '#f9fafb',
+                        background: 'transparent',
                         display: 'flex',
                         flexDirection: 'column',
                         position: 'relative'
@@ -357,13 +410,14 @@ export default function PublicBotPage() {
                                 ))}
                                 {loading && (
                                     <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                        <div style={{ padding: '12px 16px', background: 'white', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                        <div style={{ padding: '16px 20px', background: 'white', borderRadius: '14px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
                                                 {[0, 1, 2].map(i => (
                                                     <div key={i} style={{
-                                                        width: '8px',
-                                                        height: '8px',
-                                                        background: '#9ca3af',
+                                                        width: '10px',
+                                                        height: '10px',
+                                                        background: primaryColor,
+                                                        opacity: 0.4,
                                                         borderRadius: '50%',
                                                         animation: 'bounce 1.4s infinite ease-in-out both',
                                                         animationDelay: `${-0.32 + i * 0.16}s`,

@@ -1,50 +1,56 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, Github, Twitter, Linkedin } from 'lucide-react';
-
-const footerLinks = {
-    product: [
-        { href: '#features', label: 'Tính năng' },
-        { href: '#how-it-works', label: 'Cách hoạt động' },
-        { href: '#pricing', label: 'Bảng giá' },
-    ],
-    company: [
-        { href: '/about', label: 'Về chúng tôi' },
-        { href: '/blog', label: 'Blog' },
-        { href: '/careers', label: 'Tuyển dụng' },
-    ],
-    legal: [
-        { href: '/privacy', label: 'Chính sách bảo mật' },
-        { href: '/terms', label: 'Điều khoản sử dụng' },
-    ],
-};
-
-const socialLinks = [
-    { href: 'https://github.com', icon: Github, label: 'GitHub' },
-    { href: 'https://twitter.com', icon: Twitter, label: 'Twitter' },
-    { href: 'https://linkedin.com', icon: Linkedin, label: 'LinkedIn' },
-];
+import { Github, Twitter, Linkedin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function MarketingFooter() {
-    return (
-        <footer className="border-t border-border/50 bg-background pt-20 pb-10">
-            <div className="container mx-auto px-4 md:px-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
-                    {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
-                        <Link href="/" className="flex items-center gap-2 mb-6 group">
-                            <div className="p-2 rounded-xl bg-primary/5 border border-border/50 group-hover:bg-primary/10 transition-colors">
-                                <Sparkles className="w-4 h-4 text-primary" />
-                            </div>
-                            <span className="font-display font-bold text-xl tracking-tight text-foreground">
-                                WataAI
-                            </span>
-                        </Link>
-                        <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-                            The intelligent automation platform for modern businesses. Connect, automate, and scale.
-                        </p>
+    const { t } = useTranslation();
 
+    const footerLinks = {
+        product: [
+            { href: '/features', label: t('marketing.nav.features') },
+            { href: '/how-it-works', label: t('marketing.nav.howItWorks') },
+            { href: '/pricing', label: t('marketing.nav.pricing') },
+            { href: 'https://watatek.com/', label: 'WATA TECH', external: true },
+        ],
+        company: [
+            { href: 'https://watatek.com/about', label: t('dashboard.knowledgeBase'), external: true },
+            { href: '/blog', label: 'Blog' },
+            { href: 'https://watatek.com/contact', label: t('hero.contactSales'), external: true },
+        ],
+        legal: [
+            { href: '/privacy', label: 'Privacy' },
+            { href: '/terms', label: 'Terms' },
+        ],
+    };
+
+    const socialLinks = [
+        { href: 'https://github.com/watatech', icon: Github, label: 'GitHub' },
+        { href: 'https://twitter.com/watatech', icon: Twitter, label: 'Twitter' },
+        { href: 'https://linkedin.com/company/watatech', icon: Linkedin, label: 'LinkedIn' },
+    ];
+
+    return (
+        <footer className="border-t border-white/5 bg-slate-950 pt-24 pb-12">
+            <div className="container mx-auto px-4 md:px-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-16 mb-20">
+                    {/* Brand */}
+                    <div className="col-span-2 md:col-span-1 space-y-8">
+                        <Link href="/" className="flex items-center group">
+                            <div className="relative w-40 h-12 transition-transform duration-500 group-hover:scale-105">
+                                <Image
+                                    src="/images/logo.svg"
+                                    alt="WataAI Logo"
+                                    fill
+                                    className="object-contain"
+                                />
+                            </div>
+                        </Link>
+                        <p className="text-sm text-white/40 max-w-xs leading-relaxed font-medium">
+                            The intelligent automation platform for modern businesses. Build, deploy, and scale AI agents in seconds.
+                        </p>
                     </div>
 
                     {/* Product Links */}
@@ -53,12 +59,12 @@ export function MarketingFooter() {
                         <ul className="space-y-4">
                             {footerLinks.product.map((link) => (
                                 <li key={link.href}>
-                                    <a
-                                        href={link.href}
+                                    <Link
+                                        href={link.href as any}
                                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {link.label}
-                                    </a>
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
@@ -70,12 +76,12 @@ export function MarketingFooter() {
                         <ul className="space-y-4">
                             {footerLinks.company.map((link) => (
                                 <li key={link.href}>
-                                    <a
-                                        href={link.href}
+                                    <Link
+                                        href={link.href as any}
                                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {link.label}
-                                    </a>
+                                    </Link>
                                 </li>
                             ))}
                         </ul>
@@ -87,12 +93,12 @@ export function MarketingFooter() {
                         <ul className="space-y-4">
                             {footerLinks.legal.map((link) => (
                                 <li key={link.href}>
-                                    <a
-                                        href={link.href}
+                                    <Link
+                                        href={link.href as any}
                                         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         {link.label}
-                                    </a>
+                                    </Link>
                                 </li>
                             ))}
                         </ul>

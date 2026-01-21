@@ -2,89 +2,90 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { ArrowRight, Sparkles, Zap, PlayCircle } from 'lucide-react';
-
+import { ArrowRight, Sparkles, Zap, Shield, PlayCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function HeroSection() {
+    const { t } = useTranslation();
+
+    const heroFeatures = [
+        {
+            icon: Zap,
+            title: t('marketing.heroFeatures.instant.title'),
+            desc: t('marketing.heroFeatures.instant.desc')
+        },
+        {
+            icon: Shield,
+            title: t('marketing.heroFeatures.secure.title'),
+            desc: t('marketing.heroFeatures.secure.desc')
+        },
+        {
+            icon: PlayCircle,
+            title: t('marketing.heroFeatures.fast.title'),
+            desc: t('marketing.heroFeatures.fast.desc')
+        }
+    ];
+
     return (
-        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-            {/* Ambient Background Effects */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/20 rounded-full blur-[120px] opacity-50 pointer-events-none" />
-            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
+        <section className="relative pt-24 pb-20 md:pt-36 md:pb-32 overflow-hidden">
+            {/* Ambient background glow */}
+            <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[1200px] h-[800px] bg-primary/10 rounded-[100%] blur-[120px] pointer-events-none" />
 
             <div className="container relative z-10 px-4 mx-auto">
                 <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-8 animate-fade-in">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{t('marketing.hero.badge')}</span>
+                    </div>
+
                     {/* Headline */}
-                    <h1
-                        className="text-4xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight mb-8"
-                    >
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-br from-foreground via-foreground/90 to-foreground/50 pb-2">
-                            One AI Brain.
-                        </span>
-                        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-pink-400 pb-4">
-                            Every Channel.
-                        </span>
+                    <h1 className="display-heading-1 mb-8">
+                        {t('marketing.hero.titlePart1')} <br />
+                        <span className="text-gradient">{t('marketing.hero.titlePart2')}</span>
                     </h1>
 
                     {/* Subheadline */}
-                    <p
-                        className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed"
-                    >
-                        Build, deploy, and manage intelligent chatbots that live across Facebook, Zalo, and your Website.
-                        <span className="text-foreground font-medium"> Zero code required.</span>
+                    <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-12 leading-relaxed">
+                        {t('marketing.hero.description')}
                     </p>
 
                     {/* CTAs */}
-                    <div
-                        className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
-                    >
+                    <div className="flex flex-col sm:flex-row items-center gap-6 mb-24">
                         <Button
                             size="lg"
-                            className="h-12 px-8 text-base shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:scale-105 transition-all duration-300"
+                            className="h-14 px-10 text-lg shadow-2xl shadow-primary/20 hover:scale-105 transition-all duration-300 rounded-2xl font-black uppercase tracking-widest"
                             asChild
                         >
-                            <Link href="/register">
-                                <Zap className="w-4 h-4 mr-2" />
-                                Start Building Free
+                            <Link href={"/register" as any}>
+                                {t('marketing.hero.ctaStart')}
+                                <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </Button>
                         <Button
                             size="lg"
-                            variant="outline"
-                            className="h-12 px-8 text-base backdrop-blur-sm bg-background/5 border-border/50 hover:bg-background/10"
+                            variant="ghost"
+                            className="h-14 px-8 text-lg font-bold text-white/50 hover:text-white transition-colors flex items-center gap-2 group"
+                            asChild
                         >
-                            <PlayCircle className="w-4 h-4 mr-2" />
-                            View Demo
+                            <Link href="https://watatek.com/contact" target="_blank" rel="noopener noreferrer">
+                                {t('hero.contactSales')}
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </Link>
                         </Button>
                     </div>
 
-                    {/* Visual Mockup Placeholder */}
-                    <div
-                        className="mt-20 relative w-full aspect-[16/9] max-w-5xl rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden shadow-2xl"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-
-                        {/* Mock UI Elements - Refactored to use tokens */}
-                        <div className="absolute top-4 left-4 right-4 h-12 rounded-lg bg-background/40 border border-border/50 flex items-center px-4 gap-3">
-                            <div className="flex gap-1.5">
-                                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                    {/* Feature Spotlight Cards (replacing complex mockup) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+                        {heroFeatures.map((item, i) => (
+                            <div key={i} className="glass-card p-6 text-left hover:border-primary/50 transition-colors group">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <item.icon className="w-5 h-5 text-primary" />
+                                </div>
+                                <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                             </div>
-                            <div className="flex-1 h-6 rounded-md bg-background/40 max-w-sm mx-auto text-[10px] flex items-center justify-center text-muted-foreground font-mono border border-border/30">
-                                app.wata.ai/dashboard
-                            </div>
-                        </div>
-
-                        <div className="absolute top-20 left-4 w-64 bottom-4 rounded-lg bg-background/40 border border-border/50 p-4 space-y-3">
-                            <div className="h-8 w-full bg-muted/50 rounded" />
-                            <div className="h-4 w-3/4 bg-muted/30 rounded" />
-                            <div className="h-4 w-1/2 bg-muted/30 rounded" />
-                        </div>
-
-                        <div className="absolute top-20 left-72 right-4 bottom-4 rounded-lg bg-background/40 border border-border/50 flex items-center justify-center">
-                            <p className="text-muted-foreground text-sm font-medium">Interactive Graph Visualization Node</p>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

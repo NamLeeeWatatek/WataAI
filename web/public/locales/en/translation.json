@@ -30,6 +30,68 @@
     "startForFree": "Start for free",
     "contactSales": "Contact sales"
   },
+  "marketing": {
+    "nav": {
+      "features": "Features",
+      "howItWorks": "How it Works",
+      "pricing": "Pricing",
+      "login": "Login",
+      "startFree": "Start Free"
+    },
+    "hero": {
+      "badge": "Generation AI is here",
+      "titlePart1": "The AI-Powered Brain for ",
+      "titlePart2": "Every Customer Channel.",
+      "description": "Automate complex business interactions on Facebook, Zalo, and Web. Build intelligent agents that learn from your data in seconds.",
+      "ctaStart": "Start for free",
+      "ctaVerify": "Verify now"
+    },
+    "heroFeatures": {
+      "instant": {
+        "title": "Instant Response",
+        "desc": "Automate 90% of FAQs with high precision."
+      },
+      "secure": {
+        "title": "Safe & Secure",
+        "desc": "Your data is encrypted and protected by enterprise standards."
+      },
+      "fast": {
+        "title": "Fast Deployment",
+        "desc": "Connect and operate in minutes, no coding needed."
+      }
+    },
+    "connectors": {
+      "badge": "Integrations",
+      "titlePart1": "Connect ",
+      "titlePart2": "Anywhere.",
+      "description": "WataAI acts as the central brain for your business. Connect your existing channels in seconds and let our AI handle the traffic."
+    },
+    "featuresBento": {
+      "titlePart1": "Everything you need to ",
+      "titlePart2": "automate & scale.",
+      "description": "A complete toolkit for modern businesses to automate customer engagement without writing a single line of code.",
+      "omnichannel": {
+        "title": "Omnichannel Chatbots",
+        "desc": "Build once, deploy everywhere. Support for Facebook, Zalo, and Web Widget out of the box."
+      },
+      "inbox": {
+        "title": "Unified Inbox",
+        "desc": "Manage all your customer conversations in one centralized dashboard."
+      },
+      "analytics": {
+        "title": "Smart Analytics",
+        "desc": "Deep insights into bot performance and user engagement."
+      },
+      "builder": {
+        "title": "Zero Code Builder",
+        "desc": "Drag-and-drop visual flow builder. If you can draw it, you can build it."
+      },
+      "security": {
+        "title": "Enterprise Security",
+        "desc": "Bank-grade encryption and role-based access control."
+      }
+    }
+  },
   "dashboard": {
     "title": "Analytics Dashboard",
     "welcomeBack": "Welcome back! Here's your overview.",

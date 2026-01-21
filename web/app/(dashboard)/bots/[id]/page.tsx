@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PageLoading } from '@/components/shared/PageLoading';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import {
+    CheckCircle2,
     Save,
     AlertCircle,
     Bot as BotIcon,
@@ -15,7 +17,12 @@ import {
     Code,
     History,
     Clock,
-    RefreshCw
+    RefreshCw,
+    BarChart3,
+    BrainCircuit,
+    Share2,
+    Layout,
+    Rocket
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
@@ -31,9 +38,11 @@ import { WidgetDeploymentHistory } from '@/components/features/widget/WidgetDepl
 import { WidgetEmbedCode } from '@/components/features/widget/WidgetEmbedCode';
 import { WidgetVersionsList } from '@/components/features/widget/WidgetVersionsList';
 import { useWidgetVersions, useWidgetDeployments } from '@/lib/hooks/use-widget-versions';
+import { BotPerformanceTab } from '@/components/features/bots/BotPerformanceTab';
 
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useBot, useBots } from '@/lib/hooks/features/useBots';
+import { useBotConversations } from '@/lib/hooks/features/useBotConversations';
 import { BotStatus, BotWidgetPosition, BotWidgetButtonSize } from '@/lib/types/bots';
 
 export default function BotDetailPage() {
@@ -49,9 +58,11 @@ export default function BotDetailPage() {
     } = useBot(botId);
 
     const { updateBot, isMutating: saving } = useBots();
+    const { total: totalServed } = useBotConversations({ botId, source: 'widget', limit: 0 });
 
     const [hasChanges, setHasChanges] = useState(false);
     const [activeTab, setActiveTab] = useState('configuration');
+    const { t } = useTranslation();
 
     const { versions, isLoading: versionsLoading, mutate: mutateVersions } = useWidgetVersions(botId);
     const { deployments, isLoading: deploymentsLoading } = useWidgetDeployments(botId);
@@ -62,6 +73,7 @@ export default function BotDetailPage() {
     interface BotFormData {
         name: string;
         description: string;
+        avatarUrl: string | null;
         systemPrompt: string;
         aiProviderId: string | null;
         aiModelName: string;
@@ -82,11 +94,15 @@ export default function BotDetailPage() {
         widgetButtonSize: BotWidgetButtonSize;
         showAvatar: boolean;
         showTimestamp: boolean;
+        borderRadius: number;
+        glassmorphism: boolean;
+        headerStyle: 'solid' | 'minimal' | 'gradient';
     }
 
     const [formData, setFormData] = useState<BotFormData>({
         name: '',
         description: '',
+        avatarUrl: null,
         systemPrompt: '',
         aiProviderId: null,
         aiModelName: '',
@@ -106,6 +122,9 @@ export default function BotDetailPage() {
         widgetButtonSize: 'medium',
         showAvatar: true,
         showTimestamp: true,
+        borderRadius: 16,
+        glassmorphism: true,
+        headerStyle: 'solid',
     });
 
     // Sync form data when bot is loaded
@@ -114,6 +133,7 @@ export default function BotDetailPage() {
             setFormData({
                 name: bot.name,
                 description: bot.description || '',
+                avatarUrl: bot.avatarUrl || null,
                 systemPrompt: bot.systemPrompt || '',
                 aiProviderId: bot.aiConfigId || bot.aiProviderId || null,
                 aiModelName: bot.aiModelName || '',
@@ -133,6 +153,9 @@ export default function BotDetailPage() {
                 widgetButtonSize: bot.widgetButtonSize || 'medium',
                 showAvatar: bot.showAvatar ?? true,
                 showTimestamp: bot.showTimestamp ?? true,
+                borderRadius: bot.borderRadius ?? 16,
+                glassmorphism: bot.glassmorphism ?? true,
+                headerStyle: bot.headerStyle || 'solid',
             });
             setHasChanges(false);
         }
@@ -208,17 +231,23 @@ export default function BotDetailPage() {
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
                     <TabsHeader>
-                        <TabsList variant="pills">
+                        <TabsList variant="pills" className="bg-muted/20 p-1 border border-border/40">
                             {[
-                                { value: 'configuration', label: 'General', icon: BotIcon },
-                                { value: 'knowledge-base', label: 'Knowledge Base', icon: Code },
-                                { value: 'channels', label: 'Channels', icon: Palette },
-                                { value: 'widget', label: 'Interface', icon: History },
-                                { value: 'settings', label: 'Settings', icon: Clock }
+                                { value: 'configuration', label: t('ai.configuration', 'AI Brain'), icon: BrainCircuit },
+                                { value: 'knowledge-base', label: t('dashboard.knowledgeBase', 'Knowledge'), icon: Code },
+                                { value: 'channels', label: t('dashboard.channels', 'Connect'), icon: Share2 },
+                                { value: 'widget', label: t('common.appearance', 'Interface'), icon: Layout },
+                                { value: 'performance', label: t('dashboard.stats.conversations', 'Analytics'), icon: BarChart3 },
+                                { value: 'settings', label: t('common.settings', 'Settings'), icon: Clock }
                             ].map((tab) => (
-                                <TabsTrigger key={tab.value} value={tab.value} variant="pills">
-                                    <tab.icon className="w-3.5 h-3.5 mr-2" />
-                                    <span className="font-bold text-xs">{tab.label}</span>
+                                <TabsTrigger
+                                    key={tab.value}
+                                    value={tab.value}
+                                    variant="pills"
+                                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary"
+                                >
+                                    <tab.icon className="w-4 h-4 mr-2" />
+                                    <span className="font-bold text-xs uppercase tracking-wider">{tab.label}</span>
                                 </TabsTrigger>
                             ))}
                         </TabsList>
@@ -226,7 +255,16 @@ export default function BotDetailPage() {
 
                     <div className="mt-8">
                         <TabsContent value="configuration" className="m-0 focus-visible:outline-none">
-                            <BotConfigurationTab formData={formData} onChange={handleChange} workspaceId={bot?.workspaceId} />
+                            <BotConfigurationTab
+                                formData={formData}
+                                onChange={handleChange}
+                                workspaceId={bot?.workspaceId}
+                                totalServed={totalServed}
+                            />
+                        </TabsContent>
+
+                        <TabsContent value="performance" className="m-0 focus-visible:outline-none">
+                            <BotPerformanceTab botId={botId} />
                         </TabsContent>
 
                         <TabsContent value="knowledge-base" className="m-0 focus-visible:outline-none">

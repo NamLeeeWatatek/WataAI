@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { Palette, Rocket, History, Code, Plus } from 'lucide-react';
 import { WidgetAppearanceSettings } from '@/components/features/widget/WidgetAppearanceSettings';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function BotGlobalInterfaceTab({ botId, formData, onChange }: Props) {
+    const { t } = useTranslation();
     const [subTab, setSubTab] = useState('identity');
     const { versions, isLoading: versionsLoading, mutate: mutateVersions } = useWidgetVersions(botId);
     const { deployments, isLoading: deploymentsLoading } = useWidgetDeployments(botId);
@@ -75,19 +77,19 @@ export function BotGlobalInterfaceTab({ botId, formData, onChange }: Props) {
                             <DialogTrigger asChild>
                                 <Button className="font-bold shadow-lg shadow-primary/20">
                                     <Plus className="w-4 h-4 mr-2" />
-                                    Snapshot Version
+                                    {t('ai.snapshotVersion', 'Snapshot Version')}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Create Version Snapshot</DialogTitle>
+                                    <DialogTitle>{t('ai.createSnapshot', 'Create Version Snapshot')}</DialogTitle>
                                     <DialogDescription>
-                                        Create a frozen snapshot of the current interface configuration.
+                                        {t('ai.createSnapshotDesc', 'Create a frozen snapshot of the current interface configuration.')}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
-                                        <Label>Version Identifier</Label>
+                                        <Label>{t('ai.versionIdentifier', 'Version Identifier')}</Label>
                                         <Input
                                             placeholder="e.g. v1.0.2-beta"
                                             value={newVersion}
@@ -95,17 +97,17 @@ export function BotGlobalInterfaceTab({ botId, formData, onChange }: Props) {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label>Changelog / Notes</Label>
+                                        <Label>{t('ai.changelog', 'Changelog / Notes')}</Label>
                                         <Textarea
-                                            placeholder="Describe changes in this version..."
+                                            placeholder={t('ai.changelogPlaceholder', 'Describe changes in this version...')}
                                             value={changelog}
                                             onChange={(e) => setChangelog(e.target.value)}
                                         />
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                                    <Button onClick={handleCreateVersion} disabled={isSubmitting} loading={isSubmitting}>Create Snapshot</Button>
+                                    <Button variant="outline" onClick={() => setIsCreateOpen(false)}>{t('common.cancel', 'Cancel')}</Button>
+                                    <Button onClick={handleCreateVersion} disabled={isSubmitting} loading={isSubmitting}>{t('ai.create', 'Create Snapshot')}</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
@@ -113,11 +115,11 @@ export function BotGlobalInterfaceTab({ botId, formData, onChange }: Props) {
                     <TabsList variant="pills" className="bg-muted/50">
                         <TabsTrigger value="identity" variant="pills">
                             <Palette className="w-3.5 h-3.5 mr-2" />
-                            <span className="font-bold text-xs">Designer</span>
+                            <span className="font-bold text-xs">{t('common.appearance', 'Designer')}</span>
                         </TabsTrigger>
                         <TabsTrigger value="deployment" variant="pills">
                             <Rocket className="w-3.5 h-3.5 mr-2" />
-                            <span className="font-bold text-xs">Deployment</span>
+                            <span className="font-bold text-xs">{t('dashboard.deployment', 'Deployment')}</span>
                         </TabsTrigger>
                     </TabsList>
                 </div>

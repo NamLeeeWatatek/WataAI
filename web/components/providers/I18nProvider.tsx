@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode, useEffect, useState } from 'react'
-import '../../lib/i18n/i18n'
+import i18n from '../../lib/i18n/i18n'
 import { LoadingLogo } from '../shared/LoadingLogo'
 
 interface I18nProviderProps {
@@ -9,19 +9,23 @@ interface I18nProviderProps {
 }
 
 export function I18nProvider({ children }: I18nProviderProps) {
-  const [mounted, setMounted] = useState(false)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    const handleInitialized = () => {
+      setIsReady(true)
+    }
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingLogo size="lg" />
-      </div>
-    )
-  }
+    if (i18n.isInitialized) {
+      handleInitialized()
+    } else {
+      i18n.on('initialized', handleInitialized)
+    }
+
+    return () => {
+      i18n.off('initialized', handleInitialized)
+    }
+  }, [])
 
   return <>{children}</>
 }
