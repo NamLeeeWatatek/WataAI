@@ -37,6 +37,13 @@ export function TeamTab() {
         enabled: !!workspace?.id,
     });
 
+    // 3. Get pending invitations
+    const { data: invitations = [], isLoading: loadingInvitations } = useQuery({
+        queryKey: ['workspace-invitations', workspace?.id],
+        queryFn: () => workspacesApi.getPendingInvitations(workspace!.id),
+        enabled: !!workspace?.id,
+    });
+
     // Mutations
     const removeMemberMutation = useMutation({
         mutationFn: (userId: string) => workspacesApi.removeMember(workspace!.id, userId),
@@ -144,6 +151,50 @@ export function TeamTab() {
                         </Card>
                     )}
 
+                    {/* Pending Invitations Section */}
+                    {invitations.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between px-1">
+                                <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                                    Pending Invitations ({invitations.length})
+                                </h4>
+                            </div>
+
+                            <Card className="overflow-hidden border-dashed">
+                                <div className="divide-y divide-border/40">
+                                    {invitations.map((invitation) => (
+                                        <div
+                                            key={invitation.id}
+                                            className="flex items-center justify-between p-5 hover:bg-muted/30 transition-all"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center border border-orange-200 text-orange-600 font-bold dark:bg-orange-900/20 dark:border-orange-900/50 dark:text-orange-400">
+                                                    <Mail className="h-4 w-4" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-semibold text-sm">
+                                                            {invitation.email}
+                                                        </p>
+                                                        <Badge variant="outline" className="h-5 px-1.5 text-[10px] bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/10 dark:text-orange-400 dark:border-orange-800">
+                                                            Pending
+                                                        </Badge>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                                        <Clock className="w-3 h-3" />
+                                                        <span>Expires on {new Date(invitation.expiresAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Optional: Add Revoke button here if API supported it */}
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
                     {/* Other Members List */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
@@ -158,7 +209,7 @@ export function TeamTab() {
                                     <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center">
                                         <UserPlus className="w-5 h-5 opacity-50" />
                                     </div>
-                                    <p>No other members yet. Invite your team to get started!</p>
+                                    <p>No other active members yet.</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-border/40">

@@ -25,8 +25,11 @@ export function WorkspaceSwitcher() {
   const dispatch = useAppDispatch()
   const { currentWorkspace, workspaces, isLoading } = useAppSelector(state => state.workspace)
 
+  const [mounted, setMounted] = useState(false)
+
   // Sync with axiosClient on change or hydration
   useEffect(() => {
+    setMounted(true)
     if (currentWorkspace?.id) {
       import('@/lib/axios-client').then(({ setActiveWorkspaceId }) => {
         setActiveWorkspaceId(currentWorkspace.id)
@@ -48,7 +51,7 @@ export function WorkspaceSwitcher() {
     return name?.substring(0, 1).toUpperCase() || 'W'
   }
 
-  if (isLoading) {
+  if (isLoading || !mounted) {
     return (
       <div className="flex w-full items-center gap-2 rounded-xl border border-border/50 bg-muted/50 p-2">
         <div className="h-8 w-8 animate-pulse rounded-lg bg-muted-foreground/20" />

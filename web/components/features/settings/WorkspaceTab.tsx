@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher';
+// import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher';
 import { Briefcase } from 'lucide-react';
 import { Separator } from '@/components/ui/Separator';
 
@@ -25,14 +25,8 @@ export function WorkspaceTab() {
                             <Separator className="opacity-50" />
 
                             <div className="max-w-md pt-2 space-y-4">
-                                <div className="grid gap-2">
-                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                        Current Workspace
-                                    </label>
-                                    <WorkspaceSwitcher />
-                                    <p className="text-[0.8rem] text-muted-foreground">
-                                        Select the workspace you want to view or configure.
-                                    </p>
+                                <div className="p-4 rounded-xl bg-muted/50 border border-border/50 text-sm text-muted-foreground">
+                                    You can now switch between workspaces directly from the sidebar on the left.
                                 </div>
                             </div>
                         </div>

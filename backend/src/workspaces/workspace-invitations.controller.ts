@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Get,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,7 +24,7 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 export class WorkspaceInvitationsController {
   constructor(
     private readonly invitationsService: WorkspaceInvitationsService,
-  ) {}
+  ) { }
 
   @Permissions('iam:InviteUser')
   @Post(':workspaceId')
@@ -42,5 +43,12 @@ export class WorkspaceInvitationsController {
   @HttpCode(HttpStatus.OK)
   accept(@Param('token') token: string, @Request() req) {
     return this.invitationsService.accept(token, req.user.id);
+  }
+
+  @Permissions('iam:InviteUser')
+  @Get(':workspaceId')
+  @ApiOperation({ summary: 'Get pending invitations for workspace' })
+  findAll(@Param('workspaceId') workspaceId: string) {
+    return this.invitationsService.findAllByWorkspace(workspaceId);
   }
 }
