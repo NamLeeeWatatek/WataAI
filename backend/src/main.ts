@@ -11,7 +11,6 @@ import { useContainer } from 'class-validator';
 import { AppModule } from './app.module';
 import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
-import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import helmet from 'helmet';
 import * as bodyParser from 'body-parser';
 import { HttpExceptionFilter } from './utils/filters/http-exception.filter';
@@ -25,16 +24,22 @@ interface RequestWithRawBody extends Request {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
-    cors: {
-      origin: process.env.FRONTEND_DOMAIN || 'http://localhost:3000',
-      credentials: true,
-    },
+    cors: true,
   });
 
-  // âœ… FIX: Add raw body middleware for webhook signature verification
-  // This must be BEFORE any other body parsing middleware
+  const configService = app.get(ConfigService<AllConfigType>);
+
+  app.enableCors({
+    origin: configService.getOrThrow('app.frontendDomain', { infer: true }),
+    credentials: true,
+  });
+
+  const apiPrefix = configService.getOrThrow('app.apiPrefix', { infer: true });
+
+  // ✅ FIX: Add raw body middleware for webhook signature verification
+  // this path must match the webhook controller path EXACTLY
   app.use(
-    '/api/v1/webhooks',
+    `/${apiPrefix}/v1/webhooks`,
     bodyParser.json({
       verify: (req: RequestWithRawBody, res: Response, buf: Buffer) => {
         req.rawBody = buf;
@@ -57,24 +62,16 @@ async function bootstrap() {
   });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  const configService = app.get(ConfigService<AllConfigType>);
-
   app.enableShutdownHooks();
-  app.setGlobalPrefix(
-    configService.getOrThrow('app.apiPrefix', { infer: true }),
-    {
-      exclude: ['/'],
-    },
-  );
+  app.setGlobalPrefix(apiPrefix, {
+    exclude: ['/'],
+  });
   app.enableVersioning({
     type: VersioningType.URI,
   });
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe(validationOptions));
-  app.useGlobalInterceptors(
-    new ResolvePromisesInterceptor(),
-    new ClassSerializerInterceptor(app.get(Reflector)),
-  );
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const options = new DocumentBuilder()
     .setTitle('API')

@@ -56,16 +56,24 @@ import { ExecutionModule } from './execution/execution.module';
 import { ProjectsModule } from './projects/projects.module';
 import { CreationToolsModule } from './creation-tools/creation-tools.module';
 
+import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseConfigService } from './database/mongoose-config.service';
+
 /**
  * Dynamically selects the database module based on configuration.
  * Uses MongoDB (Mongoose) for document database or SQL (TypeORM) for relational database.
  */
-const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
-  useClass: TypeOrmConfigService,
-  dataSourceFactory: async (options: DataSourceOptions) => {
-    return new DataSource(options).initialize();
-  },
-});
+const infrastructureDatabaseModule =
+  process.env.DATABASE_TYPE === 'mongodb'
+    ? MongooseModule.forRootAsync({
+      useClass: MongooseConfigService,
+    })
+    : TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options: DataSourceOptions) => {
+        return new DataSource(options).initialize();
+      },
+    });
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
@@ -192,4 +200,4 @@ import { WorkflowsModule } from './workflows/workflows.module';
     WorkflowsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
