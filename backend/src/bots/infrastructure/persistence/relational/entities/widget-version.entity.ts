@@ -38,6 +38,8 @@ export class WidgetVersionEntity extends EntityRelationalHelper {
       backgroundColor?: string;
       botMessageColor?: string;
       botMessageTextColor?: string;
+      userMessageColor?: string;
+      userMessageTextColor?: string;
       fontFamily?: string;
       position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
       buttonSize: 'small' | 'medium' | 'large';

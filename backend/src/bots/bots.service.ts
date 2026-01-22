@@ -40,7 +40,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -251,6 +251,10 @@ export class BotsService {
         (bot as any).widgetButtonSize = config.theme.buttonSize;
         (bot as any).showAvatar = config.theme.showAvatar;
         (bot as any).showTimestamp = config.theme.showTimestamp;
+        (bot as any).botMessageColor = config.theme.botMessageColor;
+        (bot as any).botMessageTextColor = config.theme.botMessageTextColor;
+        (bot as any).userMessageColor = config.theme.userMessageColor;
+        (bot as any).userMessageTextColor = config.theme.userMessageTextColor;
       }
 
       // Messages
@@ -287,6 +291,10 @@ export class BotsService {
       welcomeMessage,
       placeholderText,
       allowedOrigins,
+      botMessageColor,
+      botMessageTextColor,
+      userMessageColor,
+      userMessageTextColor,
       ...botUpdate
     } = updateDto;
 
@@ -327,6 +335,10 @@ export class BotsService {
       welcomeMessage,
       placeholderText,
       allowedOrigins,
+      botMessageColor,
+      botMessageTextColor,
+      userMessageColor,
+      userMessageTextColor,
     ].some((v) => v !== undefined);
 
     if (hasVisualUpdates && bot.createdBy) {
@@ -349,6 +361,13 @@ export class BotsService {
             configUpdates.theme.showAvatar = showAvatar;
           if (showTimestamp !== undefined)
             configUpdates.theme.showTimestamp = showTimestamp;
+          if (botMessageColor) configUpdates.theme.botMessageColor = botMessageColor;
+          if (botMessageTextColor)
+            configUpdates.theme.botMessageTextColor = botMessageTextColor;
+          if (userMessageColor)
+            configUpdates.theme.userMessageColor = userMessageColor;
+          if (userMessageTextColor)
+            configUpdates.theme.userMessageTextColor = userMessageTextColor;
         }
 
         if (welcomeMessage || placeholderText) {

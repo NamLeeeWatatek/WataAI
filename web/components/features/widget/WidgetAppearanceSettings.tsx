@@ -31,6 +31,8 @@ interface WidgetAppearanceSettingsData {
     borderRadius?: number;
     glassmorphism?: boolean;
     headerStyle?: 'solid' | 'minimal' | 'gradient';
+    userMessageColor?: string;
+    userMessageTextColor?: string;
 }
 
 interface Props {
@@ -57,6 +59,8 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
         glassmorphism: true,
         headerStyle: 'solid',
         widgetEnabled: true,
+        userMessageColor: '#667eea',
+        userMessageTextColor: '#ffffff',
     });
 
     const [activeTab, setActiveTab] = useState('design');

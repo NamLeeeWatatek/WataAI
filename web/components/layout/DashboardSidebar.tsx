@@ -168,7 +168,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                 <nav className="flex-1 px-3 space-y-8 overflow-y-auto scrollbar-thin py-6">
                     {groups.map((group) => (
                         <div key={group.title} className="space-y-2">
-                            <h3 className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+                            <h3 className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40" suppressHydrationWarning>
                                 {group.title}
                             </h3>
                             <div className="space-y-1">
@@ -190,7 +190,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <item.icon className="w-4 h-4 opacity-60" />
-                                                        <span>{item.name}</span>
+                                                        <span suppressHydrationWarning>{item.name}</span>
                                                     </div>
                                                     <ChevronDown
                                                         className={`w-3.5 h-3.5 transition-transform duration-200 opacity-40 ${isExpanded ? 'rotate-180' : ''}`}
@@ -211,7 +211,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-full" />
                                                     )}
                                                     <item.icon className={cn("w-4 h-4 transition-colors", active ? "text-primary" : "opacity-60 group-hover:opacity-100")} />
-                                                    <span>{item.name}</span>
+                                                    <span suppressHydrationWarning>{item.name}</span>
                                                 </Link>
                                             )}
 
@@ -230,6 +230,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                                         ? "text-primary font-bold bg-primary/5"
                                                                         : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
                                                                 )}
+                                                                suppressHydrationWarning
                                                             >
                                                                 {child.name}
                                                             </Link>
@@ -286,12 +287,12 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                             ) : (
                                 <LogOut className="w-3.5 h-3.5 mr-2" />
                             )}
-                            <span>{isLoggingOut ? t('dashboard.signingOut') : t('dashboard.signOut')}</span>
+                            <span suppressHydrationWarning>{isLoggingOut ? t('dashboard.signingOut') : t('dashboard.signOut')}</span>
                         </Button>
                     </Card>
                 </div>
             </aside>
-        </React.Fragment>
+        </React.Fragment >
     )
 })
 

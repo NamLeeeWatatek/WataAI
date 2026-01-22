@@ -153,6 +153,26 @@ export class UpdateBotDto extends PartialType(CreateBotDto) {
   @IsArray()
   @IsString({ each: true })
   allowedOrigins?: string[] | null;
+
+  @ApiPropertyOptional({ example: '#f3f4f6' })
+  @IsOptional()
+  @IsString()
+  botMessageColor?: string;
+
+  @ApiPropertyOptional({ example: '#1f2937' })
+  @IsOptional()
+  @IsString()
+  botMessageTextColor?: string;
+
+  @ApiPropertyOptional({ example: '#667eea' })
+  @IsOptional()
+  @IsString()
+  userMessageColor?: string;
+
+  @ApiPropertyOptional({ example: '#ffffff' })
+  @IsOptional()
+  @IsString()
+  userMessageTextColor?: string;
 }
 
 export class CreateFlowVersionDto {

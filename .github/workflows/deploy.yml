@@ -88,7 +88,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
           source: "docker-compose.prod.yml"
-          target: "~/aiwata-deploy"
+          target: "/var/www/watagroup"
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
@@ -98,7 +98,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
           script: |
-            cd ~/aiwata-deploy
+            cd /var/www/watagroup
             
             # Convert repo to lowercase for GHCR compatibility
             export IMAGE_PREFIX="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"

@@ -57,6 +57,17 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
                             }}
                         />
                     ),
+                    img: ({ node, ...props }) => (
+                        <img
+                            {...props}
+                            style={{
+                                maxWidth: '100%',
+                                borderRadius: '8px',
+                                margin: '0.5em 0',
+                                display: 'block'
+                            }}
+                        />
+                    ),
                 }}
             >
                 {content}
