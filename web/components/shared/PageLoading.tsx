@@ -3,6 +3,7 @@
 import React from 'react'
 import { LoadingLogo } from './LoadingLogo'
 import { cn } from '@/lib/utils'
+import { Loader2 } from 'lucide-react'
 
 interface PageLoadingProps {
     message?: string
@@ -24,8 +25,9 @@ export function PageLoading({
     className,
     minHeight = 'min-h-[400px]',
     size = 'lg',
-    showGlow = true
-}: PageLoadingProps) {
+    showGlow = true,
+    useLogo = fullScreen // Default to logo only for fullscreen/global loading
+}: PageLoadingProps & { useLogo?: boolean }) {
     return (
         <div className={cn(
             "flex flex-col items-center justify-center w-full",
@@ -35,18 +37,26 @@ export function PageLoading({
             className
         )}>
             <div className="relative">
-                {/* Enhanced glow background effect */}
-                {showGlow && (
-                    <div className={cn(
-                        "absolute -inset-8 rounded-full blur-3xl opacity-0 transition-opacity duration-700",
-                        "bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20",
-                        "group-hover:opacity-100 animate-pulse"
-                    )} />
-                )}
-
                 {/* Content container */}
-                <div className="relative group">
-                    <LoadingLogo size={size} text={message} showGlow={showGlow} />
+                <div className="relative group flex flex-col items-center gap-4">
+                    {useLogo ? (
+                        <>
+                            {/* Enhanced glow background effect only for logo */}
+                            {showGlow && (
+                                <div className={cn(
+                                    "absolute -inset-8 rounded-full blur-3xl opacity-0 transition-opacity duration-700",
+                                    "bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20",
+                                    "group-hover:opacity-100 animate-pulse"
+                                )} />
+                            )}
+                            <LoadingLogo size={size} text={message} showGlow={showGlow} />
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center gap-3">
+                            <Loader2 className={cn("text-primary animate-spin", size === 'lg' ? 'w-10 h-10' : 'w-6 h-6')} />
+                            {message && <p className="text-muted-foreground text-sm font-medium animate-pulse">{message}</p>}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
