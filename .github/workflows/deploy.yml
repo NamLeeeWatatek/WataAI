@@ -110,7 +110,7 @@ jobs:
             docker compose -f docker-compose.prod.yml pull
             
             # Restart services with zero-downtime
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
             
             # Cleanup unused images
             docker image prune -f

@@ -111,9 +111,9 @@ function LoginPageContent() {
                             <Sparkles className="w-8 h-8 text-primary drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
                         </div>
                         <h1 className="text-3xl font-black mb-3 tracking-tighter">
-                            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent uppercase tracking-tight">{t('login.welcomeBack')}</span>
+                            <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent uppercase tracking-tight" suppressHydrationWarning>{t('login.welcomeBack')}</span>
                         </h1>
-                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60">
+                        <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-60" suppressHydrationWarning>
                             {t('login.subtitle')}
                         </p>
                     </div>
@@ -135,7 +135,7 @@ function LoginPageContent() {
                             <span className="w-full border-t border-border/10" />
                         </div>
                         <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                            <span className="bg-card px-4 text-muted-foreground/60 rounded-full border border-border/10">
+                            <span className="bg-card px-4 text-muted-foreground/60 rounded-full border border-border/10" suppressHydrationWarning>
                                 {t('login.or')}
                             </span>
                         </div>
@@ -144,7 +144,7 @@ function LoginPageContent() {
                     {/* Email Form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('login.email')}</Label>
+                            <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1" suppressHydrationWarning>{t('login.email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -157,10 +157,11 @@ function LoginPageContent() {
                         </div>
                         <div className="space-y-2">
                             <div className="flex items-center justify-between px-1">
-                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('login.password')}</Label>
+                                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground" suppressHydrationWarning>{t('login.password')}</Label>
                                 <Link
                                     href="/forgot-password"
                                     className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline hover:opacity-80 transition-all"
+                                    suppressHydrationWarning
                                 >
                                     {t('login.forgotPassword')}
                                 </Link>
@@ -206,21 +207,21 @@ function LoginPageContent() {
                                 {isBusy ? (
                                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                                 ) : null}
-                                {t('login.signIn')}
+                                <span suppressHydrationWarning>{t('login.signIn')}</span>
                             </Button>
                         </div>
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-10 text-center text-[11px] font-black uppercase tracking-widest text-muted-foreground/60">
+                    <div className="mt-10 text-center text-[11px] font-black uppercase tracking-widest text-muted-foreground/60" suppressHydrationWarning>
                         {t('login.noAccount')}{' '}
-                        <Link href="/register" className="text-primary hover:text-primary/80 transition-colors">
+                        <Link href="/register" className="text-primary hover:text-primary/80 transition-colors" suppressHydrationWarning>
                             {t('login.signUp')}
                         </Link>
                     </div>
 
                     <div className="mt-8 text-center">
-                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back">
+                        <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-primary transition-all group/back" suppressHydrationWarning>
                             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             {t('login.backToHome')}
                         </Link>
