@@ -9,7 +9,31 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # 1. Check for changes
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'docker-compose.prod.yml'
+            web:
+              - 'web/**'
+              - 'docker-compose.prod.yml'
+
+  # 2. Build Backend (Only if changed)
   build-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,11 +60,17 @@ jobs:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/backend:latest
+          # Tag with both 'latest' and commit sha
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/backend:latest
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # 3. Build Web (Only if changed)
   build-web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -70,15 +100,37 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_FRONTEND_URL=${{ secrets.NEXT_PUBLIC_FRONTEND_URL }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/web:latest
+          # Tag with both 'latest' and commit sha
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/web:latest
+            ${{ env.REGISTRY }}/${{ env.REPO_LOWER }}/web:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # 4. Deploy
   deploy:
-    needs: [build-backend, build-web]
+    needs: [changes, build-backend, build-web]
+    if: always() # Run even if one build info was skipped
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Determine Tags
+        id: tags
+        run: |
+          # If backend built (changed), use SHA. Else use latest.
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
+            echo "BACKEND_TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "BACKEND_TAG=latest" >> $GITHUB_OUTPUT
+          fi
+          
+          # If web built (changed), use SHA. Else use latest.
+          if [[ "${{ needs.changes.outputs.web }}" == "true" ]]; then
+            echo "WEB_TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "WEB_TAG=latest" >> $GITHUB_OUTPUT
+          fi
 
       - name: Copy docker-compose to VPS
         uses: appleboy/scp-action@master
@@ -97,19 +149,27 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
+          # Pass determined tags to the script
           script: |
             cd /var/www/watagroup
             
-            # Convert repo to lowercase for GHCR compatibility
+            # Export Variables for Docker Compose
             export IMAGE_PREFIX="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+            export BACKEND_TAG="${{ steps.tags.outputs.BACKEND_TAG }}"
+            export WEB_TAG="${{ steps.tags.outputs.WEB_TAG }}"
             
+            echo "Deploying Backend: $BACKEND_TAG"
+            echo "Deploying Web: $WEB_TAG"
+
             # Login to GHCR
             echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pull latest images
+            # Pull latest images (specifically the tags we need)
+            # We explicitly pull the tags we intend to use to ensure they exist/are updated
             docker compose -f docker-compose.prod.yml pull
             
             # Restart services with zero-downtime
+            # --force-recreate ensures we switch to the new tag/container
             docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
             
             # Cleanup unused images
