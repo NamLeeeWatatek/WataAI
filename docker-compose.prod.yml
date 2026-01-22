@@ -9,7 +9,7 @@ services:
     container_name: aiwata-backend
     restart: unless-stopped
     env_file:
-      - backend/.env
+      - .env
     environment:
       # If you want to run DB on Host, uncomment extra_hosts below and set DATABASE_HOST=host.docker.internal in .env
       # If you want to run DB in Docker (infra-shared), set DATABASE_HOST=postgres in .env
@@ -36,7 +36,7 @@ services:
     container_name: aiwata-web
     restart: unless-stopped
     env_file:
-      - web/.env
+      - .env
     ports:
       - "3001:3000"
     networks:
