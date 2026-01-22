@@ -5,10 +5,6 @@ import Facebook from "next-auth/providers/facebook"
 import { authConfig } from "@/auth.config"
 import { logger } from "@/lib/logger"
 
-import { UserRole } from "./types/next-auth"
-
-// Types and helper functions moved to auth.config.ts / types
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   providers: [
@@ -25,7 +21,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return null
           }
 
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+          const apiUrl =
+            process.env.INTERNAL_API_URL ??
+            process.env.NEXT_PUBLIC_API_URL ??
+            'http://localhost:8000/api/v1';
 
           // Call backend email login
           const response = await fetch(`${apiUrl}/auth/email/login`, {
