@@ -36,7 +36,7 @@ const AdminLink = () => {
         >
             <Link href={paths.system.root as any}>
                 <Settings className="w-3.5 h-3.5" />
-                <span>{t('navigation.adminSystem')}</span>
+                <span suppressHydrationWarning>{t('navigation.adminSystem')}</span>
             </Link>
         </Button>
     )

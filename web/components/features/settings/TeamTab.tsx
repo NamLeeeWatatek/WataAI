@@ -184,7 +184,7 @@ export function TeamTab() {
                                                     </div>
                                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                                         <Clock className="w-3 h-3" />
-                                                        <span>
+                                                        <span suppressHydrationWarning>
                                                             {new Date(invitation.expiresAt).toLocaleDateString(i18n.language, {
                                                                 year: 'numeric',
                                                                 month: 'long',
