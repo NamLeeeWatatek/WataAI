@@ -27,10 +27,7 @@ import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { AuthRefreshTokenDto } from './dto/auth-refresh-token.dto';
 
 @ApiTags('Auth')
-@Controller({
-  path: 'auth',
-  version: '1',
-})
+@Controller('auth')
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 

@@ -32,10 +32,7 @@ import { infinityPagination } from '../utils/infinity-pagination';
 import { InfinityPaginationResponse } from '../utils/dto/infinity-pagination-response.dto';
 
 @ApiTags('Categories')
-@Controller({
-  path: 'categories',
-  version: '1',
-})
+@Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

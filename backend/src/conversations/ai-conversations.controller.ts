@@ -23,7 +23,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @ApiTags('AI Conversations')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'ai-conversations', version: '1' })
+@Controller('ai-conversations')
 export class AiConversationsController {
   constructor(private readonly conversationsService: AiConversationsService) {}
 

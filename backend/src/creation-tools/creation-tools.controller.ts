@@ -44,10 +44,7 @@ import { CreationJobsService } from '../creation-jobs/creation-jobs.service';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @ApiTags('Creation Tools')
-@Controller({
-  path: 'creation-tools',
-  version: '1',
-})
+@Controller('creation-tools')
 export class CreationToolsController {
   constructor(
     private readonly service: CreationToolsService,

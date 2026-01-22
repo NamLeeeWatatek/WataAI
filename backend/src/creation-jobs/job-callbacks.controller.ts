@@ -15,10 +15,7 @@ import { CompleteJobDto } from './dto/complete-job.dto';
 
 @ApiTags('Creation Job Callbacks')
 @Public()
-@Controller({
-  path: 'callbacks/jobs',
-  version: '1',
-})
+@Controller('callbacks/jobs')
 export class JobCallbacksController {
   constructor(private readonly service: CreationJobsService) {}
 

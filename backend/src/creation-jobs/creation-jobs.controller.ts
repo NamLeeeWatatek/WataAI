@@ -36,10 +36,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @ApiTags('Creation Jobs')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({
-  path: 'creation-jobs',
-  version: '1',
-})
+@Controller('creation-jobs')
 export class CreationJobsController {
   constructor(private readonly service: CreationJobsService) {}
 

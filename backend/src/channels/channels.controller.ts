@@ -32,7 +32,7 @@ import { FacebookOAuthService } from './facebook-oauth.service';
 @ApiTags('Channels')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'channels', version: '1' })
+@Controller('channels')
 export class ChannelsController {
   private readonly logger = new Logger(ChannelsController.name);
 

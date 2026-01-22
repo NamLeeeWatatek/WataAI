@@ -27,10 +27,7 @@ import { infinityPagination } from '../utils/infinity-pagination';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Projects')
-@Controller({
-  path: 'projects',
-  version: '1',
-})
+@Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 

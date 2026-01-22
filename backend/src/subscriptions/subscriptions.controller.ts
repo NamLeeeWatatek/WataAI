@@ -24,7 +24,7 @@ import { Plan, Subscription, UsageQuota, Invoice } from './domain/subscription';
 @ApiTags('Subscriptions')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'subscriptions', version: '1' })
+@Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 

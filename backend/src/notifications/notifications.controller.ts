@@ -31,7 +31,7 @@ import { FindAllNotificationsDto } from './dto/find-all-notifications.dto';
 @ApiTags('Notifications')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'notifications', version: '1' })
+@Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 

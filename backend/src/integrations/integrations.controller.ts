@@ -18,7 +18,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @ApiTags('Integrations')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'integrations', version: '1' })
+@Controller('integrations')
 export class IntegrationsController {
   constructor(private readonly integrationsService: IntegrationsService) {}
 

@@ -27,10 +27,7 @@ import { infinityPagination } from '../utils/infinity-pagination';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Characters')
-@Controller({
-  path: 'characters',
-  version: '1',
-})
+@Controller('characters')
 export class CharactersController {
   constructor(private readonly charactersService: CharactersService) {}
 

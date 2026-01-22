@@ -13,10 +13,7 @@ import { FileUploadDto } from './dto/file.dto';
 import { MinioFileResponseDto } from './dto/file-response.dto';
 
 @ApiTags('Files')
-@Controller({
-  path: 'files',
-  version: '1',
-})
+@Controller('files')
 export class FilesMinioController {
   constructor(private readonly filesService: FilesMinioService) {}
 

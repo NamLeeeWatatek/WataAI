@@ -29,7 +29,7 @@ import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.
 @ApiTags('Bot Knowledge Bases')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'bots/:id/knowledge-bases', version: '1' })
+@Controller('bots/:id/knowledge-bases')
 export class BotKnowledgeBasesController {
   constructor(private readonly botsService: BotsService) {}
 

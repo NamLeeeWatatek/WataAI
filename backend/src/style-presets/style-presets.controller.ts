@@ -27,10 +27,7 @@ import { infinityPagination } from '../utils/infinity-pagination';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('StylePresets')
-@Controller({
-  path: 'style-presets',
-  version: '1',
-})
+@Controller('style-presets')
 export class StylePresetsController {
   constructor(private readonly stylePresetsService: StylePresetsService) {}
 

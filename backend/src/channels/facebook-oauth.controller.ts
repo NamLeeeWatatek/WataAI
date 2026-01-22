@@ -26,7 +26,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
 
 @ApiTags('Facebook OAuth')
-@Controller({ path: 'channels/facebook', version: '1' })
+@Controller('channels/facebook')
 export class FacebookOAuthController {
   private readonly logger = new Logger(FacebookOAuthController.name);
 
