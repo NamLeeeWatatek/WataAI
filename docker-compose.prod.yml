@@ -2,7 +2,8 @@ version: "3.8"
 
 services:
   backend:
-    image: ${IMAGE_PREFIX:-ghcr.io/namleeewatatek/wataai}/backend:${BACKEND_TAG:-latest}
+    image: ghcr.io/namleeewatatek/wataai/backend:${BACKEND_TAG}
+    pull_policy: always
     container_name: aiwata-backend
     restart: unless-stopped
     env_file:
@@ -10,6 +11,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      INTERNAL_API_URL: http://backend:8000/api/v1
     ports:
       - "8000:8000"
     networks:
@@ -22,7 +24,8 @@ services:
           memory: 1G
 
   web:
-    image: ${IMAGE_PREFIX:-ghcr.io/namleeewatatek/wataai}/web:${WEB_TAG:-latest}
+    image: ghcr.io/namleeewatatek/wataai/web:${WEB_TAG}
+    pull_policy: always
     container_name: aiwata-web
     restart: unless-stopped
     env_file:
