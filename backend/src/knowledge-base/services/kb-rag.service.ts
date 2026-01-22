@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -74,6 +74,7 @@ export class KBRagService {
 
   async generateAnswerStream(
     question: string,
+    workspaceId: string,
     knowledgeBaseId?: string,
     model?: string,
     options?: {
@@ -87,6 +88,7 @@ export class KBRagService {
     await Promise.resolve();
     return this._generateAnswerStream(
       question,
+      workspaceId,
       knowledgeBaseId,
       model,
       options,
@@ -95,6 +97,7 @@ export class KBRagService {
 
   private async *_generateAnswerStream(
     question: string,
+    workspaceId: string,
     knowledgeBaseId?: string,
     model?: string,
     options?: {
@@ -112,7 +115,7 @@ export class KBRagService {
       const candidateLimit = limit * 3;
       let relevantChunks = await this.query(
         question,
-        'default',
+        workspaceId,
         knowledgeBaseId,
         candidateLimit,
         threshold,
@@ -175,6 +178,7 @@ export class KBRagService {
 
   async generateAnswer(
     question: string,
+    workspaceId: string,
     knowledgeBaseId?: string,
     model?: string,
     options?: {
@@ -192,7 +196,7 @@ export class KBRagService {
       const candidateLimit = limit * 3;
       let relevantChunks = await this.query(
         question,
-        'default',
+        workspaceId,
         knowledgeBaseId,
         candidateLimit,
         threshold,
@@ -261,9 +265,30 @@ export class KBRagService {
   }
 
   private async expandContext(chunks: ChunkSource[]): Promise<ChunkSource[]> {
-    // Placeholder for context expansion logic if it was used in original
-    await Promise.resolve();
-    return chunks;
+    if (!chunks.length) return chunks;
+
+    this.logger.log(`Expanding context for ${chunks.length} chunks...`);
+    const expandedChunks: ChunkSource[] = [];
+    const seenHashes = new Set<string>();
+
+    for (const chunk of chunks) {
+      const neighbors = await this.searchService.fetchAdjacentChunks(chunk, 1);
+      for (const neighbor of neighbors) {
+        const hash = `${neighbor.documentId}_${neighbor.chunkIndex}`;
+        if (!seenHashes.has(hash)) {
+          seenHashes.add(hash);
+          expandedChunks.push(neighbor);
+        }
+      }
+    }
+
+    // Still sort by score originally, then by document and index to keep logical flow
+    return expandedChunks.sort((a, b) => {
+      if (a.documentId !== b.documentId) {
+        return a.documentId.localeCompare(b.documentId);
+      }
+      return a.chunkIndex - b.chunkIndex;
+    });
   }
 
   private async generateAnswerFromKb(
@@ -413,9 +438,10 @@ export class KBRagService {
 
       if (knowledgeBaseIds.length > 0) {
         try {
+          const effectiveWorkspaceId = workspaceId || bot.workspaceId || 'default';
           relevantChunks = await this.gatherRAGContext(
             question,
-            workspaceId || 'default',
+            effectiveWorkspaceId,
             knowledgeBaseIds,
           );
           relevantChunks = relevantChunks.slice(0, 5); // Ensure top 5
@@ -452,12 +478,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiConfigId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiConfigId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -518,17 +544,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiConfigId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiConfigId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
@@ -564,7 +590,7 @@ export class KBRagService {
           ragWorkspaceId,
           effectiveKnowledgeBaseIds,
         );
-        ragSources = allChunks.slice(0, 5);
+        ragSources = await this.expandContext(allChunks.slice(0, 5));
 
         if (ragSources.length > 0) {
           ragContext = ragSources
@@ -585,22 +611,28 @@ export class KBRagService {
         effectiveKnowledgeBaseIds?.[0],
       );
 
-      if (!providerConfig) {
-        throw new UnprocessableEntityException(
-          `No AI provider configured. Please configure an AI provider in Settings first.`,
+      const finalModel = providerConfig?.modelName || defaultModel;
+
+      let answer: string;
+      if (providerConfig) {
+        answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
+          messages,
+          finalModel,
+          providerConfig.configId,
+          providerConfig.scope,
+          providerConfig.scopeId,
+          providerConfig.aiParameters,
+        );
+      } else {
+        // Fallback to system default/general chat
+        this.logger.warn(
+          `⚠️ [RAG] No specific provider resolved for Bot ${botId}, falling back to system default.`
+        );
+        answer = await this.aiProvidersService.chatWithHistory(
+          messages,
+          finalModel
         );
       }
-
-      const finalModel = providerConfig.modelName || defaultModel;
-
-      const answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
-        messages,
-        finalModel,
-        providerConfig.configId,
-        providerConfig.scope,
-        providerConfig.scopeId,
-        providerConfig.aiParameters,
-      );
 
       return {
         answer,
@@ -637,7 +669,10 @@ export class KBRagService {
       fullSystemPrompt +=
         `\n\n${this.i18n.t('ai.ragContextPrefix', { lang })}\n\n` +
         `${ragContext}\n\n` +
-        this.i18n.t('ai.ragPromptPrefix', { lang });
+        `INSTRUCTION: Answer the user's request using the context provided above. ` +
+        `Keep the answer in the SAME LANGUAGE as the user message. ` +
+        `If the context is in a different language, translate relevant information while maintaining accuracy. ` +
+        `If the context doesn't contain the answer, say you don't know based on the context but offer general help.`;
     }
 
     return [

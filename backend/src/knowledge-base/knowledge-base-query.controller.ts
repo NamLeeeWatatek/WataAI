@@ -10,6 +10,7 @@ import {
 } from './dto/kb-document.dto';
 
 import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guard';
+import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 
 @ApiTags('Knowledge Base - Query & RAG')
 @ApiBearerAuth()
@@ -19,7 +20,7 @@ export class KnowledgeBaseQueryController {
   constructor(
     private readonly ragService: KBRagService,
     private readonly botExecutionService: BotExecutionService,
-  ) {}
+  ) { }
 
   @Post('query')
   @ApiOperation({ summary: 'Query knowledge base (vector search)' })
@@ -46,9 +47,13 @@ export class KnowledgeBaseQueryController {
   @ApiOperation({
     summary: 'Generate answer using RAG (with sources and relevance)',
   })
-  async generateAnswer(@Body() answerDto: GenerateAnswerDto) {
+  async generateAnswer(
+    @Body() answerDto: GenerateAnswerDto,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
     const result = await this.ragService.generateAnswer(
       answerDto.question,
+      workspaceId,
       answerDto.knowledgeBaseId,
       answerDto.model,
       {
@@ -74,6 +79,7 @@ export class KnowledgeBaseQueryController {
   })
   async generateAnswerStream(
     @Body() answerDto: GenerateAnswerDto,
+    @CurrentWorkspace() workspaceId: string,
     @Res() res: Response,
   ) {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -83,6 +89,7 @@ export class KnowledgeBaseQueryController {
     try {
       const stream = await this.ragService.generateAnswerStream(
         answerDto.question,
+        workspaceId,
         answerDto.knowledgeBaseId,
         answerDto.model,
         {
@@ -173,9 +180,9 @@ export class KnowledgeBaseQueryController {
       body.message,
       body.conversationHistory
         ? body.conversationHistory.map((m) => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }))
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        }))
         : [],
       undefined,
     );

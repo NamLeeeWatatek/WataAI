@@ -48,7 +48,15 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 logger.error("[Auth] Token refresh failed with status:", response.status, errorData);
-                throw new Error("RefreshAccessTokenError");
+
+                // CRITICAL FIX: Only invalidate session if it's a client error (4xx) (e.g. invalid refresh token)
+                // If it's a server error (5xx) or network error, keep the old token to allow retries.
+                if (response.status >= 400 && response.status < 500) {
+                    throw new Error("RefreshAccessTokenError");
+                }
+
+                // For 5xx errors, return old token (retry later)
+                return token;
             }
 
             const data = await response.json()
@@ -62,13 +70,21 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 error: undefined
             }
         } catch (error) {
-            logger.error("[Auth] Token refresh failure:", error instanceof Error ? error.message : "Unknown error")
-            return {
-                ...token,
-                error: "RefreshAccessTokenError",
-                // Set expiry to far future to stop refresh attempts until logout
-                accessTokenExpires: Date.now() + 1000 * 60 * 60 * 24 * 365
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            logger.error("[Auth] Token refresh exception:", errorMessage);
+
+            if (errorMessage === "RefreshAccessTokenError") {
+                return {
+                    ...token,
+                    error: "RefreshAccessTokenError",
+                    // Set expiry to far future to stop refresh attempts until logout
+                    accessTokenExpires: Date.now() + 1000 * 60 * 60 * 24 * 365
+                }
             }
+
+            // For network errors or other exceptions, return old token (retry later)
+            // Do NOT kill the session.
+            return token;
         }
     })();
 

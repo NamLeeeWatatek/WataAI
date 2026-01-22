@@ -77,7 +77,14 @@ function LoginPageContent() {
             })
 
             if (result?.error) {
-                setLoginError(t('login.errors.invalidCredentials'))
+                // Handle specific errors thrown by our authorize function
+                if (result.error === 'ConnectionRefused') {
+                    setLoginError(t('login.errors.connectionRefused') || "Server is currently unavailable. Please try again later.");
+                } else if (result.error.startsWith('ServerError')) {
+                    setLoginError(t('login.errors.serverError') || "A server error occurred. Please contact support.");
+                } else {
+                    setLoginError(t('login.errors.invalidCredentials'))
+                }
                 setIsLoading(false)
             } else {
                 logger.info('[Login] Success, prefetching dashboard...')
@@ -88,6 +95,7 @@ function LoginPageContent() {
                 router.push(safeRedirect)
             }
         } catch (error) {
+            logger.error('[Login] Unexpected error:', error);
             setLoginError(t('login.errors.generic'))
             setIsLoading(false)
         }
