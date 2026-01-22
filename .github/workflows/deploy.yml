@@ -26,9 +26,11 @@ jobs:
             backend:
               - 'backend/**'
               - 'docker-compose.prod.yml'
+              - '.github/workflows/deploy.yml'
             web:
               - 'web/**'
               - 'docker-compose.prod.yml'
+              - '.github/workflows/deploy.yml'
 
   # 2. Build Backend (Only if changed)
   build-backend:
@@ -121,15 +123,19 @@ jobs:
           # If backend built (changed), use SHA. Else use latest.
           if [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
             echo "BACKEND_TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "Backend changed, using SHA: ${{ github.sha }}"
           else
             echo "BACKEND_TAG=latest" >> $GITHUB_OUTPUT
+            echo "Backend unchanged, using latest"
           fi
           
           # If web built (changed), use SHA. Else use latest.
           if [[ "${{ needs.changes.outputs.web }}" == "true" ]]; then
             echo "WEB_TAG=${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "Web changed, using SHA: ${{ github.sha }}"
           else
             echo "WEB_TAG=latest" >> $GITHUB_OUTPUT
+            echo "Web unchanged, using latest"
           fi
 
       - name: Copy docker-compose to VPS
@@ -144,28 +150,32 @@ jobs:
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
+        env:
+          BACKEND_TAG: ${{ steps.tags.outputs.BACKEND_TAG }}
+          WEB_TAG: ${{ steps.tags.outputs.WEB_TAG }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
-          # Pass determined tags to the script
+          envs: BACKEND_TAG,WEB_TAG
           script: |
             cd /var/www/watagroup
             
-            # Export Variables for Docker Compose
+            # Convert repo to lowercase for GHCR compatibility
             export IMAGE_PREFIX="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
-            export BACKEND_TAG="${{ steps.tags.outputs.BACKEND_TAG }}"
-            export WEB_TAG="${{ steps.tags.outputs.WEB_TAG }}"
             
-            echo "Deploying Backend: $BACKEND_TAG"
-            echo "Deploying Web: $WEB_TAG"
+            # Export dynamically passed tags
+            export BACKEND_TAG=$BACKEND_TAG
+            export WEB_TAG=$WEB_TAG
+            
+            echo "Deploying Backend Tag: $BACKEND_TAG"
+            echo "Deploying Web Tag: $WEB_TAG"
 
             # Login to GHCR
             echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pull latest images (specifically the tags we need)
-            # We explicitly pull the tags we intend to use to ensure they exist/are updated
+            # Pull these specific images to ensure they exist
             docker compose -f docker-compose.prod.yml pull
             
             # Restart services with zero-downtime
