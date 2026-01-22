@@ -36,8 +36,6 @@ async function bootstrap() {
 
   const apiPrefix = configService.getOrThrow('app.apiPrefix', { infer: true });
 
-  // ✅ FIX: Add raw body middleware for webhook signature verification
-  // this path must match the webhook controller path EXACTLY
   app.use(
     `/${apiPrefix}/v1/webhooks`,
     bodyParser.json({
@@ -65,8 +63,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
   app.setGlobalPrefix('api');
   app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
+    type: VersioningType.URI
   });
 
   app.useGlobalFilters(new HttpExceptionFilter());
