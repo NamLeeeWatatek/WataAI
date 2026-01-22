@@ -14,7 +14,7 @@ import { KBManagementService } from './services/kb-management.service';
 @ApiTags('Knowledge Base - Sync')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'knowledge-bases', version: '1' })
+@Controller('knowledge-bases')
 export class KnowledgeBaseSyncController {
   constructor(
     private readonly syncService: KBSyncService,

@@ -16,7 +16,7 @@ import { IntegrationsService } from './integrations.service';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
 
 @ApiTags('OAuth')
-@Controller({ path: 'oauth', version: '1' })
+@Controller('oauth')
 export class OAuthController {
   private readonly logger = new Logger('OAuthController');
 

@@ -15,7 +15,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @ApiTags('Knowledge Base - Processing')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'knowledge-bases', version: '1' })
+@Controller('knowledge-bases')
 export class KnowledgeBaseProcessingController {
   constructor(private readonly processingQueue: KBProcessingQueueService) {}
 

@@ -43,7 +43,7 @@ import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 @ApiTags('Bots')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'bots', version: '1' })
+@Controller('bots')
 export class BotsController {
   constructor(
     private readonly botsService: BotsService,

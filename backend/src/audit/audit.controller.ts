@@ -24,7 +24,7 @@ import { RolesGuard } from '../roles/roles.guard';
 @ApiTags('Audit')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller({ path: 'audit', version: '1' })
+@Controller('audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 

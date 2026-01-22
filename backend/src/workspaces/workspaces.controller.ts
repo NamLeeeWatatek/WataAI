@@ -36,7 +36,7 @@ import { WorkspaceAccessGuard } from './guards/workspace-access.guard';
 @ApiTags('Workspaces')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), PermissionsGuard)
-@Controller({ path: 'workspaces', version: '1' })
+@Controller('workspaces')
 export class WorkspacesController {
   constructor(private readonly workspacesService: WorkspacesService) {}
 

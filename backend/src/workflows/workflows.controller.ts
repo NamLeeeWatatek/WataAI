@@ -22,10 +22,7 @@ import { RolesGuard } from '../roles/roles.guard';
 @ApiTags('Workflows')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller({
-  path: 'workflows',
-  version: '1',
-})
+@Controller('workflows')
 export class WorkflowsController {
   constructor(private readonly workflowsService: WorkflowsService) {}
 

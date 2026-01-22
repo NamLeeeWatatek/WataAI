@@ -15,7 +15,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @ApiTags('Knowledge Base - Query & RAG')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'knowledge-bases', version: '1' })
+@Controller('knowledge-bases')
 export class KnowledgeBaseQueryController {
   constructor(
     private readonly ragService: KBRagService,

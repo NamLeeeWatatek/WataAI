@@ -27,7 +27,7 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @ApiTags('Bot Functions')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'bots/:id/functions', version: '1' })
+@Controller('bots/:id/functions')
 export class BotFunctionsController {
   constructor(private readonly botFunctionsService: BotFunctionsService) {}
 

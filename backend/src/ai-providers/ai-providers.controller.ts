@@ -51,10 +51,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('AI Providers')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({
-  path: 'ai-providers',
-  version: '1',
-})
+@Controller('ai-providers')
 @ApiExtraModels(AiModel)
 export class AiProvidersController {
   constructor(private readonly aiProvidersService: AiProvidersService) {}

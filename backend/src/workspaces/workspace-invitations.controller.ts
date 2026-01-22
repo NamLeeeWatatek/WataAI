@@ -20,7 +20,7 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 @ApiTags('Workspace Invitations')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'workspaces/invitations', version: '1' })
+@Controller('workspaces/invitations')
 export class WorkspaceInvitationsController {
   constructor(
     private readonly invitationsService: WorkspaceInvitationsService,

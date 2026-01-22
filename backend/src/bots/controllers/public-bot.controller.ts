@@ -29,7 +29,7 @@ import {
 } from '../dto/public-bot.dto';
 
 @ApiTags('Public Bot API')
-@Controller({ path: 'public/bots', version: '1' })
+@Controller('public/bots')
 @Public()
 export class PublicBotController {
   constructor(private readonly publicBotService: PublicBotService) {}

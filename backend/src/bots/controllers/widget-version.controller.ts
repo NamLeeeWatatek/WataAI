@@ -33,7 +33,7 @@ import { WorkspaceAccessGuard } from '../../workspaces/guards/workspace-access.g
 @ApiTags('Widget Versions')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, WorkspaceAccessGuard)
-@Controller({ path: 'bots/:botId/widget/versions', version: '1' })
+@Controller('bots/:botId/widget/versions')
 export class WidgetVersionController {
   constructor(private readonly widgetVersionService: WidgetVersionService) {}
 

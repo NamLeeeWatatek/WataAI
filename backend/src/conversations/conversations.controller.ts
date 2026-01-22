@@ -41,7 +41,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('Conversations')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'conversations', version: '1' })
+@Controller('conversations')
 export class ConversationsController {
   constructor(private readonly conversationsService: ConversationsService) {}
 

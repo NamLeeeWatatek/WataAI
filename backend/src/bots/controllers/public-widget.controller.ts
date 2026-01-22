@@ -14,7 +14,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 @ApiTags('Public Widget')
-@Controller({ path: 'public/widget', version: '1' })
+@Controller('public/widget')
 @Public()
 export class PublicWidgetController {
   constructor(private readonly widgetVersionService: WidgetVersionService) {}

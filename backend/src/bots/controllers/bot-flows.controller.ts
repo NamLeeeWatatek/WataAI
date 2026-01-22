@@ -22,10 +22,7 @@ import { Roles } from '../../roles/roles.decorator';
 import { RoleEnum } from '../../roles/roles.enum';
 
 @ApiTags('Bot Flows')
-@Controller({
-  path: 'bots',
-  version: '1',
-})
+@Controller('bots')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiBearerAuth()
 @Roles(RoleEnum.admin, RoleEnum.user)

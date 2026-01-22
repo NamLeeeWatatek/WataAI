@@ -31,10 +31,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('Templates')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({
-  path: 'templates',
-  version: '1',
-})
+@Controller('templates')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
 

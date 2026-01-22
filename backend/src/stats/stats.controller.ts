@@ -22,7 +22,7 @@ import { StatsQueryDto } from './dto/stats-query.dto';
 @ApiTags('Stats')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'stats', version: '1' })
+@Controller('stats')
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 

@@ -31,7 +31,7 @@ import { CurrentWorkspace } from '../../workspaces/decorators/current-workspace.
 @ApiTags('Bot Channels')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'bots/:id/channels', version: '1' })
+@Controller('bots/:id/channels')
 export class BotChannelsController {
   constructor(private readonly botsService: BotsService) {}
 

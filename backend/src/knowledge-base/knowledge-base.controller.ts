@@ -52,7 +52,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('Knowledge Base')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'knowledge-bases', version: '1' })
+@Controller('knowledge-bases')
 export class KnowledgeBaseController {
   private readonly logger = new Logger(KnowledgeBaseController.name);
 

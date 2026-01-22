@@ -18,7 +18,7 @@ import { BotAppearanceService } from '../services/bot-appearance.service';
 @ApiTags('Widget Appearance')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, WorkspaceAccessGuard, PermissionsGuard)
-@Controller({ path: 'bots/:botId/widget/appearance', version: '1' })
+@Controller('bots/:botId/widget/appearance')
 export class WidgetAppearanceController {
   constructor(private readonly appearanceService: BotAppearanceService) {}
 

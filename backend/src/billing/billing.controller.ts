@@ -19,10 +19,7 @@ import { Request } from 'express';
 // In NestJS we can't easily get raw body if bodyParser is global.
 // Assuming raw-body middleware or similar is setup, or we rely on 'rawBody' property (NestJS 9+)
 
-@Controller({
-  path: 'billing',
-  version: '1',
-})
+@Controller('billing')
 export class BillingController {
   private readonly logger = new Logger(BillingController.name);
 

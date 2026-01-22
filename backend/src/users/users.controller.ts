@@ -40,10 +40,7 @@ import { RoleEnum } from '../roles/roles.enum';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Users')
-@Controller({
-  path: 'users',
-  version: '1',
-})
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

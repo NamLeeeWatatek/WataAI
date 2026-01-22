@@ -118,7 +118,7 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 @ApiTags('Knowledge Base - Documents')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard)
-@Controller({ path: 'knowledge-bases', version: '1' })
+@Controller('knowledge-bases')
 export class KnowledgeBaseDocumentsController {
   private readonly logger = new Logger(KnowledgeBaseDocumentsController.name);
 

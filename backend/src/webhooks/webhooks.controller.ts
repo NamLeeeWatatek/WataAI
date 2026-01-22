@@ -23,7 +23,7 @@ import { WebhookEvent } from './domain/webhook';
 @ApiTags('Webhooks')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller({ path: 'webhooks', version: '1' })
+@Controller('webhooks')
 export class WebhooksController {
   constructor(private readonly webhooksService: WebhooksService) {}
 

@@ -27,10 +27,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @ApiTags('Generation Jobs')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
-@Controller({
-  path: 'generation-jobs',
-  version: '1',
-})
+@Controller('generation-jobs')
 export class GenerationJobsController {
   constructor(private readonly generationJobsService: GenerationJobsService) {}
 
