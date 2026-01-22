@@ -16,7 +16,7 @@ RUN apk add --no-cache \
 
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --only=production --ignore-scripts
 
 # Stage 2: Build
 FROM node:22-alpine AS builder
