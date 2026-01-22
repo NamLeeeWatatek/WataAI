@@ -28,6 +28,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import { UserRole } from '@/types/next-auth'
+import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher'
 
 interface NavigationItem {
     name: string
@@ -147,7 +148,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                 onCloseSidebar ? "border-r-0" : ""
             )}>
                 {/* Brand Header */}
-                <div className="flex h-16 shrink-0 items-center px-6">
+                <div className="flex h-16 shrink-0 items-center px-6 mb-2">
                     <div className="relative w-48 h-12 transition-transform duration-500 hover:scale-105">
                         <Image
                             src="/images/logo.svg"
@@ -157,6 +158,10 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                             priority
                         />
                     </div>
+                </div>
+
+                <div className="px-4 mb-2">
+                    <WorkspaceSwitcher />
                 </div>
 
                 {/* Navigation */}

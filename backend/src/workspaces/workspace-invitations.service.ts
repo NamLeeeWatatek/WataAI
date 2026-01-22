@@ -26,7 +26,7 @@ export class WorkspaceInvitationsService {
     private workspacesService: WorkspacesService,
     private mailService: MailService,
     private usersService: UsersService,
-  ) {}
+  ) { }
 
   async create(
     workspaceId: string,
@@ -207,6 +207,21 @@ export class WorkspaceInvitationsService {
         roleId,
         acceptedAt: IsNull(),
         expiresAt: MoreThan(new Date()),
+      },
+    });
+  }
+
+  async findAllByWorkspace(
+    workspaceId: string,
+  ): Promise<WorkspaceInvitationEntity[]> {
+    return this.invitationRepository.find({
+      where: {
+        workspaceId,
+        acceptedAt: IsNull(),
+        expiresAt: MoreThan(new Date()),
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
   }

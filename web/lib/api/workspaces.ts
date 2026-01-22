@@ -42,6 +42,17 @@ export interface CreateInvitationDto {
     role?: WorkspaceRole
 }
 
+export interface WorkspaceInvitation {
+    id: string
+    email: string
+    roleId: number
+    expiresAt: string
+    createdAt: string
+    role?: {
+        name: string
+    }
+}
+
 export const workspacesApi = {
     async getCurrent(): Promise<Workspace> {
         return axiosClient.get<Workspace>('/workspaces/current') as unknown as Workspace
@@ -65,5 +76,9 @@ export const workspacesApi = {
 
     async updateMemberRole(workspaceId: string, userId: string, role: WorkspaceRole) {
         return axiosClient.patch(`/workspaces/${workspaceId}/members/${userId}`, { role })
+    },
+
+    async getPendingInvitations(workspaceId: string): Promise<WorkspaceInvitation[]> {
+        return axiosClient.get<WorkspaceInvitation[]>(`/workspaces/invitations/${workspaceId}`) as unknown as WorkspaceInvitation[]
     }
 }
