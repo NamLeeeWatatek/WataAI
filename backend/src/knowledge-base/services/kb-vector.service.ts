@@ -465,4 +465,30 @@ export class KBVectorService {
       return [];
     }
   }
+
+  async getPointsByPayload(
+    filter: Record<string, any>,
+    dimension: number,
+  ): Promise<SearchResult[]> {
+    if (!this.qdrantClient) return [];
+
+    const collectionName = this.getCollectionName(dimension);
+    try {
+      const result = await this.qdrantClient.scroll(collectionName, {
+        limit: 100,
+        with_payload: true,
+        with_vector: false,
+        filter: this.buildFilter(filter),
+      });
+
+      return result.points.map((point) => ({
+        id: point.id as string,
+        score: 1.0,
+        payload: point.payload as Record<string, any>,
+      }));
+    } catch (error) {
+      this.logger.debug(`Failed to fetch points by payload: ${error.message}`);
+      return [];
+    }
+  }
 }

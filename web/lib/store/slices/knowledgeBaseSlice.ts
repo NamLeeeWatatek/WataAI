@@ -90,14 +90,14 @@ export const loadKnowledgeBase = createAsyncThunk(
 
     const kb = (kbRes as any)?.data || kbRes
     const stats = (statsRes as any)?.data || statsRes
-    const { folders, documents, breadcrumbs } = contentRes
+    const { folders, documents, breadcrumbs, meta } = contentRes
 
     return {
       kb,
       stats,
       folders,
       documents: documents.data,
-      total: documents.total,
+      total: meta?.unifiedTotal ?? documents.total,
       breadcrumbs,
       folderId: folderId || null
     }
@@ -113,13 +113,13 @@ export const refreshData = createAsyncThunk(
     ])
 
     const stats = (statsRes as any)?.data || statsRes
-    const { folders, documents, breadcrumbs } = contentRes
+    const { folders, documents, breadcrumbs, meta } = contentRes
 
     return {
       stats,
       folders,
       documents: documents.data,
-      total: documents.total,
+      total: meta?.unifiedTotal ?? documents.total,
       breadcrumbs,
       folderId: folderId || null
     }

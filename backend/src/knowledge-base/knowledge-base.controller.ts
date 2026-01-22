@@ -63,7 +63,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) {}
+  ) { }
 
   @Permissions('kb:List')
   @Get()
@@ -137,7 +137,8 @@ export class KnowledgeBaseController {
     const effectiveFolderId =
       folderId === 'null' || !folderId ? null : folderId;
 
-    // 1. Get ALL folders matching search
+    // 1. Get ALL folders matching search for this level
+    // Optimization: If search is provided, we might want a different logic, but for level-view, filtering in memory is fine for typical folder counts.
     const allFolders = await this.foldersService.findAllByParent(
       kbId,
       effectiveFolderId,
@@ -145,48 +146,53 @@ export class KnowledgeBaseController {
       search,
     );
 
-    // 2. Calculate Folder Slice
-    const foldersStartIndex = (page - 1) * limit;
-    const foldersEndIndex = foldersStartIndex + limit;
-    const pagedFolders = allFolders.slice(foldersStartIndex, foldersEndIndex);
+    const totalFoldersCount = allFolders.length;
 
-    // 3. Calculate Document Params
-    // Number of slots used by folders on this page
+    // 2. Calculate Unified Paging
+    // We want to show folders first, then documents.
+    const globalStartIndex = (page - 1) * limit;
+
+    // Determine how many folders to show
+    let pagedFolders: any[] = [];
+    if (globalStartIndex < totalFoldersCount) {
+      // We are still in folder territory (at least partially)
+      pagedFolders = allFolders.slice(globalStartIndex, globalStartIndex + limit);
+    }
+
+    // Determine how many documents to show and from where
     const slotsUsedByFolders = pagedFolders.length;
-    // Remaining slots for documents
     const docLimit = limit - slotsUsedByFolders;
 
-    // Document offset: How many documents should we skip?
-    // If we are deep in pages (past the folder count), we skip (GlobalStartIndex - TotalFolders)
-    // If we are still in folder pages (GlobalStartIndex < TotalFolders), we skip 0 (documents start after folders)
-    const totalFoldersCount = allFolders.length;
-    const docOffset = Math.max(0, foldersStartIndex - totalFoldersCount);
+    // Document offset:
+    // If we've started showing documents (globalStartIndex >= totalFoldersCount),
+    // skip (globalStartIndex - totalFoldersCount) documents.
+    // Otherwise, start from 0 if we have free slots.
+    const docOffset = Math.max(0, globalStartIndex - totalFoldersCount);
 
     let documents: KbDocumentEntity[] = [];
     let totalDocs = 0;
 
-    // Only fetch documents if we have space left or if we are past the folder region
+    // Always fetch totalDocs if we don't have it (for unified total)
     if (docLimit > 0 || docOffset > 0) {
       const { data, total } =
         await this.documentsService.findManyWithPagination({
           kbId,
           filterOptions: { folderId: effectiveFolderId, search },
           paginationOptions: {
-            page: 1,
+            page: 1, // dummy
             limit: docLimit > 0 ? docLimit : 0,
             offset: docOffset,
-          }, // page:1 is dummy, relying on offset/limit
+          },
           userId,
         });
       documents = data;
       totalDocs = total;
     } else {
-      // We are purely in folder territory and filled the page with folders
-      // But we still need total Docs count for pagination to work
+      // Just fetch the total count for documents to provide correct meta
       const { total } = await this.documentsService.findManyWithPagination({
         kbId,
         filterOptions: { folderId: effectiveFolderId, search },
-        paginationOptions: { page: 1, limit: 1 }, // minimized fetch
+        paginationOptions: { page: 1, limit: 0 }, // Just counting
         userId,
       });
       totalDocs = total;
@@ -198,7 +204,20 @@ export class KnowledgeBaseController {
 
     return {
       folders: pagedFolders,
-      documents: { data: documents, total: totalFoldersCount + totalDocs }, // Unified total for frontend
+      documents: {
+        data: documents,
+        total: totalDocs, // This is now purely document total
+      },
+      // Metadata for better frontend control
+      meta: {
+        totalFolders: totalFoldersCount,
+        totalDocuments: totalDocs,
+        unifiedTotal: totalFoldersCount + totalDocs,
+        page,
+        limit,
+        docOffset,
+        foldersStartIndex: globalStartIndex,
+      },
       breadcrumbs,
     };
   }

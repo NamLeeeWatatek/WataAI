@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -70,7 +70,7 @@ export class BotExecutionService {
     }
 
     const workspaceId =
-      bot.workspaceId || contextOverride?.workspaceId || 'default';
+      bot.workspaceId || contextOverride?.workspaceId || undefined;
 
     // 1. Gather RAG Context
     let ragSources: any[] = [];
@@ -86,7 +86,7 @@ export class BotExecutionService {
         const kbIds = linkedKBs.map((kb) => kb.knowledgeBaseId);
         ragSources = await this.kbRagService.gatherRAGContext(
           message,
-          workspaceId,
+          workspaceId || 'default',
           kbIds,
         ); // Using public method
 
@@ -107,7 +107,7 @@ export class BotExecutionService {
 
     // Add Multilingual instruction
     systemPrompt +=
-      "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English.";
+      "\n\nINSTRUCTION: Always respond in the same language as the user's latest message. If the context information from the knowledge base is in a different language, translate relevant points while answering.";
 
     // Add RAG Context
     // const lang = I18nContext.current()?.lang;
@@ -124,19 +124,28 @@ export class BotExecutionService {
 
     // 4. Call AI Provider
     let answer = '';
-    const modelName = bot.aiModelName || 'gpt-3.5-turbo'; // TODO: Use config default
+    const modelName = bot.aiModelName || 'gpt-3.5-turbo';
 
-    if (bot.aiConfigId) {
-      // Use specific provider configured for this bot
-      answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
-        messages,
-        modelName,
-        bot.aiConfigId,
-        'workspace',
-        bot.workspaceId || contextOverride?.workspaceId || 'system',
-      );
-    } else {
-      // Fallback to generic chat (system default or resolved from model name)
+    try {
+      if (bot.aiConfigId) {
+        // Use specific provider configured for this bot
+        answer = await this.aiProvidersService.chatWithHistoryUsingProvider(
+          messages,
+          modelName,
+          bot.aiConfigId,
+          'workspace',
+          bot.workspaceId || contextOverride?.workspaceId || bot.createdBy || 'system',
+        );
+      } else {
+        // Fallback to generic chat
+        answer = await this.aiProvidersService.chatWithHistory(
+          messages,
+          modelName,
+        );
+      }
+    } catch (error) {
+      this.logger.error(`AI Provider call failed for Bot ${botId}: ${error.message}`);
+      // Final fallback to generic chat if specific provider fails
       answer = await this.aiProvidersService.chatWithHistory(
         messages,
         modelName,

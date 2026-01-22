@@ -8,6 +8,7 @@ export interface ChunkSource {
   documentId: string;
   chunkIndex: number;
   metadata?: Record<string, any>;
+  dimension?: number;
 }
 
 @Injectable()
@@ -17,7 +18,7 @@ export class KBSearchService {
   constructor(
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly vectorService: KBVectorService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -71,6 +72,7 @@ export class KBSearchService {
         metadata: (result.payload.metadata as Record<string, any>) || {},
         documentId: String(result.payload.documentId || ''),
         chunkIndex: Number(result.payload.chunkIndex || 0),
+        dimension: queryEmbedding.length,
       }));
     } catch (error) {
       this.logger.error(`Error querying knowledge base: ${error.message}`);
@@ -98,25 +100,33 @@ export class KBSearchService {
       const vectorResults = await this.vectorService.search(
         queryEmbedding,
         workspaceId,
-        limit * 2, // Get more for re-ranking
+        limit * 3, // Get more for re-ranking
         knowledgeBaseId ? { knowledgeBaseId } : undefined,
+      );
+
+      // Filter vector results by similarity threshold immediately
+      // This ensures we don't bring in junk semantic matches
+      const filteredVectorResults = vectorResults.filter(
+        (v) => v.score >= similarityThreshold,
       );
 
       // 2. Keyword Search (Qdrant Payload Search)
       const keywordResults = await this.vectorService.searchByPayload(
         query,
         workspaceId,
-        limit * 2,
-        queryEmbedding.length, // Dynamic dimension from the actual embedding model
+        limit * 3,
+        queryEmbedding.length,
       );
 
-      // 3. Merging with Reciprocal Rank Fusion (RRF)
-      const rrfResults = new Map<string, { chunk: any; score: number }>();
+      // 3. Merging with Weighted Reciprocal Rank Fusion (RRF)
+      const rrfResults = new Map<string, { chunk: any; score: number; vectorScore: number }>();
       const k = 60; // Smoothing constant
+      const vectorWeight = 0.8; // Weight for semantic search (more important)
+      const keywordWeight = 0.2; // Weight for keyword matches (precision)
 
-      // Process Vector Results
-      vectorResults.forEach((result, rank) => {
-        const score = 1 / (k + rank);
+      // Process filtered Vector Results
+      filteredVectorResults.forEach((result, rank) => {
+        const semanticScore = 1 / (k + rank);
         rrfResults.set(result.id, {
           chunk: {
             content: result.payload.content,
@@ -124,17 +134,20 @@ export class KBSearchService {
             documentId: result.payload.documentId,
             chunkIndex: result.payload.chunkIndex,
           },
-          score: score,
+          score: semanticScore * vectorWeight,
+          vectorScore: result.score
         });
       });
 
       // Process Keyword Results (from Qdrant)
       keywordResults.forEach((result, rank) => {
-        const score = 1 / (k + rank);
+        const kwScore = 1 / (k + rank);
         const existing = rrfResults.get(result.id);
         if (existing) {
-          existing.score += score;
+          existing.score += kwScore * keywordWeight;
         } else {
+          // Only include keyword-only results if they are high rank 
+          // or if similarityThreshold is very low
           rrfResults.set(result.id, {
             chunk: {
               content: result.payload.content,
@@ -142,23 +155,41 @@ export class KBSearchService {
               documentId: result.payload.documentId,
               chunkIndex: result.payload.chunkIndex,
             },
-            score: score,
+            score: kwScore * keywordWeight,
+            vectorScore: 0
           });
         }
       });
 
-      // Sort and Format
-      const sortedResults = Array.from(rrfResults.values())
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+      // Sort
+      const sortedIntermediate = Array.from(rrfResults.values())
+        .sort((a, b) => b.score - a.score);
 
-      return sortedResults.map((r) => ({
-        content: String(r.chunk.content || ''),
-        metadata: r.chunk.metadata || {},
-        documentId: String(r.chunk.documentId || ''),
-        chunkIndex: Number(r.chunk.chunkIndex || 0),
-        score: Number(r.score),
-      }));
+      // Normalize scores back to 0-1 range for similarityThreshold compatibility
+      // Max possible RRF score with weights is (1/k * vectorWeight) + (1/k * keywordWeight) = 1/k
+      const maxTheoreticalRRF = 1 / k;
+
+      const pagedResults = sortedIntermediate.slice(0, limit);
+
+      return pagedResults.map((r) => {
+        // Map RRF score back to a similarity-like scale (0-1)
+        // This is a heuristic: we divide by maxTheoreticalRRF
+        let normalizedScore = r.score / maxTheoreticalRRF;
+
+        // If we have a real vector score, blend it for more accuracy
+        if (r.vectorScore > 0) {
+          normalizedScore = (normalizedScore + r.vectorScore) / 2;
+        }
+
+        return {
+          content: String(r.chunk.content || ''),
+          metadata: r.chunk.metadata || {},
+          documentId: String(r.chunk.documentId || ''),
+          chunkIndex: Number(r.chunk.chunkIndex || 0),
+          score: Number(normalizedScore.toFixed(4)),
+          dimension: queryEmbedding.length,
+        };
+      });
     } catch (error) {
       this.logger.error(`Error in hybrid query: ${error.message}`);
       // Fallback to simple vector search if hybrid fails
@@ -190,5 +221,43 @@ export class KBSearchService {
     }
 
     return allChunks.sort((a, b) => b.score - a.score).slice(0, 10);
+  }
+
+  async fetchAdjacentChunks(
+    source: ChunkSource,
+    windowSize: number = 1,
+  ): Promise<ChunkSource[]> {
+    if (!source.documentId || source.chunkIndex === undefined || !source.dimension) {
+      return [source];
+    }
+
+    const indices: number[] = [];
+    for (let i = -windowSize; i <= windowSize; i++) {
+      if (i === 0) continue; // Original already included
+      const idx = source.chunkIndex + i;
+      if (idx >= 0) indices.push(idx);
+    }
+
+    if (indices.length === 0) return [source];
+
+    const results = await this.vectorService.getPointsByPayload(
+      {
+        documentId: source.documentId,
+        chunkIndex: indices,
+      },
+      source.dimension,
+    );
+
+    const adjacentChunks: ChunkSource[] = results.map((r) => ({
+      content: String(r.payload.content || ''),
+      score: source.score, // Inherit score for context
+      documentId: source.documentId,
+      chunkIndex: Number(r.payload.chunkIndex),
+      metadata: r.payload.metadata,
+      dimension: source.dimension,
+    }));
+
+    // Combine and sort by index
+    return [source, ...adjacentChunks].sort((a, b) => a.chunkIndex - b.chunkIndex);
   }
 }
