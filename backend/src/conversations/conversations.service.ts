@@ -229,8 +229,15 @@ export class ConversationsService {
     const query = this.conversationRepository
       .createQueryBuilder('conversation')
       .leftJoinAndSelect('conversation.contact', 'contact')
-      .where('conversation.deletedAt IS NULL')
-      .andWhere('conversation.channelId IS NOT NULL'); // ✅ ALWAYS filter for channel conversations
+      .where('conversation.deletedAt IS NULL');
+
+    // ✅ Filter by source if specified
+    if (options.onlyChannelConversations === true) {
+      query.andWhere('conversation.channelId IS NOT NULL');
+    } else if (options.onlyChannelConversations === false) {
+      // Widget conversations have no channelId
+      query.andWhere('conversation.channelId IS NULL');
+    }
 
     // ✅ Search Filter
     if (options.search) {

@@ -4,6 +4,8 @@ import * as React from "react"
 import { addDays, format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
+import { useTranslation } from "react-i18next"
+import { useDateLocale } from "@/lib/hooks/use-date-locale"
 
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover"
@@ -20,6 +22,9 @@ export function DateRangePicker({
     date,
     setDate,
 }: DateRangePickerProps) {
+    const { t } = useTranslation()
+    const locale = useDateLocale()
+
     const [open, setOpen] = React.useState(false)
     const [tempDate, setTempDate] = React.useState<DateRange | undefined>(date)
 
@@ -51,7 +56,7 @@ export function DateRangePicker({
                         id="date"
                         variant={"outline"}
                         className={cn(
-                            "w-[300px] justify-start text-left font-normal",
+                            "w-auto min-w-[220px] justify-start text-left font-normal",
                             !date && "text-muted-foreground"
                         )}
                     >
@@ -59,14 +64,14 @@ export function DateRangePicker({
                         {date?.from ? (
                             date.to ? (
                                 <>
-                                    {format(date.from, "LLL dd, y")} -{" "}
-                                    {format(date.to, "LLL dd, y")}
+                                    {format(date.from, "P", { locale })} -{" "}
+                                    {format(date.to, "P", { locale })}
                                 </>
                             ) : (
-                                format(date.from, "LLL dd, y")
+                                format(date.from, "P", { locale })
                             )
                         ) : (
-                            <span>Pick a date</span>
+                            <span>{t('common.pickDate')}</span>
                         )}
                     </Button>
                 </PopoverTrigger>
@@ -80,14 +85,14 @@ export function DateRangePicker({
                     />
                     <div className="p-3 border-t border-border flex items-center justify-between bg-muted/20">
                         <Button variant="ghost" size="sm" onClick={handleClear} disabled={!tempDate} className="text-muted-foreground hover:text-foreground">
-                            Reset
+                            {t('common.reset')}
                         </Button>
                         <div className="flex gap-2">
                             <Button variant="ghost" size="sm" onClick={handleCancel}>
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button size="sm" onClick={handleApply} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                                Apply
+                                {t('common.apply')}
                             </Button>
                         </div>
                     </div>

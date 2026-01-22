@@ -10,8 +10,8 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "./Button"
-
 import { format } from "date-fns"
+import { useDateLocale } from '@/lib/hooks/use-date-locale'
 
 function Calendar({
   className,
@@ -26,9 +26,11 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const locale = useDateLocale()
 
   return (
     <DayPicker
+      locale={locale}
       showOutsideDays={showOutsideDays}
       className={cn(
         "bg-background p-3",
@@ -36,7 +38,7 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatCaption: (date) => format(date, "MMMM yyyy"),
+        formatCaption: (date) => format(date, "MMMM yyyy", { locale }),
         ...formatters,
       }}
       classNames={{

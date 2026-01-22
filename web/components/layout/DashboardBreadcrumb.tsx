@@ -104,13 +104,13 @@ export const DashboardBreadcrumb = React.memo(() => {
                         {isLast ? (
                             <BreadcrumbPage className="flex items-center gap-2">
                                 {Icon && <Icon className="w-4 h-4" />}
-                                <span>{label}</span>
+                                <span suppressHydrationWarning>{label}</span>
                             </BreadcrumbPage>
                         ) : (
                             <BreadcrumbLink asChild>
                                 <Link href={currentPath as any} className="flex items-center gap-2">
                                     {Icon && <Icon className="w-4 h-4" />}
-                                    <span>{label}</span>
+                                    <span suppressHydrationWarning>{label}</span>
                                 </Link>
                             </BreadcrumbLink>
                         )}
@@ -129,7 +129,7 @@ export const DashboardBreadcrumb = React.memo(() => {
                     <BreadcrumbLink asChild>
                         <Link href="/dashboard" className="flex items-center gap-2">
                             <Home className="w-4 h-4" />
-                            <span>{t('common.home', { defaultValue: 'Home' })}</span>
+                            <span suppressHydrationWarning>{t('common.home', { defaultValue: 'Home' })}</span>
                         </Link>
                     </BreadcrumbLink>
                 </BreadcrumbItem>

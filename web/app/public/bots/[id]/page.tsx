@@ -278,6 +278,11 @@ export default function PublicBotPage() {
                             <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>
                                 {bot.name}
                             </h3>
+                            {bot.description && (
+                                <p style={{ margin: '2px 0 0', fontSize: '12px', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {bot.description}
+                                </p>
+                            )}
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
@@ -400,8 +405,8 @@ export default function PublicBotPage() {
                                             fontSize: '14px',
                                             lineHeight: '1.5',
                                             wordWrap: 'break-word',
-                                            background: msg.role === 'user' ? primaryColor : 'white',
-                                            color: msg.role === 'user' ? 'white' : '#1f2937',
+                                            background: msg.role === 'user' ? (bot.theme?.userMessageColor || primaryColor) : (bot.theme?.botMessageColor || 'white'),
+                                            color: msg.role === 'user' ? (bot.theme?.userMessageTextColor || 'white') : (bot.theme?.botMessageTextColor || '#1f2937'),
                                             border: msg.role === 'user' ? 'none' : '1px solid #e5e7eb',
                                         }}>
                                             <MarkdownRenderer content={msg.content} />

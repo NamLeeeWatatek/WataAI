@@ -57,7 +57,7 @@ export default function BotDetailPage() {
         refetch: refetchBot,
     } = useBot(botId);
 
-    const { updateBot, isMutating: saving } = useBots();
+    const { updateBot, isMutating: saving, deleteBot } = useBots();
     const { total: totalServed } = useBotConversations({ botId, source: 'widget', limit: 0 });
 
     const [hasChanges, setHasChanges] = useState(false);
@@ -97,6 +97,10 @@ export default function BotDetailPage() {
         borderRadius: number;
         glassmorphism: boolean;
         headerStyle: 'solid' | 'minimal' | 'gradient';
+        botMessageColor: string;
+        botMessageTextColor: string;
+        userMessageColor: string;
+        userMessageTextColor: string;
     }
 
     const [formData, setFormData] = useState<BotFormData>({
@@ -125,6 +129,10 @@ export default function BotDetailPage() {
         borderRadius: 16,
         glassmorphism: true,
         headerStyle: 'solid',
+        botMessageColor: '#f3f4f6',
+        botMessageTextColor: '#1f2937',
+        userMessageColor: '#667eea',
+        userMessageTextColor: '#ffffff',
     });
 
     // Sync form data when bot is loaded
@@ -156,6 +164,10 @@ export default function BotDetailPage() {
                 borderRadius: bot.borderRadius ?? 16,
                 glassmorphism: bot.glassmorphism ?? true,
                 headerStyle: bot.headerStyle || 'solid',
+                botMessageColor: (bot as any).botMessageColor || '#f3f4f6',
+                botMessageTextColor: (bot as any).botMessageTextColor || '#1f2937',
+                userMessageColor: (bot as any).userMessageColor || '#667eea',
+                userMessageTextColor: (bot as any).userMessageTextColor || '#ffffff',
             });
             setHasChanges(false);
         }
@@ -288,7 +300,12 @@ export default function BotDetailPage() {
                                 enableAutoLearn={formData.enableAutoLearn}
                                 status={formData.status}
                                 onChange={(updates) => handleChange(updates)}
-                                onDelete={() => router.push('/bots')}
+                                onDelete={async () => {
+                                    try {
+                                        await deleteBot(botId);
+                                        router.push('/bots');
+                                    } catch (e) { }
+                                }}
                             />
                         </TabsContent>
                     </div>

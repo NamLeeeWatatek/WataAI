@@ -17,8 +17,10 @@ import { Loader2, MoreVertical, Plus, UserPlus, Shield, Clock, Crown, Mail, Eye 
 import { InviteMemberDialog } from './InviteMemberDialog';
 import { toast } from 'sonner';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
+import { useTranslation } from 'react-i18next';
 
 export function TeamTab() {
+    const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -182,7 +184,13 @@ export function TeamTab() {
                                                     </div>
                                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                                         <Clock className="w-3 h-3" />
-                                                        <span>Expires on {new Date(invitation.expiresAt).toLocaleDateString()}</span>
+                                                        <span>
+                                                            {new Date(invitation.expiresAt).toLocaleDateString(i18n.language, {
+                                                                year: 'numeric',
+                                                                month: 'long',
+                                                                day: 'numeric'
+                                                            })}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
