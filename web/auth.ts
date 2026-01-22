@@ -37,18 +37,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               email: credentials.email,
               password: credentials.password,
             }),
-          })
+          }).catch(err => {
+            // Network error (backend down)
+            logger.error('[NextAuth] Backend connection failed:', err);
+            throw new Error("ConnectionRefused");
+          });
 
           if (!response.ok) {
             const error = await response.text()
-            logger.error('[NextAuth] Login failed:', error)
-            return null
+            logger.error('[NextAuth] Login failed:', response.status, error)
+
+            // 401/403 = Invalid Credentials. Return null to trigger standard "Sign In failed" flow.
+            if (response.status === 401 || response.status === 403) {
+              return null;
+            }
+
+            // 5xx or others = server error. Throw to trigger "Configuration" or "Error" flow.
+            throw new Error(`ServerError: ${response.status}`);
           }
 
           const data = await response.json()
 
           if (!data.token || !data.user) {
-            return null
+            logger.error('[NextAuth] Invalid response structure');
+            return null;
           }
 
           const userName = data.user.name || data.user.firstName || data.user.email
@@ -73,7 +85,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             workspaces: [],
           }
         } catch (error) {
-          logger.error('[NextAuth] Authorize error:', error)
+          const errMsg = error instanceof Error ? error.message : String(error);
+          logger.error('[NextAuth] Authorize error:', errMsg)
+
+          if (errMsg === "ConnectionRefused" || errMsg.startsWith("ServerError")) {
+            throw error; // Re-throw to be handled by NextAuth error page
+          }
           return null
         }
       },

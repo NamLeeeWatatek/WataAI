@@ -45,7 +45,7 @@ export class AuthService {
     private workspaceHelper: WorkspaceHelperService,
     private eventEmitter: EventEmitter2,
     private workspaceInvitationsService: WorkspaceInvitationsService,
-  ) {}
+  ) { }
 
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
@@ -587,10 +587,10 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const hash = crypto
-      .createHash('sha256')
-      .update(randomStringGenerator())
-      .digest('hex');
+    // ✅ FIX: Do NOT rotate hash on every single refresh.
+    // This prevents race conditions where parallel requests invalidate each other's refresh tokens.
+    // The session hash should remain stable unless we want to force-invalidate all current refresh tokens.
+    const hash = session.hash;
 
     const user = await this.usersService.findById(session.user.id);
 
@@ -598,9 +598,9 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    await this.sessionService.update(session.id, {
-      hash,
-    });
+    // No need to update the session hash every time.
+    // This allows multiple browser tabs to refresh concurrently if needed.
+    // await this.sessionService.update(session.id, { hash });
 
     // ✅ FIX: Preserve workspace context from existing token
     // Don't call ensureUserHasWorkspace which may create new workspace

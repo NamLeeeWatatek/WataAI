@@ -144,14 +144,13 @@ axiosClient.interceptors.response.use(
           // CRITICAL: Prevent infinite loop if NextAuth returns the same expired token
           // This happens if client/server clocks are out of sync or if refresh logic skipped
           if (newToken === cachedToken) {
-            logger.error("[Axios] Helper: Token refresh returned distinct same token. Forcing logout/reload.");
+            logger.error("[Axios] Helper: Token refresh returned distinct same token. Loop detected.");
             processQueue(new Error("Token refresh loop detected"), null);
-            cachedToken = null;
-            // Optional: Force reload to reset application state
-            if (typeof window !== 'undefined') {
-              // Critical auth failure requires hard reset
-              window.location.assign('/login');
-            }
+            cachedToken = null; // Clear cache so next attempt tries fresh
+
+            // Do NOT force logout here. It might be a transient network issue where 
+            // the refresh endpoint failed (returning old token) but the backend is temporarily down.
+            // Letting the request fail allows the user to try again later.
             return Promise.reject(error);
           }
 
@@ -167,12 +166,8 @@ axiosClient.interceptors.response.use(
           return axiosClient(originalRequest);
         } else {
           // Refresh failed - Reject all
-          if (typeof window !== 'undefined') {
-            // Avoid infinite redirect loop if already on login
-            if (!window.location.pathname.startsWith('/login')) {
-              window.location.assign('/login');
-            }
-          }
+          // Do not redirect to login immediately. Let the UI handle the 'Unauthenticated' state 
+          // if it persists.
           throw new Error("Session refresh failed");
         }
       } catch (err) {
