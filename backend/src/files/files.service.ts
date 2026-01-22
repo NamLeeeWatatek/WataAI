@@ -11,10 +11,10 @@ export class FilesService {
     private readonly fileRepository: FileRepository,
     private readonly auditService: AuditService,
     @Inject('FILE_DRIVER') private readonly fileDriver: FileDriver,
-  ) {}
+  ) { }
 
   private readonly uuidRegex =
-    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{24}/i;
 
   findById(id: FileType['id']): Promise<NullableType<FileType>> {
     return this.fileRepository.findById(id);

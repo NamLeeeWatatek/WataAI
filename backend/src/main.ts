@@ -24,7 +24,7 @@ interface RequestWithRawBody extends Request {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
-    cors: true,
+    cors: false,
   });
 
   const configService = app.get(ConfigService<AllConfigType>);
