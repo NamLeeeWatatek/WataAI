@@ -1,10 +1,7 @@
-version: '3.8'
+version: "3.8"
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     image: ${IMAGE_PREFIX:-ghcr.io/namleeewatatek/wataai}/backend:${BACKEND_TAG:-latest}
     container_name: aiwata-backend
     restart: unless-stopped
@@ -12,9 +9,7 @@ services:
       - backend/.env
       - .env
     environment:
-      # If you want to run DB on Host, uncomment extra_hosts below and set DATABASE_HOST=host.docker.internal in .env
-      # If you want to run DB in Docker (infra-shared), set DATABASE_HOST=postgres in .env
-      - NODE_ENV=production
+      NODE_ENV: production
     ports:
       - "8000:8000"
     networks:
@@ -27,12 +22,6 @@ services:
           memory: 1G
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_FRONTEND_URL: ${NEXT_PUBLIC_FRONTEND_URL}
     image: ${IMAGE_PREFIX:-ghcr.io/namleeewatatek/wataai}/web:${WEB_TAG:-latest}
     container_name: aiwata-web
     restart: unless-stopped
