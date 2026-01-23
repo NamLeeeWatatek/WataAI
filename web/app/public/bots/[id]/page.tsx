@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
+import { useTranslation } from 'react-i18next'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react'
 import Image from 'next/image'
@@ -113,6 +114,8 @@ export default function PublicBotPage() {
         }
     }
 
+    const { t } = useTranslation()
+
     const handleSend = async () => {
         if (!input.trim() || loading || !conversationId) return
 
@@ -134,7 +137,7 @@ export default function PublicBotPage() {
         } catch {
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.',
+                content: t('error.general', { defaultValue: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.' }),
                 timestamp: new Date().toISOString(),
             }])
         } finally {
@@ -337,14 +340,14 @@ export default function PublicBotPage() {
                                 }}>
                                     <User size={32} />
                                 </div>
-                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#1f2937' }}>Welcome!</h4>
+                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#1f2937' }}>{t('common.welcome', { defaultValue: 'Welcome!' })}</h4>
                                 <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-                                    Please enter your phone number to start chatting.
+                                    {t('publicBot.identitySubtitle', { defaultValue: 'Please enter your phone number to start chatting.' })}
                                 </p>
                                 <form onSubmit={handleIdentitySubmit} style={{ width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     <input
                                         type="text"
-                                        placeholder="Your Name (Optional)"
+                                        placeholder={t('login.name', { defaultValue: 'Your Name (Optional)' })}
                                         value={identityName}
                                         onChange={(e) => setIdentityName(e.target.value)}
                                         style={{
@@ -360,7 +363,7 @@ export default function PublicBotPage() {
                                     />
                                     <input
                                         type="tel"
-                                        placeholder="Phone Number (Required)"
+                                        placeholder={t('login.phone', { defaultValue: 'Phone Number (Required)' })}
                                         value={identityPhone}
                                         onChange={(e) => setIdentityPhone(e.target.value)}
                                         required
@@ -390,7 +393,7 @@ export default function PublicBotPage() {
                                             marginTop: '8px'
                                         }}
                                     >
-                                        Start Chatting
+                                        {t('publicBot.startChatting', { defaultValue: 'Start Chatting' })}
                                     </button>
                                 </form>
                             </div>
@@ -456,7 +459,7 @@ export default function PublicBotPage() {
                                         handleSend();
                                     }
                                 }}
-                                placeholder={bot.placeholderText || 'Nhập tin nhắn...'}
+                                placeholder={bot.placeholderText || t('chat.typeMessage', { defaultValue: 'Nhập tin nhắn...' })}
                                 disabled={loading}
                                 rows={1}
                                 style={{

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useInView } from 'react-intersection-observer';
 import { Loader2, Bot } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -34,6 +35,7 @@ export function MessagesList({
     onLoadMore,
     className
 }: MessagesListProps) {
+    const { t } = useTranslation();
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const isInitialLoadRef = useRef(true);
@@ -103,7 +105,7 @@ export function MessagesList({
                         >
                             <div className="text-center">
                                 <Loader2 className="w-5 h-5 animate-spin mx-auto mb-1 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">Scroll up to load more</span>
+                                <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">{t('chat.scrollUpToLoadMore', { defaultValue: 'Scroll up to load more' })}</span>
                             </div>
                         </div>
                     )}
@@ -119,8 +121,8 @@ export function MessagesList({
 
                     {/* No more messages indicator */}
                     {!hasMore && messages.length > 0 && (
-                        <div className="text-center py-4 text-sm text-muted-foreground">
-                            Beginning of conversation
+                        <div className="text-center py-4 text-xs font-bold uppercase tracking-widest text-muted-foreground/60">
+                            {t('chat.beginningOfConversation', { defaultValue: 'Beginning of conversation' })}
                         </div>
                     )}
 
@@ -129,7 +131,7 @@ export function MessagesList({
                         <div className="text-center py-12">
                             <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                             <p className="text-muted-foreground">
-                                Start a conversation with {botName}
+                                {t('chat.startConversationWith', { name: botName, defaultValue: `Start a conversation with ${botName}` })}
                             </p>
                         </div>
                     ) : (

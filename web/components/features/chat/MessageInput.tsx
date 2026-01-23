@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TiptapEditor } from '@/components/features/chat/TiptapEditor';
 import { Button } from '@/components/ui/Button';
 import type { Message } from '@/lib/store/slices/messagesSlice';
@@ -19,6 +20,7 @@ export function MessageInput({
     senderRole = MessageRole.ASSISTANT,
     disabled = false
 }: MessageInputProps) {
+    const { t } = useTranslation();
     const [sending, setSending] = useState(false);
 
     const handleSend = async (content: string) => {
@@ -39,7 +41,7 @@ export function MessageInput({
             <div className="p-2">
                 <TiptapEditor
                     onSend={handleSend}
-                    placeholder="Type your message..."
+                    placeholder={t('chat.typeMessage', { defaultValue: 'Type your message...' })}
                     disabled={disabled || sending}
                     className="max-w-full"
                 />

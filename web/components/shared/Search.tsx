@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useTranslation } from 'react-i18next'
 import { Search as LucideSearch, X as LucideX, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/Input"
@@ -13,6 +14,7 @@ export interface SearchProps extends React.ComponentProps<typeof Input> {
 
 const Search = React.forwardRef<HTMLInputElement, SearchProps>(
     ({ className, value, onChange, onClear, showClear = true, inputClassName, loading, ...props }, ref) => {
+        const { t } = useTranslation()
         const handleClear = (e: React.MouseEvent) => {
             e.preventDefault()
             e.stopPropagation()
@@ -51,7 +53,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
                         data-slot="search-clear"
                     >
                         <LucideX className="size-3" />
-                        <span className="sr-only">Clear search</span>
+                        <span className="sr-only">{t('common.clearSearch', { defaultValue: 'Clear search' })}</span>
                     </Button>
                 )}
             </div>

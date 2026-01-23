@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ChevronLeft,
   ChevronRight,
@@ -137,6 +138,7 @@ export function Pagination({
   onPageSizeChange,
   className
 }: PaginationProps) {
+  const { t } = useTranslation()
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= pagination.totalPages) {
       onPageChange?.(page)
@@ -182,15 +184,15 @@ export function Pagination({
     <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-4 py-2", className)}>
       <div className="flex items-center gap-2">
         <p className="text-sm text-muted-foreground">
-          Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
-          <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
-          <span className="font-medium text-foreground">{pagination.total}</span> results
+          {t('pagination.showing', { defaultValue: 'Showing' })} <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> {t('pagination.to', { defaultValue: 'to' })}{' '}
+          <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> {t('pagination.of', { defaultValue: 'of' })}{' '}
+          <span className="font-medium text-foreground">{pagination.total}</span> {t('pagination.results', { defaultValue: 'results' })}
         </p>
         {pageSizeOptions.length > 1 && (
           <>
             <span className="text-sm text-muted-foreground">•</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">{t('pagination.rows', { defaultValue: 'Rows:' })}</span>
               <Select
                 value={String(pagination.limit)}
                 onValueChange={(value) => handlePageSizeChange(Number(value))}

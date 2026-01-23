@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { LinkDialog } from '@/components/shared/LinkDialog';
 
@@ -31,6 +32,7 @@ export function TiptapEditor({
     disabled = false,
     className
 }: TiptapEditorProps) {
+    const { t } = useTranslation();
     // Track content state for send button
     const [hasContent, setHasContent] = useState(false);
     const [showLinkDialog, setShowLinkDialog] = useState(false);
@@ -44,7 +46,7 @@ export function TiptapEditor({
                 horizontalRule: false,
             }),
             Placeholder.configure({
-                placeholder,
+                placeholder: placeholder || t('chat.typeMessage', { defaultValue: 'Type your message...' }),
             }),
             Link.configure({
                 openOnClick: false,
@@ -208,7 +210,7 @@ export function TiptapEditor({
                     <div className="flex-1" />
 
                     <p className="text-xs text-muted-foreground mr-2">
-                        <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Enter</kbd> to send
+                        <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs">Enter</kbd> {t('chat.enterToSend', { defaultValue: 'to send' })}
                     </p>
                 </div>
 
@@ -227,7 +229,7 @@ export function TiptapEditor({
                         className="gap-1.5 h-8 text-xs"
                     >
                         <Send className="w-3.5 h-3.5" />
-                        Send
+                        {t('chat.send', { defaultValue: 'Send' })}
                     </Button>
                 </div>
             </div>

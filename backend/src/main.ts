@@ -61,9 +61,7 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.enableShutdownHooks();
-  app.setGlobalPrefix(apiPrefix, {
-    exclude: ['/'],
-  });
+  app.setGlobalPrefix(apiPrefix);
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',

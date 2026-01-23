@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -19,6 +20,7 @@ export function ChatInput({
     disabled = false,
     className
 }: ChatInputProps) {
+    const { t } = useTranslation();
     const [message, setMessage] = useState('');
     const [sending, setSending] = useState(false);
 
@@ -51,12 +53,12 @@ export function ChatInput({
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={placeholder}
+                        placeholder={placeholder || t('chat.typeMessage', { defaultValue: 'Type your message...' })}
                         disabled={disabled || sending}
                         className="min-h-[60px] max-h-[200px] resize-none"
                     />
                     <p className="text-xs text-muted-foreground mt-2">
-                        Press Enter to send, Shift+Enter for new line
+                        {t('chat.pressEnterToSend', { defaultValue: 'Press Enter to send, Shift+Enter for new line' })}
                     </p>
                 </div>
                 <Button

@@ -5,7 +5,7 @@
 import axios from 'axios'
 import { auth } from '@/auth'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+const API_URL = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
 export const axiosServer = axios.create({
   baseURL: API_URL,
@@ -17,7 +17,7 @@ export const axiosServer = axios.create({
 
 export async function getAuthenticatedAxios(workspaceId?: string) {
   const session = await auth()
-  
+
   const instance = axios.create({
     baseURL: API_URL,
     timeout: 30000,
