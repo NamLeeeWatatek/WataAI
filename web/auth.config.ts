@@ -32,7 +32,10 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         return refreshLocks.get(key)!;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    if (apiUrl && !apiUrl.endsWith('/v1')) {
+        apiUrl = `${apiUrl}/v1`;
+    }
 
     const refreshPromise = (async () => {
         try {
@@ -101,7 +104,10 @@ export const authConfig = {
         async jwt({ token, user, account, trigger, session }) {
             // Initial Sign In
             if (account) {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                if (apiUrl && !apiUrl.endsWith('/v1')) {
+                    apiUrl = `${apiUrl}/v1`;
+                }
 
                 // Handle Credentials
                 if (account.provider === 'credentials' && user) {

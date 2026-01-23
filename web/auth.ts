@@ -22,10 +22,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return null
           }
 
-          const apiUrl =
+          let apiUrl =
             process.env.INTERNAL_API_URL ??
             process.env.NEXT_PUBLIC_API_URL ??
             'http://localhost:8000/api/v1';
+
+          if (apiUrl && !apiUrl.endsWith('/v1')) {
+            apiUrl = `${apiUrl}/v1`;
+          }
 
           // Call backend email login using Axios
           const { data } = await axios.post(`${apiUrl}/auth/email/login`, {
