@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Google from "next-auth/providers/google"
 import Facebook from "next-auth/providers/facebook"
+import axios from "axios"
 import { authConfig } from "@/auth.config"
 import { logger } from "@/lib/logger"
 
@@ -26,39 +27,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             process.env.NEXT_PUBLIC_API_URL ??
             'http://localhost:8000/api/v1';
 
-          // Call backend email login
-          const response = await fetch(`${apiUrl}/auth/email/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
+          // Call backend email login using Axios
+          const { data } = await axios.post(`${apiUrl}/auth/email/login`, {
+            email: credentials.email,
+            password: credentials.password,
+          }, {
+            headers: { 'Content-Type': 'application/json' }
           }).catch(err => {
-            // Network error (backend down)
-            logger.error('[NextAuth] Backend connection failed:', err);
+            if (err.response) {
+              logger.error('[NextAuth] Login failed:', err.response.status, err.response.data);
+              if (err.response.status === 401 || err.response.status === 403) {
+                return { data: null };
+              }
+              throw new Error(`ServerError: ${err.response.status}`);
+            }
+            logger.error('[NextAuth] Backend connection failed:', err.message);
             throw new Error("ConnectionRefused");
           });
 
-          if (!response.ok) {
-            const error = await response.text()
-            logger.error('[NextAuth] Login failed:', response.status, error)
-
-            // 401/403 = Invalid Credentials. Return null to trigger standard "Sign In failed" flow.
-            if (response.status === 401 || response.status === 403) {
-              return null;
-            }
-
-            // 5xx or others = server error. Throw to trigger "Configuration" or "Error" flow.
-            throw new Error(`ServerError: ${response.status}`);
-          }
-
-          const data = await response.json()
-
-          if (!data.token || !data.user) {
-            logger.error('[NextAuth] Invalid response structure');
+          if (!data || !data.token || !data.user) {
             return null;
           }
 
