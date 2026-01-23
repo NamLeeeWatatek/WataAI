@@ -61,11 +61,14 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.enableShutdownHooks();
+
+  console.log(`[Main] Setting Global Prefix to: ${apiPrefix}`);
+  app.setGlobalPrefix(apiPrefix);
+
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
-  app.setGlobalPrefix(apiPrefix);
 
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe(validationOptions));
