@@ -162,25 +162,28 @@ jobs:
           script: |
             cd /var/www/watagroup
             
-            # Convert repo to lowercase for GHCR compatibility
-            export IMAGE_PREFIX="ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+            # Ensure images are pulled using the correct tags
+            export BACKEND_TAG=${BACKEND_TAG}
+            export WEB_TAG=${WEB_TAG}
             
-            # Export dynamically passed tags
-            export BACKEND_TAG=$BACKEND_TAG
-            export WEB_TAG=$WEB_TAG
-            
-            echo "Deploying Backend Tag: $BACKEND_TAG"
-            echo "Deploying Web Tag: $WEB_TAG"
+            echo "------------------------------------------"
+            echo "🚀 Starting Deployment"
+            echo "📦 Backend Tag: $BACKEND_TAG"
+            echo "📦 Web Tag: $WEB_TAG"
+            echo "------------------------------------------"
 
-            # Login to GHCR
+            # Login to GHCR (GitHub Container Registry)
             echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # Pull these specific images to ensure they exist
-            docker compose -f docker-compose.prod.yml pull
-            
-            # Restart services with zero-downtime
-            # --force-recreate ensures we switch to the new tag/container
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
-            
-            # Cleanup unused images
+
+            # Force pull the exact images defined in the compose file
+            BACKEND_TAG=$BACKEND_TAG WEB_TAG=$WEB_TAG docker compose -f docker-compose.prod.yml pull
+
+            # Update the services
+            # --force-recreate: Bắt buộc tạo lại container ngay cả khi tag image ko đổi (nếu dùng latest)
+            # --remove-orphans: Xóa bỏ các container ko còn định nghĩa trong file compose
+            BACKEND_TAG=$BACKEND_TAG WEB_TAG=$WEB_TAG docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
+
+            # Cleanup: Xóa các image "dangling" (image cũ ko còn dùng) để tránh đầy ổ cứng
             docker image prune -f
+            
+            echo "✅ Deployment successful!"
