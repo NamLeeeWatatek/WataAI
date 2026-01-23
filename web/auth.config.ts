@@ -1,3 +1,4 @@
+import axios from "axios"
 import type { NextAuthConfig, Session, User, Account } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { UserRole, WorkspaceEntity } from "./types/next-auth"
@@ -39,27 +40,11 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 throw new Error("No refresh token available");
             }
 
-            const response = await fetch(`${apiUrl}/auth/refresh-token`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken: token.refreshToken }),
+            const { data } = await axios.post(`${apiUrl}/auth/refresh-token`, {
+                refreshToken: token.refreshToken
+            }, {
+                headers: { "Content-Type": "application/json" }
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                logger.error("[Auth] Token refresh failed with status:", response.status, errorData);
-
-                // CRITICAL FIX: Only invalidate session if it's a client error (4xx) (e.g. invalid refresh token)
-                // If it's a server error (5xx) or network error, keep the old token to allow retries.
-                if (response.status >= 400 && response.status < 500) {
-                    throw new Error("RefreshAccessTokenError");
-                }
-
-                // For 5xx errors, return old token (retry later)
-                return token;
-            }
-
-            const data = await response.json()
 
             return {
                 ...token,
@@ -143,17 +128,10 @@ export const authConfig = {
                             ? { idToken: account.id_token }
                             : { accessToken: account.access_token }
 
-                        const response = await fetch(`${apiUrl}${endpoint}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(body),
+                        const { data } = await axios.post(`${apiUrl}${endpoint}`, body, {
+                            headers: { "Content-Type": "application/json" }
                         })
 
-                        if (!response.ok) {
-                            throw new Error(`Backend social login failed: ${response.statusText}`)
-                        }
-
-                        const data = await response.json()
                         const user = data.user
                         const userName = user.name || user.firstName || user.email
 
