@@ -40,8 +40,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           const apiUrl = normalizeApiUrl(rawApiUrl);
 
+          const loginUrl = `${apiUrl}/auth/email/login`;
+          console.log(`[NextAuth] Attempting login at: ${loginUrl}`);
+
           // Call backend email login using Axios
-          const { data } = await axios.post(`${apiUrl}/auth/email/login`, {
+          const { data } = await axios.post(loginUrl, {
             email: credentials.email,
             password: credentials.password,
           }, {
