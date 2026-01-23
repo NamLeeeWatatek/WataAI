@@ -46,6 +46,8 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
     const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
     const apiUrl = normalizeApiUrl(rawApiUrl);
 
+    console.log(`[Auth] Refreshing token at: ${apiUrl}/auth/refresh-token`);
+
     const refreshPromise = (async () => {
         try {
             if (!token.refreshToken) {
@@ -148,11 +150,14 @@ export const authConfig = {
                 if (account.provider === 'google' || account.provider === 'facebook') {
                     try {
                         const endpoint = account.provider === 'google' ? '/auth/google/login' : '/auth/facebook/login'
+                        const loginUrl = `${apiUrl}${endpoint}`;
+                        console.log(`[Auth] Social login exchange at: ${loginUrl}`);
+
                         const body = account.provider === 'google'
                             ? { idToken: account.id_token }
                             : { accessToken: account.access_token }
 
-                        const { data } = await axios.post(`${apiUrl}${endpoint}`, body, {
+                        const { data } = await axios.post(loginUrl, body, {
                             headers: { "Content-Type": "application/json" }
                         })
 

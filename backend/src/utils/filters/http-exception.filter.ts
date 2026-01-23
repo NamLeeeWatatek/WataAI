@@ -35,7 +35,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const errorResponse = {
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: request.originalUrl, // Dùng originalUrl để thấy toàn bộ đường dẫn từ Nginx gửi sang
       method: request.method,
       message: Array.isArray(message) ? message.join('. ') : message,
       error: (exceptionResponse as any).error || 'Error',
