@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ export const MessageBubble = React.memo(function MessageBubble({
     currentUserName,
     isChannelConversation
 }: MessageBubbleProps) {
+    const { t, i18n } = useTranslation();
     // ✅ CORRECT LOGIC:
     // In channel conversations:
     // - 'user' = Customer (from Facebook/Instagram) → LEFT side
@@ -37,7 +39,7 @@ export const MessageBubble = React.memo(function MessageBubble({
             if (isNaN(date.getTime())) {
                 return '';
             }
-            return date.toLocaleTimeString('en-US', {
+            return date.toLocaleTimeString(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
                 hour: '2-digit',
                 minute: '2-digit'
             });
@@ -52,7 +54,7 @@ export const MessageBubble = React.memo(function MessageBubble({
     // ✅ Show "You" badge for agent messages
     const roleLabel = isAgent ? (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-[10px] font-medium">
-            You
+            {t('chat.you', { defaultValue: 'You' })}
         </span>
     ) : null;
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSession } from 'next-auth/react';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -34,8 +35,9 @@ export function ChatInterface({
     className,
     senderRole = MessageRole.ASSISTANT,
 }: ChatInterfaceProps) {
+    const { t } = useTranslation();
     const { data: session } = useSession();
-    const currentUserName = session?.user?.name || session?.user?.email || 'You';
+    const currentUserName = session?.user?.name || session?.user?.email || t('chat.you', { defaultValue: 'You' });
     const dispatch = useAppDispatch();
 
     // Track current conversation to prevent unnecessary joins/leaves
@@ -123,7 +125,7 @@ export function ChatInterface({
         try {
             await onSendMessage(content.trim());
         } catch (err) {
-            toast.error('Failed to send message');
+            toast.error(t('chat.failedToSend', { defaultValue: 'Failed to send message' }));
             dispatch(removeMessage({ conversationId, messageId: tempId }));
             throw err;
         }
@@ -135,7 +137,7 @@ export function ChatInterface({
                 <AlertCircle className="w-12 h-12 text-destructive mb-4" />
                 <p className="text-muted-foreground">{error}</p>
                 <Button onClick={loadInitialMessages} variant="outline" className="mt-4">
-                    Retry
+                    {t('chat.retry', { defaultValue: 'Retry' })}
                 </Button>
             </div>
         );
@@ -145,8 +147,8 @@ export function ChatInterface({
         <div className={cn('flex flex-col h-full', className)}>
             <MessagesList
                 messages={messages}
-                botName={botName}
-                customerName={customerName}
+                botName={botName || t('chat.aiAssistant', { defaultValue: 'AI Assistant' })}
+                customerName={customerName || t('chat.customer', { defaultValue: 'Customer' })}
                 currentUserName={currentUserName}
                 isChannelConversation={isChannelConversation}
                 loading={loading}

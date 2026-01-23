@@ -32,10 +32,19 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         return refreshLocks.get(key)!;
     }
 
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
-    if (apiUrl && !apiUrl.endsWith('/v1')) {
-        apiUrl = `${apiUrl}/v1`;
-    }
+    const normalizeApiUrl = (url: string) => {
+        let cleaned = url.replace(/\/+$/, "");
+        if (!cleaned.includes("/api")) {
+            cleaned = `${cleaned}/api`;
+        }
+        if (!cleaned.endsWith("/v1")) {
+            cleaned = `${cleaned}/v1`;
+        }
+        return cleaned;
+    };
+
+    const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const apiUrl = normalizeApiUrl(rawApiUrl);
 
     const refreshPromise = (async () => {
         try {
@@ -104,10 +113,19 @@ export const authConfig = {
         async jwt({ token, user, account, trigger, session }) {
             // Initial Sign In
             if (account) {
-                let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
-                if (apiUrl && !apiUrl.endsWith('/v1')) {
-                    apiUrl = `${apiUrl}/v1`;
-                }
+                const normalizeApiUrl = (url: string) => {
+                    let cleaned = url.replace(/\/+$/, "");
+                    if (!cleaned.includes("/api")) {
+                        cleaned = `${cleaned}/api`;
+                    }
+                    if (!cleaned.endsWith("/v1")) {
+                        cleaned = `${cleaned}/v1`;
+                    }
+                    return cleaned;
+                };
+
+                const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                const apiUrl = normalizeApiUrl(rawApiUrl);
 
                 // Handle Credentials
                 if (account.provider === 'credentials' && user) {

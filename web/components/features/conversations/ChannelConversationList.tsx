@@ -1,6 +1,7 @@
 'use client';
 
 
+import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Facebook, Instagram, Mail, MessageCircle, Phone, Send } from 'lucide-react';
@@ -31,11 +32,11 @@ interface ChannelConversationListProps {
   loading?: boolean;
 }
 
-const formatRelativeTime = (dateString: string): string => {
+const formatRelativeTime = (dateString: string, t: any, i18n: any): string => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return 'Recently';
+      return t('conversations.date.recently', { defaultValue: 'Recently' });
     }
 
     const now = new Date();
@@ -44,17 +45,17 @@ const formatRelativeTime = (dateString: string): string => {
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 1) return t('conversations.date.justNow', { defaultValue: 'Just now' });
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInDays < 7) return `${diffInDays}d`;
 
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
       month: 'short',
       day: 'numeric'
     }).format(date);
   } catch {
-    return 'Recently';
+    return t('conversations.date.recently', { defaultValue: 'Recently' });
   }
 };
 
@@ -90,6 +91,7 @@ export function ChannelConversationList({
   onSelect,
   loading = false
 }: ChannelConversationListProps) {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return <ChatListSkeleton count={10} />;
   }
@@ -100,9 +102,9 @@ export function ChannelConversationList({
         <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
           <MessageSquare className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-base mb-2">No conversations yet</h3>
+        <h3 className="font-semibold text-base mb-2">{t('conversations.noConversations', { defaultValue: 'No conversations yet' })}</h3>
         <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-          Conversations from your channels will appear here
+          {t('conversations.noConversationsDesc', { defaultValue: 'Conversations from your channels will appear here' })}
         </p>
       </div>
     );
@@ -126,7 +128,7 @@ export function ChannelConversationList({
               <Avatar className="h-11 w-11 ring-1 ring-border">
                 <AvatarImage src={conv.customerAvatar} />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                  {(conv.customerName || 'User').charAt(0).toUpperCase()}
+                  {(conv.customerName || t('conversations.unknown', { defaultValue: 'User' })).charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {/* Channel icon badge */}
@@ -151,7 +153,7 @@ export function ChannelConversationList({
                   {conv.customerName}
                 </h3>
                 <span className="text-xs text-muted-foreground shrink-0">
-                  {formatRelativeTime(conv.lastMessageAt)}
+                  {formatRelativeTime(conv.lastMessageAt, t, i18n)}
                 </span>
               </div>
 

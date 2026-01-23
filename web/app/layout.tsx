@@ -41,7 +41,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
-            <body className="font-sans antialiased">
+            <body className="font-sans antialiased" suppressHydrationWarning>
                 <QueryProvider>
                     <I18nProvider>
                         <SessionProvider>

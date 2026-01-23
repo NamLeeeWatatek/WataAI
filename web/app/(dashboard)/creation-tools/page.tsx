@@ -16,6 +16,7 @@ import { Pagination } from '@/components/shared/Pagination';
 import { Search } from '@/components/shared/Search';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ToolCardSkeleton } from '@/components/shared/Skeletons';
+import { useTranslation } from 'react-i18next';
 
 
 function CategoryItems() {
@@ -33,6 +34,7 @@ function CategoryItems() {
 
 export default function CreationToolsPage() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
     const [searchQuery, setSearchQuery] = useState('');
@@ -69,8 +71,8 @@ export default function CreationToolsPage() {
     return (
         <div className="page-container space-y-6">
             <PageHeader
-                title="Creation Tools"
-                description="Choose a tool to start creating amazing content with AI"
+                title={t('navigation.creationTools')}
+                description={t('creationTools.description', { defaultValue: 'Choose a tool to start creating amazing content with AI' })}
                 onRefresh={handleRefresh}
                 refreshing={isLoading || isFetching}
             />
@@ -79,7 +81,7 @@ export default function CreationToolsPage() {
             <div className="glass-card flex flex-col md:flex-row items-center gap-4 p-1.5 rounded-2xl backdrop-blur-sm">
                 <div className="flex-1 w-full relative group">
                     <Search
-                        placeholder="Search tools..."
+                        placeholder={t('creationTools.searchPlaceholder', { defaultValue: 'Search tools...' })}
                         value={searchQuery}
                         onChange={(e: any) => setSearchQuery(e.target.value)}
                         onClear={() => setSearchQuery('')}
@@ -89,10 +91,10 @@ export default function CreationToolsPage() {
                 <div className="w-full md:w-[240px]">
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                         <SelectTrigger className="w-full bg-background/50 border-transparent hover:bg-background hover:border-border/50 focus:ring-0 transition-all font-medium">
-                            <SelectValue placeholder="All Categories" />
+                            <SelectValue placeholder={t('creationTools.allCategories', { defaultValue: 'All Categories' })} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="all">{t('creationTools.allCategories', { defaultValue: 'All Categories' })}</SelectItem>
                             <CategoryItems />
                         </SelectContent>
                     </Select>
@@ -116,15 +118,15 @@ export default function CreationToolsPage() {
                             const isVideo = name.includes('video') || slug.includes('video');
                             const isImage = !isVideo && (name.includes('hình ảnh') || name.includes('image') || slug.includes('image'));
 
-                            const input = tool.metadata?.inputLabel || (hasFiles ? "Assets" : (hasTemplate ? "Template" : "Input"));
-                            const output = tool.metadata?.outputLabel || (isVideo ? "Video" : (isImage ? "Image" : "Result"));
-                            const cta = tool.formConfig?.submitLabel || tool.metadata?.actionLabel || (isVideo ? "Create Video" : (isImage ? "Generate Image" : "Open Tool"));
+                            const input = tool.metadata?.inputLabel || (hasFiles ? t('creationTools.assets', { defaultValue: 'Assets' }) : (hasTemplate ? t('creationTools.template', { defaultValue: 'Template' }) : t('creationTools.input', { defaultValue: 'Input' })));
+                            const output = tool.metadata?.outputLabel || (isVideo ? t('creationTools.video', { defaultValue: 'Video' }) : (isImage ? t('creationTools.image', { defaultValue: 'Image' }) : t('creationTools.result', { defaultValue: 'Result' })));
+                            const cta = tool.formConfig?.submitLabel || tool.metadata?.actionLabel || (isVideo ? t('creationTools.createVideo', { defaultValue: 'Create Video' }) : (isImage ? t('creationTools.generateImage', { defaultValue: 'Generate Image' }) : t('creationTools.openTool', { defaultValue: 'Open Tool' })));
 
                             let description = tool.description;
                             if (!description || description.includes("Specialized AI agent")) {
-                                if (isVideo) description = "Transform assets into high-energy UGC videos.";
-                                else if (isImage) description = "Generate marketing visuals from templates or text.";
-                                else description = "Accelerate creation with high-performance AI.";
+                                if (isVideo) description = t('creationTools.defaultVideoDesc', { defaultValue: 'Transform assets into high-energy UGC videos.' });
+                                else if (isImage) description = t('creationTools.defaultImageDesc', { defaultValue: 'Generate marketing visuals from templates or text.' });
+                                else description = t('creationTools.defaultToolDesc', { defaultValue: 'Accelerate creation with high-performance AI.' });
                             }
 
                             return { input, output, cta, description, type: isVideo ? 'video' : (isImage ? 'image' : 'text') };
@@ -209,8 +211,8 @@ export default function CreationToolsPage() {
                 <div className="py-20">
                     <EmptyState
                         icon={<Sparkles className="w-12 h-12 text-muted-foreground/50" />}
-                        title="No creation tools available"
-                        description="We couldn't find any active creation tools in this workspace. Check back later."
+                        title={t('creationTools.emptyTitle', { defaultValue: 'No creation tools available' })}
+                        description={t('creationTools.emptyDesc', { defaultValue: "We couldn't find any active creation tools in this workspace. Check back later." })}
                     />
                 </div>
             )}

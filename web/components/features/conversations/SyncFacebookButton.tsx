@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export function SyncFacebookButton({
   channelType,
   onSyncComplete,
 }: SyncFacebookButtonProps) {
+  const { t } = useTranslation();
   const { syncConversations, isSyncing: syncing } = useBotConversations();
 
   const handleSync = async () => {
@@ -54,7 +56,7 @@ export function SyncFacebookButton({
       disabled={syncing}
     >
       <RefreshCw className={cn('w-4 h-4', syncing && 'animate-spin')} />
-      <span className="text-xs">Sync</span>
+      <span className="text-xs">{t('conversations.sync', { defaultValue: 'Sync' })}</span>
     </Button>
   );
 }

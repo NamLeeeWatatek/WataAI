@@ -22,14 +22,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return null
           }
 
-          let apiUrl =
+          const normalizeApiUrl = (url: string) => {
+            let cleaned = url.replace(/\/+$/, "");
+            if (!cleaned.includes("/api")) {
+              cleaned = `${cleaned}/api`;
+            }
+            if (!cleaned.endsWith("/v1")) {
+              cleaned = `${cleaned}/v1`;
+            }
+            return cleaned;
+          };
+
+          const rawApiUrl =
             process.env.INTERNAL_API_URL ??
             process.env.NEXT_PUBLIC_API_URL ??
             'http://localhost:8000/api/v1';
 
-          if (apiUrl && !apiUrl.endsWith('/v1')) {
-            apiUrl = `${apiUrl}/v1`;
-          }
+          const apiUrl = normalizeApiUrl(rawApiUrl);
 
           // Call backend email login using Axios
           const { data } = await axios.post(`${apiUrl}/auth/email/login`, {
