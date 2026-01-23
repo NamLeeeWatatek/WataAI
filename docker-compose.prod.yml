@@ -2,9 +2,6 @@ version: "3.8"
 
 services:
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
     image: ghcr.io/namleeewatatek/wataai/backend:${BACKEND_TAG:-latest}
     pull_policy: always
     container_name: aiwata-backend
@@ -25,12 +22,6 @@ services:
           memory: 1G
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-        - NEXT_PUBLIC_FRONTEND_URL=${NEXT_PUBLIC_FRONTEND_URL}
     image: ghcr.io/namleeewatatek/wataai/web:${WEB_TAG:-latest}
     pull_policy: always
     container_name: aiwata-web
