@@ -16,4 +16,14 @@ export class PostToChannelsDto {
   @IsOptional()
   @IsString()
   message?: string;
+
+  @ApiPropertyOptional({ description: 'Bot ID to use for content refinement' })
+  @IsOptional()
+  @IsString()
+  botId?: string;
+
+  @ApiPropertyOptional({ description: 'Specific writing style/tone' })
+  @IsOptional()
+  @IsString()
+  writingStyle?: string;
 }

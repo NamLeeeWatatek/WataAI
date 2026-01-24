@@ -24,6 +24,7 @@ import { ExecutionValidationService } from '../execution/validation/execution-va
 import { ExecutionFlow } from '../creation-tools/domain/creation-tool';
 import { ChannelsService } from '../channels/channels.service';
 import { OAuthService } from '../integrations/oauth.service';
+import { BotExecutionService } from '../bots/bot-execution.service';
 
 @Injectable()
 export class CreationJobsService {
@@ -41,7 +42,9 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) {}
+    @Inject(forwardRef(() => BotExecutionService))
+    private readonly botExecutionService: BotExecutionService,
+  ) { }
 
   async executePreview(
     toolId: string,
@@ -454,6 +457,8 @@ export class CreationJobsService {
     workspaceId: string,
     scheduledTime?: string,
     customMessage?: string,
+    botId?: string,
+    writingStyle?: string,
   ): Promise<any> {
     const job = await this.creationJobsRepository.findById(jobId, workspaceId);
     if (!job) {
@@ -525,6 +530,31 @@ export class CreationJobsService {
             .map(([_, val]) => val)
             .join('\n');
         }
+      }
+    }
+
+    // NEW: Use Bot to refine/rewrite the message if requested
+    if (botId && message) {
+      let prompt = message;
+      if (writingStyle) {
+        prompt = `Please rewrite the following content in this style: "${writingStyle}".\n\nContent: ${message}`;
+      } else {
+        prompt = `Please polish and refine the following content for social media posting:\n\n${message}`;
+      }
+
+      try {
+        const botResult = await this.botExecutionService.generateBotResponse(
+          botId,
+          prompt,
+          [],
+          { workspaceId },
+        );
+        if (botResult && botResult.answer) {
+          message = botResult.answer;
+        }
+      } catch (botError) {
+        // Fallback to original message if bot fails
+        console.error('Bot refinement failed:', botError);
       }
     }
 

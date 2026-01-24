@@ -40,7 +40,7 @@ import { TriggerActionBodyDto } from './dto/trigger-action-body.dto';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller('creation-jobs')
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post()
   @Permissions('job:Create')
@@ -178,6 +178,8 @@ export class CreationJobsController {
       workspaceId,
       body.scheduledTime,
       body.message,
+      body.botId,
+      body.writingStyle,
     );
   }
 
