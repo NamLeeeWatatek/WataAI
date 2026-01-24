@@ -7,7 +7,7 @@ import { useCreationTools } from '@/lib/hooks/features/useCreationTools';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, Settings, Wrench, LayoutTemplate, icons, Download, Upload, Copy } from 'lucide-react';
 import { Search } from '@/components/shared/Search';
 import { PageLoading } from '@/components/shared/PageLoading';
 import { toast } from 'sonner';
@@ -77,6 +77,7 @@ export default function CreationToolsPage() {
         isLoading: loading,
         refetch,
         deleteTool,
+        cloneTool,
         exportTools,
         importTools,
         isMutating
@@ -398,6 +399,16 @@ export default function CreationToolsPage() {
                                             >
                                                 <Edit2 className="w-3.5 h-3.5 mr-1.5 opacity-70" />
                                                 Edit
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 w-8 px-0"
+                                                onClick={() => cloneTool(tool.id)}
+                                                title="Clone Tool"
+                                                disabled={isMutating}
+                                            >
+                                                <Copy className="w-3.5 h-3.5" />
                                             </Button>
                                             <Button
                                                 variant="outline"
