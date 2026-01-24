@@ -10,6 +10,7 @@ import { ProductDetailsDialog } from './ProductDetailsDialog';
 import { toast } from 'sonner';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { Progress } from '@/components/ui/Progress';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,7 +21,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/AlertDialog';
-
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Image } from '@/components/shared/Image';
 
@@ -35,17 +35,6 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-
-    const statusConfig = {
-        [CreationJobStatus.COMPLETED]: { color: 'text-success', variant: 'success' as const, icon: CheckCircle, label: 'Completed' },
-        [CreationJobStatus.PROCESSING]: { color: 'text-primary', variant: 'info' as const, icon: Clock, label: 'Processing' },
-        [CreationJobStatus.PENDING]: { color: 'text-warning', variant: 'warning' as const, icon: Clock, label: 'Pending' },
-        [CreationJobStatus.FAILED]: { color: 'text-destructive', variant: 'destructive' as const, icon: AlertCircle, label: 'Failed' },
-        [CreationJobStatus.CANCELED]: { color: 'text-muted-foreground', variant: 'secondary' as const, icon: AlertCircle, label: 'Canceled' },
-    };
-
-    const status = statusConfig[job.status] || statusConfig[CreationJobStatus.PENDING];
-    const StatusIcon = status.icon;
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -145,10 +134,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                         <CardTitle className={cn("text-base font-bold truncate transition-all", isSelected && "ml-7")} title={getDisplayName()}>
                             {getDisplayName()}
                         </CardTitle>
-                        <Badge className="font-bold border-none h-6">
-                            <StatusIcon className="w-3 h-3 mr-1" />
-                            {status.label}
-                        </Badge>
+                        <StatusBadge status={job.status} showIcon className="font-bold border-none h-6" />
                     </div>
                     <CardDescription className="flex items-center gap-2 text-xs text-muted-foreground/60">
                         <span className="flex items-center gap-1">
