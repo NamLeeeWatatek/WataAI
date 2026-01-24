@@ -102,6 +102,7 @@ export interface FormField {
     options?: string | Array<{ label: string; value: any; icon?: string }>;
     multiple?: boolean;
     config?: Record<string, any>; // For canvas-editor and other complex fields
+    useForPostGen?: boolean; // NEW: Flag to use this field in Post Generation Dialog
     validation?: {
         required?: boolean;
         min?: number;

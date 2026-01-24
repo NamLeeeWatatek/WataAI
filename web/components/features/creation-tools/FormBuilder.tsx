@@ -393,18 +393,30 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                         <div className="pt-4 border-t space-y-4">
                                                             <div className="flex items-center justify-between">
                                                                 <Label className="text-sm font-bold">Options</Label>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-6 text-xs hover:bg-primary/10 hover:text-primary"
-                                                                    onClick={() => {
-                                                                        const opts = Array.isArray(currentField.options) ? [...currentField.options] : []
-                                                                        opts.push({ label: 'New Option', value: 'new_option' })
-                                                                        updateField({ options: opts })
-                                                                    }}
-                                                                >
-                                                                    <Plus className="w-3 h-3 mr-1" /> Add
-                                                                </Button>
+                                                                <div className="flex items-center gap-2">
+                                                                    {/* NEW: Use for Post Gen Switch */}
+                                                                    <div className="flex items-center gap-1.5 bg-secondary/30 pl-2 pr-1 py-0.5 rounded-full border border-secondary/50" title="Use this field's options for Social Post Style selection">
+                                                                        <Label htmlFor="use-post-gen" className="text-[9px] font-bold uppercase text-muted-foreground whitespace-nowrap cursor-pointer">Post Logic</Label>
+                                                                        <Switch
+                                                                            id="use-post-gen"
+                                                                            className="scale-75 origin-right"
+                                                                            checked={!!currentField.useForPostGen}
+                                                                            onCheckedChange={(v) => updateField({ useForPostGen: v })}
+                                                                        />
+                                                                    </div>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 text-xs hover:bg-primary/10 hover:text-primary"
+                                                                        onClick={() => {
+                                                                            const opts = Array.isArray(currentField.options) ? [...currentField.options] : []
+                                                                            opts.push({ label: 'New Option', value: 'new_option' })
+                                                                            updateField({ options: opts })
+                                                                        }}
+                                                                    >
+                                                                        <Plus className="w-3 h-3 mr-1" /> Add
+                                                                    </Button>
+                                                                </div>
                                                             </div>
                                                             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
                                                                 {(Array.isArray(currentField.options) ? currentField.options : []).map((opt: any, idx: number) => (

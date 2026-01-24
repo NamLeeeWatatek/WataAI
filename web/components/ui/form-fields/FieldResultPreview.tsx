@@ -106,11 +106,12 @@ export function FieldResultPreview({ field, value, allValues = {} }: DynamicForm
                 {mediaUrl && (
                     <div className="relative w-full bg-black/5 dark:bg-black/20">
                         {/* Aspect Ratio Container - roughly 16:9 or auto */}
-                        <div className="relative w-full min-h-[200px] max-h-[500px] flex items-center justify-center">
+                        <div className="relative w-full min-h-[200px] max-h-[500px] flex items-center justify-center p-2">
                             <Media
                                 src={mediaUrl}
                                 alt="Result"
-                                className="w-full h-auto object-contain"
+                                className="w-full h-full max-w-full max-h-[500px] object-contain mx-auto"
+                                objectFit="contain" // Explicit prop for Media component support
                                 controls
                                 ambient
                             />
