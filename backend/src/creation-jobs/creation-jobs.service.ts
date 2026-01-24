@@ -41,7 +41,7 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) {}
+  ) { }
 
   async executePreview(
     toolId: string,
@@ -75,7 +75,17 @@ export class CreationJobsService {
 
     // 2. Resolve and Execute Strategy
     const strategy = this.strategyResolver.resolve(config.type);
-    const result = await strategy.execute(config, executionInputs, context);
+
+    // Inject system variables for consistency
+    const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+    const finalInputs = {
+      ...executionInputs,
+      _jobId: 'preview',
+      _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/preview/complete`,
+      _workspaceId: context?.workspaceId,
+    };
+
+    const result = await strategy.execute(config, finalInputs, context);
 
     return result;
   }
@@ -130,17 +140,24 @@ export class CreationJobsService {
     // 3. Execute Step (if it has execution config)
     let executionResult = null;
     if (step.execution) {
-      // Validate inputs for this step specifically?
-      // For now, we assume the frontend sends valid data for the step.
+      const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+
+      // Prepare inputs: Form Data + Previous Step Results
+      const previousResults = job.outputData || {};
+      const executionInputs = {
+        ...updatedInputData,
+        ...previousResults, // Flatten for easy access {{field}}
+        prev: previousResults, // Access via {{prev.stepId.field}}
+        _jobId: job.id,
+        _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/${job.id}/complete`,
+        _workspaceId: context.workspaceId,
+      };
 
       const strategy = this.strategyResolver.resolve(step.execution.type);
 
-      // We pass the ACCUMULATED results? Or just the inputs?
-      // Usually execution needs inputs + previous results.
-
       executionResult = await strategy.execute(
-        step.execution,
-        updatedInputData,
+        step.execution.config as any,
+        executionInputs,
         { ...context, toolId, stepId, jobId: job.id } as any,
       );
     }
