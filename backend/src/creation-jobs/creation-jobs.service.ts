@@ -614,4 +614,66 @@ export class CreationJobsService {
 
     return results;
   }
+
+  async triggerAction(
+    jobId: string,
+    actionId: string,
+    workspaceId: string,
+    actionInputs: Record<string, any>,
+    context?: { userId?: string },
+  ): Promise<any> {
+    const job = await this.creationJobsRepository.findById(jobId, workspaceId);
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${jobId} not found`);
+    }
+
+    const tool = await this.creationToolsService.findById(job.creationToolId);
+    if (!tool) {
+      throw new NotFoundException(
+        `Tool with ID ${job.creationToolId} not found`,
+      );
+    }
+
+    // 1. Find the Action
+    const action = tool.actions?.find((a) => a.id === actionId);
+    if (!action) {
+      throw new NotFoundException(
+        `Action with ID ${actionId} not found in tool ${tool.name}`,
+      );
+    }
+
+    // 2. Prepare Inputs: Merge Original Inputs + Outputs + Action Inputs
+    const baseInputs = {
+      ...(job.inputData || {}),
+      ...(job.outputData || {}),
+      ...actionInputs,
+      _jobId: job.id,
+      _workspaceId: workspaceId,
+      _userId: context?.userId,
+      _actionId: actionId,
+    };
+
+    // 3. Resolve and Execute Strategy (The "Workflow Engine")
+    const strategy = this.strategyResolver.resolve(action.execution.type);
+
+    const result = await strategy.execute(
+      action.execution.config as any,
+      baseInputs,
+      { ...context, workspaceId, toolId: tool.id, jobId: job.id, actionId } as any,
+    );
+
+    // 4. Audit Log
+    if (context?.userId) {
+      await this.auditService.log({
+        userId: context.userId,
+        workspaceId,
+        action: `ACTION_TRIGGERED:${actionId}`,
+        resourceType: 'creation-job',
+        resourceId: jobId,
+        details: { actionId, toolId: tool.id },
+      });
+    }
+
+    return result;
+  }
 }

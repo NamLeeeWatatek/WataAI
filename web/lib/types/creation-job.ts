@@ -17,6 +17,7 @@ export interface CreationToolInfo {
     description?: string;
     icon?: string;
     category?: string;
+    actions?: any[]; // For dynamic manual actions
 }
 
 /** Input data for creation jobs */
