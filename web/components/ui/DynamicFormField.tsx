@@ -114,7 +114,15 @@ function arePropsEqual(prev: DynamicFormFieldProps, next: DynamicFormFieldProps)
     if (prev.onChange !== next.onChange) return false
     if (prev.error !== next.error) return false
 
+    // CRITICAL FIX: Always re-render if preview or previous step results change
+    // This is required for ResultPreview components to update after async generation
+    if (prev.allValues?.preview !== next.allValues?.preview) return false
+    if (prev.allValues?.prev !== next.allValues?.prev) return false
+
     if (!prev.field.showWhen && !prev.field.showIf && !next.field.showWhen && !next.field.showIf) {
+        // For special fields that depend on allValues (like result-preview), we might need to be less aggressive
+        if (['result-preview', 'canvas-editor'].includes(prev.field.type)) return false;
+
         return true;
     }
 
