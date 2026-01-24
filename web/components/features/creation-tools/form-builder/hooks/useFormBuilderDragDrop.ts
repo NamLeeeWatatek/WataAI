@@ -66,17 +66,17 @@ export function useFormBuilderDragDrop(
         const activeData = active.data.current;
         const overData = over.data.current;
 
-        // Auto-switch Steps when dragging over them
-        if (overData?.type === 'STEP') {
-            const targetIndex = overData.index;
-            if (activeStepIndex !== targetIndex) {
-                const now = Date.now();
-                if (now - lastStepSwitchRef.current > 600) {
-                    setActiveStepIndex(targetIndex);
-                    lastStepSwitchRef.current = now;
-                }
-            }
-        }
+        // Auto-switch Steps when dragging over them -> DISABLED by USER REQUEST
+        // if (overData?.type === 'STEP') {
+        //     const targetIndex = overData.index;
+        //     if (activeStepIndex !== targetIndex) {
+        //         const now = Date.now();
+        //         if (now - lastStepSwitchRef.current > 600) {
+        //             setActiveStepIndex(targetIndex);
+        //             lastStepSwitchRef.current = now;
+        //         }
+        //     }
+        // }
     }, [activeStepIndex, setActiveStepIndex]);
 
     const handleMoveFieldToStep = useCallback((fieldName: string, targetStepIndex: number) => {

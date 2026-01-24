@@ -159,9 +159,9 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                 {/* Main Content Area */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Canvas - Zone Grid */}
-                    <div className="flex-1 overflow-y-auto p-8 bg-muted/10">
-                        <div className="h-full px-8 pb-32">
-                            <div className="max-w-[1600px] mx-auto space-y-6">
+                    <div className="flex-1 overflow-y-auto p-4 bg-muted/10">
+                        <div className="h-full px-4 pb-32">
+                            <div className="max-w-full mx-auto space-y-6">
                                 <SortableContext items={layoutRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
                                     {layoutRows.map((row, rowIdx) => (
                                         <div key={row.id} className="group/row relative">

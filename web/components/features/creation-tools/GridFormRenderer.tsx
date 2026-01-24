@@ -332,7 +332,7 @@ export function GridFormRenderer({
                                 form.trigger(field.name as any);
                             }
                         }}
-                        allValues={{ ...form.watch(), prev: stepResults }}
+                        allValues={{ ...form.watch(), prev: stepResults, preview: previewResults }}
                         error={fieldState.error?.message}
                     />
                 )}
@@ -386,7 +386,7 @@ export function GridFormRenderer({
                                             form.trigger(f.name as any);
                                         }
                                     }}
-                                    allValues={{ ...form.watch(), prev: stepResults }}
+                                    allValues={{ ...form.watch(), prev: stepResults, preview: previewResults }}
                                     error={fieldState.error?.message}
                                 />
                             )}
