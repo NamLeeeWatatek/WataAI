@@ -15,6 +15,7 @@ import { useNotificationsRealtime } from '@/lib/hooks/use-notifications-realtime
 import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { cn } from '@/lib/utils';
 import { Notification, JobStatus } from '@/lib/types/notification';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -264,9 +265,10 @@ export function NotificationDropdown({
                         {notification.workspaceId && (
                           <div className="mt-2 flex items-center gap-2">
                             {notification.data?.status && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5 font-normal">
-                                {notification.data.status}
-                              </Badge>
+                              <StatusBadge
+                                status={notification.data.status}
+                                className="text-[10px] px-1.5 py-0 h-5 font-normal"
+                              />
                             )}
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-normal text-muted-foreground">
                               WS: {notification.workspaceId.slice(0, 8)}

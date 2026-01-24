@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/Badge';
+import { StatusBadge } from '@/components/shared/StatusBadge';
 import { CheckCircle, Clock, AlertCircle, Copy, ExternalLink, Activity, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -39,17 +40,6 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
     }, [open, job]);
 
     if (!job) return null;
-
-    const statusConfig = {
-        [CreationJobStatus.COMPLETED]: { color: 'bg-green-500/10 text-green-500', icon: CheckCircle, label: 'Completed' },
-        [CreationJobStatus.PROCESSING]: { color: 'bg-blue-500/10 text-blue-500', icon: Clock, label: 'Processing' },
-        [CreationJobStatus.PENDING]: { color: 'bg-yellow-500/10 text-yellow-500', icon: Clock, label: 'Pending' },
-        [CreationJobStatus.FAILED]: { color: 'bg-red-500/10 text-red-500', icon: AlertCircle, label: 'Failed' },
-        [CreationJobStatus.CANCELED]: { color: 'bg-gray-500/10 text-gray-500', icon: AlertCircle, label: 'Canceled' },
-    };
-
-    const status = statusConfig[job.status] || statusConfig[CreationJobStatus.PENDING];
-    const StatusIcon = status.icon;
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -271,10 +261,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                 {getDisplayName()}
                             </DialogTitle>
                         </div>
-                        <Badge variant="outline" className={cn(status.color, "border-0 flex items-center gap-1.5 shrink-0 px-3 py-1")}>
-                            <StatusIcon className="w-4 h-4" />
-                            {status.label}
-                        </Badge>
+                        <StatusBadge status={job.status} showIcon className="px-3 py-1 text-sm border-0" />
                     </div>
                 </DialogHeader>
 
