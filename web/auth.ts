@@ -34,7 +34,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
 
           const rawApiUrl =
-            process.env.INTERNAL_API_URL ??
             process.env.NEXT_PUBLIC_API_URL ??
             'http://localhost:8000/api/v1';
 
