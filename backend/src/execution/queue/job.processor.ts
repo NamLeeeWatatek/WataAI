@@ -142,7 +142,9 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
 
       const config = tool.executionFlow as ExecutionFlow;
       const startTime = Date.now();
-      const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+      let apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || '';
+      apiUrl = apiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+
       const systemInputs = {
         ...executionInputs,
         _jobId: jobEntity.id,
@@ -179,9 +181,9 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
           `Job ${jobEntity.id} dispatched successfully. Waiting for external callback (Async Pattern).`,
         );
 
-        const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+        // Reuse normalized URL from scope
         this.logger.warn(
-          `Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/v1/callbacks/jobs/${jobEntity.id}/complete`,
+          `Job is waiting for callback. To complete, external tool must POST to: ${apiUrl}/api/v1/callbacks/jobs/${jobEntity.id}/complete`,
         );
         this.logger.warn(
           `If running locally, ensure n8n can reach your localhost (e.g. via ngrok) or DISABLE asyncPattern in tool config.`,
