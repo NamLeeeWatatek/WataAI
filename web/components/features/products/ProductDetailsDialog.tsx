@@ -148,22 +148,35 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                         if (key === 'knowledgeBaseId' || !value) return null;
 
                                         // Handle Image Inputs
-                                        if (typeof value === 'string' && (isImageUrl(value) || key.toLowerCase().includes('image'))) {
+                                        if (key.toLowerCase().includes('image') || (typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url))) {
+                                            const imgUrl = typeof value === 'string' ? value : (value as any).url;
                                             return (
                                                 <div key={key} className="bg-secondary/10 p-2 rounded-lg border border-border/50">
                                                     <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">{key.replace(/_/g, ' ')}</p>
                                                     <div className="relative w-full aspect-video rounded overflow-hidden bg-background">
-                                                        <Media src={value} alt={key} fill objectFit="contain" />
+                                                        <Media src={imgUrl} alt={key} fill objectFit="contain" />
                                                     </div>
                                                 </div>
                                             );
+                                        }
+
+                                        // Handle Channel/Platform IDs
+                                        if (['facebook', 'instagram', 'linkedin', 'twitter', 'tiktok', 'youtube'].some(k => key.toLowerCase().includes(k))) {
+                                            return (
+                                                <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
+                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/_/g, ' ')}</p>
+                                                    <code className="text-[10px] bg-background px-1.5 py-0.5 rounded border block truncate">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</code>
+                                                </div>
+                                            )
                                         }
 
                                         // Handle Text Inputs (Prompts)
                                         return (
                                             <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
                                                 <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/_/g, ' ')}</p>
-                                                <p className="text-xs text-foreground/90 whitespace-pre-wrap font-medium">{String(value)}</p>
+                                                <p className="text-xs text-foreground/90 whitespace-pre-wrap font-medium">
+                                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                                </p>
                                             </div>
                                         );
                                     })}
