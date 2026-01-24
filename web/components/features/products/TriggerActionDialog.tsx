@@ -81,7 +81,10 @@ export function TriggerActionDialog({
 
         setIsExecuting(true);
         try {
-            const response = await axiosClient.post(`/creation-jobs/${jobId}/actions/${action.id}`, formValues);
+            // Updated to use { inputs: ... } wrapper to stay compatible with NestJS whitelist logic
+            const response = await axiosClient.post(`/creation-jobs/${jobId}/actions/${action.id}`, {
+                inputs: formValues
+            });
 
             toast.success(`${action.name} executed successfully!`);
             onSuccess?.(response.data);
