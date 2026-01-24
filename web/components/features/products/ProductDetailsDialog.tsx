@@ -138,16 +138,38 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                         if (key === 'knowledgeBaseId' || !value) return null;
 
                                         // Handle Image Inputs
-                                        if (isImageUrl(String(value)) || key.toLowerCase().includes('image') || (typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url))) {
-                                            const imgUrl = typeof value === 'string' ? value : (value as any).url;
-                                            return (
-                                                <div key={key} className="bg-secondary/10 p-2 rounded-lg border border-border/50">
-                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">{key.replace(/_/g, ' ')}</p>
-                                                    <div className="relative w-full aspect-video rounded overflow-hidden bg-background">
-                                                        <Media src={imgUrl} alt={key} fill objectFit="contain" />
+                                        // Handle Image Inputs
+                                        const isImageKey = key.toLowerCase().includes('image');
+                                        const hasUrl = typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url);
+                                        const isStringImage = typeof value === 'string' && isImageUrl(value);
+
+                                        if (isImageKey || hasUrl || isStringImage) {
+                                            let images: string[] = [];
+
+                                            if (Array.isArray(value)) {
+                                                images = value
+                                                    .map((v: any) => typeof v === 'string' ? v : v?.url)
+                                                    .filter((url) => typeof url === 'string' && (isImageUrl(url) || isImageKey));
+                                            } else if (typeof value === 'string') {
+                                                images = [value];
+                                            } else if (typeof value === 'object' && value && (value as any).url) {
+                                                images = [(value as any).url];
+                                            }
+
+                                            if (images.length > 0) {
+                                                return (
+                                                    <div key={key} className="bg-secondary/10 p-2 rounded-lg border border-border/50">
+                                                        <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">{key.replace(/_/g, ' ')}</p>
+                                                        <div className={cn("grid gap-2", images.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+                                                            {images.map((imgUrl, idx) => (
+                                                                <div key={idx} className="relative w-full aspect-video rounded overflow-hidden bg-background">
+                                                                    <Media src={imgUrl} alt={`${key} ${idx + 1}`} fill objectFit="contain" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
+                                                );
+                                            }
                                         }
 
                                         // Handle Channel/Platform IDs
