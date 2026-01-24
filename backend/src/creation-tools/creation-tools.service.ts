@@ -27,7 +27,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {
@@ -257,7 +257,8 @@ export class CreationToolsService {
     } as any);
 
     if (original.icon) await this.filesService.confirmFromUrl(original.icon);
-    if (original.coverImage) await this.filesService.confirmFromUrl(original.coverImage);
+    if (original.coverImage)
+      await this.filesService.confirmFromUrl(original.coverImage);
 
     return clonedTool;
   }

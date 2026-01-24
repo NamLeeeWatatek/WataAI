@@ -118,8 +118,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         if (error.response.status === 504) {
           this.logger.warn(
             'Gateway Timeout (504) detected. The external tool took too long to respond to the initial webhook. ' +
-            'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
-            'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
+              'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
+              'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
           );
         }
       } else if (error.code === 'ECONNABORTED') {
@@ -128,8 +128,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         this.logger.warn(
           'Request Timeout detected. The external tool took too long to respond. ' +
-          '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
-          '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
+            '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
+            '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
         );
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);

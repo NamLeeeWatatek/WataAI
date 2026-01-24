@@ -40,7 +40,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -361,7 +361,8 @@ export class BotsService {
             configUpdates.theme.showAvatar = showAvatar;
           if (showTimestamp !== undefined)
             configUpdates.theme.showTimestamp = showTimestamp;
-          if (botMessageColor) configUpdates.theme.botMessageColor = botMessageColor;
+          if (botMessageColor)
+            configUpdates.theme.botMessageColor = botMessageColor;
           if (botMessageTextColor)
             configUpdates.theme.botMessageTextColor = botMessageTextColor;
           if (userMessageColor)

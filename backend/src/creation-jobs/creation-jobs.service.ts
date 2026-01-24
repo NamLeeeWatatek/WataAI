@@ -41,7 +41,7 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) { }
+  ) {}
 
   async executePreview(
     toolId: string,
@@ -659,7 +659,13 @@ export class CreationJobsService {
     const result = await strategy.execute(
       action.execution.config as any,
       baseInputs,
-      { ...context, workspaceId, toolId: tool.id, jobId: job.id, actionId } as any,
+      {
+        ...context,
+        workspaceId,
+        toolId: tool.id,
+        jobId: job.id,
+        actionId,
+      } as any,
     );
 
     // 4. Audit Log

@@ -182,10 +182,7 @@ export class WebhooksController {
 
       return result;
     } catch (_) {
-      this.logger.error(
-        `Facebook webhook error: ${_.message}`,
-        _.stack,
-      );
+      this.logger.error(`Facebook webhook error: ${_.message}`, _.stack);
       return { success: false, error: _.message };
     }
   }
