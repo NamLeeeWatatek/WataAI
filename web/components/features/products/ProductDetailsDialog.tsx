@@ -148,7 +148,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                         if (key === 'knowledgeBaseId' || !value) return null;
 
                                         // Handle Image Inputs
-                                        if (key.toLowerCase().includes('image') || (typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url))) {
+                                        if (isImageUrl(String(value)) || key.toLowerCase().includes('image') || (typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url))) {
                                             const imgUrl = typeof value === 'string' ? value : (value as any).url;
                                             return (
                                                 <div key={key} className="bg-secondary/10 p-2 rounded-lg border border-border/50">

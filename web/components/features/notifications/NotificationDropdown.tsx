@@ -88,7 +88,6 @@ export function NotificationDropdown({
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-      toast.success('All notifications marked as read');
     } catch (error) {
       console.error('Failed to mark all as read:', error);
       toast.error('Failed to mark notifications as read');
