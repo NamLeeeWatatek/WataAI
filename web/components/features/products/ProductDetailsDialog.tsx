@@ -1,20 +1,17 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import { LoadingLogo } from '@/components/shared/LoadingLogo';
-
-
 import { cn } from '@/lib/utils';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/Badge';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, Copy, ExternalLink, Activity, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Media } from '@/components/shared/Media';
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
-
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
 import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 
 interface ProductDetailsDialogProps {
     job: CreationJob | null;
@@ -31,10 +28,6 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
             if (input.knowledgeBaseId && typeof input.knowledgeBaseId === 'string') {
                 getKnowledgeBase(input.knowledgeBaseId)
                     .then(res => {
-                        // Res might be the KB object directly or wrapped in data property depending on axios interceptor
-                        // Based on api file: return axiosClient.get(...)
-                        // Usually returns data directly if interceptor is set up, or { data: ... }
-                        // For safety, let's assume standard response structure or check properties
                         const name = (res as any).name || (res as any).data?.name;
                         if (name) setKbName(name);
                     })
@@ -62,7 +55,6 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         navigator.clipboard.writeText(text);
         toast.success("Copied to clipboard");
     };
-
 
     const renderOutput = () => {
         if (!job.outputData) {
@@ -128,6 +120,78 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         );
     }
 
+    const renderProcess = () => {
+        if (!job) return null;
+
+        const steps = (job.outputData as any)?.steps || [];
+        const toolSteps = (job.creationTool as any)?.executionFlow?.steps || [];
+
+        return (
+            <div className="space-y-6 pt-2">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-4 w-1 bg-blue-500 rounded-full" />
+                    <h4 className="text-sm font-bold uppercase tracking-tight">Execution Process</h4>
+                </div>
+
+                <div className="relative pl-6 border-l-2 border-muted space-y-8">
+                    <div className="relative">
+                        <div className="absolute -left-[29px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
+                        <div className="space-y-1">
+                            <h5 className="text-xs font-bold uppercase text-primary">Job Started</h5>
+                            <p className="text-[10px] text-muted-foreground">{format(new Date(job.createdAt), 'PPpp')}</p>
+                        </div>
+                    </div>
+
+                    {toolSteps.length > 0 ? toolSteps.map((step: any, idx: number) => {
+                        const outputStep = steps.find((s: any) => s.id === step.id);
+                        const isDone = !!outputStep;
+
+                        return (
+                            <div key={idx} className="relative">
+                                <div className={cn(
+                                    "absolute -left-[29px] top-1 w-4 h-4 rounded-full border-4 border-background transition-colors",
+                                    isDone ? "bg-green-500" : "bg-muted-foreground/30"
+                                )} />
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h5 className={cn("text-xs font-bold uppercase", isDone ? "text-foreground" : "text-muted-foreground")}>{step.title || `Step ${idx + 1}`}</h5>
+                                        {isDone && <Badge variant="secondary" className="text-[10px] h-4 bg-green-500/10 text-green-500">Completed</Badge>}
+                                    </div>
+                                    {outputStep && (
+                                        <div className="bg-muted/30 p-2 rounded text-[10px] font-mono border break-all max-h-20 overflow-hidden text-muted-foreground">
+                                            {JSON.stringify(outputStep.result || outputStep)}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    }) : (
+                        <div className="relative">
+                            <div className="absolute -left-[29px] top-1 w-4 h-4 rounded-full bg-green-500 border-4 border-background" />
+                            <div className="space-y-1">
+                                <h5 className="text-xs font-bold uppercase text-foreground">Processing</h5>
+                                <p className="text-[10px] text-muted-foreground">Single step execution</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="relative">
+                        <div className={cn(
+                            "absolute -left-[29px] top-0 w-4 h-4 rounded-full border-4 border-background",
+                            job.status === 'COMPLETED' ? "bg-primary" : "bg-muted-foreground/30"
+                        )} />
+                        <div className="space-y-1">
+                            <h5 className="text-xs font-bold uppercase">Completion</h5>
+                            <p className="text-[10px] text-muted-foreground">
+                                {job.status === 'COMPLETED' ? 'Finished successfully' : (job.status === 'FAILED' ? 'Failed' : 'Pending...')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     const getDisplayName = () => {
         if (!job) return '';
         const toolName = job.creationTool?.name || 'Product';
@@ -143,8 +207,8 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 border-0 shadow-2xl">
-                <DialogHeader className="p-6 pb-4 border-b bg-secondary/10">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0 gap-0 border-0 shadow-2xl flex flex-col bg-background">
+                <DialogHeader className="p-6 pb-4 border-b bg-secondary/10 shrink-0">
                     <div className="flex items-center justify-between gap-4">
                         <div className="space-y-1">
                             {job.creationTool?.name && (
@@ -161,26 +225,36 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                             {status.label}
                         </Badge>
                     </div>
-                    <div className="flex items-center gap-3 mt-4 text-[11px] text-muted-foreground/60 font-medium tracking-wide border-t pt-3">
-                        <span className="flex items-center gap-1.5 uppercase">
-                            <Clock className="w-3 h-3" />
-                            {format(new Date(job.createdAt), 'PPpp')}
-                        </span>
-                    </div>
                 </DialogHeader>
 
-                <div className="p-6 space-y-8">
-                    {/* Output Section First - User wants to see the product */}
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="h-4 w-1 bg-primary rounded-full" />
-                            <h4 className="text-sm font-bold uppercase tracking-tight">Generated Result</h4>
-                        </div>
-                        {renderOutput()}
+                <Tabs defaultValue="result" className="flex-1 flex flex-col overflow-hidden">
+                    <div className="px-6 pt-2 border-b bg-background/50 backdrop-blur-sm z-10">
+                        <TabsList className="bg-transparent p-0 h-auto gap-6">
+                            <TabsTrigger
+                                value="result"
+                                className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none transition-all uppercase text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground"
+                            >
+                                <FileText className="w-3.5 h-3.5 mr-2" /> Result
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="process"
+                                className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none transition-all uppercase text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground"
+                            >
+                                <Activity className="w-3.5 h-3.5 mr-2" /> Process & History
+                            </TabsTrigger>
+                        </TabsList>
                     </div>
 
+                    <div className="flex-1 overflow-y-auto p-6 bg-muted/5">
+                        <TabsContent value="result" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            {renderOutput()}
+                        </TabsContent>
 
-                </div>
+                        <TabsContent value="process" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            {renderProcess()}
+                        </TabsContent>
+                    </div>
+                </Tabs>
             </DialogContent>
         </Dialog>
     );

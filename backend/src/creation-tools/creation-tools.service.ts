@@ -27,7 +27,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {
@@ -226,5 +226,38 @@ export class CreationToolsService {
     }
 
     return tool;
+  }
+
+  async clone(id: CreationTool['id']): Promise<CreationTool> {
+    const original = await this.repository.findById(id);
+    if (!original) {
+      throw new NotFoundException(
+        this.i18n.t('common.notFound', {
+          args: { resource: 'Creation tool' },
+        }),
+      );
+    }
+
+    const newSlug = `${original.slug}-copy-${Date.now()}`;
+    const newName = `${original.name} (Copy)`;
+
+    const clonedTool = await this.repository.create({
+      ...original,
+      name: newName,
+      slug: newSlug,
+      isActive: false,
+      categories: original.categories
+        ? original.categories.map((c) => ({ id: c.id }))
+        : undefined,
+      createdAt: undefined,
+      updatedAt: undefined,
+      deletedAt: undefined,
+      id: undefined,
+    } as any);
+
+    if (original.icon) await this.filesService.confirmFromUrl(original.icon);
+    if (original.coverImage) await this.filesService.confirmFromUrl(original.coverImage);
+
+    return clonedTool;
   }
 }

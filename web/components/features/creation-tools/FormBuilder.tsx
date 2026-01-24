@@ -389,6 +389,78 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                         )}
                                                     </div>
 
+                                                    {['select', 'radio', 'checkbox', 'multi-select'].includes(currentField.type) && (
+                                                        <div className="pt-4 border-t space-y-4">
+                                                            <div className="flex items-center justify-between">
+                                                                <Label className="text-sm font-bold">Options</Label>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 text-xs hover:bg-primary/10 hover:text-primary"
+                                                                    onClick={() => {
+                                                                        const opts = Array.isArray(currentField.options) ? [...currentField.options] : []
+                                                                        opts.push({ label: 'New Option', value: 'new_option' })
+                                                                        updateField({ options: opts })
+                                                                    }}
+                                                                >
+                                                                    <Plus className="w-3 h-3 mr-1" /> Add
+                                                                </Button>
+                                                            </div>
+                                                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                                                                {(Array.isArray(currentField.options) ? currentField.options : []).map((opt: any, idx: number) => (
+                                                                    <div key={idx} className="flex gap-2 items-center group/opt">
+                                                                        <Input
+                                                                            value={opt.label}
+                                                                            className="h-7 text-xs bg-background"
+                                                                            placeholder="Label"
+                                                                            onChange={(e) => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                const val = e.target.value
+                                                                                // Auto-generate value from label if value was simple slug of old label
+                                                                                const oldSlug = opt.label.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+                                                                                const currentVal = opt.value
+                                                                                const newVal = val.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+                                                                                opts[idx] = {
+                                                                                    ...opts[idx],
+                                                                                    label: val,
+                                                                                    // Update value only if it looks like it was auto-generated
+                                                                                    value: currentVal === oldSlug ? newVal : currentVal
+                                                                                }
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        />
+                                                                        <Input
+                                                                            value={opt.value}
+                                                                            className="h-7 text-xs font-mono text-muted-foreground w-20 bg-muted/20"
+                                                                            placeholder="Value"
+                                                                            onChange={(e) => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                opts[idx] = { ...opts[idx], value: e.target.value }
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        />
+                                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover/opt:opacity-100 hover:text-destructive hover:bg-destructive/10"
+                                                                            onClick={() => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                opts.splice(idx, 1)
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 className="w-3 h-3" />
+                                                                        </Button>
+                                                                    </div>
+                                                                ))}
+                                                                {(!currentField.options || (currentField.options as any[]).length === 0) && (
+                                                                    <div className="text-center py-4 border border-dashed rounded bg-muted/20">
+                                                                        <p className="text-[10px] text-muted-foreground italic">No options defined.</p>
+                                                                        <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={() => updateField({ options: [{ label: 'Option 1', value: 'opt_1' }] })}>Add Default</Button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full text-destructive hover:bg-destructive/10 mt-4"
