@@ -137,6 +137,13 @@ export class FormFieldDto {
   @IsOptional()
   @IsObject()
   config?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: 'Flag to use this field in Post Generation Dialog',
+  })
+  @IsOptional()
+  @IsBoolean()
+  useForPostGen?: boolean;
 }
 
 // --- New Layout Structure ---
@@ -303,4 +310,42 @@ export class FormConfigDto {
   @IsOptional()
   @IsString()
   layout?: string; // Legacy support or global layout type hint
+}
+
+export class TriggerActionDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiPropertyOptional({
+    type: Object,
+    description: 'Specific fields for this action',
+  })
+  @IsOptional()
+  @IsObject()
+  formConfig?: {
+    fields: FormFieldDto[];
+  };
+
+  @ApiProperty({ type: StepExecutionConfigDto })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => StepExecutionConfigDto)
+  execution: StepExecutionConfigDto;
 }

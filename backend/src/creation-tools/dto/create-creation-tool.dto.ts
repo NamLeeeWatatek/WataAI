@@ -6,9 +6,10 @@ import {
   IsString,
   IsBoolean,
   IsNumber,
+  IsArray,
   ValidateNested,
 } from 'class-validator';
-import { FormConfigDto } from './form-config.dto';
+import { FormConfigDto, TriggerActionDto } from './form-config.dto';
 import {
   AiExecutionConfigDto,
   HttpExecutionConfigDto,
@@ -68,6 +69,13 @@ export class CreateCreationToolDto {
   @ValidateNested()
   @Type(() => FormConfigDto)
   formConfig: FormConfigDto;
+
+  @ApiPropertyOptional({ type: [TriggerActionDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TriggerActionDto)
+  actions?: TriggerActionDto[];
 
   @ApiPropertyOptional({
     type: Object,

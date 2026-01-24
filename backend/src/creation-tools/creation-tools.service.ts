@@ -117,6 +117,7 @@ export class CreationToolsService {
         ? createDto.categoryIds.map((id) => ({ id }))
         : undefined,
       formConfig: createDto.formConfig,
+      actions: createDto.actions,
       executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
       workspaceId: createDto.workspaceId,
