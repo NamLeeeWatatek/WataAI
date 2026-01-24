@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -109,6 +110,7 @@ Bạn phải hiểu và áp dụng chúng để tạo ra kết quả tốt nhấ
 
 @Injectable()
 export class CreationJobsService {
+  private readonly logger = new Logger(CreationJobsService.name);
   constructor(
     private readonly executionQueueService: ExecutionQueueService,
     private readonly creationJobsRepository: CreationJobsRepository,
@@ -532,6 +534,107 @@ export class CreationJobsService {
       });
     }
   }
+
+  /**
+   * Helper to extract a comprehensive summary of the product/job result
+   */
+  private extractProductSummary(job: CreationJob): string {
+    const parts: string[] = [];
+
+    // 1. Tool Information
+    if (job.creationTool?.name) {
+      parts.push(`Sản phẩm/Dịch vụ: ${job.creationTool.name}`);
+    }
+
+    // 2. User Inputs (filter out technical/internal IDs)
+    if (job.inputData) {
+      const inputs = job.inputData as Record<string, any>;
+      const relevantInputs = Object.entries(inputs)
+        .filter(([key]) => !key.startsWith('_') && key !== 'id')
+        .map(([key, val]) => {
+          if (typeof val === 'string' && val.length > 500) return `${key}: [Nội dung dài]`;
+          return `${key}: ${val}`;
+        });
+      if (relevantInputs.length > 0) {
+        parts.push(`\n[Thông tin đầu vào]:\n${relevantInputs.join('\n')}`);
+      }
+    }
+
+    // 3. Execution Results (Output Data)
+    if (job.outputData) {
+      const output = job.outputData as Record<string, any>;
+      // Look for main content fields
+      const contentFields = ['content', 'text', 'result', 'description', 'caption', 'article'];
+      const foundContent = contentFields
+        .map(f => output[f])
+        .find(val => typeof val === 'string' && val.trim().length > 0);
+
+      if (foundContent) {
+        parts.push(`\n[Kết quả tạo ra]:\n${foundContent}`);
+      } else {
+        // Fallback: take all string fields that aren't URLs
+        const otherStrings = Object.entries(output)
+          .filter(([_, val]) => typeof val === 'string' && val.length > 10 && !val.startsWith('http'))
+          .map(([key, val]) => `${key}: ${val}`);
+        if (otherStrings.length > 0) {
+          parts.push(`\n[Dữ liệu kết quả bổ sung]:\n${otherStrings.join('\n')}`);
+        }
+      }
+    }
+
+    return parts.join('\n');
+  }
+
+  /**
+   * Generates a professional social media post draft without posting it
+   */
+  async generatePostDraft(
+    jobId: string,
+    workspaceId: string,
+    botId?: string,
+    writingStyle?: string,
+    customUserInstructions?: string,
+  ): Promise<{ draft: string }> {
+    const job = await this.creationJobsRepository.findById(jobId, workspaceId);
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${jobId} not found`);
+    }
+
+    const productSummary = this.extractProductSummary(job);
+
+    // If no bot, just return a basic summary or previous message
+    if (!botId) {
+      return { draft: customUserInstructions || productSummary };
+    }
+
+    const prompt = `<prompt yêu cầu>: ${customUserInstructions || 'Viết một bài đăng Social Media chuyên nghiệp cho sản phẩm này.'}
+
+<Phong cách viết>: ${writingStyle || 'Chuyên gia'}
+
+<kiến thức đã học (Dữ liệu sản phẩm từ hệ thống)>:
+${productSummary}
+
+-------------------
+Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt nhất.`;
+
+    try {
+      const botResult = await this.botExecutionService.generateBotResponse(
+        botId,
+        prompt,
+        [],
+        {
+          workspaceId,
+          systemPromptOverride: SOCIAL_MEDIA_EXPERT_PROMPT,
+        },
+      );
+
+      return { draft: botResult.answer };
+    } catch (error) {
+      this.logger.error(`Social Draft generation failed: ${error.message}`);
+      throw new BadRequestException(`Không thể tạo bản nháp: ${error.message}`);
+    }
+  }
+
   async postToChannels(
     jobId: string,
     channels: string[],
@@ -614,27 +717,21 @@ export class CreationJobsService {
       }
     }
 
-    // NEW: Use Bot to refine/rewrite the message if requested
-    if (botId && message) {
-      // Use the expert prompt structure
-      const prompt = `"${message}" ; "${writingStyle || 'Professional'}" ; "See Knowledge Base Context Below"`;
-
+    // NEW: Use Bot to refine/rewrite the message IF requested AND not already refined
+    // Note: If the user already used 'generate-post-draft' in the UI, message will be rich.
+    // If they click 'Post' directly, we refine it here.
+    if (botId && message && (message.length < 50 || !message.includes('\n'))) {
       try {
-        const botResult = await this.botExecutionService.generateBotResponse(
+        const { draft } = await this.generatePostDraft(
+          jobId,
+          workspaceId,
           botId,
-          prompt,
-          [],
-          {
-            workspaceId,
-            systemPromptOverride: SOCIAL_MEDIA_EXPERT_PROMPT,
-          },
+          writingStyle,
+          message,
         );
-        if (botResult && botResult.answer) {
-          message = botResult.answer;
-        }
+        message = draft;
       } catch (botError) {
-        // Fallback to original message if bot fails
-        console.error('Bot refinement failed:', botError);
+        console.error('Bot refinement during posting failed:', botError);
       }
     }
 

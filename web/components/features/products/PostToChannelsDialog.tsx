@@ -81,8 +81,33 @@ export function PostToChannelsDialog({
         fetchToolConfig();
     }, [jobId]);
 
-    // Generation logic is now handled in the backend during posting
-    // We'll keep the placeholders but won't call the bot hook here
+    // Generation logic: call the backend draft endpoint
+    const handleGenerateDraft = async () => {
+        if (!jobId || !selectedBotId) {
+            toast.error("Please select a Bot and a Writing Style first");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            // Send current message as 'instructions' to the bot
+            const response = await axiosClient.post(`/creation-jobs/${jobId}/post-draft`, {
+                message: message, // Current user input as refinement instructions
+                botId: selectedBotId,
+                writingStyle: selectedStyle
+            }) as any;
+
+            if (response && response.draft) {
+                setMessage(response.draft);
+                toast.success("AI has crafted a professional post for you!");
+            }
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Failed to generate AI draft");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     const handlePost = async () => {
         if (!jobId) return;
@@ -181,10 +206,20 @@ export function PostToChannelsDialog({
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Caption / Message</Label>
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-                                <Sparkles className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-bold text-primary uppercase">Bot handles styling</span>
-                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10 transition-all"
+                                onClick={handleGenerateDraft}
+                                disabled={isGenerating || !selectedBotId}
+                            >
+                                {isGenerating ? (
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                )}
+                                {selectedBotId ? 'Refine with Bot' : 'Select Bot to Refine'}
+                            </Button>
                         </div>
                         <Textarea
                             placeholder="Write a caption for your post..."
