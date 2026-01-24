@@ -32,6 +32,8 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Permissions } from '../permissions/decorators/permissions.decorator';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
+import { PostToChannelsDto } from './dto/post-to-channels.dto';
+import { TriggerActionBodyDto } from './dto/trigger-action-body.dto';
 
 @ApiTags('Creation Jobs')
 @ApiBearerAuth()
@@ -167,7 +169,7 @@ export class CreationJobsController {
   post(
     @Param('id') id: string,
     @Body()
-    body: { channels: string[]; scheduledTime?: string; message?: string },
+    body: PostToChannelsDto,
     @CurrentWorkspace() workspaceId: string,
   ) {
     return this.service.postToChannels(
@@ -187,11 +189,11 @@ export class CreationJobsController {
   triggerAction(
     @Param('id') id: string,
     @Param('actionId') actionId: string,
-    @Body() inputs: Record<string, any>,
+    @Body() body: TriggerActionBodyDto,
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.service.triggerAction(id, actionId, workspaceId, inputs, {
+    return this.service.triggerAction(id, actionId, workspaceId, body.inputs, {
       userId: req.user.id,
     });
   }

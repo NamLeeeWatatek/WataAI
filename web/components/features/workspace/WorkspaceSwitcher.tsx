@@ -23,6 +23,7 @@ interface Workspace {
 
 export function WorkspaceSwitcher() {
   const dispatch = useAppDispatch()
+  const { data: session, status, update } = useSession()
   const { currentWorkspace, workspaces, isLoading } = useAppSelector(state => state.workspace)
 
   const [mounted, setMounted] = useState(false)
@@ -37,12 +38,29 @@ export function WorkspaceSwitcher() {
     }
   }, [currentWorkspace?.id])
 
-  const handleWorkspaceChange = (workspaceId: string) => {
+  const handleWorkspaceChange = async (workspaceId: string) => {
+    const selectedWorkspace = workspaces.find(w => w.id === workspaceId)
+    if (!selectedWorkspace) return
+
     dispatch(switchWorkspace(workspaceId))
+
+    // Sync with NextAuth session so it persists across refreshes
+    if (status === 'authenticated') {
+      try {
+        await update({
+          workspace: {
+            id: selectedWorkspace.id,
+            name: selectedWorkspace.name,
+            slug: selectedWorkspace.slug
+          }
+        })
+      } catch (err) {
+        console.error('Failed to update session workspace:', err)
+      }
+    }
+
     import('@/lib/axios-client').then(({ setActiveWorkspaceId }) => {
       setActiveWorkspaceId(workspaceId)
-      // Optional: Force reload to clear other states if needed
-      // window.location.reload()
     })
   }
 

@@ -19,10 +19,15 @@ let cachedToken: string | null = null;
 // Keep track of the last valid workspace ID to prevent race conditions during refresh
 let lastValidWorkspaceId: string | null = null;
 
+export const getActiveWorkspaceId = () => activeWorkspaceId || lastValidWorkspaceId;
+
 export const setActiveWorkspaceId = (id: string | null) => {
   activeWorkspaceId = id;
   if (id) {
     lastValidWorkspaceId = id;
+    axiosClient.defaults.headers.common['x-workspace-id'] = id;
+  } else {
+    delete axiosClient.defaults.headers.common['x-workspace-id'];
   }
 };
 

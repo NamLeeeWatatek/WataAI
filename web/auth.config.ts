@@ -183,14 +183,22 @@ export const authConfig = {
                 }
             }
 
-            // Handle Session Update
-            if (trigger === "update" && session?.user) {
-                return {
-                    ...token,
-                    name: session.user.name,
-                    avatarUrl: session.user.avatarUrl,
-                    image: session.user.avatarUrl, // ensure image property is also updated
+            // Handle Session Update (Profile or Workspace switch)
+            if (trigger === "update" && session) {
+                const refreshedToken = { ...token };
+
+                if (session.user?.name) refreshedToken.name = session.user.name;
+                if (session.user?.avatarUrl) {
+                    refreshedToken.avatarUrl = session.user.avatarUrl;
+                    refreshedToken.image = session.user.avatarUrl;
                 }
+
+                // Support switching workspace context in session
+                if (session.workspace) {
+                    refreshedToken.workspace = session.workspace;
+                }
+
+                return refreshedToken;
             }
 
             // 1. If there's already a refresh error, stop trying to refresh
