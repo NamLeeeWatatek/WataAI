@@ -54,6 +54,9 @@ export interface FormField {
     customMessage?: string;
   };
 
+  // NEW: Flag to use this field in Post Generation Dialog
+  useForPostGen?: boolean;
+
   // Conditional rendering
   showIf?: {
     field: string;

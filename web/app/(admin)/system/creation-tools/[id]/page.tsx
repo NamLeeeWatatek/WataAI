@@ -45,6 +45,7 @@ const toolFormSchema = z.object({
     categoryIds: z.array(z.string()).default([]),
     isActive: z.boolean().default(true),
     formConfig: z.any().default({ fields: [], steps: [] }),
+    actions: z.array(z.any()).default([]),
     knowledgeBaseId: z.string().default(''),
     executionFlow: z.any().default({ steps: [] }),
 });
@@ -89,6 +90,7 @@ export default function EditCreationToolPage() {
             categoryIds: [],
             isActive: true,
             formConfig: { fields: [], steps: [] },
+            actions: [],
             executionFlow: { steps: [] },
             knowledgeBaseId: '',
         },
@@ -129,6 +131,7 @@ export default function EditCreationToolPage() {
                 categoryIds: tool.categories?.map((c: { id: string }) => c.id) || [],
                 isActive: !!tool.isActive,
                 formConfig: tool.formConfig || { fields: [], steps: [] },
+                actions: tool.actions || [],
                 executionFlow: tool.executionFlow || { steps: [] },
                 knowledgeBaseId: tool.knowledgeBaseId || '',
             });
