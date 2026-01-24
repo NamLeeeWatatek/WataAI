@@ -228,4 +228,8 @@ export const creationToolsApi = {
             jobId
         });
     },
+
+    clone: async (id: string): Promise<CreationTool> => {
+        return await axiosClient.post(`/creation-tools/${id}/clone`);
+    },
 };
