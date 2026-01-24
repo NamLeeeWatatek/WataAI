@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -438,7 +438,8 @@ export class KBRagService {
 
       if (knowledgeBaseIds.length > 0) {
         try {
-          const effectiveWorkspaceId = workspaceId || bot.workspaceId || 'default';
+          const effectiveWorkspaceId =
+            workspaceId || bot.workspaceId || 'default';
           relevantChunks = await this.gatherRAGContext(
             question,
             effectiveWorkspaceId,
@@ -478,12 +479,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiConfigId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiConfigId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -544,17 +545,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiConfigId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiConfigId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {
@@ -626,11 +627,11 @@ export class KBRagService {
       } else {
         // Fallback to system default/general chat
         this.logger.warn(
-          `⚠️ [RAG] No specific provider resolved for Bot ${botId}, falling back to system default.`
+          `⚠️ [RAG] No specific provider resolved for Bot ${botId}, falling back to system default.`,
         );
         answer = await this.aiProvidersService.chatWithHistory(
           messages,
-          finalModel
+          finalModel,
         );
       }
 

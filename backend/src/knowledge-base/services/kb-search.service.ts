@@ -18,7 +18,7 @@ export class KBSearchService {
   constructor(
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly vectorService: KBVectorService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -119,7 +119,10 @@ export class KBSearchService {
       );
 
       // 3. Merging with Weighted Reciprocal Rank Fusion (RRF)
-      const rrfResults = new Map<string, { chunk: any; score: number; vectorScore: number }>();
+      const rrfResults = new Map<
+        string,
+        { chunk: any; score: number; vectorScore: number }
+      >();
       const k = 60; // Smoothing constant
       const vectorWeight = 0.8; // Weight for semantic search (more important)
       const keywordWeight = 0.2; // Weight for keyword matches (precision)
@@ -135,7 +138,7 @@ export class KBSearchService {
             chunkIndex: result.payload.chunkIndex,
           },
           score: semanticScore * vectorWeight,
-          vectorScore: result.score
+          vectorScore: result.score,
         });
       });
 
@@ -146,7 +149,7 @@ export class KBSearchService {
         if (existing) {
           existing.score += kwScore * keywordWeight;
         } else {
-          // Only include keyword-only results if they are high rank 
+          // Only include keyword-only results if they are high rank
           // or if similarityThreshold is very low
           rrfResults.set(result.id, {
             chunk: {
@@ -156,14 +159,15 @@ export class KBSearchService {
               chunkIndex: result.payload.chunkIndex,
             },
             score: kwScore * keywordWeight,
-            vectorScore: 0
+            vectorScore: 0,
           });
         }
       });
 
       // Sort
-      const sortedIntermediate = Array.from(rrfResults.values())
-        .sort((a, b) => b.score - a.score);
+      const sortedIntermediate = Array.from(rrfResults.values()).sort(
+        (a, b) => b.score - a.score,
+      );
 
       // Normalize scores back to 0-1 range for similarityThreshold compatibility
       // Max possible RRF score with weights is (1/k * vectorWeight) + (1/k * keywordWeight) = 1/k
@@ -227,7 +231,11 @@ export class KBSearchService {
     source: ChunkSource,
     windowSize: number = 1,
   ): Promise<ChunkSource[]> {
-    if (!source.documentId || source.chunkIndex === undefined || !source.dimension) {
+    if (
+      !source.documentId ||
+      source.chunkIndex === undefined ||
+      !source.dimension
+    ) {
       return [source];
     }
 
@@ -258,6 +266,8 @@ export class KBSearchService {
     }));
 
     // Combine and sort by index
-    return [source, ...adjacentChunks].sort((a, b) => a.chunkIndex - b.chunkIndex);
+    return [source, ...adjacentChunks].sort(
+      (a, b) => a.chunkIndex - b.chunkIndex,
+    );
   }
 }

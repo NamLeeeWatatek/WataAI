@@ -57,7 +57,7 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateConversationDto & {
@@ -340,7 +340,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (_) { }
+        } catch (_) {}
 
         return {
           ...item,

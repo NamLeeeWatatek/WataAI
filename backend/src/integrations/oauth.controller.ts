@@ -24,7 +24,7 @@ export class OAuthController {
     private readonly oauthService: OAuthService,
     private readonly channelsService: ChannelsService,
     private readonly integrationsService: IntegrationsService,
-  ) { }
+  ) {}
 
   @Get('login/:provider')
   @ApiBearerAuth()

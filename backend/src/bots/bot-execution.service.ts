@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -134,7 +134,10 @@ export class BotExecutionService {
           modelName,
           bot.aiConfigId,
           'workspace',
-          bot.workspaceId || contextOverride?.workspaceId || bot.createdBy || 'system',
+          bot.workspaceId ||
+            contextOverride?.workspaceId ||
+            bot.createdBy ||
+            'system',
         );
       } else {
         // Fallback to generic chat
@@ -144,7 +147,9 @@ export class BotExecutionService {
         );
       }
     } catch (error) {
-      this.logger.error(`AI Provider call failed for Bot ${botId}: ${error.message}`);
+      this.logger.error(
+        `AI Provider call failed for Bot ${botId}: ${error.message}`,
+      );
       // Final fallback to generic chat if specific provider fails
       answer = await this.aiProvidersService.chatWithHistory(
         messages,

@@ -50,7 +50,7 @@ export class CreationToolsController {
     private readonly service: CreationToolsService,
     private readonly executionResolver: ExecutionStrategyResolver,
     private readonly creationJobsService: CreationJobsService,
-  ) { }
+  ) {}
 
   @ApiCreatedResponse({ type: CreationTool })
   @ApiOperation({ summary: 'Create new creation tool' })
