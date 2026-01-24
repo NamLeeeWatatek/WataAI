@@ -183,6 +183,30 @@ export class CreationJobsController {
     );
   }
 
+  @Post(':id/post-draft')
+  @Permissions('job:Update')
+  @ApiOkResponse({
+    description: 'Generate a social post draft using AI',
+  })
+  generatePostDraft(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      message?: string;
+      botId?: string;
+      writingStyle?: string;
+    },
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.generatePostDraft(
+      id,
+      workspaceId,
+      body.botId,
+      body.writingStyle,
+      body.message,
+    );
+  }
+
   @Post(':id/actions/:actionId')
   @Permissions('job:Update')
   @ApiOkResponse({
