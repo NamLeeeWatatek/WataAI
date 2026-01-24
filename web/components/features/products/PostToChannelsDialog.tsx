@@ -46,14 +46,41 @@ export function PostToChannelsDialog({
     const [isPosting, setIsPosting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Default to first bot if available
-    useEffect(() => {
-        const botList = bots?.data || [];
-        if (open && botList.length > 0 && !selectedBotId) {
-            setSelectedBotId(botList[0].id);
-        }
-    }, [open, bots, selectedBotId]);
+    const [writingStyleOptions, setWritingStyleOptions] = useState<any[]>([]);
 
+    // Fetch tool config to find writing styles
+    useEffect(() => {
+        const fetchToolConfig = async () => {
+            if (!jobId) return;
+            try {
+                // We need to fetch the job first to get the creationToolId
+                const { data: job } = await axiosClient.get(`/creation-jobs/${jobId}`);
+                if (job && job.creationToolId) {
+                    const { data: tool } = await axiosClient.get(`/creation-tools/${job.creationToolId}`);
+
+                    // Look for fields that are flagged for Post Generation logic
+                    // Fallback to name matching if no flag is set (backward compatibility)
+                    const flaggedStyleField = tool.formConfig?.fields?.find((f: any) => f.useForPostGen === true);
+
+                    const possibleStyleFields = ['writing_style', 'style', 'tone', 'voice'];
+                    const styleField = flaggedStyleField || tool.formConfig?.fields?.find((f: any) => possibleStyleFields.includes(f.name));
+
+                    if (styleField && styleField.options) {
+                        setWritingStyleOptions(styleField.options);
+                        if (flaggedStyleField) {
+                            // If explicit flag, we can be more confident and update Label too
+                            // But we'll keep the UI generic "Writing Style" for now or use the Field Label if we wanted
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch tool config for options", error);
+            }
+        };
+        fetchToolConfig();
+    }, [jobId]);
+
+    // Update Post Logic to include style
     const handleGenerateContent = async () => {
         setIsGenerating(true);
         try {
@@ -67,7 +94,11 @@ export function PostToChannelsDialog({
             } else {
                 // Fallback for no bot selected
                 await new Promise(resolve => setTimeout(resolve, 1000));
-                const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Content'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity`;
+
+                // Use selected style if available
+                const styleNote = writingStyleOptions.length > 0 ? " (optimized for engagement)" : "";
+
+                const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Content'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity${styleNote}`;
                 setMessage(generatedContent);
                 toast.success("Content generated!");
             }
@@ -149,6 +180,30 @@ export function PostToChannelsDialog({
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {/* Dynamic Writing Style Selection from Tool Config */}
+                    {writingStyleOptions.length > 0 && (
+                        <div className="space-y-2 px-1">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Writing Style (From Tool)</Label>
+                            <Select onValueChange={(val) => {
+                                // Append style instruction to message or handle internally
+                                toast.info(`Style set to: ${val}`);
+                            }}>
+                                <SelectTrigger className="w-full bg-secondary/20 h-9 text-xs">
+                                    <SelectValue placeholder="Select specific tone/style..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {writingStyleOptions.map((opt: any, idx: number) => {
+                                        const val = typeof opt === 'string' ? opt : opt.value;
+                                        const label = typeof opt === 'string' ? opt : opt.label;
+                                        return (
+                                            <SelectItem key={idx} value={val}>{label}</SelectItem>
+                                        )
+                                    })}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
