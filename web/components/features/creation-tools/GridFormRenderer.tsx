@@ -66,6 +66,47 @@ export function GridFormRenderer({
         return () => clearInterval(timer)
     }, [isExecutingStep])
 
+    // --- POLL FOR JOB UPDATES ---
+    useEffect(() => {
+        let pollingTimer: NodeJS.Timeout;
+
+        if (currentJobId && !isExecutingStep) {
+            // Poll every 3s
+            pollingTimer = setInterval(async () => {
+                try {
+                    const job = await creationJobsApi.findOne(currentJobId);
+
+                    // If polling finds a COMPLETED job, update the preview data
+                    if (job && job.status === 'COMPLETED' && job.outputData) {
+                        const output = job.outputData as any;
+
+                        // Update previewResults for the preview component
+                        setPreviewResults(output);
+
+                        // Also try to update stepResults - heuristic to find which step this output belongs to
+                        // If output has 'steps', map them back
+                        if (output.steps && Array.isArray(output.steps)) {
+                            setStepResults(prev => {
+                                const next = { ...prev };
+                                output.steps.forEach((s: any) => {
+                                    if (s.id && s.result) next[s.id] = s.result;
+                                });
+                                return next;
+                            });
+                        } else {
+                            // Fallback: If we can't map to a step, treat it as a generic preview result
+                            // This ensures it shows up in FieldResultPreview via 'allValues.preview'
+                        }
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 3000);
+        }
+
+        return () => clearInterval(pollingTimer);
+    }, [currentJobId, isExecutingStep]);
+
     const renderResultPreview = (data: any) => {
         if (!data) return null;
 
@@ -263,11 +304,21 @@ export function GridFormRenderer({
                     setCurrentJobId(result.jobId);
                 }
 
-                // Store result
-                setStepResults(prev => ({
-                    ...prev,
-                    [currentStepConfig.id]: result.result
-                }));
+                // Store result (Immediate Sync Result)
+                if (result.result) {
+                    setStepResults(prev => ({
+                        ...prev,
+                        [currentStepConfig.id]: result.result
+                    }));
+                    // Also set as generic preview if this was the last step action
+                    setPreviewResults(result.result);
+                } else if (result.jobId) {
+                    // Async Result - we have a job ID but no immediate result. 
+                    // The Polling Effect will pick this up.
+                    // We can optimistically set a "Processing" state in results if needed, 
+                    // but FieldResultPreview handles nulls.
+                    console.log('Async job started, waiting for polling...');
+                }
 
                 toast.success(`Step executed successfully!`);
 
