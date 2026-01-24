@@ -66,18 +66,88 @@ export function useFormBuilderDragDrop(
         const activeData = active.data.current;
         const overData = over.data.current;
 
-        // Auto-switch Steps when dragging over them -> DISABLED by USER REQUEST
-        // if (overData?.type === 'STEP') {
-        //     const targetIndex = overData.index;
-        //     if (activeStepIndex !== targetIndex) {
-        //         const now = Date.now();
-        //         if (now - lastStepSwitchRef.current > 600) {
-        //             setActiveStepIndex(targetIndex);
-        //             lastStepSwitchRef.current = now;
-        //         }
-        //     }
-        // }
-    }, [activeStepIndex, setActiveStepIndex]);
+        // --- Handle Field Moving Between Containers (Zones/Rows) for Smooth Sorting ---
+        if (activeData?.type === 'FIELD') {
+            const isOverField = overData?.type === 'FIELD';
+            const isOverZone = overData?.type === 'ZONE';
+
+            // Only allow dragging over fields or zones (stay within current step layout context)
+            if (!isOverField && !isOverZone) return;
+
+            const newSteps = JSON.parse(JSON.stringify(steps)) as FormStep[];
+            const currentStepLayout = newSteps[activeStepIndex]?.layout;
+            if (!currentStepLayout) return;
+
+            // 1. Find Source
+            let sourceVal: { fr: any; idx: number; zId: string } | null = null;
+
+            for (const row of currentStepLayout.rows) {
+                for (const zone of row.zones) {
+                    for (const fr of zone.fieldRows) {
+                        const idx = fr.fields.indexOf(activeId);
+                        if (idx !== -1) {
+                            sourceVal = { fr, idx, zId: zone.id };
+                            break;
+                        }
+                    }
+                    if (sourceVal) break;
+                }
+                if (sourceVal) break;
+            }
+
+            if (!sourceVal) return;
+
+            // 2. Find Target
+            let targetVal: { fr: any; idx: number | null; zId: string } | null = null;
+
+            if (isOverField) {
+                for (const row of currentStepLayout.rows) {
+                    for (const zone of row.zones) {
+                        for (const fr of zone.fieldRows) {
+                            const idx = fr.fields.indexOf(overId);
+                            if (idx !== -1) {
+                                targetVal = { fr, idx, zId: zone.id };
+                                break;
+                            }
+                        }
+                        if (targetVal) break;
+                    }
+                    if (targetVal) break;
+                }
+            } else if (isOverZone) {
+                for (const row of currentStepLayout.rows) {
+                    const zone = row.zones.find(z => z.id === overId);
+                    if (zone) {
+                        if (zone.fieldRows.length > 0) {
+                            // Target last row
+                            targetVal = { fr: zone.fieldRows[zone.fieldRows.length - 1], idx: null, zId: zone.id };
+                        } else {
+                            // Should theoretically create a row if none, but zones usually initialized with one.
+                            // If strictly empty, we can't push to a fieldRow. 
+                            // Assuming data integrity ensures at least 1 empty fieldRow for drop targets.
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (!targetVal) return;
+
+            // 3. Move if container changed
+            if (sourceVal.fr.id !== targetVal.fr.id) {
+                sourceVal.fr.fields.splice(sourceVal.idx, 1);
+
+                if (targetVal.idx !== null) {
+                    targetVal.fr.fields.splice(targetVal.idx, 0, activeId);
+                } else {
+                    targetVal.fr.fields.push(activeId);
+                }
+
+                // Immediate update for smooth transition
+                onChange({ ...config, steps: newSteps });
+            }
+        }
+    }, [activeStepIndex, steps, onChange, config]);
 
     const handleMoveFieldToStep = useCallback((fieldName: string, targetStepIndex: number) => {
         if (targetStepIndex === activeStepIndex) return;
@@ -163,7 +233,8 @@ export function useFormBuilderDragDrop(
             let targetZoneId: string | undefined = undefined;
 
             if (overData?.type === 'STEP') {
-                targetStepIndex = overData.index;
+                // DROPPING INTO STEPS DISABLED - Force current step
+                targetStepIndex = activeStepIndex;
             } else if (overData?.type === 'FIELD') {
                 targetZoneId = overData.zoneId;
             } else if (overData?.type === 'ZONE') {
@@ -326,34 +397,11 @@ export function useFormBuilderDragDrop(
 
             if (movedFieldName) {
                 // 2. Insert into destination
+                // DROPPING INTO STEPS IS DISABLED BY USER REQUEST
                 if (overData?.type === 'STEP') {
-                    const targetStepIdx = overData.index;
-                    const targetStep = newSteps[targetStepIdx];
-
-                    if (!targetStep.layout) targetStep.layout = { rows: [] };
-                    if (!targetStep.layout.rows) targetStep.layout.rows = [];
-
-                    if (targetStep.layout.rows.length === 0) {
-                        targetStep.layout.rows.push({
-                            id: generateId(),
-                            zones: [{
-                                id: generateId(),
-                                title: 'Main Content',
-                                fieldRows: [{ id: generateId(), fields: [] }]
-                            }]
-                        });
-                    }
-
-                    const targetZone = targetStep.layout.rows[0].zones[0];
-                    if (targetZone.fieldRows.length === 0) targetZone.fieldRows.push({ id: generateId(), fields: [] });
-
-                    targetZone.fieldRows[targetZone.fieldRows.length - 1].fields.push(movedFieldName);
-
-                    changed = true;
-                    if (targetStepIdx !== activeStepIndex) {
-                        setActiveStepIndex(targetStepIdx);
-                        toast.success(`Moved to ${targetStep.title}`);
-                    }
+                    // Do nothing - revert move if needed, effectively cancelling drag to step
+                    console.log('Drag to step disabled');
+                    return;
                 } else {
                     // Reorder within currently visible step
                     const currentStepLayoutRows = newSteps[activeStepIndex].layout.rows;
