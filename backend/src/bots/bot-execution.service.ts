@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -59,7 +59,11 @@ export class BotExecutionService {
     botId: string,
     message: string,
     history: Array<{ role: 'user' | 'assistant'; content: string }> = [],
-    contextOverride?: { conversationId?: string; workspaceId?: string },
+    contextOverride?: {
+      conversationId?: string;
+      workspaceId?: string;
+      systemPromptOverride?: string;
+    },
   ): Promise<ChatResult> {
     const bot = await this.botRepository.findOne({
       where: { id: botId },
@@ -103,7 +107,10 @@ export class BotExecutionService {
     }
 
     // 2. Build System Prompt
-    let systemPrompt = bot.systemPrompt || 'You are a helpful assistant.';
+    let systemPrompt =
+      contextOverride?.systemPromptOverride ||
+      bot.systemPrompt ||
+      'You are a helpful assistant.';
 
     // Add Multilingual instruction
     systemPrompt +=
@@ -135,9 +142,9 @@ export class BotExecutionService {
           bot.aiConfigId,
           'workspace',
           bot.workspaceId ||
-            contextOverride?.workspaceId ||
-            bot.createdBy ||
-            'system',
+          contextOverride?.workspaceId ||
+          bot.createdBy ||
+          'system',
         );
       } else {
         // Fallback to generic chat

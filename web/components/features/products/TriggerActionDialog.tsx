@@ -87,7 +87,7 @@ export function TriggerActionDialog({
             });
 
             toast.success(`${action.name} executed successfully!`);
-            onSuccess?.(response.data);
+            onSuccess?.(response);
             onOpenChange(false);
         } catch (error: any) {
             console.error(error);

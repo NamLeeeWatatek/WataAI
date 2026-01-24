@@ -47,6 +47,8 @@ export function PostToChannelsDialog({
     const [isGenerating, setIsGenerating] = useState(false);
 
     const [writingStyleOptions, setWritingStyleOptions] = useState<any[]>([]);
+    const [styleLabel, setStyleLabel] = useState('Writing Style');
+    const [selectedStyle, setSelectedStyle] = useState<string>('');
 
     // Fetch tool config to find writing styles
     useEffect(() => {
@@ -54,9 +56,9 @@ export function PostToChannelsDialog({
             if (!jobId) return;
             try {
                 // We need to fetch the job first to get the creationToolId
-                const { data: job } = await axiosClient.get(`/creation-jobs/${jobId}`);
+                const job = await axiosClient.get(`/creation-jobs/${jobId}`) as any;
                 if (job && job.creationToolId) {
-                    const { data: tool } = await axiosClient.get(`/creation-tools/${job.creationToolId}`);
+                    const tool = await axiosClient.get(`/creation-tools/${job.creationToolId}`) as any;
 
                     // Look for fields that are flagged for Post Generation logic
                     // Fallback to name matching if no flag is set (backward compatibility)
@@ -67,9 +69,8 @@ export function PostToChannelsDialog({
 
                     if (styleField && styleField.options) {
                         setWritingStyleOptions(styleField.options);
-                        if (flaggedStyleField) {
-                            // If explicit flag, we can be more confident and update Label too
-                            // But we'll keep the UI generic "Writing Style" for now or use the Field Label if we wanted
+                        if (styleField.label) {
+                            setStyleLabel(styleField.label);
                         }
                     }
                 }
@@ -80,35 +81,8 @@ export function PostToChannelsDialog({
         fetchToolConfig();
     }, [jobId]);
 
-    // Update Post Logic to include style
-    const handleGenerateContent = async () => {
-        setIsGenerating(true);
-        try {
-            if (selectedBotId) {
-                // Zero-Hardcoding: Send only raw content. Bot's systemPrompt handles the logic.
-                const prompt = productName || message || '';
-
-                const result = await botsApi.chat(selectedBotId, prompt);
-                setMessage(result.response);
-                toast.success("Content generated using Bot's knowledge!");
-            } else {
-                // Fallback for no bot selected
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                // Use selected style if available
-                const styleNote = writingStyleOptions.length > 0 ? " (optimized for engagement)" : "";
-
-                const generatedContent = `🚀 Check out my new creation: ${productName || 'Amazing AI Content'}!\n\nCreate yours today with WataAI. #AI #GenerativeAI #Creativity${styleNote}`;
-                setMessage(generatedContent);
-                toast.success("Content generated!");
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to generate content with the selected bot");
-        } finally {
-            setIsGenerating(false);
-        }
-    };
+    // Generation logic is now handled in the backend during posting
+    // We'll keep the placeholders but won't call the bot hook here
 
     const handlePost = async () => {
         if (!jobId) return;
@@ -122,6 +96,8 @@ export function PostToChannelsDialog({
             await axiosClient.post(`/creation-jobs/${jobId}/post`, {
                 channels: selectedChannels,
                 message,
+                botId: selectedBotId,
+                writingStyle: selectedStyle,
                 // We'll support scheduling in the future, for now it's immediate
             });
 
@@ -184,13 +160,10 @@ export function PostToChannelsDialog({
                     {/* Dynamic Writing Style Selection from Tool Config */}
                     {writingStyleOptions.length > 0 && (
                         <div className="space-y-2 px-1">
-                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Writing Style (From Tool)</Label>
-                            <Select onValueChange={(val) => {
-                                // Append style instruction to message or handle internally
-                                toast.info(`Style set to: ${val}`);
-                            }}>
+                            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{styleLabel}</Label>
+                            <Select value={selectedStyle} onValueChange={setSelectedStyle}>
                                 <SelectTrigger className="w-full bg-secondary/20 h-9 text-xs">
-                                    <SelectValue placeholder="Select specific tone/style..." />
+                                    <SelectValue placeholder={`Select ${styleLabel.toLowerCase()}...`} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {writingStyleOptions.map((opt: any, idx: number) => {
@@ -208,20 +181,10 @@ export function PostToChannelsDialog({
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Caption / Message</Label>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 text-xs text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10"
-                                onClick={handleGenerateContent}
-                                disabled={isGenerating}
-                            >
-                                {isGenerating ? (
-                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                ) : (
-                                    <Sparkles className="w-3 h-3 mr-1" />
-                                )}
-                                {selectedBotId ? 'Rewrite with Bot' : 'Generate with AI'}
-                            </Button>
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                                <Sparkles className="w-3 h-3 text-primary" />
+                                <span className="text-[10px] font-bold text-primary uppercase">Bot handles styling</span>
+                            </div>
                         </div>
                         <Textarea
                             placeholder="Write a caption for your post..."
