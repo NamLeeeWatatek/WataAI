@@ -123,11 +123,16 @@ export class ExecutionValidationService {
 
       if (field.type === 'file' || field.type === 'files') {
         if (Array.isArray(value)) {
-          prepared[field.name] = value.map((v) =>
-            typeof v === 'object' && v.url ? v.url : v,
-          );
-        } else if (typeof value === 'object' && value.url) {
-          prepared[field.name] = value.url;
+          // Map array of file objects to array of URLs
+          prepared[field.name] = value.map((v) => {
+            if (typeof v === 'object' && v !== null) {
+              return v.url || v.link || v; // Fallback to v if no url found
+            }
+            return v;
+          });
+        } else if (typeof value === 'object' && value !== null) {
+          // Extract URL from single file object
+          prepared[field.name] = value.url || value.link || value;
         }
       }
     }

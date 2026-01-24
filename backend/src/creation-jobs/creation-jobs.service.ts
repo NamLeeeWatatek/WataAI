@@ -142,10 +142,17 @@ export class CreationJobsService {
     if (step.execution) {
       const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
 
+      // CRITICAL FIX: Sanitize inputs (e.g. convert file objects to URLs) using FormConfig
+      // This solves the issue where {{images}} renders as [object Object] because it wasn't processed.
+      const sanitizedData = this.validationService.prepareInputs(
+        tool.formConfig,
+        updatedInputData,
+      );
+
       // Prepare inputs: Form Data + Previous Step Results
       const previousResults = job.outputData || {};
       const executionInputs = {
-        ...updatedInputData,
+        ...sanitizedData, // Use sanitized data instead of raw updatedInputData
         ...previousResults, // Flatten for easy access {{field}}
         prev: previousResults, // Access via {{prev.stepId.field}}
         _jobId: job.id,
