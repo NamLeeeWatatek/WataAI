@@ -77,7 +77,10 @@ export class CreationJobsService {
     const strategy = this.strategyResolver.resolve(config.type);
 
     // Inject system variables for consistency
-    const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+    let apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || '';
+    // Normalize URL: Remove trailing slash and /api if present to avoid duplication
+    apiUrl = apiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+
     const finalInputs = {
       ...executionInputs,
       _jobId: 'preview',
@@ -140,7 +143,8 @@ export class CreationJobsService {
     // 3. Execute Step (if it has execution config)
     let executionResult = null;
     if (step.execution) {
-      const apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL;
+      let apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || '';
+      apiUrl = apiUrl.replace(/\/$/, '').replace(/\/api$/, '');
 
       // CRITICAL FIX: Sanitize inputs (e.g. convert file objects to URLs) using FormConfig
       // This solves the issue where {{images}} renders as [object Object] because it wasn't processed.
