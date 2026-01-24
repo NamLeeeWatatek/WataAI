@@ -19,6 +19,25 @@ export interface CreationTool {
     sortOrder: number;
     createdAt: string;
     updatedAt: string;
+    actions?: TriggerAction[];
+}
+
+/**
+ * Trigger Action - Manual actions available for a product/result
+ */
+export interface TriggerAction {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string;
+
+    // Optional: Specific fields required only for this manual action (e.g., "Post Caption")
+    formConfig?: {
+        fields: FormField[];
+    };
+
+    // The actual execution logic for this action
+    execution: StepExecutionConfig;
 }
 
 // --- New Nested Layout Types ---

@@ -50,6 +50,9 @@ export class CreationToolEntity extends EntityRelationalHelper {
   @Column({ name: 'execution_flow', type: 'jsonb' })
   executionFlow: any;
 
+  @Column({ name: 'actions', type: 'jsonb', nullable: true })
+  actions?: any;
+
   @Column({ name: 'is_active', type: Boolean, default: true })
   @Index()
   isActive: boolean;

@@ -38,7 +38,7 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller('creation-jobs')
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) {}
+  constructor(private readonly service: CreationJobsService) { }
 
   @Post()
   @Permissions('job:Create')
@@ -177,6 +177,23 @@ export class CreationJobsController {
       body.scheduledTime,
       body.message,
     );
+  }
+
+  @Post(':id/actions/:actionId')
+  @Permissions('job:Update')
+  @ApiOkResponse({
+    description: 'Trigger a manual action for a job',
+  })
+  triggerAction(
+    @Param('id') id: string,
+    @Param('actionId') actionId: string,
+    @Body() inputs: Record<string, any>,
+    @Request() req,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.triggerAction(id, actionId, workspaceId, inputs, {
+      userId: req.user.id,
+    });
   }
 
   @Post(':id/cancel')
