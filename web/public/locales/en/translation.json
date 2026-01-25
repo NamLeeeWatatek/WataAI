@@ -625,5 +625,16 @@
     "results": "results",
     "rows": "Rows:",
     "more": "More pages"
+  },
+  "writingStyle": {
+    "professional": "Professional",
+    "friendly": "Friendly",
+    "humorous": "Humorous",
+    "persuasive": "Persuasive",
+    "inspirational": "Inspirational",
+    "trendy": "Trendy",
+    "storytelling": "Storytelling",
+    "concise": "Concise",
+    "saleHard": "Sale Hard"
   }
 }
