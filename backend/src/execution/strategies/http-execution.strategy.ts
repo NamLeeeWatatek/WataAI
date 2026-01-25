@@ -160,6 +160,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
       this.logger.debug(`Request URL: ${url}`);
       this.logger.debug(`Request Body: ${JSON.stringify(body)}`);
 
+      const finalBody = this.sanitizeData(body);
+
       this.logger.debug(
         `Request timeout configured to: ${config.timeoutMs || 60000}ms`,
       );
@@ -171,7 +173,7 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
             'User-Agent': 'WataAI/1.0',
             ...config.headers,
           },
-          data: body,
+          data: finalBody,
           timeout: config.timeoutMs || 60000, // Default to 60s for slow webhooks
         }),
       );
