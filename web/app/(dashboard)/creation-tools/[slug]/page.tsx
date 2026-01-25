@@ -121,9 +121,12 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         });
 
         try {
-            const inputData = { ...data };
-            if (data.template) {
-                inputData.templateId = data.template;
+            const { template: templateValue, ...cleanData } = data;
+            const inputData = { ...cleanData } as any;
+
+            // If template selected, use templateId as the canonical key for the backend
+            if (templateValue) {
+                inputData.templateId = templateValue;
             }
 
             const job = await creationJobsApi.create({
