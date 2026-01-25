@@ -1,6 +1,8 @@
 'use client'
 
 import { DynamicFormField } from '@/components/ui/DynamicFormField'
+import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { FormConfig, FormField, LayoutRow, ZoneConfig, FieldRow, creationToolsApi } from '@/lib/api/creation-tools'
 import { useForm } from 'react-hook-form'
 import { Form, FormField as ShadcnFormField } from '@/components/ui/Form'
@@ -18,7 +20,6 @@ import {
 } from '@/components/ui/Dialog'
 import { creationJobsApi } from '@/lib/api/creation-jobs'
 import { Share2 } from 'lucide-react'
-import { PostToChannelsDialog } from '../products/PostToChannelsDialog'
 
 
 interface GridFormRendererProps {
@@ -53,10 +54,11 @@ export function GridFormRenderer({
 
     // Job State (Drafts)
     const [currentJobId, setCurrentJobId] = useState<string | null>(null)
-    const [isPostDialogOpen, setIsPostDialogOpen] = useState(false)
 
     // Timer for execution
     const [elapsedTime, setElapsedTime] = useState(0)
+
+    const router = useRouter()
 
     useEffect(() => {
         let timer: NodeJS.Timeout
@@ -168,7 +170,7 @@ export function GridFormRenderer({
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setIsPostDialogOpen(true);
+                                router.push(`/publishing/${currentJobId}` as Route);
                             }}
                             className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider gap-2 rounded-full border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 bg-white/50 backdrop-blur-sm shadow-sm transition-all"
                         >
@@ -226,10 +228,10 @@ export function GridFormRenderer({
         currentFields.forEach(fieldName => {
             const currentVal = form.getValues(fieldName);
             if (typeof currentVal === 'string' && currentVal.includes('{{prev.')) {
-                const resolved = resolveValue(currentVal);
-                if (resolved !== currentVal) {
-                    // console.log(`[GRID-RENDERER] Auto-resolving variable for ${fieldName}: ${currentVal} -> ${resolved}`);
-                    form.setValue(fieldName, resolved, { shouldValidate: true, shouldDirty: true });
+                const resolve = resolveValue(currentVal);
+                if (resolve !== currentVal) {
+                    // console.log(`[GRID-RENDERER] Auto-resolving variable for ${fieldName}: ${currentVal} -> ${resolve}`);
+                    form.setValue(fieldName, resolve, { shouldValidate: true, shouldDirty: true });
                 }
             }
         });
@@ -550,11 +552,6 @@ export function GridFormRenderer({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <PostToChannelsDialog
-                open={isPostDialogOpen}
-                onOpenChange={setIsPostDialogOpen}
-                jobId={currentJobId}
-            />
         </Form>
     )
 }

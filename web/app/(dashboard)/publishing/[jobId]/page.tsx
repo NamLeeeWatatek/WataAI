@@ -1,0 +1,420 @@
+'use client';
+
+import { useState, useEffect, use } from 'react';
+import { Button } from '@/components/ui/Button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/Select';
+import { Calendar } from "@/components/ui/Calendar"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/Popover"
+import { Switch } from "@/components/ui/Switch"
+import { FieldChannelSelector } from '@/components/ui/form-fields/FieldChannelSelector';
+import { toast } from 'sonner';
+import { Loader2, Share2, Sparkles, BrainCircuit, Calendar as CalendarIcon, Clock, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Textarea } from '@/components/ui/Textarea';
+import { Label } from '@/components/ui/Label';
+import axiosClient from '@/lib/axios-client';
+import { useBots } from '@/lib/hooks/features/useBots';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/ScrollArea";
+import { Separator } from "@/components/ui/Separator";
+import { useRouter } from 'next/navigation';
+
+interface PostDraft {
+    id: string;
+    content: string;
+    scheduledAt?: Date;
+}
+
+export default function PublishingStudioPage(props: { params: Promise<{ jobId: string }> }) {
+    const params = use(props.params);
+    const { jobId } = params;
+    const router = useRouter();
+    const { workspaceId } = useWorkspace();
+    const { data: bots } = useBots(workspaceId || undefined);
+
+    const [productName, QPsetName] = useState<string>('');
+    const [isLoadingJob, setIsLoadingJob] = useState(true);
+
+    // Core selections
+    const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+    const [selectedBotId, setSelectedBotId] = useState<string>('');
+    const [selectedStyle, setSelectedStyle] = useState<string>('');
+
+    // Drafts State
+    const [posts, setPosts] = useState<PostDraft[]>([
+        { id: '1', content: '' }
+    ]);
+    const [activePostId, setActivePostId] = useState<string>('1');
+
+    // UI State
+    const [isPosting, setIsPosting] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isScheduled, setIsScheduled] = useState(false);
+
+    const activePost = posts.find(p => p.id === activePostId) || posts[0];
+
+    // Fetch Job Info
+    useEffect(() => {
+        const fetchJob = async () => {
+            try {
+                const job = await axiosClient.get(`/creation-jobs/${jobId}`) as any;
+                if (job) {
+                    const tool = await axiosClient.get(`/creation-tools/${job.creationToolId}`) as any;
+                    QPsetName(tool?.name || 'Content');
+
+                    // Pre-fill content from job output if available and empty
+                    if (job.outputData && posts[0].content === '') {
+                        let content = '';
+                        if (typeof job.outputData.content === 'string') content = job.outputData.content;
+                        else if (typeof job.outputData.text === 'string') content = job.outputData.text;
+                        else if (typeof job.outputData.result === 'string') content = job.outputData.result;
+
+                        if (content) {
+                            setPosts([{ id: '1', content }]);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch job", error);
+                toast.error("Could not load job details");
+            } finally {
+                setIsLoadingJob(false);
+            }
+        };
+        fetchJob();
+    }, [jobId]);
+
+    const updateActivePost = (data: Partial<PostDraft>) => {
+        setPosts(prev => prev.map(p => p.id === activePostId ? { ...p, ...data } : p));
+    };
+
+    const addNewPost = () => {
+        const newId = Date.now().toString();
+        setPosts(prev => [...prev, { id: newId, content: '' }]);
+        setActivePostId(newId);
+    };
+
+    const removePost = (id: string) => {
+        if (posts.length <= 1) return;
+        const newPosts = posts.filter(p => p.id !== id);
+        setPosts(newPosts);
+        if (activePostId === id) {
+            setActivePostId(newPosts[newPosts.length - 1].id);
+        }
+    };
+
+    const handleGenerateDraft = async () => {
+        if (!jobId || !selectedBotId) {
+            toast.error("Please select a Bot and a Writing Style first");
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const response = await axiosClient.post(`/creation-jobs/${jobId}/post-draft`, {
+                message: activePost.content,
+                botId: selectedBotId,
+                writingStyle: selectedStyle
+            }) as any;
+
+            if (response && response.draft) {
+                updateActivePost({ content: response.draft });
+                toast.success("Content reinforced by AI!");
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Failed to generate");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handlePost = async () => {
+        if (!jobId) return;
+        if (selectedChannels.length === 0) {
+            toast.error("Please select at least one channel");
+            return;
+        }
+
+        setIsPosting(true);
+        try {
+            const promises = posts.map(post =>
+                axiosClient.post(`/creation-jobs/${jobId}/post`, {
+                    channels: selectedChannels,
+                    message: post.content,
+                    botId: selectedBotId,
+                    writingStyle: selectedStyle,
+                    scheduledTime: isScheduled ? post.scheduledAt : undefined
+                })
+            );
+
+            await Promise.all(promises);
+
+            toast.success(`Successfully queued ${posts.length} post(s)!`);
+            router.back();
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Failed to post content";
+            toast.error(message);
+        } finally {
+            setIsPosting(false);
+        }
+    };
+
+    if (isLoadingJob) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="h-screen flex flex-col bg-background">
+            {/* Header */}
+            <header className="h-16 border-b flex items-center px-6 gap-4 bg-background z-10">
+                <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                    <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <div>
+                    <h1 className="text-lg font-semibold flex items-center gap-2">
+                        <Share2 className="w-5 h-5 text-primary" />
+                        Publishing Studio
+                    </h1>
+                    <p className="text-sm text-muted-foreground">{productName}</p>
+                </div>
+            </header>
+
+            <div className="flex-1 flex overflow-hidden">
+                {/* LEFT COLUMN: Configuration */}
+                <div className="w-[350px] border-r bg-muted/10 flex flex-col">
+                    <ScrollArea className="flex-1 p-6 space-y-8">
+                        {/* Channels */}
+                        <div className="space-y-4">
+                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Destinations</Label>
+                            <FieldChannelSelector
+                                field={{ name: 'channels', type: 'channel-selector', label: '' } as any}
+                                value={selectedChannels}
+                                onChange={(_, val) => setSelectedChannels(val as string[])}
+                                allValues={{}}
+                            />
+                        </div>
+
+                        <Separator />
+
+                        {/* AI Config */}
+                        <div className="space-y-4">
+                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                <BrainCircuit className="w-3.5 h-3.5" />
+                                AI Writer Config
+                            </Label>
+
+                            <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                                <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder="Select a Bot..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {bots?.data?.map((bot) => (
+                                        <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                                <SelectTrigger className="bg-background">
+                                    <SelectValue placeholder="Select Writing Style..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[
+                                        "Chuyên gia (Professional)",
+                                        "Thân thiện (Friendly)",
+                                        "Hài hước (Humorous)",
+                                        "Thuyết phục (Persuasive)",
+                                        "Truyền cảm hứng (Inspirational)",
+                                        "Bắt trend (Trendy)",
+                                        "Kể chuyện (Storytelling)",
+                                        "Ngắn gọn (Concise)",
+                                        "Quảng cáo (Sale Hard)"
+                                    ].map((style) => (
+                                        <SelectItem key={style} value={style}>
+                                            {style}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <Separator />
+
+                        {/* Multi-Post Manager (Mini List) */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Post Queue</Label>
+                                <Button variant="ghost" size="sm" onClick={addNewPost} className="h-6 w-6 p-0">
+                                    <Plus className="w-3.5 h-3.5" />
+                                </Button>
+                            </div>
+                            <div className="space-y-2">
+                                {posts.map((p, index) => (
+                                    <div
+                                        key={p.id}
+                                        className={cn(
+                                            "p-3 rounded-lg border text-sm cursor-pointer transition-all hover:bg-accent/50",
+                                            activePostId === p.id ? "bg-accent border-primary/50 shadow-sm" : "bg-background border-transparent hover:border-border"
+                                        )}
+                                        onClick={() => setActivePostId(p.id)}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-bold text-xs truncate">Post #{index + 1}</span>
+                                            {posts.length > 1 && (
+                                                <Trash2
+                                                    className="w-3 h-3 text-muted-foreground hover:text-destructive"
+                                                    onClick={(e) => { e.stopPropagation(); removePost(p.id); }}
+                                                />
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground truncate opacity-70">
+                                            {p.content || "Empty content..."}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </ScrollArea>
+                </div>
+
+                {/* RIGHT COLUMN: Editor */}
+                <div className="flex-1 flex flex-col min-w-0 bg-background">
+                    {/* Toolbar */}
+                    <div className="h-16 border-b flex items-center justify-between px-8 bg-muted/5">
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-semibold">Post Editor</span>
+                            {activePost.scheduledAt && isScheduled && (
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {format(activePost.scheduledAt, "MMM d, HH:mm")}
+                                </span>
+                            )}
+                        </div>
+                        <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleGenerateDraft}
+                            disabled={isGenerating || !selectedBotId}
+                            className="text-xs bg-white border shadow-sm hover:bg-gray-50"
+                        >
+                            {isGenerating ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2 text-purple-500" />}
+                            AI Generate / Refine
+                        </Button>
+                    </div>
+
+                    {/* Text Area */}
+                    <div className="flex-1 p-8 overflow-y-auto">
+                        <Textarea
+                            placeholder="Start writing your amazing post here..."
+                            value={activePost.content}
+                            onChange={(e) => updateActivePost({ content: e.target.value })}
+                            className="h-full min-h-[400px] resize-none border-none focus-visible:ring-0 text-lg leading-relaxed p-0 shadow-none font-medium"
+                        />
+                    </div>
+
+                    {/* Footer / Scheduling */}
+                    <div className="p-6 border-t bg-muted/5 space-y-4">
+                        <div className="flex items-center justify-between max-w-4xl mx-auto w-full">
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-2">
+                                    <Switch id="schedule-mode" checked={isScheduled} onCheckedChange={setIsScheduled} />
+                                    <Label htmlFor="schedule-mode" className="text-sm font-medium">Schedule for later</Label>
+                                </div>
+
+                                {isScheduled && (
+                                    <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-5">
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    size="sm"
+                                                    className={cn(
+                                                        "w-[240px] justify-start text-left font-normal",
+                                                        !activePost.scheduledAt && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {activePost.scheduledAt ? format(activePost.scheduledAt, "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={activePost.scheduledAt}
+                                                    onSelect={(date) => {
+                                                        if (!date) {
+                                                            updateActivePost({ scheduledAt: undefined });
+                                                            return;
+                                                        }
+                                                        const newDate = new Date(date);
+                                                        if (activePost.scheduledAt) {
+                                                            newDate.setHours(activePost.scheduledAt.getHours());
+                                                            newDate.setMinutes(activePost.scheduledAt.getMinutes());
+                                                        }
+                                                        updateActivePost({ scheduledAt: newDate });
+                                                    }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        <Select
+                                            value={activePost.scheduledAt ? format(activePost.scheduledAt, "HH:mm") : undefined}
+                                            onValueChange={(time) => {
+                                                if (!time) return;
+                                                const [hours, minutes] = time.split(':').map(Number);
+                                                const newDate = activePost.scheduledAt ? new Date(activePost.scheduledAt) : new Date();
+                                                newDate.setHours(hours);
+                                                newDate.setMinutes(minutes);
+                                                updateActivePost({ scheduledAt: newDate });
+                                            }}
+                                        >
+                                            <SelectTrigger className="w-[100px] h-9">
+                                                <SelectValue placeholder="Time" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Array.from({ length: 24 * 2 }).map((_, i) => {
+                                                    const h = Math.floor(i / 2);
+                                                    const m = i % 2 === 0 ? '00' : '30';
+                                                    const time = `${h.toString().padStart(2, '0')}:${m}`;
+                                                    return <SelectItem key={time} value={time}>{time}</SelectItem>
+                                                })}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <Button variant="ghost" onClick={() => router.back()}>Cancel</Button>
+                                <Button
+                                    onClick={handlePost}
+                                    disabled={isPosting || selectedChannels.length === 0 || !activePost.content}
+                                    className="px-8 font-bold min-w-[200px]"
+                                    size="lg"
+                                >
+                                    {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isScheduled ? 'Schedule Campaign' : 'Publish Content'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
