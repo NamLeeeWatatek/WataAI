@@ -14,6 +14,14 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
     this.engine.registerFilter('url_encode', (v) => encodeURIComponent(v));
     this.engine.registerFilter('url_decode', (v) => decodeURIComponent(v));
+    this.engine.registerFilter('strip_newlines', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, '');
+    });
+    this.engine.registerFilter('newline_to_space', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, ' ');
+    });
     this.engine.registerFilter('escape_json', (v) => {
       if (typeof v !== 'string') return v;
       return v
