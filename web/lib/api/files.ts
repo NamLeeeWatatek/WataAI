@@ -39,9 +39,16 @@ export const filesApi = {
         const { uploadSignedUrl, file: fileData } = presignedResponse
 
         if (uploadSignedUrl) {
+            let contentType = file.type || 'application/octet-stream';
+
+            // Ensure UTF-8 for text files to fix encoding issues in preview
+            if (contentType.startsWith('text/') && !contentType.includes('charset')) {
+                contentType = `${contentType}; charset=utf-8`;
+            }
+
             await axios.put(uploadSignedUrl, file, {
                 headers: {
-                    'Content-Type': file.type,
+                    'Content-Type': contentType,
                 },
                 onUploadProgress: (progressEvent: any) => {
                     if (onProgress && progressEvent.total) {
