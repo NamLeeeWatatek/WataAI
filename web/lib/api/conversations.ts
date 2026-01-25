@@ -30,6 +30,7 @@ export interface GetConversationsParams {
   source?: 'all' | 'channel' | 'widget',
   channelId?: string
   search?: string
+  uniqueLeads?: boolean
 }
 
 /**
