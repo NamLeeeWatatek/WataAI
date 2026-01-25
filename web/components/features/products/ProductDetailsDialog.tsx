@@ -11,8 +11,12 @@ import { toast } from 'sonner';
 import { Media } from '@/components/shared/Media';
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
+import { useQuery } from '@tanstack/react-query';
+import { creationToolsApi } from '@/lib/api/creation-tools';
+import { useChannels } from '@/lib/hooks/features/useChannels';
+import { useWorkspace } from '@/lib/hooks/useWorkspace';
 
 interface ProductDetailsDialogProps {
     job: CreationJob | null;
@@ -22,6 +26,14 @@ interface ProductDetailsDialogProps {
 
 export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetailsDialogProps) {
     const [kbName, setKbName] = useState<string | null>(null);
+    const { currentWorkspace } = useWorkspace();
+    const { channels } = useChannels(currentWorkspace?.id);
+
+    const { data: fullTool } = useQuery({
+        queryKey: ['creation-tool', job?.creationToolId],
+        queryFn: () => job?.creationToolId ? creationToolsApi.getById(job.creationToolId) : null,
+        enabled: open && !!job?.creationToolId
+    });
 
     useEffect(() => {
         if (open && job && job.inputData && typeof job.inputData === 'object') {
@@ -135,11 +147,19 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
                                     {Object.entries(job.inputData).map(([key, value]) => {
-                                        if (key === 'knowledgeBaseId' || !value) return null;
+                                        if (key === 'knowledgeBaseId' || key === 'creationToolId' || !value) return null;
+
+                                        const lowerKey = key.toLowerCase();
+                                        // Deduplicate Template fields (case insensitive)
+                                        if ((lowerKey === 'templateid' || lowerKey === 'template_id') && (job.inputData['template'] || job.inputData['TEMPLATE'])) return null;
+
+                                        // Find field definition for labels/options - Use fullTool if available
+                                        const toolConfig = fullTool || job.creationTool;
+                                        const field = (toolConfig as any)?.formConfig?.fields?.find((f: any) => f.name === key || f.name.toLowerCase() === lowerKey);
+                                        const displayLabel = field?.displayName || field?.label || key.replace(/_/g, ' ');
 
                                         // Handle Image Inputs
-                                        // Handle Image Inputs
-                                        const isImageKey = key.toLowerCase().includes('image');
+                                        const isImageKey = lowerKey.includes('image') || lowerKey.includes('file') || field?.type === 'file' || field?.type === 'files';
                                         const hasUrl = typeof value === 'object' && value && (value as any).url && isImageUrl((value as any).url);
                                         const isStringImage = typeof value === 'string' && isImageUrl(value);
 
@@ -159,7 +179,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                             if (images.length > 0) {
                                                 return (
                                                     <div key={key} className="bg-secondary/10 p-2 rounded-lg border border-border/50">
-                                                        <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">{key.replace(/_/g, ' ')}</p>
+                                                        <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">{displayLabel}</p>
                                                         <div className={cn("grid gap-2", images.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
                                                             {images.map((imgUrl, idx) => (
                                                                 <div key={idx} className="relative w-full aspect-video rounded overflow-hidden bg-background">
@@ -172,20 +192,65 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                             }
                                         }
 
-                                        // Handle Channel/Platform IDs
-                                        if (['facebook', 'instagram', 'linkedin', 'twitter', 'tiktok', 'youtube'].some(k => key.toLowerCase().includes(k))) {
+                                        // Handle Channel/Platform IDs mapping to names
+                                        const isChannelField = field?.type === 'channel-selector' || field?.type === 'channel-select' ||
+                                            ['facebook', 'instagram', 'linkedin', 'twitter', 'tiktok', 'youtube'].some(k => key.toLowerCase().includes(k));
+
+                                        if (isChannelField) {
+                                            let displayValue = '';
+                                            if (Array.isArray(value)) {
+                                                displayValue = value.map(id => {
+                                                    const channel = channels.find((c: any) => String(c.id) === String(id));
+                                                    return channel ? channel.name : id;
+                                                }).join(', ');
+                                            } else {
+                                                const channel = channels.find((c: any) => String(c.id) === String(value));
+                                                displayValue = channel ? channel.name : String(value);
+                                            }
+
                                             return (
                                                 <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
-                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/_/g, ' ')}</p>
-                                                    <code className="text-[10px] bg-background px-1.5 py-0.5 rounded border block truncate">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</code>
+                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{displayLabel}</p>
+                                                    <p className="text-xs font-medium text-foreground">{displayValue}</p>
                                                 </div>
                                             )
                                         }
 
-                                        // Handle Text Inputs (Prompts)
+                                        // Lookup labels for select/radio fields - Support multi-select
+                                        if (field?.options && Array.isArray(field.options)) {
+                                            const getOptionLabel = (val: any) => {
+                                                const option = (field.options as any[]).find((opt: any) =>
+                                                    (typeof opt === 'string' ? opt : opt.value) === val
+                                                );
+                                                return typeof option === 'string' ? option : (option?.label || val);
+                                            };
+
+                                            const displayValue = Array.isArray(value)
+                                                ? value.map(getOptionLabel).join(', ')
+                                                : getOptionLabel(value);
+
+                                            return (
+                                                <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
+                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{displayLabel}</p>
+                                                    <p className="text-xs font-medium text-foreground">{displayValue}</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        // Handle Knowledge Base Name override
+                                        if (key === 'knowledgeBaseId' && kbName) {
+                                            return (
+                                                <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
+                                                    <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Knowledge Base</p>
+                                                    <p className="text-xs font-medium text-foreground">{kbName}</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        // Default Text Inputs (Prompts)
                                         return (
                                             <div key={key} className="bg-secondary/10 p-3 rounded-lg border border-border/50">
-                                                <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{key.replace(/_/g, ' ')}</p>
+                                                <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{displayLabel}</p>
                                                 <p className="text-xs text-foreground/90 whitespace-pre-wrap font-medium">
                                                     {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
                                                 </p>
