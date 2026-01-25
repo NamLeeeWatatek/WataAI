@@ -20,7 +20,7 @@ import { generateZodSchema } from '@/lib/utils/schema-generator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { completeProgressOverlay, failProgressOverlay, showProgressOverlay } from '@/components/shared/ProgressOverlay';
 import { FormSkeleton } from '@/components/shared/Skeletons';
-import { PostToChannelsDialog } from '@/components/features/products/PostToChannelsDialog';
+
 
 import { PageShell } from '@/components/layout/PageShell';
 
@@ -55,7 +55,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
     const [activeStep, setActiveStep] = useState(0);
     const [submitting, setSubmitting] = useState(false);
     const [lastJobId, setLastJobId] = useState<string | null>(null);
-    const [postDialogOpen, setPostDialogOpen] = useState(false);
+
 
     // Fetch Templates (still needed for URL pre-fill)
     const { data: templates = [] } = useQuery({
@@ -154,7 +154,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                 );
 
                 if (!hasChannelSelector) {
-                    setPostDialogOpen(true);
+                    router.push(`/publishing/${job.id}` as any);
                 }
 
                 toast({ title: 'Success', description: 'Request received successfully.' });
@@ -277,11 +277,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                     <span>Secure Input</span>
                 </div>
 
-                <PostToChannelsDialog
-                    open={postDialogOpen}
-                    onOpenChange={setPostDialogOpen}
-                    jobId={lastJobId}
-                />
+
             </div>
         </PageShell>
     );
