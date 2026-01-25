@@ -17,6 +17,8 @@ import {
     DialogTitle,
 } from '@/components/ui/Dialog'
 import { creationJobsApi } from '@/lib/api/creation-jobs'
+import { Share2 } from 'lucide-react'
+import { PostToChannelsDialog } from '../products/PostToChannelsDialog'
 
 
 interface GridFormRendererProps {
@@ -51,6 +53,7 @@ export function GridFormRenderer({
 
     // Job State (Drafts)
     const [currentJobId, setCurrentJobId] = useState<string | null>(null)
+    const [isPostDialogOpen, setIsPostDialogOpen] = useState(false)
 
     // Timer for execution
     const [elapsedTime, setElapsedTime] = useState(0)
@@ -144,18 +147,36 @@ export function GridFormRenderer({
                 )}
 
                 {/* Always show Raw Data for debugging but collapsed if we have preview */}
-                <details className="group">
-                    <summary className="flex items-center gap-2 cursor-pointer text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors py-2">
-                        <span className="bg-muted px-1.5 py-0.5 rounded group-open:bg-primary/10">
-                            {imageUrl || textContent ? 'View Raw Data' : 'View Output Data'}
-                        </span>
-                    </summary>
-                    <div className="mt-2 rounded-lg bg-muted/50 p-4 overflow-auto max-h-[200px] border border-border/50">
-                        <pre className="text-[10px] font-mono whitespace-pre-wrap word-break-all text-muted-foreground">
-                            {JSON.stringify(data, null, 2)}
-                        </pre>
-                    </div>
-                </details>
+                <div className="flex items-center justify-between gap-4 py-2 border-t border-border/40 mt-2">
+                    <details className="group flex-1">
+                        <summary className="flex items-center gap-2 cursor-pointer text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors py-2">
+                            <span className="bg-muted px-1.5 py-0.5 rounded group-open:bg-primary/10">
+                                {imageUrl || textContent ? 'View Raw Data' : 'View Output Data'}
+                            </span>
+                        </summary>
+                        <div className="mt-2 rounded-lg bg-muted/50 p-4 overflow-auto max-h-[200px] border border-border/50">
+                            <pre className="text-[10px] font-mono whitespace-pre-wrap word-break-all text-muted-foreground">
+                                {JSON.stringify(data, null, 2)}
+                            </pre>
+                        </div>
+                    </details>
+
+                    {currentJobId && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsPostDialogOpen(true);
+                            }}
+                            className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider gap-2 rounded-full border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 bg-white/50 backdrop-blur-sm shadow-sm transition-all"
+                        >
+                            <Share2 className="w-3 h-3" />
+                            Post to Channels
+                        </Button>
+                    )}
+                </div>
             </div>
         )
     }
@@ -529,6 +550,11 @@ export function GridFormRenderer({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <PostToChannelsDialog
+                open={isPostDialogOpen}
+                onOpenChange={setIsPostDialogOpen}
+                jobId={currentJobId}
+            />
         </Form>
     )
 }
