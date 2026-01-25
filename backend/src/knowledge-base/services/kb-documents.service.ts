@@ -46,7 +46,7 @@ export class KBDocumentsService {
     private readonly processingQueue: KBProcessingQueueService,
     private readonly textExtractorService: KBTextExtractorService,
     private readonly configService: ConfigService<AllConfigType>,
-  ) {}
+  ) { }
 
   async extractTextFromFile(buffer: Buffer, mimeType: string): Promise<string> {
     return this.textExtractorService.extractText(buffer, mimeType);
@@ -92,10 +92,15 @@ export class KBDocumentsService {
         throw new BadRequestException('Failed to generate upload URL');
       }
 
+      let effectiveMimeType = mimeType;
+      if (effectiveMimeType.startsWith('text/') && !effectiveMimeType.includes('charset')) {
+        effectiveMimeType = `${effectiveMimeType}; charset=utf-8`;
+      }
+
       const axios = (await import('axios')).default;
       const uploadResponse = await axios.put(result.uploadSignedUrl, buffer, {
         headers: {
-          'Content-Type': mimeType,
+          'Content-Type': effectiveMimeType,
           'Content-Length': buffer.length.toString(),
         },
       });
