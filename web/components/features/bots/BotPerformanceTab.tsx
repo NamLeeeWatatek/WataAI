@@ -25,7 +25,8 @@ export function BotPerformanceTab({ botId }: BotPerformanceTabProps) {
     const { conversations, total, isLoading } = useBotConversations({
         botId,
         limit: 10,
-        source: 'widget' // Focus on widget leads as requested
+        source: 'widget', // Focus on widget leads as requested
+        uniqueLeads: true // Group by user to avoid duplicates 
     });
 
     if (isLoading) return <div className="py-20 text-center"><PageLoading message="Analyzing performance data..." /></div>;
@@ -123,10 +124,15 @@ export function BotPerformanceTab({ botId }: BotPerformanceTabProps) {
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                                                     <Phone className="w-3.5 h-3.5 opacity-40" />
-                                                    {(conv.metadata as any)?.phone || (conv.metadata as any)?.guest?.phone || 'Not provided'}
+                                                    {(conv as any).contactPhone || 'Not provided'}
                                                 </div>
-                                                {conv.metadata?.ipAddress && (
+                                                {(conv as any).contactEmail && (
                                                     <div className="text-[10px] text-muted-foreground opacity-50">
+                                                        {(conv as any).contactEmail}
+                                                    </div>
+                                                )}
+                                                {conv.metadata?.ipAddress && (
+                                                    <div className="text-[10px] text-muted-foreground opacity-30">
                                                         IP: {conv.metadata.ipAddress as string}
                                                     </div>
                                                 )}
