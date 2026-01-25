@@ -20,6 +20,7 @@ import { generateZodSchema } from '@/lib/utils/schema-generator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { completeProgressOverlay, failProgressOverlay, showProgressOverlay } from '@/components/shared/ProgressOverlay';
 import { FormSkeleton } from '@/components/shared/Skeletons';
+import { PostToChannelsDialog } from '@/components/features/products/PostToChannelsDialog';
 
 import { PageShell } from '@/components/layout/PageShell';
 
@@ -53,6 +54,8 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
     // State
     const [activeStep, setActiveStep] = useState(0);
     const [submitting, setSubmitting] = useState(false);
+    const [lastJobId, setLastJobId] = useState<string | null>(null);
+    const [postDialogOpen, setPostDialogOpen] = useState(false);
 
     // Fetch Templates (still needed for URL pre-fill)
     const { data: templates = [] } = useQuery({
@@ -140,6 +143,17 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
 
             setTimeout(() => {
                 completeProgressOverlay(job);
+                setLastJobId(job.id);
+
+                // Smart auto-popup: Only show if the tool doesn't already have integrated channel selection
+                const hasChannelSelector = tool.formConfig.fields.some(f =>
+                    ['channel-selector', 'channel-select'].includes(f.type)
+                );
+
+                if (!hasChannelSelector) {
+                    setPostDialogOpen(true);
+                }
+
                 toast({ title: 'Success', description: 'Request received successfully.' });
             }, 500);
 
@@ -259,6 +273,12 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                     <div className="w-1 h-1 rounded-full bg-border" />
                     <span>Secure Input</span>
                 </div>
+
+                <PostToChannelsDialog
+                    open={postDialogOpen}
+                    onOpenChange={setPostDialogOpen}
+                    jobId={lastJobId}
+                />
             </div>
         </PageShell>
     );
