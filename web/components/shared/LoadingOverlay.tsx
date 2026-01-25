@@ -49,7 +49,7 @@ export function LoadingOverlay({
 
                 {/* Content */}
                 <div className="relative z-10">
-                    <LoadingLogo size="lg" showGlow />
+                    <LoadingLogo size="lg" />
                 </div>
 
                 {message && (

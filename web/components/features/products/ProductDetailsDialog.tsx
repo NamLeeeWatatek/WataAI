@@ -62,7 +62,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         if (!job.outputData) {
             return (
                 <div className="py-12 flex items-center justify-center">
-                    <LoadingLogo size="md" text="Generating your product..." showGlow />
+                    <LoadingLogo size="md" text="Generating your product..." />
                 </div>
             );
         }

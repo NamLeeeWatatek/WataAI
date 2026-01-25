@@ -39,7 +39,7 @@ export function ProgressOverlay() {
 
                     {/* Header */}
                     <DialogHeader className="text-center relative z-10">
-                        <LoadingLogo size="lg" className="mb-4" showGlow />
+                        <LoadingLogo size="lg" className="mb-4" />
                         <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                             {title}
                         </DialogTitle>
@@ -73,7 +73,7 @@ export function ProgressOverlay() {
                                 'shadow-lg shadow-primary/5',
                             )}>
                                 <div className="flex-shrink-0">
-                                    <LoadingLogo size="sm" showGlow={false} />
+                                    <LoadingLogo size="sm" />
                                 </div>
                                 <span className="text-sm font-medium">
                                     {steps[currentStep] || steps[steps.length - 1]}
