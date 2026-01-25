@@ -4,7 +4,6 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/Dialog';
@@ -78,8 +77,7 @@ export function PostToChannelsDialog({
     // UI State
     const [isPosting, setIsPosting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [writingStyleOptions, setWritingStyleOptions] = useState<any[]>([]);
-    const [styleLabel, setStyleLabel] = useState('Writing Style');
+
     const [isScheduled, setIsScheduled] = useState(false);
 
     const activePost = posts.find(p => p.id === activePostId) || posts[0];
@@ -104,29 +102,7 @@ export function PostToChannelsDialog({
         }
     };
 
-    // Fetch tool config
-    useEffect(() => {
-        const fetchToolConfig = async () => {
-            if (!jobId) return;
-            try {
-                const job = await axiosClient.get(`/creation-jobs/${jobId}`) as any;
-                if (job && job.creationToolId) {
-                    const tool = await axiosClient.get(`/creation-tools/${job.creationToolId}`) as any;
-                    const flaggedStyleField = tool.formConfig?.fields?.find((f: any) => f.useForPostGen === true);
-                    const possibleStyleFields = ['writing_style', 'style', 'tone', 'voice'];
-                    const styleField = flaggedStyleField || tool.formConfig?.fields?.find((f: any) => possibleStyleFields.includes(f.name));
 
-                    if (styleField && styleField.options) {
-                        setWritingStyleOptions(styleField.options);
-                        if (styleField.label) setStyleLabel(styleField.label);
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch tool config", error);
-            }
-        };
-        fetchToolConfig();
-    }, [jobId]);
 
     const handleGenerateDraft = async () => {
         if (!jobId || !selectedBotId) {
@@ -173,7 +149,7 @@ export function PostToChannelsDialog({
                     message: post.content,
                     botId: selectedBotId,
                     writingStyle: selectedStyle,
-                    scheduledAt: isScheduled ? post.scheduledAt : undefined
+                    scheduledTime: isScheduled ? post.scheduledAt : undefined
                 })
             );
 
@@ -239,20 +215,28 @@ export function PostToChannelsDialog({
                                     </SelectContent>
                                 </Select>
 
-                                {writingStyleOptions.length > 0 && (
-                                    <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                                        <SelectTrigger className="bg-background">
-                                            <SelectValue placeholder={`Select ${styleLabel}...`} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {writingStyleOptions.map((opt: any, idx: number) => (
-                                                <SelectItem key={idx} value={typeof opt === 'string' ? opt : opt.value}>
-                                                    {typeof opt === 'string' ? opt : opt.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
+                                <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Select Writing Style..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[
+                                            "Chuyên gia (Professional)",
+                                            "Thân thiện (Friendly)",
+                                            "Hài hước (Humorous)",
+                                            "Thuyết phục (Persuasive)",
+                                            "Truyền cảm hứng (Inspirational)",
+                                            "Bắt trend (Trendy)",
+                                            "Kể chuyện (Storytelling)",
+                                            "Ngắn gọn (Concise)",
+                                            "Quảng cáo (Sale Hard)"
+                                        ].map((style) => (
+                                            <SelectItem key={style} value={style}>
+                                                {style}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Multi-Post Manager (Mini List) */}
@@ -355,8 +339,18 @@ export function PostToChannelsDialog({
                                                 <Calendar
                                                     mode="single"
                                                     selected={activePost.scheduledAt}
-                                                    onSelect={(date) => updateActivePost({ scheduledAt: date })}
-                                                    initialFocus
+                                                    onSelect={(date) => {
+                                                        if (!date) {
+                                                            updateActivePost({ scheduledAt: undefined });
+                                                            return;
+                                                        }
+                                                        const newDate = new Date(date);
+                                                        if (activePost.scheduledAt) {
+                                                            newDate.setHours(activePost.scheduledAt.getHours());
+                                                            newDate.setMinutes(activePost.scheduledAt.getMinutes());
+                                                        }
+                                                        updateActivePost({ scheduledAt: newDate });
+                                                    }}
                                                 />
                                             </PopoverContent>
                                         </Popover>
