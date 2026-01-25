@@ -12,6 +12,42 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
 
   constructor(private readonly httpService: HttpService) {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
+    this.engine.registerFilter('url_encode', (v) => encodeURIComponent(v));
+    this.engine.registerFilter('url_decode', (v) => decodeURIComponent(v));
+    this.engine.registerFilter('escape_json', (v) => {
+      if (typeof v !== 'string') return v;
+      return v
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    });
+  }
+
+  /**
+   * Recursively renders string templates inside an object or array.
+   * This preserves the technical structure of the object while only rendering the values,
+   * which prevents JSON syntax errors caused by raw newlines or special characters in variables.
+   */
+  private async renderRecursive(obj: any, inputs: any): Promise<any> {
+    if (typeof obj === 'string') {
+      return this.engine.parseAndRender(obj, inputs);
+    }
+
+    if (Array.isArray(obj)) {
+      return Promise.all(obj.map((item) => this.renderRecursive(item, inputs)));
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const result: Record<string, any> = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = await this.renderRecursive(value, inputs);
+      }
+      return result;
+    }
+
+    return obj;
   }
 
   async execute(
@@ -37,6 +73,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
     let body: any = undefined;
     if (config.bodyTemplate) {
       if (typeof config.bodyTemplate === 'string') {
+        // CASE: String Template (e.g. JSON string with tags)
+        // User must use {{variable | json}} to safely handle newlines in complex strings
         const renderedBody = await this.engine.parseAndRender(
           config.bodyTemplate,
           inputs,
@@ -44,15 +82,15 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         try {
           body = JSON.parse(renderedBody);
         } catch {
+          // If it's not valid JSON, we treat the whole thing as a raw string body
           body = renderedBody;
         }
       } else {
-        const templateString = JSON.stringify(config.bodyTemplate);
-        const renderedString = await this.engine.parseAndRender(
-          templateString,
-          inputs,
-        );
-        body = JSON.parse(renderedString);
+        // CASE: Object Template (Recommended)
+        // We render values recursively to PRESERVE object structure.
+        // This is safe because JS strings in an object can contain raw newlines,
+        // and axios/httpService will handle the correct JSON serialization later.
+        body = await this.renderRecursive(config.bodyTemplate, inputs);
       }
     } else if (['POST', 'PUT', 'PATCH'].includes(config.method)) {
       body = inputs;
@@ -118,8 +156,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         if (error.response.status === 504) {
           this.logger.warn(
             'Gateway Timeout (504) detected. The external tool took too long to respond to the initial webhook. ' +
-              'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
-              'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
+            'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
+            'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
           );
         }
       } else if (error.code === 'ECONNABORTED') {
@@ -128,8 +166,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         this.logger.warn(
           'Request Timeout detected. The external tool took too long to respond. ' +
-            '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
-            '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
+          '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
+          '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
         );
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);
