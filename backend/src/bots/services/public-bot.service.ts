@@ -51,7 +51,7 @@ export class PublicBotService {
 
     private readonly widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getBotConfig(
     botId: string,
@@ -297,11 +297,18 @@ export class PublicBotService {
       `User message saved: ${userMessage.id} in conversation ${conversationId} `,
     );
 
-    const history = await this.messageRepository.find({
+    // Fetch recent messages for context (reverse chronological to get latest)
+    const recentMessages = await this.messageRepository.find({
       where: { conversationId },
-      order: { sentAt: 'ASC' },
-      take: 10,
+      order: { sentAt: 'DESC' },
+      take: 20, // Fetch deeper to ensure adequate context after filtering
     });
+
+    // Valid history: remove current message, take 10 latest, then order chronologically
+    const history = recentMessages
+      .filter((m) => m.id !== userMessage.id)
+      .slice(0, 10)
+      .reverse();
 
     let aiContent = '';
     let sources: ChunkSource[] = [];
