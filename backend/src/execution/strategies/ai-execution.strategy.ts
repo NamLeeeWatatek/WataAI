@@ -21,6 +21,14 @@ export class AiExecutionStrategy implements IExecutionStrategy {
     private readonly kbService: KBRagService,
   ) {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
+    this.engine.registerFilter('strip_newlines', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, '');
+    });
+    this.engine.registerFilter('newline_to_space', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, ' ');
+    });
   }
 
   async execute(
