@@ -633,5 +633,16 @@
     "results": "kết quả",
     "rows": "Dòng:",
     "more": "Thêm trang"
+  },
+  "writingStyle": {
+    "professional": "Chuyên nghiệp",
+    "friendly": "Thân thiện",
+    "humorous": "Hài hước",
+    "persuasive": "Thuyết phục",
+    "inspirational": "Truyền cảm hứng",
+    "trendy": "Bắt trend",
+    "storytelling": "Kể chuyện",
+    "concise": "Ngắn gọn",
+    "saleHard": "Chốt đơn"
   }
 }

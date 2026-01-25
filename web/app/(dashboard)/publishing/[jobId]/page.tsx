@@ -27,12 +27,14 @@ import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/ScrollArea";
-import { Separator } from "@/components/ui/Separator";
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 
 interface PostDraft {
     id: string;
     content: string;
+    imageUrl?: string;
+    channelIds: string[];
     scheduledAt?: Date;
 }
 
@@ -40,20 +42,16 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     const params = use(props.params);
     const { jobId } = params;
     const router = useRouter();
+    const { t } = useTranslation();
     const { workspaceId } = useWorkspace();
     const { data: bots } = useBots(workspaceId || undefined);
 
     const [productName, QPsetName] = useState<string>('');
     const [isLoadingJob, setIsLoadingJob] = useState(true);
 
-    // Core selections
-    const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
-    const [selectedBotId, setSelectedBotId] = useState<string>('');
-    const [selectedStyle, setSelectedStyle] = useState<string>('');
-
     // Drafts State
     const [posts, setPosts] = useState<PostDraft[]>([
-        { id: '1', content: '' }
+        { id: '1', content: '', channelIds: [] }
     ]);
     const [activePostId, setActivePostId] = useState<string>('1');
 
@@ -61,8 +59,12 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     const [isPosting, setIsPosting] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isScheduled, setIsScheduled] = useState(false);
+    const [selectedBotId, setSelectedBotId] = useState<string>('');
+    const [selectedStyle, setSelectedStyle] = useState<string>('');
 
     const activePost = posts.find(p => p.id === activePostId) || posts[0];
+    const selectedChannels = activePost.channelIds;
+    const setSelectedChannels = (val: string[]) => updateActivePost({ channelIds: val });
 
     // Fetch Job Info
     useEffect(() => {
@@ -78,10 +80,16 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                         let content = '';
                         if (typeof job.outputData.content === 'string') content = job.outputData.content;
                         else if (typeof job.outputData.text === 'string') content = job.outputData.text;
-                        else if (typeof job.outputData.result === 'string') content = job.outputData.result;
+                        else if (typeof job.outputData.result === 'string' && job.outputData.result !== 'Success') content = job.outputData.result;
 
-                        if (content) {
-                            setPosts([{ id: '1', content }]);
+                        let imageUrl = '';
+                        if (typeof job.outputData.imageUrl === 'string') imageUrl = job.outputData.imageUrl;
+                        else if (typeof job.outputData.image === 'string') imageUrl = job.outputData.image;
+                        else if (typeof job.outputData.url === 'string') imageUrl = job.outputData.url;
+                        else if (Array.isArray(job.outputData.images) && job.outputData.images[0]) imageUrl = job.outputData.images[0];
+
+                        if (content || imageUrl) {
+                            setPosts([{ id: '1', content, imageUrl, channelIds: [] }]);
                         }
                     }
                 }
@@ -101,7 +109,9 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
     const addNewPost = () => {
         const newId = Date.now().toString();
-        setPosts(prev => [...prev, { id: newId, content: '' }]);
+        // Inherit channels from previous post for convenience
+        const lastChannels = posts[posts.length - 1]?.channelIds || [];
+        setPosts(prev => [...prev, { id: newId, content: '', channelIds: lastChannels, imageUrl: activePost.imageUrl }]);
         setActivePostId(newId);
     };
 
@@ -191,17 +201,10 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             <Share2 className="w-4 h-4 text-primary" />
                         </div>
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                            Publishing Studio
+                            {t('Creation Studio')}
                         </span>
                     </h1>
                     <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/50 ml-9 -mt-0.5">{productName}</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/30 border border-border/20">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">Live Session</span>
-                    </div>
                 </div>
             </header>
 
@@ -253,18 +256,18 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[
-                                                "Professional",
-                                                "Friendly",
-                                                "Humorous",
-                                                "Persuasive",
-                                                "Inspirational",
-                                                "Trendy",
-                                                "Storytelling",
-                                                "Concise",
-                                                "Sale Hard"
+                                                { label: t('writingStyle.professional'), value: 'Professional' },
+                                                { label: t('writingStyle.friendly'), value: 'Friendly' },
+                                                { label: t('writingStyle.humorous'), value: 'Humorous' },
+                                                { label: t('writingStyle.persuasive'), value: 'Persuasive' },
+                                                { label: t('writingStyle.inspirational'), value: 'Inspirational' },
+                                                { label: t('writingStyle.trendy'), value: 'Trendy' },
+                                                { label: t('writingStyle.storytelling'), value: 'Storytelling' },
+                                                { label: t('writingStyle.concise'), value: 'Concise' },
+                                                { label: t('writingStyle.saleHard'), value: 'Sale Hard' }
                                             ].map((style) => (
-                                                <SelectItem key={style} value={style}>
-                                                    {style}
+                                                <SelectItem key={style.value} value={style.value}>
+                                                    {style.label}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -318,8 +321,11 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                                     </Button>
                                                 )}
                                             </div>
-                                            <div className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 italic">
-                                                {p.content || "Click to start writing..."}
+                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 italic">
+                                                <span>{p.content || "Click to start writing..."}</span>
+                                                {p.channelIds.length > 0 && (
+                                                    <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full">{p.channelIds.length} Ch.</span>
+                                                )}
                                             </div>
 
                                             {activePostId === p.id && (
@@ -374,25 +380,40 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                     {/* Text Area Content */}
                     <div className="flex-1 overflow-hidden relative">
                         <ScrollArea className="h-full">
-                            <div className="max-w-4xl mx-auto p-12 lg:p-20 min-h-full flex flex-col">
-                                <div
-                                    key={activePostId}
-                                    className="flex-1 flex flex-col"
-                                >
-                                    <Textarea
-                                        placeholder="Start writing your amazing post here..."
-                                        value={activePost.content}
-                                        onChange={(e) => updateActivePost({ content: e.target.value })}
-                                        className="flex-1 min-h-[50vh] resize-none border-none focus-visible:ring-0 text-xl leading-[1.8] p-0 shadow-none font-medium bg-transparent selection:bg-primary/20 placeholder:text-muted-foreground/30 placeholder:italic transition-all"
-                                    />
-
-                                    {/* Stats or word count could go here */}
-                                    <div className="mt-8 pt-6 border-t border-border/10 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
-                                        <div className="flex items-center gap-4">
-                                            <span>Words: {activePost.content.trim().split(/\s+/).filter(Boolean).length}</span>
-                                            <span>Characters: {activePost.content.length}</span>
+                            <div className="max-w-[1400px] mx-auto p-8 lg:p-12 min-h-full">
+                                <div key={activePostId} className="flex gap-10 items-start">
+                                    {/* Image Preview Side */}
+                                    {activePost.imageUrl && (
+                                        <div className="w-1/2 sticky top-0 aspect-square rounded-[32px] overflow-hidden border border-border/40 bg-card/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] group">
+                                            <img
+                                                src={activePost.imageUrl}
+                                                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                                                alt="Generated preview"
+                                            />
+                                            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Button size="sm" variant="secondary" className="w-full rounded-xl backdrop-blur-md" onClick={() => window.open(activePost.imageUrl, '_blank')}>
+                                                    View Full Resolution
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <span>Auto-Save Active</span>
+                                    )}
+
+                                    {/* Editor Side */}
+                                    <div className={cn("flex flex-col gap-8", activePost.imageUrl ? "w-1/2" : "w-full max-w-4xl mx-auto")}>
+                                        <Textarea
+                                            placeholder="Start writing your amazing post here..."
+                                            value={activePost.content}
+                                            onChange={(e) => updateActivePost({ content: e.target.value })}
+                                            className="min-h-[60vh] resize-none border-none focus-visible:ring-0 text-xl leading-[1.8] p-0 shadow-none font-medium bg-transparent selection:bg-primary/20 placeholder:text-muted-foreground/30 placeholder:italic transition-all"
+                                        />
+
+                                        <div className="pt-8 border-t border-border/10 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+                                            <div className="flex items-center gap-4">
+                                                <span>Words: {activePost.content.trim().split(/\s+/).filter(Boolean).length}</span>
+                                                <span>Characters: {activePost.content.length}</span>
+                                            </div>
+                                            <span>Session ID: {jobId.slice(-6)}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

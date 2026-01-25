@@ -1,13 +1,10 @@
-'use client'
-
-import { Sparkles } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface LoadingLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   text?: string
   className?: string
-  showGlow?: boolean
 }
 
 export function LoadingLogo({
@@ -15,35 +12,19 @@ export function LoadingLogo({
   text,
   className,
 }: LoadingLogoProps) {
-
-  // Icon dimensions - Increased sizes
   const iconSizes = {
-    xs: 32,
-    sm: 48,
-    md: 64,
-    lg: 96,
-    xl: 128
+    xs: 'w-4 h-4',
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-16 h-16',
+    xl: 'w-24 h-24'
   }
 
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-6", className)}>
-      <div className="relative flex items-center justify-center">
-        {/* Simple Glow Effect */}
-        <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full animate-pulse-slow" />
-
-        <img
-          src="/images/logo.svg"
-          alt="Wata AI"
-          className="relative z-10 object-contain drop-shadow-2xl animate-in fade-in zoom-in duration-700"
-          style={{
-            width: iconSizes[size] * 3, // Make it significantly wider since it's a full logo
-            height: iconSizes[size]
-          }}
-        />
-      </div>
-
+    <div className={cn("flex flex-col items-center justify-center gap-4", className)}>
+      <Loader2 className={cn("text-primary animate-spin", iconSizes[size])} />
       {text && (
-        <p className="text-sm font-medium text-muted-foreground animate-pulse tracking-widest uppercase">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 animate-pulse">
           {text}
         </p>
       )}
