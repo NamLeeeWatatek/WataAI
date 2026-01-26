@@ -27,6 +27,7 @@ import { formatDate } from '@/lib/utils/date';
 import { Search } from '@/components/shared/Search';
 import type { Channel } from '@/lib/types/channel';
 import { ColumnDef } from '@tanstack/react-table';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectedChannelsTabProps {
   channels: Channel[];
@@ -65,6 +66,7 @@ export function ConnectedChannelsTab({
   onLoadData,
   isLoading = false
 }: ConnectedChannelsTabProps) {
+  const { t } = useTranslation();
 
 
 
@@ -75,7 +77,7 @@ export function ConnectedChannelsTab({
   const columns = React.useMemo<ColumnDef<Channel>[]>(() => [
     {
       id: 'name',
-      header: 'Channel Name',
+      header: t('channels_config.channel_name'),
       accessorKey: 'name',
       cell: ({ row, getValue }) => (
         <div className="flex items-center gap-3">
@@ -91,25 +93,25 @@ export function ConnectedChannelsTab({
     },
     {
       id: 'status',
-      header: 'Status',
+      header: t('channels_config.status'),
       cell: () => (
         <Badge variant="default" className="font-bold">
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Active
+          <CheckCircle2 className="w-3 h-3 mr-1" /> {t('channels_config.active')}
         </Badge>
       )
     },
     {
       id: 'bot',
-      header: 'Assigned Bot',
+      header: t('channels_config.bot_assigned'),
       cell: ({ row }) => row.original.metadata?.botId ? (
-        <Badge variant="secondary">Bot Assigned</Badge>
+        <Badge variant="secondary">{t('channels_config.bot_assigned')}</Badge>
       ) : (
-        <span className="text-xs text-muted-foreground">Disconnected</span>
+        <span className="text-xs text-muted-foreground">{t('channels_config.unassigned')}</span>
       )
     },
     {
       id: 'createdAt',
-      header: 'Connected',
+      header: t('channels_config.connected'),
       accessorKey: 'createdAt',
       cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground">{formatDate(getValue() as string)}</span>
     },
@@ -127,14 +129,14 @@ export function ConnectedChannelsTab({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onManagePages(row.original)}>
                 <Settings className="w-3.5 h-3.5 mr-2" />
-                Manage Configuration
+                {t('channels_config.manage_config')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDisconnect(row.original.id)}
                 className="text-destructive focus:text-destructive focus:bg-destructive/10"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-2" />
-                Disconnect
+                {t('channels_config.disconnect')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -149,7 +151,7 @@ export function ConnectedChannelsTab({
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between py-4 border-b border-border/40">
         <div className="relative flex-1 w-full max-w-sm group">
           <Search
-            placeholder="Search connected channels..."
+            placeholder={t('channels_config.search_placeholder')}
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
             onClear={() => onSearchChange("")}
@@ -166,7 +168,7 @@ export function ConnectedChannelsTab({
               "h-8 w-8 rounded-md transition-all",
               viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
-            title="Grid View"
+            title={t('channels_config.grid_view')}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
@@ -178,7 +180,7 @@ export function ConnectedChannelsTab({
               "h-8 w-8 rounded-md transition-all",
               viewMode === 'list' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
-            title="List View"
+            title={t('channels_config.list_view')}
           >
             <List className="w-4 h-4" />
           </Button>
@@ -205,12 +207,12 @@ export function ConnectedChannelsTab({
         </div>
       ) : channels.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-border/40 rounded-3xl bg-muted/10">
-          <h3 className="text-xl font-semibold mb-2">No connections yet</h3>
+          <h3 className="text-xl font-semibold mb-2">{t('channels_config.no_connections')}</h3>
           <p className="text-muted-foreground mb-8 mx-auto max-w-lg">
-            Configure your first integration to start connecting channels and automating your workflow
+            {t('channels_config.no_connections_desc')}
           </p>
           <Button onClick={onLoadData} className="font-bold px-8">
-            Go to Configurations
+            {t('channels_config.go_to_configs')}
           </Button>
         </div>
       ) : (
@@ -232,9 +234,9 @@ export function ConnectedChannelsTab({
                             {channel.metadata?.pageName || channel.name}
                           </CardTitle>
                           <CardDescription className="capitalize text-xs font-medium flex items-center gap-2">
-                            <span className="text-foreground/80">{channel.metadata?.pageId ? 'Facebook Page' : `${channel.type} Channel`}</span>
+                            <span className="text-foreground/80">{channel.metadata?.pageId ? t('channels_config.facebook_page') : t('channels_config.generic_channel', { type: channel.type })}</span>
                             <span className="text-muted-foreground/40">•</span>
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-green-500">Active</span>
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-green-500">{t('channels_config.active')}</span>
                           </CardDescription>
                         </div>
                       </div>
@@ -248,14 +250,14 @@ export function ConnectedChannelsTab({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => onManagePages(channel)}>
                             <Settings className="w-3.5 h-3.5 mr-2" />
-                            Manage Configuration
+                            {t('channels_config.manage_config')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onDisconnect(channel.id)}
                             className="text-destructive focus:text-destructive focus:bg-destructive/10"
                           >
                             <Trash2 className="w-3.5 h-3.5 mr-2" />
-                            Disconnect
+                            {t('channels_config.disconnect')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -264,16 +266,16 @@ export function ConnectedChannelsTab({
                     <CardContent className="flex-1 py-4 space-y-3">
                       {channel.metadata?.botId ? (
                         <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
-                          <span className="text-muted-foreground font-medium">Assigned Bot</span>
+                          <span className="text-muted-foreground font-medium">{t('channels_config.bot_assigned')}</span>
                           <Badge variant="outline" className="bg-background text-[10px] font-mono border-primary/20 text-primary">
-                            Active
+                            {t('channels_config.active')}
                           </Badge>
                         </div>
                       ) : (
                         <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                          <span className="text-muted-foreground font-medium">Bot Status</span>
+                          <span className="text-muted-foreground font-medium">{t('channels_config.status')}</span>
                           <Badge variant="outline" className="bg-background text-[10px] font-mono border-orange-500/20 text-orange-500">
-                            Unassigned
+                            {t('channels_config.unassigned')}
                           </Badge>
                         </div>
                       )}
@@ -296,7 +298,7 @@ export function ConnectedChannelsTab({
                         onClick={() => onManagePages(channel)}
                       >
                         <Settings className="w-3.5 h-3.5 mr-2" />
-                        Manage Settings
+                        {t('channels_config.manage_settings')}
                       </Button>
                     </CardFooter>
                   </Card>
@@ -317,9 +319,12 @@ export function ConnectedChannelsTab({
 
           {/* Unified Pagination */}
           <div className="pt-8 border-t border-border/40 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground font-medium">
-              Showing <span className="text-foreground">{Math.min(paginatedChannels.length, pageSize)}</span> of <span className="text-foreground">{totalCount}</span> channels
-            </p>
+            <p className="text-sm text-muted-foreground font-medium" dangerouslySetInnerHTML={{
+              __html: t('channels_config.showing_channels', {
+                count: Math.min(paginatedChannels.length, pageSize),
+                total: totalCount
+              })
+            }} />
             <Pagination
               pagination={{
                 page: currentPage,

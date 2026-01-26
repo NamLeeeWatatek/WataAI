@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { cn } from '@/lib/utils';
 import { KbFileIcon } from './KbFileIcon';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useTranslation } from 'react-i18next';
 
 interface KbItem {
   id: string;
@@ -64,6 +65,7 @@ export function KbGridView({
   onPageChange,
   onPageSizeChange
 }: KbGridViewProps) {
+  const { t } = useTranslation();
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
     if (isNaN(size) || size === 0) return '0 B';
@@ -121,8 +123,8 @@ export function KbGridView({
         <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6 ring-8 ring-primary/5">
           <Folder className="w-10 h-10 text-primary opacity-40" />
         </div>
-        <h3 className="text-xl font-bold">Empty Collection</h3>
-        <p className="text-muted-foreground mt-2 max-w-sm">No items found in this location. Initialize a new asset to populate this space.</p>
+        <h3 className="text-xl font-bold">{t('kb_config.empty_collection')}</h3>
+        <p className="text-muted-foreground mt-2 max-w-sm">{t('kb_config.empty_desc')}</p>
       </Card>
     );
   }
@@ -138,7 +140,7 @@ export function KbGridView({
             }}
             className="border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
           />
-          <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-wider">Select All</span>
+          <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors uppercase tracking-wider">{t('kb_config.select_all')}</span>
         </label>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -197,7 +199,7 @@ export function KbGridView({
                   variant="secondary"
                   className="text-[9px] px-2 py-0 font-bold bg-primary/5 text-primary border-primary/10 tracking-widest uppercase truncate"
                 >
-                  {item.type === 'folder' ? 'FOLDER' : item.fileSize ? formatSize(item.fileSize) : 'DOC'}
+                  {item.type === 'folder' ? t('kb_config.folder') : item.fileSize ? formatSize(item.fileSize) : t('kb_config.doc')}
                 </Badge>
               </div>
 
@@ -223,7 +225,7 @@ export function KbGridView({
                         className="rounded-lg font-bold cursor-pointer p-3"
                       >
                         <Eye className="w-4 h-4 mr-2 text-primary" />
-                        Preview
+                        {t('kb_config.preview')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -233,7 +235,7 @@ export function KbGridView({
                         className="rounded-lg font-bold cursor-pointer p-3"
                       >
                         <Download className="w-4 h-4 mr-2 text-primary" />
-                        Download
+                        {t('kb_config.download')}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-border/50 my-1" />
                     </>
@@ -246,7 +248,7 @@ export function KbGridView({
                     className="rounded-lg font-bold cursor-pointer p-3"
                   >
                     <Edit2 className="w-4 h-4 mr-2 text-primary" />
-                    Edit Properties
+                    {t('kb_config.edit_properties')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -256,7 +258,7 @@ export function KbGridView({
                     className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 font-bold cursor-pointer p-3"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Item
+                    {t('kb_config.delete_item')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

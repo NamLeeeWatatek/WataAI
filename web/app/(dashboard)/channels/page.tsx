@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import toast from '@/lib/toast';
@@ -41,6 +42,7 @@ import type { Channel, ChannelPage, IntegrationConfig } from '@/lib/types/channe
 
 export default function ChannelsPage() {
     const { currentWorkspace } = useWorkspace();
+    const { t } = useTranslation();
     const workspaceId = currentWorkspace?.id;
     const dispatch = useAppDispatch();
 
@@ -96,7 +98,7 @@ export default function ChannelsPage() {
             } else {
                 const config = configId ? configs.find(c => String(c.id) === String(configId)) : configs.find(c => c.provider === provider);
                 if (!config) {
-                    toast.error(`Please configure ${provider} settings first`);
+                    toast.error(t('error.configureProviderFirst', { provider }));
                     dispatch(setConnecting(null));
                     return;
                 }
@@ -111,12 +113,12 @@ export default function ChannelsPage() {
 
             const popup = window.open(
                 oauthUrl,
-                `Connect ${provider}`,
+                t('channels.connectProvider', { provider }),
                 `width=${width},height=${height},left=${left},top=${top}`
             );
 
             if (!popup) {
-                toast.error('Popup blocked!');
+                toast.error(t('error.popupBlocked'));
                 dispatch(setConnecting(null));
                 return;
             }
@@ -128,18 +130,18 @@ export default function ChannelsPage() {
                     if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && hasPages) {
                         dispatch(setFacebookPages(event.data.pages));
                         dispatch(setFacebookTempToken(event.data.tempToken));
-                        toast.success(`Discovered ${event.data.pages.length} terminals`);
+                        toast.success(t('channels.discoveredCount', { count: event.data.pages.length }));
                         refetch();
                         setActiveTab('discovery');
                     } else {
-                        toast.success(event.data.message || `Connected to ${event.data.channel || provider}`);
+                        toast.success(event.data.message || t('channels.connectedSuccess', { name: event.data.channel || provider }));
                         refetch();
                         dispatch(setConnecting(null));
                     }
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
                 } else if (event.data?.status === 'error') {
-                    toast.error(`Connection failed: ${event.data.message || 'Unknown protocol error'}`);
+                    toast.error(t('error.connectionFailed', { message: event.data.message || 'Unknown protocol error' }));
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
                     dispatch(setConnecting(null));
@@ -148,7 +150,7 @@ export default function ChannelsPage() {
 
             window.addEventListener('message', messageHandler);
         } catch (error) {
-            toast.error('Failed to get connection URL');
+            toast.error(t('error.failedConnectionUrl'));
             dispatch(setConnecting(null));
         }
     };
@@ -165,12 +167,12 @@ export default function ChannelsPage() {
                 botId: selectedBotId,
             });
 
-            toast.success(`Connected ${page.name}`);
+            toast.success(t('channels.connectedSuccess', { name: page.name }));
             dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
             setSelectedPageIds(prev => prev.filter(id => id !== page.id));
             refetch();
         } catch (error: any) {
-            toast.error(`Failed to connect ${page.name}`);
+            toast.error(t('error.connectionFailed', { message: page.name }));
         } finally {
             dispatch(setConnectingPage(null));
         }
@@ -199,7 +201,7 @@ export default function ChannelsPage() {
             }
         }
 
-        toast.success(`Connected ${successCount} page(s)`);
+        toast.success(t('channels.bulkConnectSuccess', { count: successCount }));
         dispatch(setFacebookPages(facebookPages.filter(p => !selectedPageIds.includes(p.id))));
         setSelectedPageIds([]);
         dispatch(setConnectingPage(null));
@@ -250,22 +252,22 @@ export default function ChannelsPage() {
 
     return (
         <PageShell
-            title="Channels"
-            description="Manage your communication channels and integrations"
+            title={t('channels.title')}
+            description={t('channels.description')}
         >
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col pt-2">
                 <TabsHeader>
                     <TabsList variant="pills" className="w-full justify-start overflow-x-auto no-scrollbar">
                         <TabsTrigger value="connected" variant="pills">
                             <Activity className="w-4 h-4 mr-2" />
-                            <span>Connected Terminals</span>
+                            <span>{t('channels.tabs.connected')}</span>
                             <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
                                 {channels.length}
                             </Badge>
                         </TabsTrigger>
                         <TabsTrigger value="configurations" variant="pills">
                             <Settings className="w-4 h-4 mr-2" />
-                            <span>Configurations</span>
+                            <span>{t('channels.tabs.configurations')}</span>
                             <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
                                 {configs.length}
                             </Badge>
@@ -273,7 +275,7 @@ export default function ChannelsPage() {
                         {facebookPages.length > 0 && (
                             <TabsTrigger value="discovery" variant="pills" className="animate-in fade-in slide-in-from-left-4">
                                 <Facebook className="w-4 h-4 mr-2" />
-                                <span>Discovered Pages</span>
+                                <span>{t('channels.tabs.discovery')}</span>
                                 <Badge variant="secondary" className="ml-2 bg-primary/10 text-primary border-none text-[10px]">
                                     {facebookPages.length}
                                 </Badge>
@@ -289,10 +291,10 @@ export default function ChannelsPage() {
                                 <div>
                                     <h3 className="font-semibold flex items-center gap-2 text-lg">
                                         <Facebook className="w-5 h-5 text-blue-600" />
-                                        Connect Facebook Pages
+                                        {t('channels.discovery.title')}
                                     </h3>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                        Select the pages you want to connect to WataAI.
+                                        {t('channels.discovery.description')}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
@@ -302,7 +304,7 @@ export default function ChannelsPage() {
                                         onClick={toggleSelectAllPages}
                                         className="font-bold"
                                     >
-                                        {selectedPageIds.length === facebookPages.length ? 'Deselect All' : 'Select All'}
+                                        {selectedPageIds.length === facebookPages.length ? t('common.deselectAll') : t('common.selectAll')}
                                     </Button>
                                     <Button
                                         variant="primary"
@@ -312,7 +314,7 @@ export default function ChannelsPage() {
                                         onClick={handleBulkConnectPages}
                                         className="font-bold"
                                     >
-                                        Connect {selectedPageIds.length} Selected
+                                        {t('channels.discovery.connectSelected', { count: selectedPageIds.length })}
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => {
                                         dispatch(clearFacebookState());
@@ -320,7 +322,7 @@ export default function ChannelsPage() {
                                         setActiveTab('connected');
                                     }}>
                                         <X className="w-4 h-4 mr-2" />
-                                        Cancel
+                                        {t('common.cancel')}
                                     </Button>
                                 </div>
                             </div>
@@ -351,7 +353,7 @@ export default function ChannelsPage() {
                                                 className="flex-1 font-bold"
                                                 variant={selectedPageIds.includes(page.id) ? "primary" : "outline"}
                                             >
-                                                Connect Now
+                                                {t('channels.discovery.connectNow')}
                                             </Button>
                                         </div>
                                     </AgentCard>
@@ -396,14 +398,14 @@ export default function ChannelsPage() {
                             onSaveConfig={(config: Partial<IntegrationConfig>) => handleSaveConfig(config)}
                         />
                     </TabsContent>
-                </div>
-            </Tabs>
+                </div >
+            </Tabs >
 
             <AlertDialogConfirm
                 open={!!disconnectId}
                 onOpenChange={(o: boolean) => !o && setDisconnectId(null)}
-                title="Disconnect Terminal"
-                description="Are you sure you want to disconnect this terminal? You will no longer receive messages from this channel until you reconnect."
+                title={t('channels.disconnectTitle')}
+                description={t('channels.disconnectConfirm')}
                 onConfirm={handleDisconnect}
                 variant="destructive"
             />
@@ -411,8 +413,8 @@ export default function ChannelsPage() {
             <AlertDialogConfirm
                 open={!!deleteConfigId}
                 onOpenChange={(o: boolean) => !o && setDeleteConfigId(null)}
-                title="Delete Configuration"
-                description="Are you sure you want to delete this configuration? This will permanently remove the credentials and settings."
+                title={t('channels.deleteConfigTitle')}
+                description={t('channels.deleteConfigConfirm')}
                 onConfirm={handleDeleteConfig}
                 variant="destructive"
             />
@@ -428,6 +430,6 @@ export default function ChannelsPage() {
                     refetch();
                 }}
             />
-        </PageShell>
+        </PageShell >
     );
 }

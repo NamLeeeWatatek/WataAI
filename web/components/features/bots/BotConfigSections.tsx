@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import React from 'react';
 import axiosClient from '@/lib/axios-client';
 import { Badge } from '@/components/ui/Badge';
+import { useTranslation } from 'react-i18next';
 
 interface BotConfigData {
     name: string;
@@ -34,42 +35,43 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ data, onChange }: BasicInfoSectionProps) {
+    const { t } = useTranslation();
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Bot className="w-5 h-5 text-primary" />
-                    <CardTitle>Basic Information</CardTitle>
+                    <CardTitle>{t('bot_config.basic_info')}</CardTitle>
                 </div>
                 <CardDescription>
-                    Configure your bot's name and description
+                    {t('bot_config.basic_info_desc')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="bot-name">Bot Name *</Label>
+                    <Label htmlFor="bot-name">{t('bot_config.name')} *</Label>
                     <Input
                         id="bot-name"
                         value={data.name}
                         onChange={(e) => onChange({ name: e.target.value })}
-                        placeholder="Customer Support Bot"
+                        placeholder={t('bot_config.name_placeholder')}
                     />
                     <p className="text-xs text-muted-foreground">
-                        This name will be displayed to users
+                        {t('bot_config.name_desc', { defaultValue: 'This name will be displayed to users' })}
                     </p>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="bot-description">Description</Label>
+                    <Label htmlFor="bot-description">{t('bot_config.description')}</Label>
                     <Textarea
                         id="bot-description"
                         value={data.description}
                         onChange={(e) => onChange({ description: e.target.value })}
-                        placeholder="A helpful bot that assists customers with their questions"
+                        placeholder={t('bot_config.description_placeholder')}
                         rows={3}
                     />
                     <p className="text-xs text-muted-foreground">
-                        Brief description of what your bot does
+                        {t('bot_config.description_desc', { defaultValue: 'Brief description of what your bot does' })}
                     </p>
                 </div>
             </CardContent>
@@ -91,6 +93,7 @@ interface SystemPromptSectionProps {
 }
 
 export function SystemPromptSection({ systemPrompt, onChange, aiConfig }: SystemPromptSectionProps) {
+    const { t } = useTranslation();
     const [showExamples, setShowExamples] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [quickDescription, setQuickDescription] = useState('');
@@ -225,12 +228,12 @@ Always make learning accessible and engaging for your students.`,
             // Auto-fill the system prompt
             if (result.prompt) {
                 onChange(result.prompt);
-                toast.success('AI-generated prompt applied!');
+                toast.success(t('success.ai_generated', { defaultValue: 'AI-generated prompt applied!' }));
             }
         } catch (error: any) {
             toast.error(
                 error?.response?.data?.message ||
-                'Failed to generate prompt. Please check your AI provider settings.'
+                t('error.generate_prompt', { defaultValue: 'Failed to generate prompt. Please check your AI provider settings.' })
             );
         } finally {
             setGenerating(false);
@@ -272,13 +275,13 @@ Always make learning accessible and engaging for your students.`,
             // Auto-fill the system prompt
             if (result.prompt) {
                 onChange(result.prompt);
-                toast.success(`"${result.prompt.substring(0, 50)}..." generated and applied!`);
+                toast.success(`"${result.prompt.substring(0, 50)}..." ${t('success.applied', { defaultValue: 'generated and applied!' })}`);
             }
         } catch (error: any) {
             console.error('AI Generation Error:', error);
             toast.error(
                 error?.response?.data?.message ||
-                'Failed to generate prompt via AI Provider.'
+                t('error.generate_prompt_provider', { defaultValue: 'Failed to generate prompt via AI Provider.' })
             );
         } finally {
             setGenerating(false);
@@ -354,10 +357,10 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                     <div>
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-primary" />
-                            <CardTitle>AI System Prompt</CardTitle>
+                            <CardTitle>{t('bot_config.system_prompt')}</CardTitle>
                         </div>
                         <CardDescription>
-                            Define your bot's personality and behavior with AI-powered generation
+                            {t('bot_config.prompt_desc')}
                         </CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -366,7 +369,7 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                             size="sm"
                             onClick={() => setShowExamples(!showExamples)}
                         >
-                            {showExamples ? 'Hide' : 'Templates'}
+                            {showExamples ? t('bot_config.hide') : t('bot_config.templates')}
                         </Button>
                     </div>
                 </div>
@@ -376,7 +379,7 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
                         <Wand2 className="w-4 h-4 text-primary" />
-                        <h3 className="font-semibold text-sm">Quick Generation</h3>
+                        <h3 className="font-semibold text-sm">{t('bot_config.quick_generation')}</h3>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -418,12 +421,12 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                             {generating ? (
                                 <div className="flex items-center gap-2">
                                     <div className="rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                    <span>Generating...</span>
+                                    <span>{t('bot_config.generating')}</span>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
                                     <Sparkles className="w-4 h-4" />
-                                    <span>Generate</span>
+                                    <span>{t('bot_config.generate')}</span>
                                 </div>
                             )}
                         </Button>
@@ -455,7 +458,7 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                                             <div className="flex items-center justify-between mb-2">
                                                 <h4 className="font-medium text-sm truncate">{template.title}</h4>
                                                 <Badge variant="outline" className="text-xs">
-                                                    Use Template
+                                                    {t('bot_config.use_template')}
                                                 </Badge>
                                             </div>
                                             <p className="text-xs text-muted-foreground line-clamp-2">
@@ -472,20 +475,20 @@ Always provide well-reasoned responses and suggest next steps when appropriate.`
                 {/* Manual Editor */}
                 <div className="space-y-4 pt-4 border-t">
                     <div className="space-y-2">
-                        <Label htmlFor="system-prompt">Manual Editor</Label>
+                        <Label htmlFor="system-prompt">{t('bot_config.manual_editor')}</Label>
                         <Textarea
                             id="system-prompt"
                             value={systemPrompt}
                             onChange={(e) => onChange(e.target.value)}
-                            placeholder="You are a helpful assistant that..."
+                            placeholder={t('bot_config.prompt_placeholder')}
                             rows={12}
                             className="font-mono text-sm resize-none"
                         />
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{systemPrompt.length} characters</span>
+                            <span>{systemPrompt.length} {t('bot_config.characters')}</span>
                             <span className="flex items-center gap-1">
                                 <Cpu className="w-3 h-3" />
-                                Use AI generation above for better results
+                                {t('bot_config.use_ai_suggestion')}
                             </span>
                         </div>
                     </div>
@@ -501,6 +504,7 @@ interface AIConfigSectionProps {
 }
 
 export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
+    const { t } = useTranslation();
     const [providers, setProviders] = React.useState<any[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [fetchingModels, setFetchingModels] = React.useState(false);
@@ -515,7 +519,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                 setProviders(activeProviders);
             } catch (error) {
                 console.error('Failed to load AI providers:', error);
-                toast.error('Failed to load AI providers');
+                toast.error(t('error.general'));
             } finally {
                 setLoading(false);
             }
@@ -537,7 +541,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
             );
         } catch (error) {
             console.error('Failed to fetch models:', error);
-            toast.error('Failed to load available models');
+            toast.error(t('error.general'));
         } finally {
             setFetchingModels(false);
         }
@@ -567,19 +571,19 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Zap className="w-5 h-5 text-primary" />
-                    <CardTitle>AI Configuration</CardTitle>
+                    <CardTitle>{t('bot_config.intelligence')}</CardTitle>
                 </div>
                 <CardDescription>
-                    Configure the AI model and parameters
+                    {t('bot_config.intelligence_desc')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {providers.length === 0 && !loading && (
                     <div className="p-4 border border-dashed rounded-lg bg-muted/30">
                         <p className="text-sm text-muted-foreground text-center">
-                            No AI providers configured.
+                            {t('bot_config.no_providers')}.
                             <a href="/settings" className="text-primary hover:underline ml-1">
-                                Add one in Settings
+                                {t('bot_config.configure_integrations')}
                             </a>
                         </p>
                     </div>
@@ -588,14 +592,14 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                 {providers.length > 0 && (
                     <>
                         <div className="space-y-2">
-                            <Label htmlFor="ai-provider">AI Provider *</Label>
+                            <Label htmlFor="ai-provider">{t('bot_config.ai_provider_config')} *</Label>
                             <Select
                                 value={data.aiProviderId}
                                 onValueChange={handleProviderChange}
                                 disabled={loading}
                             >
                                 <SelectTrigger id="ai-provider">
-                                    <SelectValue placeholder={loading ? "Loading providers..." : "Select a provider"} />
+                                    <SelectValue placeholder={loading ? t('common.loading') + "..." : t('bot_config.select_provider')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {providers.map((provider) => (
@@ -617,7 +621,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
 
                         {data.aiProviderId && (
                             <div className="space-y-2">
-                                <Label htmlFor="ai-model">AI Model *</Label>
+                                <Label htmlFor="ai-model">{t('bot_config.model_name')} *</Label>
                                 <Select
                                     value={data.aiModelName}
                                     onValueChange={(value) => onChange({ aiModelName: value })}
@@ -625,8 +629,8 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                                 >
                                     <SelectTrigger id="ai-model">
                                         <SelectValue placeholder={
-                                            fetchingModels ? "Loading models..." :
-                                                data.aiModelName ? data.aiModelName : "Select a model"
+                                            fetchingModels ? t('common.loading') + "..." :
+                                                data.aiModelName ? data.aiModelName : t('bot_config.select_model')
                                         } />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -637,7 +641,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                                             if (fetchingModels) {
                                                 return (
                                                     <SelectItem value="loading" disabled>
-                                                        Loading models...
+                                                        {t('common.loading')}...
                                                     </SelectItem>
                                                 );
                                             }
@@ -645,7 +649,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                                             if (models.length === 0) {
                                                 return (
                                                     <SelectItem value="none" disabled>
-                                                        No models available
+                                                        {t('bot_config.no_models', { defaultValue: 'No models available' })}
                                                     </SelectItem>
                                                 );
                                             }
@@ -667,12 +671,12 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                 )}
 
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                    <h4 className="font-medium text-sm">Model Parameters</h4>
+                    <h4 className="font-medium text-sm">{t('bot_config.performance_tuning')}</h4>
 
                     <div className="space-y-3">
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="temperature">Temperature</Label>
+                                <Label htmlFor="temperature">{t('bot_config.response_creativity')}</Label>
                                 <span className="text-sm font-mono text-muted-foreground">
                                     {data.aiParameters.temperature.toFixed(1)}
                                 </span>
@@ -690,9 +694,9 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                                 }
                             />
                             <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>Precise (0.0)</span>
-                                <span>Balanced (1.0)</span>
-                                <span>Creative (2.0)</span>
+                                <span>{t('bot_config.precise')} (0.0)</span>
+                                <span>{t('common.balanced', { defaultValue: 'Balanced' })} (1.0)</span>
+                                <span>{t('bot_config.creative')} (2.0)</span>
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 Lower values make responses more focused and deterministic
@@ -700,7 +704,7 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="max-tokens">Max Response Length</Label>
+                            <Label htmlFor="max-tokens">{t('bot_config.max_response_length')}</Label>
                             <Input
                                 id="max-tokens"
                                 type="number"
@@ -741,6 +745,7 @@ export function AdvancedSettingsSection({
     onToggleAutoLearn,
     onToggleActive,
 }: AdvancedSettingsSectionProps) {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/public/bots/${botId}`;
 
@@ -749,9 +754,9 @@ export function AdvancedSettingsSection({
             await navigator.clipboard.writeText(shareUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-            toast.success('Link copied to clipboard!');
+            toast.success(t('success.copied', { defaultValue: 'Link copied to clipboard!' }));
         } catch {
-            toast.error('Failed to copy link');
+            toast.error(t('error.copy_failed', { defaultValue: 'Failed to copy link' }));
         }
     };
 
@@ -760,20 +765,20 @@ export function AdvancedSettingsSection({
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Settings className="w-5 h-5 text-primary" />
-                    <CardTitle>Advanced Settings</CardTitle>
+                    <CardTitle>{t('settings')}</CardTitle>
                 </div>
                 <CardDescription>
-                    Additional configuration options
+                    {t('bot_config.advanced_desc', { defaultValue: 'Additional configuration options' })}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                         <Label htmlFor="auto-learn" className="cursor-pointer font-medium">
-                            Auto-Learn from Conversations
+                            {t('bot_config.context_awareness')}
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                            Bot learns and improves from user interactions
+                            {t('bot_config.context_desc')}
                         </p>
                     </div>
                     <Switch
@@ -787,10 +792,10 @@ export function AdvancedSettingsSection({
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <Label htmlFor="is-active" className="cursor-pointer font-medium">
-                                Public Access
+                                {t('bot_config.online_visibility')}
                             </Label>
                             <p className="text-sm text-muted-foreground">
-                                Make bot accessible via public link
+                                {t('bot_config.visibility_desc')}
                             </p>
                         </div>
                         <Switch

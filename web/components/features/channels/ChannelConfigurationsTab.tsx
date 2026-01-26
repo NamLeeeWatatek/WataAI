@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -53,6 +54,7 @@ export function ChannelConfigurationsTab({
   onDeleteConfig,
   onConnect
 }: ChannelConfigurationsTabProps) {
+  const { t } = useTranslation();
   const [configForm, setConfigForm] = useState({
     id: undefined as string | undefined,
     provider: '',
@@ -101,12 +103,12 @@ export function ChannelConfigurationsTab({
 
   const saveConfig = async () => {
     if (!configForm.provider) {
-      toast.error("Provider is required");
+      toast.error(t('channels.config.providerRequired'));
       return;
     }
 
     if (!configForm.client_id) {
-      toast.error("Client ID is required");
+      toast.error(t('channels.config.clientIdRequired'));
       return;
     }
 
@@ -123,7 +125,7 @@ export function ChannelConfigurationsTab({
     if (configForm.client_secret && configForm.client_secret !== '***') {
       payload.client_secret = configForm.client_secret;
     } else if (!configForm.id && !configForm.client_secret) {
-      toast.error("Client Secret is required");
+      toast.error(t('channels.config.clientSecretRequired'));
       return;
     }
 
@@ -140,7 +142,7 @@ export function ChannelConfigurationsTab({
       {configs.length > 0 && (
         <section>
           <h2 className="text-xl font-bold mb-8 flex items-center gap-2 tracking-tight">
-            Configured Integrations
+            {t('channels.config.configuredTitle')}
             <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 ml-2">
               {configs.length}
             </Badge>
@@ -170,7 +172,7 @@ export function ChannelConfigurationsTab({
                           <span className="text-foreground/80">{channelInfo?.category || 'Integration'}</span>
                           <span className="text-muted-foreground/40">•</span>
                           <span className={cn("text-[10px] font-mono uppercase tracking-wider", config.is_active ? "text-green-500" : "text-muted-foreground")}>
-                            {config.is_active ? 'Online' : 'Offline'}
+                            {config.is_active ? t('channels_config.active') : 'Offline'}
                           </span>
                         </CardDescription>
                       </div>
@@ -185,14 +187,14 @@ export function ChannelConfigurationsTab({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openConfig(config.id)}>
                           <Edit2 className="w-3.5 h-3.5 mr-2" />
-                          Edit Configuration
+                          {t('channels.config.editConfig')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => config.id && onDeleteConfig(config.id)}
                           className="text-destructive focus:text-destructive focus:bg-destructive/10"
                         >
                           <Trash2 className="w-3.5 h-3.5 mr-2" />
-                          Disconnect
+                          {t('channels.config.disconnect')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -201,7 +203,7 @@ export function ChannelConfigurationsTab({
                   <CardContent className="flex-1 py-4">
                     <div className="bg-muted/40 rounded-lg p-3 border border-border/40 flex items-center justify-between group/id">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Client ID</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('channels.config.clientId')}</span>
                         <code className="text-xs font-mono text-foreground/80">
                           {config.client_id?.slice(0, 8)}...{config.client_id?.slice(-4)}
                         </code>
@@ -212,7 +214,7 @@ export function ChannelConfigurationsTab({
                         className="h-7 w-7 opacity-0 group-hover/id:opacity-100 transition-opacity"
                         onClick={() => {
                           navigator.clipboard.writeText(config.client_id);
-                          toast.success("Copied Client ID");
+                          toast.success(t('channels.config.copiedClientId'));
                         }}
                       >
                         <Copy className="w-3.5 h-3.5 text-muted-foreground" />
@@ -227,7 +229,7 @@ export function ChannelConfigurationsTab({
                       onClick={() => onConnect(provider, config.id)}
                     >
                       <Zap className="w-3.5 h-3.5 mr-2 fill-current" />
-                      Connect Channel
+                      {t('channels.config.connectChannel')}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -240,13 +242,13 @@ export function ChannelConfigurationsTab({
       {/* Available Integrations */}
       <section className="pt-12 border-t border-border/10">
         <h2 className="text-xl font-bold mb-8 tracking-tight">
-          Available Integrations
+          {t('channels.config.availableTitle')}
         </h2>
 
         {/* Messaging Channels */}
         <div className="mb-14">
           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Global Messaging Channels</h3>
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">{t('channels.config.messagingTitle')}</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -278,7 +280,7 @@ export function ChannelConfigurationsTab({
         {/* Business Integrations */}
         <div>
           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">Business Logic Integrations</h3>
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">{t('channels.config.businessTitle')}</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -323,7 +325,7 @@ export function ChannelConfigurationsTab({
                   <h3 className="text-2xl font-black tracking-tight capitalize">{configForm.provider}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5 font-bold text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     <ShieldCheck className="w-3 h-3 text-primary" />
-                    Security Protocol
+                    {t('channels.config.securityProtocol')}
                   </div>
                 </div>
                 <Button
@@ -337,14 +339,14 @@ export function ChannelConfigurationsTab({
               </div>
 
               <AlertBanner variant="info" className="mb-8 rounded-xl border-primary/20 bg-primary/5 font-bold text-xs p-4 leading-relaxed">
-                Connect via the <span className="text-primary underline cursor-pointer">{configForm.provider} developer portal</span> to retrieve your cryptographic credentials.
+                <span dangerouslySetInnerHTML={{ __html: t('channels.config.devPortalHint', { provider: configForm.provider }) }} />
               </AlertBanner>
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
                     <Label className="mb-2 block">
-                      Label <span className="text-muted-foreground font-normal">(Friendly Name)</span>
+                      {t('channels.config.label')} <span className="text-muted-foreground font-normal">({t('channels.config.friendlyName')})</span>
                     </Label>
                     <Input
                       type="text"
@@ -356,7 +358,7 @@ export function ChannelConfigurationsTab({
 
                   <div>
                     <Label className="mb-2 block">
-                      Access Identification <span className="text-destructive">*</span>
+                      {t('channels.config.accessId')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       type="text"
@@ -369,14 +371,14 @@ export function ChannelConfigurationsTab({
 
                   <div>
                     <Label className="mb-2 block">
-                      Authorization Secret <span className="text-destructive">*</span>
+                      {t('channels.config.authSecret')} <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
                       <Input
                         type={showClientSecret ? "text" : "password"}
                         value={configForm.client_secret}
                         onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
-                        placeholder="Secret Key"
+                        placeholder={t('channels.config.secretKey')}
                         className="font-mono pr-10"
                       />
                       <Button
@@ -400,7 +402,7 @@ export function ChannelConfigurationsTab({
                   <div className="space-y-6 border-t border-white/5 pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/40 h-full">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">OAuth Redirect URI</Label>
+                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">{t('channels.config.oauthRedirect')}</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             readOnly
@@ -414,7 +416,7 @@ export function ChannelConfigurationsTab({
                             className="h-8 w-8 shrink-0"
                             onClick={() => {
                               navigator.clipboard.writeText(`${origin}/channels/callback/${configForm.provider || 'facebook'}`);
-                              toast.success("Copied OAuth URL");
+                              toast.success(t('channels.config.copiedOAuth'));
                             }}
                           >
                             <Copy className="w-3 h-3" />
@@ -423,7 +425,7 @@ export function ChannelConfigurationsTab({
                       </div>
 
                       <div className="space-y-2 p-4 rounded-xl bg-muted/30 border border-border/40 h-full">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">Webhook Callback URL</Label>
+                        <Label className="text-xs font-semibold uppercase text-muted-foreground block mb-2">{t('channels.config.webhookUrl')}</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             readOnly
@@ -439,7 +441,7 @@ export function ChannelConfigurationsTab({
                               const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/$/, '');
                               const url = `${base.includes('/v1') ? base : base + '/v1'}/webhooks/facebook`;
                               navigator.clipboard.writeText(url);
-                              toast.success("Copied Webhook URL");
+                              toast.success(t('channels.config.copiedWebhook'));
                             }}
                           >
                             <Copy className="w-3 h-3" />
@@ -449,17 +451,17 @@ export function ChannelConfigurationsTab({
 
                       <div className="md:col-span-1">
                         <Label className="mb-2 block">
-                          Webhook Verification
+                          {t('channels.config.webhookVerification')}
                         </Label>
                         <Input
                           type="text"
                           value={configForm.verify_token}
                           onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
-                          placeholder="Security Token"
+                          placeholder={t('channels.config.securityToken')}
                           required
                         />
                         <p className="text-[10px] font-bold text-muted-foreground/50 mt-2 ml-1">
-                          Target this token within your external developer dashboard.
+                          {t('channels.config.webhookHint')}
                         </p>
                       </div>
                     </div>
@@ -469,7 +471,7 @@ export function ChannelConfigurationsTab({
                 {configForm.provider !== 'facebook' && configForm.provider !== 'messenger' && configForm.provider !== 'instagram' && (
                   <div>
                     <Label className="mb-2 block">
-                      Permission Scopes
+                      {t('channels.config.permissionScopes')}
                     </Label>
                     <Input
                       type="text"
@@ -486,14 +488,14 @@ export function ChannelConfigurationsTab({
                     className="flex-1 h-12 font-black uppercase tracking-widest text-xs opacity-60 hover:opacity-100 transition-opacity"
                     onClick={closeConfigDialog}
                   >
-                    Discard
+                    {t('channels.config.discard')}
                   </Button>
                   <Button
                     className="flex-[2] h-12 font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                     onClick={saveConfig}
                     disabled={!configForm.client_id || !configForm.client_secret}
                   >
-                    {configForm.id ? 'Push Update' : 'Initialize Config'}
+                    {configForm.id ? t('channels.config.pushUpdate') : t('channels.config.initLimit')}
                   </Button>
                 </div>
               </div>

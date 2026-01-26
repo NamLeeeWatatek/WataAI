@@ -29,14 +29,14 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('account');
 
   const tabs = useMemo(() => [
-    { id: 'account', label: t('settingsPage.account', { defaultValue: 'Account' }), icon: User },
-    { id: 'team', label: t('settingsPage.team', { defaultValue: 'Team Members' }), icon: Users },
-    { id: 'ai-settings', label: t('settingsPage.aiSettings', { defaultValue: 'AI Settings' }), icon: Settings },
-    { id: 'ai-providers', label: t('settingsPage.aiProviders', { defaultValue: 'AI Providers' }), icon: Cpu },
-    { id: 'notifications', label: t('settingsPage.notifications', { defaultValue: 'Notifications' }), icon: Bell },
-    { id: 'sharing', label: t('settingsPage.sharing', { defaultValue: 'Sharing' }), icon: Share2 },
-    { id: 'billing', label: t('settingsPage.billing', { defaultValue: 'Billing' }), icon: CreditCard },
-    { id: 'questions', label: t('settingsPage.help', { defaultValue: 'Help & FAQ' }), icon: HelpCircle },
+    { id: 'account', label: t('settingsPage.account'), icon: User },
+    { id: 'team', label: t('settingsPage.team'), icon: Users },
+    { id: 'ai-settings', label: t('settingsPage.aiSettings'), icon: Settings },
+    { id: 'ai-providers', label: t('settingsPage.aiProviders'), icon: Cpu },
+    { id: 'notifications', label: t('settingsPage.notifications'), icon: Bell },
+    { id: 'sharing', label: t('settingsPage.sharing'), icon: Share2 },
+    { id: 'billing', label: t('settingsPage.billing'), icon: CreditCard },
+    { id: 'questions', label: t('settingsPage.help'), icon: HelpCircle },
   ], [t]);
 
   return (
@@ -47,8 +47,8 @@ export default function SettingsPage() {
           <div className="flex-none">
             <div className="page-container pb-4">
               <PageHeader
-                title={t('settingsPage.title', { defaultValue: 'System Configuration' })}
-                description={t('settingsPage.description', { defaultValue: 'Neural gateway orchestration and system-wide preference matrix' })}
+                title={t('settingsPage.title')}
+                description={t('settingsPage.description')}
                 premium
                 className="mb-0"
               />

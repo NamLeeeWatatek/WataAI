@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, ShieldCheck, Zap, Sparkles, Bot, Cloud, Cpu, Settings, Stars, Grid, List } from 'lucide-react';
@@ -40,6 +41,7 @@ export function AIProvidersTab() {
     updateConfig,
     activeMutationId
   } = useAiProviders();
+  const { t } = useTranslation();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +70,7 @@ export function AIProvidersTab() {
   const columns = React.useMemo<ColumnDef<EnhancedUserConfig>[]>(() => [
     {
       id: 'displayName',
-      header: 'Provider Name',
+      header: t('settingsPage.aiProvidersDetail.totalProviders'),
       accessorKey: 'displayName',
       cell: ({ row, getValue }) => {
         const provider = row.original;
@@ -88,7 +90,7 @@ export function AIProvidersTab() {
     },
     {
       id: 'isActive',
-      header: 'Status',
+      header: t('status'),
       accessorKey: 'isActive',
       cell: ({ getValue }) => {
         const isActive = getValue() as boolean;
@@ -98,7 +100,7 @@ export function AIProvidersTab() {
             isActive ? "bg-green-500/10 text-green-600 border-green-200" : "bg-muted text-muted-foreground border-border"
           )}>
             <div className={cn("size-1.5 rounded-full", isActive ? "bg-green-500" : "bg-muted-foreground")} />
-            {isActive ? 'Active' : 'Inactive'}
+            {isActive ? t('settingsPage.aiProvidersDetail.active') : t('settingsPage.aiProvidersDetail.inactive')}
           </div>
         );
       }
@@ -141,27 +143,27 @@ export function AIProvidersTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-muted/50 border-border/50">
           <CardHeader className="pb-3 border-b border-border/50">
-            <CardDescription className="uppercase text-xs font-semibold tracking-wider">Total Providers</CardDescription>
+            <CardDescription className="uppercase text-xs font-semibold tracking-wider">{t('settingsPage.aiProvidersDetail.totalProviders')}</CardDescription>
             <CardTitle className="text-4xl font-bold mt-1">{userConfigs.length}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-medium text-primary">
               <div className="size-2 rounded-full bg-primary animate-pulse" />
-              <span>{userConfigs.filter(p => p.isActive).length} Active</span>
+              <span>{userConfigs.filter(p => p.isActive).length} {t('settingsPage.aiProvidersDetail.active')}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-primary/5 border-dashed border-primary/20 hover:bg-primary/10 transition-colors cursor-pointer" onClick={() => handleOpenDialog()}>
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-            <CardDescription className="text-primary font-bold uppercase text-xs tracking-wider">Add Provider</CardDescription>
+            <CardDescription className="text-primary font-bold uppercase text-xs tracking-wider">{t('settingsPage.aiProvidersDetail.addProvider')}</CardDescription>
             <Plus className="size-5 text-primary" />
           </CardHeader>
           <CardContent className="pt-4 flex flex-col items-center justify-center py-6">
             <div className="size-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg mb-4">
               <Plus className="size-6" />
             </div>
-            <p className="font-semibold text-sm text-primary">Connect New Provider</p>
+            <p className="font-semibold text-sm text-primary">{t('settingsPage.aiProvidersDetail.connectNewProvider')}</p>
           </CardContent>
         </Card>
       </div>
@@ -169,7 +171,7 @@ export function AIProvidersTab() {
       {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-20 bg-background/95 backdrop-blur-md py-4 border-b">
         <Search
-          placeholder="Filter providers..."
+          placeholder={t('settingsPage.aiProvidersDetail.filterProviders')}
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           onClear={() => setSearchQuery('')}
@@ -185,7 +187,7 @@ export function AIProvidersTab() {
             )}
           >
             <Grid className="size-3.5" />
-            Grid
+            {t('settingsPage.aiProvidersDetail.grid')}
           </button>
           <button
             onClick={() => setViewMode('list')}
@@ -195,7 +197,7 @@ export function AIProvidersTab() {
             )}
           >
             <List className="size-3.5" />
-            List
+            {t('settingsPage.aiProvidersDetail.list')}
           </button>
         </div>
       </div>
@@ -206,12 +208,12 @@ export function AIProvidersTab() {
           <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-6">
             <Cloud className="size-8 text-muted-foreground" />
           </div>
-          <h3 className="text-xl font-bold mb-2">No Providers Connected</h3>
+          <h3 className="text-xl font-bold mb-2">{t('settingsPage.aiProvidersDetail.noProvidersTitle')}</h3>
           <p className="text-muted-foreground text-center max-w-sm mb-8 text-sm">
-            Connect an AI provider to start using AI features in your application.
+            {t('settingsPage.aiProvidersDetail.noProvidersDesc')}
           </p>
           <Button onClick={() => handleOpenDialog()} size="lg" className="px-8">
-            Connect Provider
+            {t('settingsPage.aiProvidersDetail.connectProvider')}
           </Button>
         </div>
       ) : (
@@ -232,7 +234,7 @@ export function AIProvidersTab() {
                             <CardTitle className="text-lg font-bold">{provider.displayName}</CardTitle>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-[10px] uppercase">{provider.providerMetadata?.label || provider.providerId}</Badge>
-                              {provider.config.isVerified && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]"><ShieldCheck className="size-3 mr-1" /> Verified</Badge>}
+                              {provider.config.isVerified && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]"><ShieldCheck className="size-3 mr-1" /> {t('settingsPage.aiProvidersDetail.verified')}</Badge>}
                             </div>
                           </div>
                         </div>
@@ -241,7 +243,7 @@ export function AIProvidersTab() {
                           provider.isActive ? "bg-green-500/10 text-green-600 border-green-200" : "bg-muted text-muted-foreground border-border"
                         )}>
                           <div className={cn("size-1.5 rounded-full", provider.isActive ? "bg-green-500 animate-pulse" : "bg-muted-foreground")} />
-                          {provider.isActive ? 'Active' : 'Inactive'}
+                          {provider.isActive ? t('settingsPage.aiProvidersDetail.active') : t('settingsPage.aiProvidersDetail.inactive')}
                         </div>
                       </div>
                     </CardHeader>
@@ -250,7 +252,7 @@ export function AIProvidersTab() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 mb-1">
                           <Stars className="size-3.5 text-muted-foreground" />
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Available Models</p>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('settingsPage.aiProvidersDetail.availableModels')}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {provider.modelList?.slice(0, 4).map((model: string) => (
@@ -271,7 +273,7 @@ export function AIProvidersTab() {
                           disabled={activeMutationId === 'update'}
                           className="w-full"
                         >
-                          {provider.isActive ? 'Deactivate' : 'Activate'}
+                          {provider.isActive ? t('settingsPage.aiProvidersDetail.deactivate') : t('settingsPage.aiProvidersDetail.activate')}
                         </Button>
                         <div className="flex gap-2">
                           <Button
@@ -280,7 +282,7 @@ export function AIProvidersTab() {
                             className="flex-1"
                           >
                             <Settings className="size-4 mr-2" />
-                            Configure
+                            {t('settingsPage.aiProvidersDetail.configure')}
                           </Button>
                           <Button
                             variant="ghost"
@@ -337,9 +339,9 @@ export function AIProvidersTab() {
       <AlertDialogConfirm
         open={deleteId !== null}
         onOpenChange={(o) => !o && setDeleteId(null)}
-        title="Delete Provider"
-        description="Are you sure you want to remove this AI provider? This action cannot be undone and may affect active bots using this provider."
-        confirmText="Delete Provider"
+        title={t('settingsPage.aiProvidersDetail.deleteTitle')}
+        description={t('settingsPage.aiProvidersDetail.deleteConfirm')}
+        confirmText={t('settingsPage.aiProvidersDetail.deleteText')}
         variant="destructive"
         onConfirm={async () => {
           if (deleteId) {

@@ -99,8 +99,8 @@ export default function KnowledgeBasePage() {
     return (
         <div className="page-container h-full flex flex-col space-y-6">
             <PageHeader
-                title={t('knowledgeBase.title', { defaultValue: 'Knowledge Engine' })}
-                description={t('knowledgeBase.description', { defaultValue: 'Manage hierarchical intelligence assets and RAG protocols.' })}
+                title={t('knowledgeBase.title')}
+                description={t('knowledgeBase.description')}
                 onRefresh={refetch}
                 refreshing={loading}
                 premium
@@ -111,14 +111,14 @@ export default function KnowledgeBasePage() {
                         setDialogOpen(true);
                     }} className="font-bold shadow-lg shadow-primary/10">
                         <Plus className="w-4 h-4 mr-2" />
-                        {t('knowledgeBase.initNewEngine', { defaultValue: 'Init New Engine' })}
+                        {t('knowledgeBase.initNewEngine')}
                     </Button>
                 </div>
             </PageHeader>
 
             <div className="flex items-center gap-4">
                 <Search
-                    placeholder={t('knowledgeBase.searchPlaceholder', { defaultValue: 'Query system intelligence library...' })}
+                    placeholder={t('knowledgeBase.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e: any) => {
                         setSearchQuery(e.target.value);
@@ -136,12 +136,12 @@ export default function KnowledgeBasePage() {
                     <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 relative">
                         <Database className="w-10 h-10 text-primary opacity-60" />
                     </div>
-                    <h3 className="text-2xl font-black mb-2 tracking-tight">{t('knowledgeBase.vaultEmpty', { defaultValue: 'Intelligence Vault Empty' })}</h3>
+                    <h3 className="text-2xl font-black mb-2 tracking-tight">{t('knowledgeBase.vaultEmpty')}</h3>
                     <p className="text-muted-foreground mb-8 text-center max-w-sm font-medium leading-relaxed">
-                        {searchQuery ? t('knowledgeBase.noResultsDesc', { defaultValue: 'Shift your query parameters or initialize a fresh intelligence core.' }) : t('knowledgeBase.noItemsDesc', { defaultValue: 'Initialize your first knowledge engine to augment your agentic capabilities.' })}
+                        {searchQuery ? t('knowledgeBase.noResultsDesc') : t('knowledgeBase.noItemsDesc')}
                     </p>
                     <Button onClick={() => { setEditingKb(null); setDialogOpen(true); }} className="px-8 font-bold">
-                        <Plus className="w-4 h-4 mr-2" /> {t('knowledgeBase.bootstrapFirstEngine', { defaultValue: 'Bootstrap First Engine' })}
+                        <Plus className="w-4 h-4 mr-2" /> {t('knowledgeBase.bootstrapFirstEngine')}
                     </Button>
                 </div>
             ) : (
@@ -165,11 +165,11 @@ export default function KnowledgeBasePage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="w-48">
                                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditingKb(kb); setDialogOpen(true); }}>
-                                                <Edit2 className="w-4 h-4 mr-2" /> {t('knowledgeBase.editSpecs', { defaultValue: 'Edit Specs' })}
+                                                <Edit2 className="w-4 h-4 mr-2" /> {t('knowledgeBase.editSpecs')}
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem className="text-destructive focus:bg-destructive/10" onClick={(e) => { e.stopPropagation(); setDeleteItem(kb); }}>
-                                                <Trash2 className="w-4 h-4 mr-2" /> {t('knowledgeBase.decommissionEngine', { defaultValue: 'Decommission Engine' })}
+                                                <Trash2 className="w-4 h-4 mr-2" /> {t('knowledgeBase.decommissionEngine')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -177,11 +177,11 @@ export default function KnowledgeBasePage() {
                                 <div>
                                     <h3 className="font-bold text-lg mb-1 truncate">{kb.name}</h3>
                                     <p className="text-muted-foreground text-xs mb-4 line-clamp-2 font-medium">
-                                        {kb.description || t('knowledgeBase.defaultDescription', { defaultValue: 'General purpose intelligence storage protocol active.' })}
+                                        {kb.description || t('knowledgeBase.defaultDescription')}
                                     </p>
                                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest mb-4 border-t border-border/10 pt-4">
                                         <div className="flex items-center gap-1.5 text-primary">
-                                            <FileText className="w-3.5 h-3.5" /> <span>{t('knowledgeBase.slots', { count: kb.totalDocuments, defaultValue: `${kb.totalDocuments} Slots` })}</span>
+                                            <FileText className="w-3.5 h-3.5" /> <span>{t('knowledgeBase.slots', { count: kb.totalDocuments })}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-muted-foreground">
                                             <span>{formatSize(kb.totalSize)}</span>
@@ -189,7 +189,7 @@ export default function KnowledgeBasePage() {
                                     </div>
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <Badge variant="secondary" className="font-bold px-2">
-                                            {kb.embeddingModel || t('knowledgeBase.noEmbedding', { defaultValue: 'No Embedding' })}
+                                            {kb.embeddingModel || t('knowledgeBase.noEmbedding')}
                                         </Badge>
                                         {kb.ragModel && (
                                             <Badge variant="secondary" className="font-bold px-2 bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
@@ -197,7 +197,7 @@ export default function KnowledgeBasePage() {
                                             </Badge>
                                         )}
                                         <Badge variant="outline" className="font-bold px-2 border-primary/20 text-primary">
-                                            {t('knowledgeBase.stable', { defaultValue: 'STABLE' })}
+                                            {t('knowledgeBase.stable')}
                                         </Badge>
                                     </div>
                                 </div>
@@ -236,8 +236,8 @@ export default function KnowledgeBasePage() {
             <AlertDialogConfirm
                 open={deleteItem !== null}
                 onOpenChange={(open) => !open && setDeleteItem(null)}
-                title={t('knowledgeBase.decommissionTitle', { defaultValue: 'Decommission Knowledge Engine' })}
-                description={t('knowledgeBase.decommissionConfirm', { name: deleteItem?.name, defaultValue: `Initiating destruction of "${deleteItem?.name}". This protocol will purge all stored documents and vectors. Proceed with caution.` })}
+                title={t('knowledgeBase.decommissionTitle')}
+                description={t('knowledgeBase.decommissionConfirm', { name: deleteItem?.name })}
                 onConfirm={handleDeleteKnowledgeBase}
                 variant="destructive"
             />

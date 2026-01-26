@@ -72,7 +72,7 @@ export default function CreationToolsPage() {
         <div className="page-container space-y-6">
             <PageHeader
                 title={t('navigation.creationTools')}
-                description={t('creationTools.description', { defaultValue: 'Choose a tool to start creating amazing content with AI' })}
+                description={t('creation_tool.description')}
                 onRefresh={handleRefresh}
                 refreshing={isLoading || isFetching}
             />
@@ -81,7 +81,7 @@ export default function CreationToolsPage() {
             <div className="glass-card flex flex-col md:flex-row items-center gap-4 p-1.5 rounded-2xl backdrop-blur-sm">
                 <div className="flex-1 w-full relative group">
                     <Search
-                        placeholder={t('creationTools.searchPlaceholder', { defaultValue: 'Search tools...' })}
+                        placeholder={t('creation_tool.search_placeholder')}
                         value={searchQuery}
                         onChange={(e: any) => setSearchQuery(e.target.value)}
                         onClear={() => setSearchQuery('')}
@@ -91,10 +91,10 @@ export default function CreationToolsPage() {
                 <div className="w-full md:w-[240px]">
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                         <SelectTrigger className="w-full bg-background/50 border-transparent hover:bg-background hover:border-border/50 focus:ring-0 transition-all font-medium">
-                            <SelectValue placeholder={t('creationTools.allCategories', { defaultValue: 'All Categories' })} />
+                            <SelectValue placeholder={t('creation_tool.all_categories')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">{t('creationTools.allCategories', { defaultValue: 'All Categories' })}</SelectItem>
+                            <SelectItem value="all">{t('creation_tool.all_categories')}</SelectItem>
                             <CategoryItems />
                         </SelectContent>
                     </Select>
@@ -118,15 +118,15 @@ export default function CreationToolsPage() {
                             const isVideo = name.includes('video') || slug.includes('video');
                             const isImage = !isVideo && (name.includes('hình ảnh') || name.includes('image') || slug.includes('image'));
 
-                            const input = tool.metadata?.inputLabel || (hasFiles ? t('creationTools.assets', { defaultValue: 'Assets' }) : (hasTemplate ? t('creationTools.template', { defaultValue: 'Template' }) : t('creationTools.input', { defaultValue: 'Input' })));
-                            const output = tool.metadata?.outputLabel || (isVideo ? t('creationTools.video', { defaultValue: 'Video' }) : (isImage ? t('creationTools.image', { defaultValue: 'Image' }) : t('creationTools.result', { defaultValue: 'Result' })));
-                            const cta = tool.formConfig?.submitLabel || tool.metadata?.actionLabel || (isVideo ? t('creationTools.createVideo', { defaultValue: 'Create Video' }) : (isImage ? t('creationTools.generateImage', { defaultValue: 'Generate Image' }) : t('creationTools.openTool', { defaultValue: 'Open Tool' })));
+                            const input = tool.metadata?.inputLabel || (hasFiles ? t('creation_tool.assets') : (hasTemplate ? t('creation_tool.template') : t('creation_tool.input')));
+                            const output = tool.metadata?.outputLabel || (isVideo ? t('creation_tool.video') : (isImage ? t('creation_tool.image') : t('creation_tool.result')));
+                            const cta = tool.formConfig?.submitLabel || tool.metadata?.actionLabel || (isVideo ? t('creation_tool.create_video') : (isImage ? t('creation_tool.generate_image') : t('creation_tool.open_tool')));
 
                             let description = tool.description;
                             if (!description || description.includes("Specialized AI agent")) {
-                                if (isVideo) description = t('creationTools.defaultVideoDesc', { defaultValue: 'Transform assets into high-energy UGC videos.' });
-                                else if (isImage) description = t('creationTools.defaultImageDesc', { defaultValue: 'Generate marketing visuals from templates or text.' });
-                                else description = t('creationTools.defaultToolDesc', { defaultValue: 'Accelerate creation with high-performance AI.' });
+                                if (isVideo) description = t('creation_tool.default_video_desc');
+                                else if (isImage) description = t('creation_tool.default_image_desc');
+                                else description = t('creation_tool.default_tool_desc');
                             }
 
                             return { input, output, cta, description, type: isVideo ? 'video' : (isImage ? 'image' : 'text') };
@@ -211,8 +211,8 @@ export default function CreationToolsPage() {
                 <div className="py-20">
                     <EmptyState
                         icon={<Sparkles className="w-12 h-12 text-muted-foreground/50" />}
-                        title={t('creationTools.emptyTitle', { defaultValue: 'No creation tools available' })}
-                        description={t('creationTools.emptyDesc', { defaultValue: "We couldn't find any active creation tools in this workspace. Check back later." })}
+                        title={t('creation_tool.empty_title')}
+                        description={t('creation_tool.empty_desc')}
                     />
                 </div>
             )}

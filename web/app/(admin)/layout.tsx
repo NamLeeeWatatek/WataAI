@@ -29,6 +29,7 @@ export default function AdminLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
     const [queryClient] = useState(() => new QueryClient())
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     // Auth hooks
     const { isAuthenticated, isLoading, signOut, accessToken, error } = useAuth()
@@ -41,7 +42,7 @@ export default function AdminLayout({
         if (isLoading) return
 
         if (error === 'RefreshAccessTokenError') {
-            toast.error('Session expired. Please log in again.')
+            toast.error(t('error.unauthorized'))
             signOut()
             return
         }
@@ -84,12 +85,13 @@ export default function AdminLayout({
     }
 
     const handleSignOut = async () => {
+        setIsLoggingOut(true)
         toast.promise(
             signOut({ redirect: true, callbackUrl: '/login' }),
             {
-                loading: 'Signing out',
-                success: 'Signed out successfully',
-                error: 'Failed to sign out'
+                loading: t('dashboard.signingOut'),
+                success: t('success.signedOut'),
+                error: t('error.signedOut')
             }
         )
     }
@@ -118,6 +120,7 @@ export default function AdminLayout({
                         }}
                         sidebarOpen={true}
                         onCloseSidebar={() => setSidebarOpen(false)}
+                        isLoggingOut={isLoggingOut}
                     />
                 </SheetContent>
             </Sheet>
@@ -129,6 +132,7 @@ export default function AdminLayout({
                     onToggleSection={toggleSection}
                     onSignOutConfirm={handleSignOut}
                     sidebarOpen={true}
+                    isLoggingOut={isLoggingOut}
                 />
             </div>
 
