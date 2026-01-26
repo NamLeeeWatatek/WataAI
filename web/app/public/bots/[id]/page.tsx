@@ -339,8 +339,14 @@ export default function PublicBotPage() {
                                             )}>
                                                 <div className={cn(
                                                     "px-4 py-3 text-sm leading-relaxed shadow-sm",
-                                                    isUser ? "bg-zinc-100 dark:bg-zinc-800 rounded-2xl rounded-tr-sm text-foreground" : "bg-white border rounded-2xl rounded-tl-sm text-foreground"
-                                                )}>
+                                                    isUser ? "rounded-2xl rounded-tr-sm" : "rounded-2xl rounded-tl-sm border"
+                                                )}
+                                                    style={{
+                                                        backgroundColor: isUser ? (bot.theme?.userMessageColor || '#f4f4f5') : (bot.theme?.botMessageColor || '#ffffff'),
+                                                        color: isUser ? (bot.theme?.userMessageTextColor || '#000000') : (bot.theme?.botMessageTextColor || '#000000'),
+                                                        borderColor: !isUser ? '#e4e4e7' : 'transparent'
+                                                    }}
+                                                >
                                                     <MarkdownRenderer content={msg.content} />
                                                 </div>
                                                 {isUser && msg.timestamp && (
