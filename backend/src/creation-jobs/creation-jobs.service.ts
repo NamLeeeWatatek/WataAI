@@ -757,20 +757,27 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
 
     const results: any[] = [];
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     for (const rawChannelId of channels) {
       let channelId = rawChannelId;
       let targetPageId: string | undefined;
 
       // Handle composite IDs (e.g. "uuid:pageId")
-      if (rawChannelId.includes(':')) {
-        const parts = rawChannelId.split(':');
-        if (parts.length === 2) {
-          channelId = parts[0];
-          targetPageId = parts[1];
-        }
+      // We use substring to be robust against multiple colons or other formats
+      const colonIndex = rawChannelId.indexOf(':');
+      if (colonIndex !== -1) {
+        channelId = rawChannelId.substring(0, colonIndex);
+        targetPageId = rawChannelId.substring(colonIndex + 1);
       }
 
+      const isUuid = uuidRegex.test(channelId);
+
       try {
+        if (!isUuid) {
+          throw new Error(`Invalid channel ID format: ${channelId}`);
+        }
+
         const channel = await this.channelsService.findOne(
           channelId,
           workspaceId,
@@ -789,9 +796,6 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           // Otherwise fall back to metadata.
           const pageId =
             targetPageId || channel.metadata?.pageId || channel.metadata?.id;
-
-          // If we still don't have a pageId, check if metadata.pages exists and try to find a match or default?
-          // But usually targetPageId should cover the specific selection case.
 
           const accessToken = channel.accessToken;
 
@@ -821,15 +825,17 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           });
 
           // Persistent publication record
-          await this.creationJobsRepository.createPublication({
-            jobId,
-            channelId,
-            platform: channel.type,
-            status: PublicationStatus.SUCCESS,
-            externalId: String(result?.id || result?.postId || ''),
-            url: result?.permalink_url || result?.url,
-            metadata: result,
-          });
+          if (isUuid) {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: channel.type,
+              status: PublicationStatus.SUCCESS,
+              externalId: String(result?.id || result?.postId || ''),
+              url: result?.permalink_url || result?.url,
+              metadata: result,
+            });
+          }
 
           // Optional: Still keep audit log for high-level security tracking
           await this.auditService.log({
@@ -853,13 +859,15 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           });
 
           // Persistent publication record (Failed)
-          await this.creationJobsRepository.createPublication({
-            jobId,
-            channelId,
-            platform: channel.type,
-            status: PublicationStatus.FAILED,
-            error: errorMsg,
-          });
+          if (isUuid) {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: channel.type,
+              status: PublicationStatus.FAILED,
+              error: errorMsg,
+            });
+          }
 
           // Log failed publication
           await this.auditService.log({
@@ -884,13 +892,20 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
         });
 
         // Persistent publication record (Failed due to exception)
-        await this.creationJobsRepository.createPublication({
-          jobId,
-          channelId,
-          platform: 'unknown',
-          status: PublicationStatus.FAILED,
-          error: err.message,
-        });
+        // Only try to save if we have a valid UUID, otherwise DB will throw 500
+        if (isUuid) {
+          try {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: 'unknown',
+              status: PublicationStatus.FAILED,
+              error: err.message,
+            });
+          } catch (saveErr) {
+            console.error("Failed to save publication error record:", saveErr);
+          }
+        }
 
         // Log failed publication due to exception
         await this.auditService.log({

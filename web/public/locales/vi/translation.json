@@ -887,7 +887,23 @@
     "auto_save": "Tự động lưu",
     "secure_input": "Đầu vào an toàn",
     "prompt_required": "Vui lòng nhập mô tả prompt.",
-    "validation_error": "Lỗi xác thực"
+    "validation_error": "Lỗi xác thực",
+    "search_placeholder": "Tìm kiếm công cụ...",
+    "all_categories": "Tất cả danh mục",
+    "empty_title": "Không tìm thấy công cụ",
+    "empty_desc": "Không có công cụ sáng tạo nào phù hợp với tìm kiếm của bạn.",
+    "assets": "Tài sản",
+    "template": "Mẫu",
+    "input": "Đầu vào",
+    "video": "Video",
+    "image": "Hình ảnh",
+    "result": "Kết quả",
+    "create_video": "Tạo Video",
+    "generate_image": "Tạo Hình ảnh",
+    "open_tool": "Mở Công cụ",
+    "default_video_desc": "Tạo video chất lượng cao sử dụng các mô hình AI tiên tiến.",
+    "default_image_desc": "Tạo hình ảnh tuyệt đẹp từ mô tả văn bản.",
+    "default_tool_desc": "Sử dụng công cụ này để tạo nội dung sáng tạo."
   },
   "product_details": {
     "tabs": {
