@@ -5,6 +5,7 @@ import {
     getBotConversationMessages,
     addBotConversationMessage,
     syncFacebookConversations,
+    syncInstagramConversations,
     takeoverConversation as takeoverApi,
     handbackConversation as handbackApi,
     archiveBotConversation,
@@ -32,8 +33,12 @@ export function useBotConversations(params?: GetConversationsParams) {
     });
 
     const syncMutation = useMutation({
-        mutationFn: ({ channelId, syncParams }: { channelId: string; syncParams: any }) =>
-            syncFacebookConversations(channelId, syncParams),
+        mutationFn: ({ channelId, channelType, syncParams }: { channelId: string; channelType?: string; syncParams: any }) => {
+            if (channelType === 'instagram') {
+                return syncInstagramConversations(channelId, syncParams);
+            }
+            return syncFacebookConversations(channelId, syncParams);
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: botConversationKeys.lists() });
             toast.success('Conversations synchronized');

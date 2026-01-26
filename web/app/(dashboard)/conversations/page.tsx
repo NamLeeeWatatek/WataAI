@@ -416,19 +416,20 @@ function ConversationsPageContent() {
 
   const handleSync = async () => {
     if (selectedChannel === 'all') {
-      toast.error(t('conversations.selectChannelToSync', { defaultValue: 'Please select a specific Facebook channel to sync' }));
+      toast.error(t('conversations.selectChannelToSync', { defaultValue: 'Please select a specific channel to sync' }));
       return;
     }
 
     const channel = channels.find(c => c.id === selectedChannel);
-    if (!channel || channel.type !== 'facebook') {
-      toast.error(t('conversations.selectFacebookChannelToSync', { defaultValue: 'Please select a Facebook channel to sync' }));
+    if (!channel || (channel.type !== 'facebook' && channel.type !== 'instagram')) {
+      toast.error(t('conversations.selectSyncableChannel', { defaultValue: 'Please select a syncable channel (Facebook or Instagram)' }));
       return;
     }
 
     try {
       await syncConversations({
         channelId: channel.id,
+        channelType: channel.type,
         syncParams: {
           conversationLimit: 25,
           messageLimit: 50,
@@ -538,7 +539,7 @@ function ConversationsPageContent() {
                 )}
               </Button>
 
-              {selectedChannel !== 'all' && channels.find(c => c.id === selectedChannel)?.type === 'facebook' && (
+              {selectedChannel !== 'all' && ['facebook', 'instagram'].includes(channels.find(c => c.id === selectedChannel)?.type || '') && (
                 <Button
                   variant="outline"
                   size="sm"

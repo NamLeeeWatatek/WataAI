@@ -205,7 +205,21 @@ export function KbTableView({
       header: '',
       size: 60,
       cell: ({ row }) => (
-        <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-end items-center gap-1" onClick={e => e.stopPropagation()}>
+          {row.original.type === 'document' && onPreviewDocument && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreviewDocument(row.original.id);
+              }}
+              title="Preview"
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted font-bold transition-all">
@@ -213,17 +227,11 @@ export function KbTableView({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-premium border-border/50 bg-card/95 backdrop-blur-xl">
-              {row.original.type === 'document' && onPreviewDocument && (
+              {row.original.type === 'document' && onDownloadDocument && (
                 <>
                   <DropdownMenuItem
                     className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
-                    onClick={() => onPreviewDocument(row.original.id)}
-                  >
-                    <Eye className="w-4 h-4 text-primary" /> Preview
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
-                    onClick={() => onDownloadDocument?.(row.original.id, row.original.name)}
+                    onClick={() => onDownloadDocument(row.original.id, row.original.name)}
                   >
                     <Download className="w-4 h-4 text-primary" /> Download
                   </DropdownMenuItem>
