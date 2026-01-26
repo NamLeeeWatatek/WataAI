@@ -148,15 +148,11 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                 completeProgressOverlay(job);
                 setLastJobId(job.id);
 
-                // Smart auto-popup: Only show if the tool doesn't already have integrated channel selection
-                const hasChannelSelector = tool.formConfig.fields.some(f =>
-                    ['channel-selector', 'channel-select'].includes(f.type)
-                );
+                // Reset form for next run to prevent data leakage
+                form.reset();
+                setActiveStep(0);
 
-                if (!hasChannelSelector) {
-                    router.push(`/publishing/${job.id}` as any);
-                }
-
+                router.push(`/publishing/${job.id}` as any);
                 toast({ title: 'Success', description: 'Request received successfully.' });
             }, 500);
 
