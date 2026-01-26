@@ -30,6 +30,13 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '\\r')
         .replace(/\t/g, '\\t');
+      this.engine.registerFilter('json_parse', (v) => {
+        try {
+          return JSON.parse(v);
+        } catch {
+          return v;
+        }
+      });
     });
   }
 
@@ -121,8 +128,14 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
           sanitizedInputs,
         );
         try {
+          // Attempt to parse strictly
           body = JSON.parse(renderedBody);
-        } catch {
+        } catch (e) {
+          // If strict parse fails, try to fix common JSON errors (e.g. newlines in strings)
+          // or just fallback to sending the string (which might be intended for text/plain)
+          this.logger.warn(
+            `Failed to parse rendered body as JSON: ${e.message}. Content preview: ${renderedBody.substring(0, 50)}...`,
+          );
           body = renderedBody;
         }
       } else {
@@ -136,12 +149,17 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
     }
 
     // Auto-inject system metadata
+    // Ensure body is an object to inject metadata. If it's a string, we can't inject specific keys.
     if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
       if (!body._callbackUrl && inputs._callbackUrl)
         body._callbackUrl = inputs._callbackUrl;
       if (!body._jobId && inputs._jobId) body._jobId = inputs._jobId;
       if (!body._workspaceId && inputs._workspaceId)
         body._workspaceId = inputs._workspaceId;
+    } else {
+      this.logger.debug(
+        `Body is not an object (${typeof body}), skipping metadata injection.`,
+      );
     }
 
     // 2. SSRF Protection
@@ -195,8 +213,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         if (error.response.status === 504) {
           this.logger.warn(
             'Gateway Timeout (504) detected. The external tool took too long to respond to the initial webhook. ' +
-              'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
-              'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
+            'Ensure your n8n Webhook Node is set to "Respond: Immediately" (not "When Last Node Finishes"). ' +
+            'Using Async Pattern in WataAI requires the external tool to ACK immediately.',
           );
         }
       } else if (error.code === 'ECONNABORTED') {
@@ -205,8 +223,8 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         );
         this.logger.warn(
           'Request Timeout detected. The external tool took too long to respond. ' +
-            '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
-            '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
+          '1. check if your Tool Configuration has a low "timeoutMs" set (e.g. 5000ms). ' +
+          '2. Ensure your n8n Webhook Node is set to "Respond: Immediately".',
         );
       } else {
         this.logger.error(`HTTP Execution Failed: ${error.message}`);

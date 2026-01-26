@@ -114,11 +114,15 @@ export class KBSearchService {
       // 2. Keyword Search (Qdrant Payload Search)
       let keywordResults: any[] = [];
       try {
+        this.logger.debug(`Step 2: Starting keyword search...`);
         keywordResults = await this.vectorService.searchByPayload(
           query,
           workspaceId,
           limit * 3,
           queryEmbedding.length,
+        );
+        this.logger.debug(
+          `Step 2 Done: Found ${keywordResults.length} keyword matches`,
         );
       } catch (err) {
         this.logger.warn(
@@ -128,6 +132,7 @@ export class KBSearchService {
       }
 
       // 3. Merging with Weighted Reciprocal Rank Fusion (RRF)
+      this.logger.debug(`Step 3: Starting RRF Merge...`);
       const rrfResults = new Map<
         string,
         { chunk: any; score: number; vectorScore: number }
