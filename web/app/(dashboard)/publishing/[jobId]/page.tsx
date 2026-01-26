@@ -175,7 +175,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
             });
 
             setTimeout(() => {
-                router.push('/' as any);
+                router.push('/my-products');
             }, 1000);
         } catch (error: any) {
             const message = error.response?.data?.message || t('publishing.failed_post');

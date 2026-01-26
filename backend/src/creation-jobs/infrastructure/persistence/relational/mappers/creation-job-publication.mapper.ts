@@ -13,6 +13,7 @@ export class CreationJobPublicationMapper {
     domain.url = raw.url;
     domain.metadata = raw.metadata;
     domain.error = raw.error;
+    domain.content = raw.content;
     domain.createdAt = raw.createdAt;
     domain.updatedAt = raw.updatedAt;
     return domain;
@@ -33,6 +34,7 @@ export class CreationJobPublicationMapper {
     persistence.url = domain.url;
     persistence.metadata = domain.metadata;
     persistence.error = domain.error;
+    persistence.content = domain.content;
     return persistence;
   }
 }

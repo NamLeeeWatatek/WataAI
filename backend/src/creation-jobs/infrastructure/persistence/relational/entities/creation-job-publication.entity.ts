@@ -54,6 +54,9 @@ export class CreationJobPublicationEntity extends EntityRelationalHelper {
   @Column({ type: 'text', nullable: true })
   error?: string;
 
+  @Column({ type: 'text', nullable: true })
+  content?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

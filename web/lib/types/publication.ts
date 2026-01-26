@@ -15,6 +15,7 @@ export interface CreationJobPublication {
     url?: string;
     metadata?: Record<string, any>;
     error?: string;
+    content?: string;
     createdAt: string;
     updatedAt: string;
 }
