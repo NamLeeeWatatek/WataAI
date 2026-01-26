@@ -95,7 +95,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                 }
             } catch (error) {
                 console.error("Failed to fetch job", error);
-                toast.error("Could not load job details");
+                toast.error(t('publishing.error_load_job'));
             } finally {
                 setIsLoadingJob(false);
             }
@@ -126,7 +126,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
     const handleGenerateDraft = async () => {
         if (!jobId || !selectedBotId) {
-            toast.error("Please select a Bot and a Writing Style first");
+            toast.error(t('publishing.error_select_bot_style'));
             return;
         }
 
@@ -140,10 +140,10 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
             if (response && response.draft) {
                 updateActivePost({ content: response.draft });
-                toast.success("Content reinforced by AI!");
+                toast.success(t('publishing.success_ai_refine'));
             }
         } catch (error: any) {
-            toast.error(error.message || "Failed to generate");
+            toast.error(error.message || t('publishing.failed_generate'));
         } finally {
             setIsGenerating(false);
         }
@@ -152,7 +152,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     const handlePost = async () => {
         if (!jobId) return;
         if (selectedChannels.length === 0) {
-            toast.error("Please select at least one channel");
+            toast.error(t('publishing.error_select_channel'));
             return;
         }
 
@@ -170,10 +170,15 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
             await Promise.all(promises);
 
-            toast.success(`Successfully queued ${posts.length} post(s)!`);
-            router.back();
+            toast.info(t('publishing.post_success_notification'), {
+                duration: 5000,
+            });
+
+            setTimeout(() => {
+                router.push('/' as any);
+            }, 1000);
         } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to post content";
+            const message = error.response?.data?.message || t('publishing.failed_post');
             toast.error(message);
         } finally {
             setIsPosting(false);
@@ -201,7 +206,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             <Share2 className="w-4 h-4 text-primary" />
                         </div>
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                            {t('Creation Studio')}
+                            {t('publishing.title')}
                         </span>
                     </h1>
                     <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground/50 ml-9 -mt-0.5">{productName}</p>
@@ -218,8 +223,8 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             {/* Channels */}
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between">
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Destinations</Label>
-                                    <span className="text-[10px] font-bold text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full">{selectedChannels.length} Selected</span>
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">{t('publishing.destinations')}</Label>
+                                    <span className="text-[10px] font-bold text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full">{selectedChannels.length} {t('publishing.selected')}</span>
                                 </div>
                                 <div className="p-1 rounded-2xl bg-muted/20 border border-border/10">
                                     <FieldChannelSelector
@@ -235,13 +240,13 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             <div className="space-y-5">
                                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2">
                                     <BrainCircuit className="w-3.5 h-3.5 text-primary/70" />
-                                    AI Writer Config
+                                    {t('publishing.ai_config')}
                                 </Label>
 
                                 <div className="space-y-3">
                                     <Select value={selectedBotId} onValueChange={setSelectedBotId}>
                                         <SelectTrigger className="bg-background/50 border-border/40 rounded-xl h-11">
-                                            <SelectValue placeholder="Select a Bot..." />
+                                            <SelectValue placeholder={t('publishing.select_bot')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {bots?.data?.map((bot) => (
@@ -252,7 +257,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
                                     <Select value={selectedStyle} onValueChange={setSelectedStyle}>
                                         <SelectTrigger className="bg-background/50 border-border/40 rounded-xl h-11">
-                                            <SelectValue placeholder="Select Writing Style..." />
+                                            <SelectValue placeholder={t('publishing.select_style')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[
@@ -278,7 +283,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             {/* Multi-Post Manager (Mini List) */}
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between">
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">Post Queue</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">{t('publishing.post_queue')}</Label>
                                     <Button
                                         variant="outline"
                                         size="icon"
@@ -308,7 +313,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                                     )}>
                                                         {index + 1}
                                                     </div>
-                                                    <span className="font-bold text-[11px] tracking-tight">Draft #{index + 1}</span>
+                                                    <span className="font-bold text-[11px] tracking-tight">{t('publishing.draft')} #{index + 1}</span>
                                                 </div>
                                                 {posts.length > 1 && (
                                                     <Button
@@ -322,7 +327,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                                 )}
                                             </div>
                                             <div className="flex items-center justify-between text-[11px] text-muted-foreground line-clamp-2 leading-relaxed opacity-60 italic">
-                                                <span>{p.content || "Click to start writing..."}</span>
+                                                <span>{p.content || t('publishing.click_to_write')}</span>
                                                 {p.channelIds.length > 0 && (
                                                     <span className="text-[9px] font-black text-primary/60 bg-primary/5 px-2 py-0.5 rounded-full">{p.channelIds.length} Ch.</span>
                                                 )}
@@ -348,7 +353,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-primary" />
-                                <span className="text-xs font-black uppercase tracking-[0.15em] text-foreground/80">Editor</span>
+                                <span className="text-xs font-black uppercase tracking-[0.15em] text-foreground/80">{t('publishing.editor')}</span>
                             </div>
 
                             {activePost.scheduledAt && isScheduled && (
@@ -356,7 +361,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                     className="text-[10px] font-bold bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center gap-1.5 border border-primary/20"
                                 >
                                     <Clock className="w-3 h-3" />
-                                    Scheduled: {format(activePost.scheduledAt, "MMM d, HH:mm")}
+                                    {t('publishing.scheduled')} {format(activePost.scheduledAt, "MMM d, HH:mm")}
                                 </div>
                             )}
                         </div>
@@ -373,7 +378,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                             ) : (
                                 <Sparkles className="w-3.5 h-3.5 mr-2 text-primary group-hover:animate-pulse" />
                             )}
-                            AI Magic Refine
+                            {t('publishing.ai_magic')}
                         </Button>
                     </div>
 
@@ -392,7 +397,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                             />
                                             <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button size="sm" variant="secondary" className="w-full rounded-xl backdrop-blur-md" onClick={() => window.open(activePost.imageUrl, '_blank')}>
-                                                    View Full Resolution
+                                                    {t('publishing.view_full')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -401,7 +406,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                     {/* Editor Side */}
                                     <div className={cn("flex flex-col gap-8", activePost.imageUrl ? "w-1/2" : "w-full max-w-4xl mx-auto")}>
                                         <Textarea
-                                            placeholder="Start writing your amazing post here..."
+                                            placeholder={t('publishing.editor_placeholder')}
                                             value={activePost.content}
                                             onChange={(e) => updateActivePost({ content: e.target.value })}
                                             className="min-h-[60vh] resize-none border-none focus-visible:ring-0 text-xl leading-[1.8] p-0 shadow-none font-medium bg-transparent selection:bg-primary/20 placeholder:text-muted-foreground/30 placeholder:italic transition-all"
@@ -409,10 +414,10 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
 
                                         <div className="pt-8 border-t border-border/10 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
                                             <div className="flex items-center gap-4">
-                                                <span>Words: {activePost.content.trim().split(/\s+/).filter(Boolean).length}</span>
-                                                <span>Characters: {activePost.content.length}</span>
+                                                <span>{t('publishing.words')} {activePost.content.trim().split(/\s+/).filter(Boolean).length}</span>
+                                                <span>{t('publishing.characters')} {activePost.content.length}</span>
                                             </div>
-                                            <span>Session ID: {jobId.slice(-6)}</span>
+                                            <span>{t('publishing.session_id')} {jobId.slice(-6)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -432,7 +437,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                         className="data-[state=checked]:bg-primary"
                                     />
                                     <Label htmlFor="schedule-mode" className="text-xs font-bold uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors cursor-pointer">
-                                        Queue for Schedule
+                                        {t('publishing.queue_schedule')}
                                     </Label>
                                 </div>
 
@@ -451,7 +456,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                                     )}
                                                 >
                                                     <CalendarIcon className="mr-2 h-3.5 w-3.5 text-primary/60" />
-                                                    {activePost.scheduledAt ? format(activePost.scheduledAt, "PPP") : <span>Select Date</span>}
+                                                    {activePost.scheduledAt ? format(activePost.scheduledAt, "PPP") : <span>{t('publishing.select_date')}</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0 rounded-[24px] border-border/40 overflow-hidden shadow-2xl" align="start">
@@ -486,14 +491,14 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                             }}
                                         >
                                             <SelectTrigger className="w-[90px] h-9 text-[10px] font-bold rounded-xl border-border/40 bg-background/50">
-                                                <SelectValue placeholder="Time" />
+                                                <SelectValue placeholder={t('publishing.time')} />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl border-border/40">
                                                 {Array.from({ length: 24 * 2 }).map((_, i) => {
                                                     const h = Math.floor(i / 2);
                                                     const m = i % 2 === 0 ? '00' : '30';
-                                                    const time = `${h.toString().padStart(2, '0')}:${m}`;
-                                                    return <SelectItem key={time} value={time} className="text-[10px] font-bold">{time}</SelectItem>
+                                                    const timeStr = `${h.toString().padStart(2, '0')}:${m}`;
+                                                    return <SelectItem key={timeStr} value={timeStr} className="text-[10px] font-bold">{timeStr}</SelectItem>
                                                 })}
                                             </SelectContent>
                                         </Select>
@@ -507,7 +512,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                     onClick={() => router.back()}
                                     className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground"
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button
                                     onClick={handlePost}
@@ -519,7 +524,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                     ) : (
                                         <div className="flex items-center gap-2">
                                             {isScheduled ? <CalendarIcon className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-                                            {isScheduled ? 'Schedule Campaign' : 'Blast Content'}
+                                            {isScheduled ? t('publishing.schedule_campaign') : t('publishing.blast_content')}
                                         </div>
                                     )}
                                 </Button>
@@ -527,7 +532,7 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

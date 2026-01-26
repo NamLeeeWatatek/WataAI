@@ -16,7 +16,8 @@ import {
     ChevronDown,
     LogOut,
     ArrowLeft,
-    Folder
+    Folder,
+    Loader2
 } from 'lucide-react'
 import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,7 @@ interface AdminSidebarProps {
     onSignOutConfirm: () => void
     sidebarOpen: boolean
     onCloseSidebar?: () => void
+    isLoggingOut?: boolean
 }
 
 import { PERMISSIONS } from '@/lib/config/permissions'
@@ -58,7 +60,8 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
     onToggleSection,
     onSignOutConfirm,
     sidebarOpen,
-    onCloseSidebar
+    onCloseSidebar,
+    isLoggingOut
 }) => {
     const pathname = usePathname()
     const { t } = useTranslation()
@@ -232,9 +235,14 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
                         size="sm"
                         className="w-full h-8 justify-start text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                         onClick={onSignOutConfirm}
+                        disabled={isLoggingOut}
                     >
-                        <LogOut className="w-3.5 h-3.5 mr-2" />
-                        <span>{t('dashboard.signOut')}</span>
+                        {isLoggingOut ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                        ) : (
+                            <LogOut className="w-3.5 h-3.5 mr-2" />
+                        )}
+                        <span>{isLoggingOut ? t('dashboard.signingOut') : t('dashboard.signOut')}</span>
                     </Button>
                 </div>
             </div>

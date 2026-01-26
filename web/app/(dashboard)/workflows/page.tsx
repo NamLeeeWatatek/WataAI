@@ -9,8 +9,10 @@ import { useState } from 'react';
 
 import { useWorkflows } from '@/lib/hooks/features/useWorkflows';
 import { PageLoading } from '@/components/shared/PageLoading';
+import { useTranslation } from 'react-i18next';
 
 export default function WorkflowsPage() {
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
     const { data: workflows, isLoading } = useWorkflows();
 
@@ -21,7 +23,7 @@ export default function WorkflowsPage() {
     if (isLoading) {
         return (
             <div className="page-container">
-                <PageLoading message="Loading workflows..." />
+                <PageLoading message={t('workflows.loading')} />
             </div>
         )
     }
@@ -29,17 +31,17 @@ export default function WorkflowsPage() {
     return (
         <div className="page-container space-y-6">
             <PageHeader
-                title="Workflow Library"
-                description="Discover and execute powerful AI pipelines."
+                title={t('workflows.title')}
+                description={t('workflows.description')}
             >
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="gap-2">
                         <SlidersHorizontal className="h-4 w-4" />
-                        Filters
+                        {t('workflows.filters')}
                     </Button>
                     <Button className="gap-2 shadow-lg shadow-primary/20">
                         <Plus className="h-4 w-4" />
-                        New Workflow
+                        {t('workflows.newWorkflow')}
                     </Button>
                 </div>
             </PageHeader>
@@ -49,7 +51,7 @@ export default function WorkflowsPage() {
                 <div className="relative w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <Input
-                        placeholder="Search workflows..."
+                        placeholder={t('workflows.searchPlaceholder')}
                         className="pl-9 bg-muted/40 border-transparent focus:bg-background focus:border-primary/20"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -69,8 +71,8 @@ export default function WorkflowsPage() {
             {filteredWorkflows.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
                     <Sparkles className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No workflows found</h3>
-                    <p className="max-w-md">Try adjusting your search terms or create a new workflow to get started.</p>
+                    <h3 className="text-xl font-semibold mb-2">{t('workflows.noWorkflowsFound')}</h3>
+                    <p className="max-w-md">{t('workflows.noWorkflowsDesc')}</p>
                 </div>
             )}
         </div>
