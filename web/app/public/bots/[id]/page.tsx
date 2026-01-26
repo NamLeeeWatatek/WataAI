@@ -1,13 +1,20 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'next/navigation'
-
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useParams, useSearchParams } from 'next/navigation'
 import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 import { useTranslation } from 'react-i18next'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
-import { MessageCircle, X, Send, User, Bot } from 'lucide-react'
+import { MessageCircle, X, Send, User, Bot, Loader2, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card'
+import { ScrollArea } from '@/components/ui/ScrollArea'
+import { Spinner } from '@/components/ui/Spinner'
 
 interface GuestIdentity {
     name: string;
@@ -16,7 +23,18 @@ interface GuestIdentity {
 
 export default function PublicBotPage() {
     const params = useParams()
+    const searchParams = useSearchParams()
     const botId = params.id as string
+    const mode = searchParams.get('mode')
+    const isEmbedMode = mode === 'iframe'
+
+    // Check if we are inside an iframe (any mode)
+    const [isInsideIframe, setIsInsideIframe] = useState(false)
+
+    useEffect(() => {
+        setIsInsideIframe(window.self !== window.top)
+    }, [])
+
     const {
         bot,
         isBotLoading,
@@ -28,7 +46,7 @@ export default function PublicBotPage() {
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
     const [conversationId, setConversationId] = useState<string | null>(null)
-    const [isOpen, setIsOpen] = useState(false)
+    const [isOpen, setIsOpen] = useState(isEmbedMode)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
     // Identity State
@@ -39,7 +57,7 @@ export default function PublicBotPage() {
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }, [messages])
+    }, [messages, loading])
 
     useEffect(() => {
         if (bot?.welcomeMessage && messages.length === 0) {
@@ -137,7 +155,7 @@ export default function PublicBotPage() {
         } catch {
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: t('error.general', { defaultValue: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.' }),
+                content: t('error.general', { defaultValue: 'Sorry, something went wrong. Please try again.' }),
                 timestamp: new Date().toISOString(),
             }])
         } finally {
@@ -145,399 +163,259 @@ export default function PublicBotPage() {
         }
     }
 
-    if (!bot) return null
+    if (isBotLoading) return (
+        <div className="flex items-center justify-center w-full h-screen bg-background">
+            <Spinner size="lg" />
+        </div>
+    );
 
-    const primaryColor = bot.theme?.primaryColor || '#667eea'
-    const position = bot.theme?.position || 'bottom-right'
-    const buttonSize = bot.theme?.buttonSize === 'large' ? '64px' :
-        bot.theme?.buttonSize === 'small' ? '48px' : '56px'
+    if (!bot) return null;
 
-    // Extended theme properties
-    const borderRadius = bot.theme?.borderRadius ?? 16
-    const glassmorphism = bot.theme?.glassmorphism ?? false
-    const headerStyle = bot.theme?.headerStyle ?? 'solid'
+    const primaryColor = bot.theme?.primaryColor || '#000000';
 
     return (
         <>
-            <style jsx global>{`
-                * { 
-                    box-sizing: border-box; 
-                    margin: 0;
-                    padding: 0;
-                }
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                    overflow: hidden;
-                    background: #fdfdfd;
-                }
-            `}</style>
+            <title>{bot.name}</title>
 
-
-            {/* Background Preview (Marketing Website) - Clear and interactive as requested */}
-            <div className="fixed inset-0 z-0 overflow-hidden">
-                <iframe
-                    src="/"
-                    className="w-full h-full"
-                    style={{ border: 'none' }}
-                    title="Marketing Preview"
-                />
-            </div>
-
-            {/* Chat Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                style={{
-                    position: 'fixed',
-                    [position.includes('right') ? 'right' : 'left']: '32px',
-                    [position.includes('bottom') ? 'bottom' : 'top']: '32px',
-                    width: buttonSize,
-                    height: buttonSize,
-                    borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${primaryColor} 0%, ${adjustColor(primaryColor, -20)} 100%)`,
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: `0 8px 24px ${primaryColor}40`,
-                    transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s',
-                    zIndex: 999999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)'
-                    e.currentTarget.style.boxShadow = `0 12px 32px ${primaryColor}60`
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
-                    e.currentTarget.style.boxShadow = `0 8px 24px ${primaryColor}40`
-                }}
-            >
-                <div className="text-white">
-                    {isOpen ? (
-                        <X size={28} />
-                    ) : (
-                        <MessageCircle size={28} />
-                    )}
+            {/* Background Marketing Preview - Hidden in Embed/Iframe */}
+            {!isInsideIframe && !isEmbedMode && (
+                <div className="fixed inset-0 z-0 overflow-hidden bg-background">
+                    <iframe
+                        src="/"
+                        className="w-full h-full opacity-30 pointer-events-none grayscale"
+                        style={{ border: 'none' }}
+                        title="Marketing Preview"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
                 </div>
-            </button>
+            )}
 
-            {/* Chat Window */}
-            {isOpen && (
-                <div style={{
-                    position: 'fixed',
-                    [position.includes('right') ? 'right' : 'left']: '32px',
-                    [position.includes('bottom') ? 'bottom' : 'top']: `calc(32px + ${buttonSize} + 20px)`,
-                    width: '400px',
-                    maxWidth: 'calc(100vw - 64px)',
-                    height: '650px',
-                    maxHeight: 'calc(100vh - 160px)',
-                    background: glassmorphism ? 'rgba(255, 255, 255, 0.85)' : 'white',
-                    backdropFilter: glassmorphism ? 'blur(20px)' : 'none',
-                    borderRadius: `${borderRadius}px`,
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.15)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    zIndex: 999998,
-                    overflow: 'hidden',
-                    animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}>
-                    {/* Header */}
-                    <div style={{
-                        background: headerStyle === 'minimal' ? 'white' : (headerStyle === 'gradient' ? `linear-gradient(135deg, ${primaryColor}, ${adjustColor(primaryColor, 40)})` : primaryColor),
-                        color: headerStyle === 'minimal' ? '#1f2937' : 'white',
-                        padding: '24px 20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        flexShrink: 0,
-                        borderBottom: headerStyle === 'minimal' ? '1px solid #eee' : 'none',
-                        boxShadow: headerStyle === 'minimal' ? 'none' : '0 4px 12px rgba(0,0,0,0.05)'
-                    }}>
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '12px',
-                            background: headerStyle === 'minimal' ? `${primaryColor}10` : 'rgba(255,255,255,0.2)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            overflow: 'hidden'
-                        }}>
-                            {bot.avatarUrl ? (
-                                <Image
-                                    src={bot.avatarUrl}
-                                    alt={bot.name}
-                                    width={48}
-                                    height={48}
-                                    className="object-cover w-full h-full"
-                                />
-                            ) : (
-                                <Bot size={28} color={headerStyle === 'minimal' ? primaryColor : 'white'} />
-                            )}
+            {/* Toggle Button (Floating) - Hidden in Embed Mode */}
+            {!isEmbedMode && (
+                <div
+                    className={cn(
+                        "fixed z-[50] transition-all duration-300 ease-in-out",
+                        isOpen ? "scale-0 opacity-0" : "scale-100 opacity-100",
+                        bot.theme?.position?.includes('left') ? 'left-6' : 'right-6',
+                        bot.theme?.position?.includes('top') ? 'top-6' : 'bottom-6'
+                    )}
+                >
+                    <Button
+                        size="icon"
+                        className="h-14 w-14 rounded-full shadow-2xl hover:scale-105 transition-transform"
+                        style={{ backgroundColor: primaryColor }}
+                        onClick={() => setIsOpen(true)}
+                    >
+                        <MessageCircle className="w-8 h-8 text-white" />
+                    </Button>
+                </div>
+            )}
+
+            {/* Main Chat Container */}
+            <div
+                className={cn(
+                    "fixed z-[40] overflow-hidden flex flex-col bg-background font-sans text-foreground transition-all duration-300 shadow-2xl",
+                    isEmbedMode
+                        ? "inset-0 w-full h-full rounded-none"
+                        : cn(
+                            "bottom-6 right-6 w-[400px] max-h-[700px] h-[calc(100vh-48px)] rounded-2xl border border-border/50",
+                            !isOpen && "translate-y-[120%] opacity-0 pointer-events-none"
+                        ),
+                    !isEmbedMode && "sm:max-w-md max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:rounded-none max-sm:bottom-0 max-sm:right-0"
+                )}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur-sm z-10 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 border">
+                            <AvatarImage src={bot.avatarUrl} alt={bot.name} className="object-cover" />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                                <Bot className="w-5 h-5" />
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                            <h3 className="text-sm font-bold leading-none tracking-tight">{bot.name}</h3>
+                            <span className="text-[10px] text-muted-foreground uppercase font-medium tracking-wider mt-0.5 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                Online
+                            </span>
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.02em' }}>
-                                {bot.name}
-                            </h3>
-                            {bot.description && (
-                                <p style={{ margin: '2px 0 0', fontSize: '12px', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {bot.description}
-                                </p>
-                            )}
-                        </div>
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            style={{
-                                background: headerStyle === 'minimal' ? '#f3f4f6' : 'rgba(0,0,0,0.1)',
-                                border: 'none',
-                                borderRadius: '10px',
-                                padding: '8px',
-                                cursor: 'pointer',
-                                color: headerStyle === 'minimal' ? '#4b5563' : 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.2s',
-                                flexShrink: 0,
-                            }}
-                        >
-                            <X size={20} />
-                        </button>
                     </div>
 
-                    {/* Content Area */}
-                    <div style={{
-                        flex: 1,
-                        overflowY: 'auto',
-                        padding: '0',
-                        background: 'transparent',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative'
-                    }}>
-                        {showIdentityForm ? (
-                            <div style={{
-                                padding: '24px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                height: '100%',
-                                textAlign: 'center'
-                            }}>
-                                <div style={{
-                                    width: '64px',
-                                    height: '64px',
-                                    borderRadius: '50%',
-                                    background: `${primaryColor}1a`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginBottom: '16px',
-                                    color: primaryColor
-                                }}>
-                                    <User size={32} />
-                                </div>
-                                <h4 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', color: '#1f2937' }}>{t('common.welcome', { defaultValue: 'Welcome!' })}</h4>
-                                <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
-                                    {t('publicBot.identitySubtitle', { defaultValue: 'Please enter your phone number to start chatting.' })}
-                                </p>
-                                <form onSubmit={handleIdentitySubmit} style={{ width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <input
-                                        type="text"
-                                        placeholder={t('login.name', { defaultValue: 'Your Name (Optional)' })}
-                                        value={identityName}
-                                        onChange={(e) => setIdentityName(e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '8px',
-                                            border: '1px solid #e5e7eb',
-                                            fontSize: '14px',
-                                            color: '#1f2937',
-                                            background: '#ffffff',
-                                            outline: 'none'
-                                        }}
-                                    />
-                                    <input
-                                        type="tel"
-                                        placeholder={t('login.phone', { defaultValue: 'Phone Number (Required)' })}
-                                        value={identityPhone}
-                                        onChange={(e) => setIdentityPhone(e.target.value)}
-                                        required
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '8px',
-                                            border: '1px solid #e5e7eb',
-                                            fontSize: '14px',
-                                            color: '#1f2937',
-                                            background: '#ffffff',
-                                            outline: 'none'
-                                        }}
-                                    />
-                                    <button
-                                        type="submit"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            borderRadius: '8px',
-                                            background: primaryColor,
-                                            color: 'white',
-                                            border: 'none',
-                                            fontSize: '14px',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            marginTop: '8px'
-                                        }}
-                                    >
-                                        {t('publicBot.startChatting', { defaultValue: 'Start Chatting' })}
-                                    </button>
-                                </form>
-                            </div>
-                        ) : (
-                            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-                                {messages.map((msg, idx) => (
-                                    <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                                        <div style={{
-                                            maxWidth: '80%',
-                                            padding: '12px 16px',
-                                            borderRadius: msg.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-                                            fontSize: '14px',
-                                            lineHeight: '1.5',
-                                            wordWrap: 'break-word',
-                                            background: msg.role === 'user' ? (bot.theme?.userMessageColor || primaryColor) : (bot.theme?.botMessageColor || 'white'),
-                                            color: msg.role === 'user' ? (bot.theme?.userMessageTextColor || 'white') : (bot.theme?.botMessageTextColor || '#1f2937'),
-                                            border: msg.role === 'user' ? 'none' : '1px solid #e5e7eb',
-                                        }}>
-                                            <MarkdownRenderer content={msg.content} />
-                                        </div>
+                    {!isEmbedMode && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground -mr-2"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                    )}
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 overflow-hidden relative bg-muted/5 flex flex-col">
+                    {showIdentityForm ? (
+                        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+                            <Card className="w-full max-w-sm shadow-xl border-border/60">
+                                <CardHeader className="text-center pb-2">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <User className="w-6 h-6 text-primary" style={{ color: primaryColor }} />
                                     </div>
-                                ))}
+                                    <CardTitle className="text-xl font-bold">{t('common.welcome', { defaultValue: 'Welcome!' })}</CardTitle>
+                                    <CardDescription>
+                                        {t('publicBot.identitySubtitle', { defaultValue: 'Please introduce yourself to start chatting.' })}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleIdentitySubmit} className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Input
+                                                placeholder={t('login.name', { defaultValue: 'Your Name (Optional)' })}
+                                                value={identityName}
+                                                onChange={(e) => setIdentityName(e.target.value)}
+                                                className="h-11 bg-background"
+                                                style={{ color: '#000000' }}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Input
+                                                type="tel"
+                                                placeholder={t('login.phone', { defaultValue: 'Phone Number (Required)' })}
+                                                value={identityPhone}
+                                                onChange={(e) => setIdentityPhone(e.target.value)}
+                                                required
+                                                className="h-11 bg-background"
+                                                style={{ color: '#000000' }}
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            className="w-full h-11 font-bold text-base shadow-lg transition-all active:scale-[0.98]"
+                                            disabled={loading}
+                                            style={{ backgroundColor: primaryColor }}
+                                        >
+                                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('publicBot.startChatting', { defaultValue: 'Start Chatting' })}
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                                <CardFooter className="justify-center pt-0 pb-6 text-xs text-muted-foreground">
+                                    Powered by WataAI
+                                </CardFooter>
+                            </Card>
+                        </div>
+                    ) : (
+                        <ScrollArea className="flex-1 px-4">
+                            <div className="flex flex-col gap-6 py-6 pb-4 max-w-3xl mx-auto min-h-full">
+                                {messages.map((msg, idx) => {
+                                    const isUser = msg.role === 'user';
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={cn(
+                                                "flex w-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                                                isUser ? "flex-row-reverse" : "flex-row"
+                                            )}
+                                        >
+                                            <Avatar className="h-8 w-8 shrink-0 border mt-1">
+                                                {isUser ? (
+                                                    <AvatarFallback className="bg-zinc-100 text-zinc-600">
+                                                        <User className="w-4 h-4" />
+                                                    </AvatarFallback>
+                                                ) : (
+                                                    <>
+                                                        <AvatarImage src={bot.avatarUrl} className="object-cover" />
+                                                        <AvatarFallback className="bg-primary/10 text-primary">
+                                                            <Bot className="w-4 h-4" />
+                                                        </AvatarFallback>
+                                                    </>
+                                                )}
+                                            </Avatar>
+
+                                            <div className={cn(
+                                                "flex flex-col max-w-[85%] lg:max-w-[75%]",
+                                                isUser ? "items-end" : "items-start"
+                                            )}>
+                                                <div className={cn(
+                                                    "px-4 py-3 text-sm leading-relaxed shadow-sm",
+                                                    isUser ? "bg-zinc-100 dark:bg-zinc-800 rounded-2xl rounded-tr-sm text-foreground" : "bg-white border rounded-2xl rounded-tl-sm text-foreground"
+                                                )}>
+                                                    <MarkdownRenderer content={msg.content} />
+                                                </div>
+                                                {isUser && msg.timestamp && (
+                                                    <span className="text-[10px] text-muted-foreground mt-1 mr-1 opacity-70">
+                                                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+
                                 {loading && (
-                                    <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                                        <div style={{ padding: '16px 20px', background: 'white', borderRadius: '14px', border: '1px solid #e5e7eb', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                {[0, 1, 2].map(i => (
-                                                    <div key={i} style={{
-                                                        width: '10px',
-                                                        height: '10px',
-                                                        background: primaryColor,
-                                                        opacity: 0.4,
-                                                        borderRadius: '50%',
-                                                        animation: 'bounce 1.4s infinite ease-in-out both',
-                                                        animationDelay: `${-0.32 + i * 0.16}s`,
-                                                    }} />
-                                                ))}
+                                    <div className="flex w-full gap-4 animate-in fade-in">
+                                        <Avatar className="h-8 w-8 shrink-0 border mt-1">
+                                            <AvatarImage src={bot.avatarUrl} />
+                                            <AvatarFallback className="bg-primary/10 text-primary"><Bot className="w-4 h-4" /></AvatarFallback>
+                                        </Avatar>
+                                        <div className="bg-white border text-foreground rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                                            <div className="flex space-x-1.5 h-5 items-center">
+                                                <div className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce [animation-delay:-0.3s]"></div>
+                                                <div className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce [animation-delay:-0.15s]"></div>
+                                                <div className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce"></div>
                                             </div>
                                         </div>
                                     </div>
                                 )}
-                                <div ref={messagesEndRef} />
+                                <div ref={messagesEndRef} className="h-px w-full" />
                             </div>
-                        )}
-                    </div>
-
-                    {/* Footer Input - Hide if identity form is showing */}
-                    {!showIdentityForm && (
-                        <div style={{
-                            padding: '16px',
-                            borderTop: '1px solid #e5e7eb',
-                            background: 'white',
-                            display: 'flex',
-                            gap: '8px',
-                            flexShrink: 0,
-                        }}>
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                                placeholder={bot.placeholderText || t('chat.typeMessage', { defaultValue: 'Nhập tin nhắn...' })}
-                                disabled={loading}
-                                rows={1}
-                                style={{
-                                    flex: 1,
-                                    padding: '10px 14px',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '10px',
-                                    fontSize: '14px',
-                                    outline: 'none',
-                                    transition: 'border-color 0.2s',
-                                    resize: 'none',
-                                    minHeight: '44px',
-                                    maxHeight: '120px',
-                                    fontFamily: 'inherit',
-                                    color: '#1f2937',
-                                    background: '#ffffff',
-                                }}
-                                onFocus={(e) => e.currentTarget.style.borderColor = primaryColor}
-                                onBlur={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
-                            />
-                            <button
-                                onClick={handleSend}
-                                disabled={!input.trim() || loading}
-                                style={{
-                                    padding: '10px 16px',
-                                    background: primaryColor,
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                                    fontSize: '14px',
-                                    transition: 'opacity 0.2s',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    opacity: loading || !input.trim() ? 0.5 : 1,
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!loading && input.trim()) e.currentTarget.style.opacity = '0.9'
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!loading && input.trim()) e.currentTarget.style.opacity = '1'
-                                }}
-                            >
-                                <Send size={20} />
-                            </button>
-                        </div>
+                        </ScrollArea>
                     )}
                 </div>
-            )}
 
-            <style jsx>{`
-                @keyframes bounce {
-                    0%, 80%, 100% { transform: scale(0); }
-                    40% { transform: scale(1); }
-                }
-                @media (max-width: 480px) {
-                    div[style*="width: 380px"] {
-                        width: 100vw !important;
-                        height: 100vh !important;
-                        max-width: 100vw !important;
-                        max-height: 100vh !important;
-                        bottom: 0 !important;
-                        right: 0 !important;
-                        left: 0 !important;
-                        top: 0 !important;
-                        border-radius: 0 !important;
-                    }
-                }
-            `}</style>
+                {/* Footer Input */}
+                {!showIdentityForm && (
+                    <div className="p-4 bg-background border-t">
+                        <div className="max-w-3xl mx-auto relative flex items-end gap-2">
+                            <div className="relative flex-1 rounded-3xl border border-input bg-background shadow-sm ring-offset-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                                <Textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend();
+                                        }
+                                    }}
+                                    disabled={loading}
+                                    placeholder={bot.placeholderText || t('chat.typeMessage', { defaultValue: 'Message...' })}
+                                    className="min-h-[44px] w-full resize-none border-0 bg-transparent py-3 pl-4 pr-12 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
+                                    rows={1}
+                                    style={{ color: '#000000' }}
+                                />
+                                <Button
+                                    size="icon"
+                                    onClick={handleSend}
+                                    disabled={!input.trim() || loading}
+                                    className={cn(
+                                        "absolute right-1.5 bottom-1.5 h-8 w-8 rounded-full transition-all",
+                                        input.trim() ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                                    )}
+                                    style={{ backgroundColor: primaryColor }}
+                                >
+                                    <Send className="h-4 w-4 text-white" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="text-center mt-2">
+                            <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 opacity-50">
+                                <Sparkles className="w-3 h-3" /> AI can make mistakes. Check important info.
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </div>
         </>
     )
-}
-
-function adjustColor(color: string, amount: number): string {
-    const num = parseInt(color.replace('#', ''), 16)
-    const r = Math.max(0, Math.min(255, (num >> 16) + amount))
-    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount))
-    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount))
-    return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')
 }

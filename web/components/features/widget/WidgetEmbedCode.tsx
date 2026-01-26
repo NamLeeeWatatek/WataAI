@@ -33,7 +33,7 @@ export function WidgetEmbedCode({ botId, activeVersion }: Props) {
 ></script>`;
     const publicBotUrl = `${baseUrl}/public/bots/${botId}`;
     const iframeCode = `<iframe
-  src="${publicBotUrl}"
+  src="${publicBotUrl}?mode=iframe"
   width="100%"
   height="100%"
   frameborder="0"
