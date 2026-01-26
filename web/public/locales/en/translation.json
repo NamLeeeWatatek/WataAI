@@ -891,7 +891,23 @@
     "auto_save": "Auto Save",
     "secure_input": "Secure Input",
     "prompt_required": "Please enter a prompt description.",
-    "validation_error": "Validation Error"
+    "validation_error": "Validation Error",
+    "search_placeholder": "Search creation tools...",
+    "all_categories": "All Categories",
+    "empty_title": "No tools found",
+    "empty_desc": "No creation tools match your criteria.",
+    "assets": "Assets",
+    "template": "Template",
+    "input": "Input",
+    "video": "Video",
+    "image": "Image",
+    "result": "Result",
+    "create_video": "Create Video",
+    "generate_image": "Generate Image",
+    "open_tool": "Open Tool",
+    "default_video_desc": "Generate high-quality videos using advanced AI models.",
+    "default_image_desc": "Create stunning images from text prompts.",
+    "default_tool_desc": "Use this tool to generate creative content."
   },
   "product_details": {
     "tabs": {
