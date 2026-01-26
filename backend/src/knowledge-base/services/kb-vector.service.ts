@@ -2,6 +2,7 @@
   Injectable,
   Logger,
   InternalServerErrorException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +21,7 @@ export interface SearchResult {
 }
 
 @Injectable()
-export class KBVectorService {
+export class KBVectorService implements OnModuleInit {
   private readonly logger = new Logger(KBVectorService.name);
   private qdrantClient: QdrantClient | null = null;
   private readonly collectionPrefix: string;
@@ -47,12 +48,25 @@ export class KBVectorService {
         apiKey: qdrantApiKey, // Optional for local Qdrant
       });
       this.isAvailable = true;
-      this.logger.log(`🚀 Qdrant vector service initialized at ${qdrantUrl}`);
+      this.logger.log(`🔌 Qdrant client config loaded for: ${qdrantUrl}`);
     } catch (error) {
       this.isAvailable = false;
       this.logger.error(
         `❌ Failed to initialize Qdrant client: ${error.message}`,
       );
+    }
+  }
+
+  async onModuleInit() {
+    if (this.isAvailable) {
+      const connected = await this.testConnection();
+      if (connected) {
+        this.logger.log('✅ Successfully connected to Qdrant cluster');
+      } else {
+        this.logger.error(
+          '❌ Qdrant client initialized but connection FAILED. Check URL and Network.',
+        );
+      }
     }
   }
 
@@ -213,7 +227,11 @@ export class KBVectorService {
         payload: result.payload as Record<string, any>,
       }));
     } catch (error) {
-      this.logger.error(`Error searching vectors: ${error.message}`);
+      this.logger.error(`Error searching vectors: ${error.message}`, {
+        cause: error.cause,
+        stack: error.stack,
+      });
+      console.error(error); // Force full log to stdout
       throw error;
     }
   }
