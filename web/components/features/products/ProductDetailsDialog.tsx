@@ -5,18 +5,20 @@ import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/Badge';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { CheckCircle, Clock, AlertCircle, Copy, ExternalLink, Activity, FileText } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, Copy, ExternalLink, Activity, FileText, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { Media } from '@/components/shared/Media';
 import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
 import { useChannels } from '@/lib/hooks/features/useChannels';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { creationJobsApi } from '@/lib/api/creation-jobs';
 
 interface ProductDetailsDialogProps {
     job: CreationJob | null;
@@ -25,6 +27,7 @@ interface ProductDetailsDialogProps {
 }
 
 export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetailsDialogProps) {
+    const { t } = useTranslation();
     const [kbName, setKbName] = useState<string | null>(null);
     const { currentWorkspace } = useWorkspace();
     const { channels } = useChannels(currentWorkspace?.id);
@@ -33,6 +36,12 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         queryKey: ['creation-tool', job?.creationToolId],
         queryFn: () => job?.creationToolId ? creationToolsApi.getById(job.creationToolId) : null,
         enabled: open && !!job?.creationToolId
+    });
+
+    const { data: publications, isLoading: isLoadingPubs } = useQuery({
+        queryKey: ['creation-job-publications', job?.id],
+        queryFn: () => job?.id ? creationJobsApi.getPublications(job.id) : [],
+        enabled: open && !!job?.id
     });
 
     useEffect(() => {
@@ -320,6 +329,74 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
         )
     }
 
+    const renderPublications = () => {
+        if (isLoadingPubs) {
+            return (
+                <div className="py-12 flex items-center justify-center">
+                    <LoadingLogo size="sm" text={t('common.loading')} />
+                </div>
+            );
+        }
+
+        if (!publications || publications.length === 0) {
+            return (
+                <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                        <Share2 className="w-8 h-8 text-muted-foreground/40" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm font-bold text-foreground">{t('product_details.publications.title')}</p>
+                        <p className="text-xs text-muted-foreground max-w-[200px]">
+                            {t('product_details.publications.no_history')}
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-4 w-1 bg-green-500 rounded-full" />
+                    <h4 className="text-sm font-bold uppercase tracking-tight">{t('product_details.publications.title')}</h4>
+                </div>
+
+                <div className="rounded-xl border border-border overflow-hidden bg-background divide-y">
+                    {publications.map((item: any, idx: number) => {
+                        const channel = channels.find((c: any) => String(c.id) === String(item.channelId));
+                        return (
+                            <div key={idx} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border">
+                                        <Share2 className="w-5 h-5 text-muted-foreground" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-bold">{channel?.name || item.platform || t('common.notAvailable')}</p>
+                                        <p className="text-[10px] text-muted-foreground">{format(new Date(item.createdAt), 'PPpp')}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <StatusBadge status={item.status as any} className="h-6 text-[10px] font-bold uppercase px-2" />
+                                    {item.url && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 text-[10px] font-bold uppercase tracking-wider"
+                                            onClick={() => window.open(item.url, '_blank')}
+                                        >
+                                            <ExternalLink className="w-3 h-3 mr-2" />
+                                            {t('product_details.publications.view_post')}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
+        );
+    }
+
     const getDisplayName = () => {
         if (!job) return '';
         const toolName = job.creationTool?.name || 'Product';
@@ -359,13 +436,19 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                 value="result"
                                 className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none transition-all uppercase text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground"
                             >
-                                <FileText className="w-3.5 h-3.5 mr-2" /> Result
+                                <FileText className="w-3.5 h-3.5 mr-2" /> {t('product_details.tabs.result')}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="process"
                                 className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none transition-all uppercase text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground"
                             >
-                                <Activity className="w-3.5 h-3.5 mr-2" /> Process & History
+                                <Activity className="w-3.5 h-3.5 mr-2" /> {t('product_details.tabs.process')}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="publications"
+                                className="rounded-none border-b-2 border-transparent px-0 py-3 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none transition-all uppercase text-[10px] font-bold tracking-widest text-muted-foreground hover:text-foreground"
+                            >
+                                <Share2 className="w-3.5 h-3.5 mr-2" /> {t('product_details.tabs.publications')}
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -377,6 +460,10 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
 
                         <TabsContent value="process" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {renderProcess()}
+                        </TabsContent>
+
+                        <TabsContent value="publications" className="mt-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            {renderPublications()}
                         </TabsContent>
                     </div>
                 </Tabs>

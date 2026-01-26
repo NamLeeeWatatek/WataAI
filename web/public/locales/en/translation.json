@@ -865,5 +865,51 @@
     "success_queued": "Successfully queued {{count}} post(s)!",
     "failed_generate": "Failed to generate",
     "failed_post": "Failed to post content"
+  },
+  "creation_tool": {
+    "title": "Creation Tool",
+    "description": "Use AI intelligence to create top-notch content for your brand.",
+    "back": "Back",
+    "step": "Step",
+    "continue": "Continue",
+    "run_continue": "Run & Continue",
+    "launch_generation": "Launch Generation",
+    "processing": "Processing...",
+    "processing_preview": "Processing Preview...",
+    "executing_step": "Executing",
+    "request_received": "Request Received!",
+    "failed_generate": "Failed to generate",
+    "step_completed": "Step Completed",
+    "review_content": "Please review the results below before continuing.",
+    "approve_continue": "Approve & Continue",
+    "close_modify": "Close & Modify",
+    "generated_image": "AI Generated Image",
+    "view_raw": "View Raw Data",
+    "view_output": "View Output",
+    "post_to_channels": "Post to Channels",
+    "ai_processing": "AI Processing",
+    "auto_save": "Auto Save",
+    "secure_input": "Secure Input",
+    "prompt_required": "Please enter a prompt description.",
+    "validation_error": "Validation Error"
+  },
+  "product_details": {
+    "tabs": {
+      "result": "Result",
+      "process": "Process & History",
+      "publications": "Post History"
+    },
+    "publications": {
+      "title": "Publication History",
+      "no_history": "This product has not been posted to any channels yet.",
+      "channel": "Channel",
+      "status": "Status",
+      "date": "Post Date",
+      "view_post": "View Post",
+      "posted_by": "Posted By",
+      "success": "Success",
+      "failed": "Failed",
+      "pending": "Pending"
+    }
   }
 }
