@@ -40,7 +40,7 @@ import { TriggerActionBodyDto } from './dto/trigger-action-body.dto';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller('creation-jobs')
 export class CreationJobsController {
-  constructor(private readonly service: CreationJobsService) { }
+  constructor(private readonly service: CreationJobsService) {}
 
   @Post()
   @Permissions('job:Create')
@@ -236,5 +236,22 @@ export class CreationJobsController {
   })
   cancel(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.service.cancel(id, workspaceId);
+  }
+
+  @Get(':id/publications')
+  @Permissions('job:Get')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    description: 'Get publication history for a job',
+  })
+  getPublications(
+    @Param('id') id: string,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.getPublications(id, workspaceId);
   }
 }

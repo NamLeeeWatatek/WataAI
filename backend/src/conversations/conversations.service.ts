@@ -57,7 +57,7 @@ export class ConversationsService {
     private subscriptionsService: SubscriptionsService,
     private ragService: KBRagService,
     private aiProvidersService: AiProvidersService,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateConversationDto & {
@@ -247,9 +247,11 @@ export class ConversationsService {
 
     if (options.uniqueLeads) {
       // Group by contactId to show unique leads, but treat nulls as unique individuals
-      // COALESCE(contact_id, id::text) ensures identified users are grouped, 
+      // COALESCE(contact_id, id::text) ensures identified users are grouped,
       // while anonymous sessions stay separate and don't collapse into one row.
-      query.distinctOn(['(COALESCE(conversation.contact_id::text, conversation.id::text))']);
+      query.distinctOn([
+        '(COALESCE(conversation.contact_id::text, conversation.id::text))',
+      ]);
     }
 
     query.where('conversation.deletedAt IS NULL');
@@ -322,7 +324,10 @@ export class ConversationsService {
 
     if (options.uniqueLeads) {
       // When using DISTINCT ON, the first ORDER BY must match exactly the DISTINCT ON expression
-      query.orderBy('(COALESCE(conversation.contact_id::text, conversation.id::text))', 'ASC');
+      query.orderBy(
+        '(COALESCE(conversation.contact_id::text, conversation.id::text))',
+        'ASC',
+      );
       query.addOrderBy('conversation.lastMessageAt', 'DESC', 'NULLS LAST');
     } else {
       query.orderBy('conversation.lastMessageAt', 'DESC', 'NULLS LAST');
@@ -368,7 +373,7 @@ export class ConversationsService {
           if (lastMsg) {
             lastMessage = lastMsg.content;
           }
-        } catch (_) { }
+        } catch (_) {}
 
         return {
           ...item,
@@ -572,11 +577,14 @@ export class ConversationsService {
   }
 
   /**
-   * Automatically extracts phone/email from a message and links the conversation 
+   * Automatically extracts phone/email from a message and links the conversation
    * to a Contact record. This ensures anonymous sessions become identified leads
    * as soon as they provide contact info.
    */
-  private async extractIdentityAndLinkContact(conversation: ConversationEntity, text: string) {
+  private async extractIdentityAndLinkContact(
+    conversation: ConversationEntity,
+    text: string,
+  ) {
     try {
       const phoneRegex = /(?:(?:\+|00)84|0)\d{9,10}/g;
       const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
@@ -586,7 +594,8 @@ export class ConversationsService {
 
       if (!phone && !email) return;
 
-      const workspaceId = conversation.workspaceId || conversation.bot?.workspaceId;
+      const workspaceId =
+        conversation.workspaceId || conversation.bot?.workspaceId;
       if (!workspaceId) return;
 
       // Find or create the contact using the existing helper
@@ -594,7 +603,9 @@ export class ConversationsService {
         workspaceId,
         phone,
         email,
-        name: conversation.metadata?.contactName || `Guest ${phone ? phone.slice(-4) : 'User'}`
+        name:
+          conversation.metadata?.contactName ||
+          `Guest ${phone ? phone.slice(-4) : 'User'}`,
       });
 
       // Link the conversation to this contact
@@ -604,11 +615,13 @@ export class ConversationsService {
           ...conversation.metadata,
           contactPhone: contact.phone || undefined,
           contactEmail: contact.email || undefined,
-          contactName: contact.name || undefined
-        } as any
+          contactName: contact.name || undefined,
+        } as any,
       });
 
-      this.logger.log(`🔗 Automatically linked conversation ${conversation.id} to contact ${contact.id} (${contact.phone || contact.email})`);
+      this.logger.log(
+        `🔗 Automatically linked conversation ${conversation.id} to contact ${contact.id} (${contact.phone || contact.email})`,
+      );
     } catch (error) {
       this.logger.warn(`Failed to auto-link identity: ${error.message}`);
     }

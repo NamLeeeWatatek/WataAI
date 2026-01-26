@@ -41,4 +41,19 @@ export abstract class CreationJobsRepository {
     ids: CreationJob['id'][],
     workspaceId: string,
   ): Promise<void>;
+
+  abstract createPublication(
+    data: Omit<
+      import('../../domain/creation-job-publication').CreationJobPublication,
+      'id' | 'createdAt' | 'updatedAt'
+    >,
+  ): Promise<
+    import('../../domain/creation-job-publication').CreationJobPublication
+  >;
+
+  abstract findPublicationsByJobId(
+    jobId: string,
+  ): Promise<
+    import('../../domain/creation-job-publication').CreationJobPublication[]
+  >;
 }
