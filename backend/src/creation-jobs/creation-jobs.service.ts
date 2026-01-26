@@ -13,6 +13,7 @@ import { UpdateCreationJobDto } from './dto/update-creation-jobs.dto';
 import { CreationJobsRepository } from './infrastructure/persistence/creation-jobs.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreationJob, CreationJobStatus } from './domain/creation-jobs';
+import { PublicationStatus } from './domain/creation-job-publication';
 import { NullableType } from '../utils/types/nullable.type';
 import { ExecutionQueueService } from '../execution/queue/execution-queue.service';
 import { CreationToolsService } from '../creation-tools/creation-tools.service';
@@ -127,7 +128,7 @@ export class CreationJobsService {
     private readonly oauthService: OAuthService,
     @Inject(forwardRef(() => BotExecutionService))
     private readonly botExecutionService: BotExecutionService,
-  ) { }
+  ) {}
 
   async executePreview(
     toolId: string,
@@ -552,7 +553,8 @@ export class CreationJobsService {
       const relevantInputs = Object.entries(inputs)
         .filter(([key]) => !key.startsWith('_') && key !== 'id')
         .map(([key, val]) => {
-          if (typeof val === 'string' && val.length > 500) return `${key}: [Nội dung dài]`;
+          if (typeof val === 'string' && val.length > 500)
+            return `${key}: [Nội dung dài]`;
           return `${key}: ${val}`;
         });
       if (relevantInputs.length > 0) {
@@ -564,20 +566,34 @@ export class CreationJobsService {
     if (job.outputData) {
       const output = job.outputData as Record<string, any>;
       // Look for main content fields
-      const contentFields = ['content', 'text', 'result', 'description', 'caption', 'article'];
+      const contentFields = [
+        'content',
+        'text',
+        'result',
+        'description',
+        'caption',
+        'article',
+      ];
       const foundContent = contentFields
-        .map(f => output[f])
-        .find(val => typeof val === 'string' && val.trim().length > 0);
+        .map((f) => output[f])
+        .find((val) => typeof val === 'string' && val.trim().length > 0);
 
       if (foundContent) {
         parts.push(`\n[Kết quả tạo ra]:\n${foundContent}`);
       } else {
         // Fallback: take all string fields that aren't URLs
         const otherStrings = Object.entries(output)
-          .filter(([_, val]) => typeof val === 'string' && val.length > 10 && !val.startsWith('http'))
+          .filter(
+            ([_, val]) =>
+              typeof val === 'string' &&
+              val.length > 10 &&
+              !val.startsWith('http'),
+          )
           .map(([key, val]) => `${key}: ${val}`);
         if (otherStrings.length > 0) {
-          parts.push(`\n[Dữ liệu kết quả bổ sung]:\n${otherStrings.join('\n')}`);
+          parts.push(
+            `\n[Dữ liệu kết quả bổ sung]:\n${otherStrings.join('\n')}`,
+          );
         }
       }
     }
@@ -803,11 +819,61 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
             status: 'success',
             data: result,
           });
+
+          // Persistent publication record
+          await this.creationJobsRepository.createPublication({
+            jobId,
+            channelId: rawChannelId,
+            platform: channel.type,
+            status: PublicationStatus.SUCCESS,
+            externalId: String(result?.id || result?.postId || ''),
+            url: result?.permalink_url || result?.url,
+            metadata: result,
+          });
+
+          // Optional: Still keep audit log for high-level security tracking
+          await this.auditService.log({
+            userId: job.createdBy || 'unknown',
+            workspaceId,
+            action: 'JOB_PUBLISHED',
+            resourceType: 'creation-job',
+            resourceId: jobId,
+            details: {
+              channelId: rawChannelId,
+              status: 'success',
+              platform: channel.type,
+            },
+          });
         } else {
+          const errorMsg = `Channel type ${channel.type} not supported for posting yet`;
           results.push({
             channelId: rawChannelId,
             status: 'error',
-            error: `Channel type ${channel.type} not supported for posting yet`,
+            error: errorMsg,
+          });
+
+          // Persistent publication record (Failed)
+          await this.creationJobsRepository.createPublication({
+            jobId,
+            channelId: rawChannelId,
+            platform: channel.type,
+            status: PublicationStatus.FAILED,
+            error: errorMsg,
+          });
+
+          // Log failed publication
+          await this.auditService.log({
+            userId: job.createdBy || 'unknown',
+            workspaceId,
+            action: 'JOB_PUBLISHED',
+            resourceType: 'creation-job',
+            resourceId: jobId,
+            details: {
+              channelId: rawChannelId,
+              status: 'error',
+              platform: channel.type,
+              error: errorMsg,
+            },
           });
         }
       } catch (err) {
@@ -816,10 +882,37 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           status: 'error',
           error: err.message,
         });
+
+        // Persistent publication record (Failed due to exception)
+        await this.creationJobsRepository.createPublication({
+          jobId,
+          channelId: rawChannelId,
+          platform: 'unknown',
+          status: PublicationStatus.FAILED,
+          error: err.message,
+        });
+
+        // Log failed publication due to exception
+        await this.auditService.log({
+          userId: job.createdBy || 'unknown',
+          workspaceId,
+          action: 'JOB_PUBLISHED',
+          resourceType: 'creation-job',
+          resourceId: jobId,
+          details: {
+            channelId: rawChannelId,
+            status: 'error',
+            error: err.message,
+          },
+        });
       }
     }
 
     return results;
+  }
+
+  async getPublications(jobId: string, workspaceId: string): Promise<any[]> {
+    return this.creationJobsRepository.findPublicationsByJobId(jobId);
   }
 
   async triggerAction(
