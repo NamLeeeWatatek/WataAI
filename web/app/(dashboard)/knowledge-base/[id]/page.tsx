@@ -96,6 +96,7 @@ export default function KnowledgeBaseDetailPage() {
         setDragOverFolder,
         setPagination,
         clearSelection,
+        updateDocument
     } = useKnowledgeBaseController(kbId)
 
     // --- Local UI State ---
@@ -231,6 +232,18 @@ export default function KnowledgeBaseDetailPage() {
                         onSort={() => { }}
                         onEditItem={(item: any) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
                         onDeleteItem={(item: any) => setDeleteItem({ type: item.type, id: item.id })}
+                        onReloadItem={async (item: any) => {
+                            if (item.type === 'document') {
+                                try {
+                                    // Trigger re-crawl by setting status to pending
+                                    await updateDocument(item.id, { status: 'pending' });
+                                    toast.success('Document queued for re-processing');
+                                    refresh();
+                                } catch (e) {
+                                    toast.error('Failed to reload document');
+                                }
+                            }
+                        }}
                         onPreviewDocument={(id: string) => {
                             const item = items.find(i => i.id === id);
                             // Cast to any to access potential document properties not in the list view type
@@ -416,6 +429,14 @@ export default function KnowledgeBaseDetailPage() {
                 open={urlPreviewItem !== null}
                 onOpenChange={(open) => !open && setUrlPreviewItem(null)}
                 document={urlPreviewItem}
+                onSave={async (id, content) => {
+                    await updateDocument(id, { content });
+                    refresh();
+                }}
+                onReload={async (id) => {
+                    await updateDocument(id, { status: 'pending' });
+                    refresh();
+                }}
             />
 
             <KBItemEditDialog
