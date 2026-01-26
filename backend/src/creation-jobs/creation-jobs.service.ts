@@ -128,7 +128,7 @@ export class CreationJobsService {
     private readonly oauthService: OAuthService,
     @Inject(forwardRef(() => BotExecutionService))
     private readonly botExecutionService: BotExecutionService,
-  ) {}
+  ) { }
 
   async executePreview(
     toolId: string,
@@ -823,7 +823,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           // Persistent publication record
           await this.creationJobsRepository.createPublication({
             jobId,
-            channelId: rawChannelId,
+            channelId,
             platform: channel.type,
             status: PublicationStatus.SUCCESS,
             externalId: String(result?.id || result?.postId || ''),
@@ -855,7 +855,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           // Persistent publication record (Failed)
           await this.creationJobsRepository.createPublication({
             jobId,
-            channelId: rawChannelId,
+            channelId,
             platform: channel.type,
             status: PublicationStatus.FAILED,
             error: errorMsg,
@@ -886,7 +886,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
         // Persistent publication record (Failed due to exception)
         await this.creationJobsRepository.createPublication({
           jobId,
-          channelId: rawChannelId,
+          channelId,
           platform: 'unknown',
           status: PublicationStatus.FAILED,
           error: err.message,
