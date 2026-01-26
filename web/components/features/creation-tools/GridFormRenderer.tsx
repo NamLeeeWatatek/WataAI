@@ -60,6 +60,16 @@ export function GridFormRenderer({
 
     const router = useRouter()
 
+    // Reset state when toolId changes to prevent leakage across different tools
+    useEffect(() => {
+        if (toolId) {
+            setStepResults({});
+            setPreviewResults(null);
+            setCurrentJobId(null);
+            setLocalStep(0);
+        }
+    }, [toolId]);
+
     useEffect(() => {
         let timer: NodeJS.Timeout
         if (isExecutingStep) {
@@ -88,19 +98,18 @@ export function GridFormRenderer({
                         // Update previewResults for the preview component
                         setPreviewResults(output);
 
-                        // Also try to update stepResults - heuristic to find which step this output belongs to
-                        // If output has 'steps', map them back
-                        if (output.steps && Array.isArray(output.steps)) {
-                            setStepResults(prev => {
-                                const next = { ...prev };
-                                output.steps.forEach((s: any) => {
-                                    if (s.id && s.result) next[s.id] = s.result;
-                                });
-                                return next;
-                            });
-                        } else {
-                            // Fallback: If we can't map to a step, treat it as a generic preview result
-                            // This ensures it shows up in FieldResultPreview via 'allValues.preview'
+                        // Also try to update stepResults - map them back from the steps object
+                        if (output.steps && typeof output.steps === 'object' && !Array.isArray(output.steps)) {
+                            setStepResults(prev => ({
+                                ...prev,
+                                ...output.steps
+                            }));
+                        } else if (output.results && typeof output.results === 'object') {
+                            // Support alternative 'results' key
+                            setStepResults(prev => ({
+                                ...prev,
+                                ...output.results
+                            }));
                         }
                     }
                 } catch (e) {

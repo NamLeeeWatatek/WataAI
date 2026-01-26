@@ -16,7 +16,7 @@ export class ExecutionStrategyResolver {
     private readonly httpStrategy: HttpExecutionStrategy,
     private readonly aiStrategy: AiExecutionStrategy,
     private readonly workflowStrategy: WorkflowExecutionStrategy,
-  ) {}
+  ) { }
 
   resolve(type: ExecutionType): IExecutionStrategy {
     switch (type) {
@@ -69,16 +69,23 @@ export class ExecutionStrategyResolver {
     const inputs = { ...currentData };
 
     // 1. Flatten all previous results into root inputs for easy access (e.g. {{field_name}})
-    // This makes it much easier for users to build their payload without knowing internal step IDs
+    // We iterate in order of insertion, so later steps naturally override earlier ones if they use the same keys.
     Object.values(previousResults).forEach((result: any) => {
-      if (result && typeof result === 'object') {
-        // We'll merge them so later steps can override earlier ones if there's a name collision
-        // but current step data always wins (as it was already in inputs)
+      if (result && typeof result === 'object' && !Array.isArray(result)) {
         Object.entries(result).forEach(([key, value]) => {
-          if (!(key in inputs)) {
+          // Skip internal/meta keys if any, but otherwise let later results overwrite earlier ones
+          if (key !== 'prev' && key !== 'steps' && key !== 'latest') {
             inputs[key] = value;
           }
         });
+      }
+    });
+
+    // Explicitly add any root-level values from previousResults (like 'latest') last
+    // to ensure they have highest priority after flattening.
+    Object.entries(previousResults).forEach(([key, value]) => {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        inputs[key] = value;
       }
     });
 
