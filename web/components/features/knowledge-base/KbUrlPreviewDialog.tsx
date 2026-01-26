@@ -87,7 +87,7 @@ export function KbUrlPreviewDialog({
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="sm:max-w-2xl w-full flex flex-col p-0 gap-0 overflow-hidden">
+            <SheetContent side="right" className="sm:max-w-[1000px] w-full flex flex-col p-0 gap-0 overflow-hidden">
                 <SheetHeader className="px-6 py-4 border-b bg-muted/5 z-10">
                     <SheetTitle className="flex items-start justify-between gap-2 w-full">
                         <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -166,7 +166,7 @@ export function KbUrlPreviewDialog({
                                     <ImageIcon className="w-4 h-4 mr-2" /> Visual Preview
                                 </TabsTrigger>
                                 <TabsTrigger value="schema" className="font-bold">
-                                    <Code className="w-4 h-4 mr-2" /> Metadata
+                                    <Code className="w-4 h-4 mr-2" /> Metadata & Schema
                                 </TabsTrigger>
                             </TabsList>
 
@@ -207,7 +207,7 @@ export function KbUrlPreviewDialog({
                                     {isPreview ? (
                                         <div className="min-h-[300px] p-4 bg-background border rounded-md prose prose-sm max-w-none dark:prose-invert overflow-auto">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                {editedContent || '*No content.*'}
+                                                {editedContent ? editedContent.replace(/!\s*\((https?:\/\/[^)]+)\)/g, '![]($1)') : '*No content.*'}
                                             </ReactMarkdown>
                                         </div>
                                     ) : (
