@@ -834,6 +834,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
               externalId: String(result?.id || result?.postId || ''),
               url: result?.permalink_url || result?.url,
               metadata: result,
+              content: message,
             });
           }
 
@@ -866,6 +867,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
               platform: channel.type,
               status: PublicationStatus.FAILED,
               error: errorMsg,
+              content: message,
             });
           }
 
@@ -901,6 +903,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
               platform: 'unknown',
               status: PublicationStatus.FAILED,
               error: err.message,
+              content: message,
             });
           } catch (saveErr) {
             console.error("Failed to save publication error record:", saveErr);

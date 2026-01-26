@@ -365,30 +365,39 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                     {publications.map((item: any, idx: number) => {
                         const channel = channels.find((c: any) => String(c.id) === String(item.channelId));
                         return (
-                            <div key={idx} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border">
-                                        <Share2 className="w-5 h-5 text-muted-foreground" />
+                            <div key={idx} className="flex flex-col hover:bg-muted/30 transition-colors">
+                                <div className="p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center overflow-hidden border">
+                                            <Share2 className="w-5 h-5 text-muted-foreground" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-bold">{channel?.name || item.platform || t('common.notAvailable')}</p>
+                                            <p className="text-[10px] text-muted-foreground">{format(new Date(item.createdAt), 'PPpp')}</p>
+                                        </div>
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-bold">{channel?.name || item.platform || t('common.notAvailable')}</p>
-                                        <p className="text-[10px] text-muted-foreground">{format(new Date(item.createdAt), 'PPpp')}</p>
+                                    <div className="flex items-center gap-4">
+                                        <StatusBadge status={item.status as any} className="h-6 text-[10px] font-bold uppercase px-2" />
+                                        {item.url && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 text-[10px] font-bold uppercase tracking-wider"
+                                                onClick={() => window.open(item.url, '_blank')}
+                                            >
+                                                <ExternalLink className="w-3 h-3 mr-2" />
+                                                {t('product_details.publications.view_post')}
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <StatusBadge status={item.status as any} className="h-6 text-[10px] font-bold uppercase px-2" />
-                                    {item.url && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 text-[10px] font-bold uppercase tracking-wider"
-                                            onClick={() => window.open(item.url, '_blank')}
-                                        >
-                                            <ExternalLink className="w-3 h-3 mr-2" />
-                                            {t('product_details.publications.view_post')}
-                                        </Button>
-                                    )}
-                                </div>
+                                {item.content && (
+                                    <div className="px-16 pb-4">
+                                        <div className="p-3 bg-muted/40 rounded-lg text-xs text-muted-foreground italic border border-border/50">
+                                            "{item.content}"
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )
                     })}

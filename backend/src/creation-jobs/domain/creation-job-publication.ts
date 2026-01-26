@@ -35,6 +35,9 @@ export class CreationJobPublication {
   @ApiProperty({ required: false })
   error?: string;
 
+  @ApiProperty({ required: false })
+  content?: string;
+
   @ApiProperty()
   createdAt: Date;
 
