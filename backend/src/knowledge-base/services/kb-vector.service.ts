@@ -115,6 +115,10 @@ export class KBVectorService implements OnModuleInit {
               distance: 'Cosine',
             },
           });
+          // Optimization: create payload index immediately for efficient hybrid search
+          this.createPayloadIndex(dimension).catch((err) =>
+            this.logger.warn(`Background index creation failed: ${err.message}`),
+          );
           return collectionName;
         }
 

@@ -18,7 +18,7 @@ export class KBSearchService {
   constructor(
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly vectorService: KBVectorService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -111,12 +111,21 @@ export class KBSearchService {
       );
 
       // 2. Keyword Search (Qdrant Payload Search)
-      const keywordResults = await this.vectorService.searchByPayload(
-        query,
-        workspaceId,
-        limit * 3,
-        queryEmbedding.length,
-      );
+      // 2. Keyword Search (Qdrant Payload Search)
+      let keywordResults: any[] = [];
+      try {
+        keywordResults = await this.vectorService.searchByPayload(
+          query,
+          workspaceId,
+          limit * 3,
+          queryEmbedding.length,
+        );
+      } catch (err) {
+        this.logger.warn(
+          `Keyword search failed (skipping hybrid part): ${err.message}`,
+        );
+        keywordResults = [];
+      }
 
       // 3. Merging with Weighted Reciprocal Rank Fusion (RRF)
       const rrfResults = new Map<
