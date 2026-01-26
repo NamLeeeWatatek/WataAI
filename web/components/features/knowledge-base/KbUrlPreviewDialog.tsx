@@ -1,9 +1,9 @@
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/Dialog'
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/Sheet'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -80,26 +80,26 @@ export function KbUrlPreviewDialog({
     const statusClass = statusColors[itemStatus as keyof typeof statusColors] || statusColors.pending
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-                <DialogHeader className="px-6 py-4 border-b bg-muted/5">
-                    <DialogTitle className="flex items-center justify-between gap-2 w-full">
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent side="right" className="sm:max-w-2xl w-full flex flex-col p-0 gap-0 overflow-hidden">
+                <SheetHeader className="px-6 py-4 border-b bg-muted/5">
+                    <SheetTitle className="flex items-center justify-between gap-2 w-full">
                         <span className="truncate max-w-[400px]">Link Details</span>
                         {onReload && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-2 font-bold text-xs uppercase tracking-wider"
+                                className="h-8 gap-2 font-bold text-xs uppercase tracking-wider mr-8"
                                 onClick={handleReload}
                             >
                                 <RotateCcw className="w-3.5 h-3.5" />
                                 Re-train Page
                             </Button>
                         )}
-                    </DialogTitle>
-                </DialogHeader>
+                    </SheetTitle>
+                </SheetHeader>
 
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 h-full">
                     <div className="p-6 space-y-6">
                         {/* Status Section */}
                         <div className="space-y-4">
@@ -224,7 +224,7 @@ export function KbUrlPreviewDialog({
                 <div className="p-4 border-t bg-muted/5 flex justify-end">
                     <Button onClick={() => onOpenChange(false)}>Close</Button>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     )
 }
