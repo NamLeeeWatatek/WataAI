@@ -144,35 +144,48 @@ export function KbTableView({
       id: 'name',
       header: 'Name',
       accessorKey: 'name',
-      cell: ({ row, getValue }) => (
-        <div className="flex items-center gap-4 py-1 group max-w-md">
-          <div className={cn(
-            "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
-            "group-hover:scale-105 group-hover:shadow-md",
-            row.original.type === 'folder'
-              ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
-              : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
-          )}>
-            <KbFileIcon name={row.original.name} type={row.original.type} className="w-5 h-5" />
+      cell: ({ row, getValue }) => {
+        const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
+        const isImageFile = row.original.type === 'document' && isImage(row.original.name);
+
+        return (
+          <div className="flex items-center gap-4 py-1 group max-w-md">
+            <div className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm overflow-hidden shrink-0",
+              "group-hover:scale-105 group-hover:shadow-md",
+              row.original.type === 'folder'
+                ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
+            )}>
+              {isImageFile && row.original.sourceUrl ? (
+                <img
+                  src={row.original.sourceUrl}
+                  alt={row.original.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <KbFileIcon name={row.original.name} type={row.original.type} className="w-5 h-5" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              {row.original.sourceUrl ? (
+                <a
+                  href={row.original.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-sm line-clamp-2 leading-tight hover:text-primary transition-colors hover:underline block break-words whitespace-normal"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {String(getValue())}
+                </a>
+              ) : (
+                <div className="font-bold text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors break-words whitespace-normal">{String(getValue())}</div>
+              )}
+              {row.original.description && <div className="text-[10px] text-muted-foreground line-clamp-2 font-medium mt-0.5 break-words whitespace-normal">{row.original.description}</div>}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            {row.original.sourceUrl ? (
-              <a
-                href={row.original.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-sm truncate leading-tight hover:text-primary transition-colors hover:underline block"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {String(getValue())}
-              </a>
-            ) : (
-              <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{String(getValue())}</div>
-            )}
-            {row.original.description && <div className="text-[10px] text-muted-foreground truncate font-medium mt-0.5">{row.original.description}</div>}
-          </div>
-        </div>
-      )
+        )
+      }
     },
     {
       id: 'type',
