@@ -6,8 +6,8 @@ import { usePublicBot } from '@/lib/hooks/features/usePublicBot'
 import { useTranslation } from 'react-i18next'
 import { MarkdownRenderer } from '@/components/features/widget/MarkdownRenderer'
 import { MessageCircle, X, Send, User, Bot, Loader2, Sparkles } from 'lucide-react'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { PublicBotLanding } from '@/components/features/public-bot/PublicBotLanding'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -177,16 +177,10 @@ export default function PublicBotPage() {
         <>
             <title>{bot.name}</title>
 
-            {/* Background Marketing Preview - Hidden in Embed/Iframe */}
+            {/* Landing Page Mode - Main View */}
             {!isInsideIframe && !isEmbedMode && (
                 <div className="fixed inset-0 z-0 overflow-hidden bg-background">
-                    <iframe
-                        src="/"
-                        className="w-full h-full opacity-30 pointer-events-none grayscale"
-                        style={{ border: 'none' }}
-                        title="Marketing Preview"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+                    <PublicBotLanding bot={bot} onStartChat={() => setIsOpen(true)} />
                 </div>
             )}
 

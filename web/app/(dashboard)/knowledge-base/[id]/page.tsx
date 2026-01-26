@@ -14,6 +14,7 @@ import {
     KBItemEditDialog,
     KbTableView,
     KbFileIcon,
+    KbUrlPreviewDialog,
 } from '@/components/features/knowledge-base'
 import { KbBreadcrumbs } from '@/components/features/knowledge-base/KbBreadcrumbs'
 import {
@@ -107,6 +108,7 @@ export default function KnowledgeBaseDetailPage() {
     const [editingItem, setEditingItem] = useState<{ type: 'folder' | 'document', item: KBFolder | KBDocument } | null>(null)
     const [deleteItem, setDeleteItem] = useState<{ type: 'folder' | 'document', id: string } | null>(null)
     const [showBulkDelete, setShowBulkDelete] = useState(false)
+    const [urlPreviewItem, setUrlPreviewItem] = useState<KBDocument | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const { updateKB } = useKnowledgeBases(kb?.workspaceId || undefined)
@@ -230,7 +232,14 @@ export default function KnowledgeBaseDetailPage() {
                         onEditItem={(item: any) => setEditingItem({ type: item.type, item: item as unknown as KBFolder | KBDocument })}
                         onDeleteItem={(item: any) => setDeleteItem({ type: item.type, id: item.id })}
                         onPreviewDocument={(id: string) => {
-                            import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
+                            const item = items.find(i => i.id === id);
+                            // Cast to any to access potential document properties not in the list view type
+                            const doc = item as any;
+                            if (doc && doc.type === 'document' && (doc.fileType === 'webpage' || doc.sourceUrl || doc.type === 'url')) {
+                                setUrlPreviewItem(doc as KBDocument);
+                            } else {
+                                import('@/lib/utils/document-actions').then(({ previewDocument }) => previewDocument(id));
+                            }
                         }}
                         onDownloadDocument={(id: string, filename: string) => {
                             import('@/lib/utils/document-actions').then(({ downloadDocument }) => downloadDocument(id, filename));
@@ -401,6 +410,12 @@ export default function KnowledgeBaseDetailPage() {
                 knowledgeBaseId={kbId}
                 folderId={currentFolderId}
                 onSuccess={() => refresh()}
+            />
+
+            <KbUrlPreviewDialog
+                open={urlPreviewItem !== null}
+                onOpenChange={(open) => !open && setUrlPreviewItem(null)}
+                document={urlPreviewItem}
             />
 
             <KBItemEditDialog

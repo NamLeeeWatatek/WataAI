@@ -158,6 +158,13 @@ export async function syncFacebookConversations(channelId: string, params: { con
 }
 
 /**
+ * Sync Instagram conversations
+ */
+export async function syncInstagramConversations(channelId: string, params: { conversationLimit?: number; messageLimit?: number } = {}): Promise<any> {
+  return axiosClient.post(`/channels/instagram/connections/${channelId}/sync-to-db`, params)
+}
+
+/**
  * Hand over conversation to human (Takeover)
  */
 export async function takeoverConversation(id: string): Promise<any> {

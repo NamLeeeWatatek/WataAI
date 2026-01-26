@@ -31,6 +31,9 @@ import { TelegramWebhookProcessor } from './webhooks/telegram-webhook.processor'
 import { WebhookLoggerInterceptor } from './interceptors/webhook-logger.interceptor';
 import { FacebookSyncService } from './services/facebook-sync.service';
 import { FacebookConversationSyncService } from './services/facebook-conversation-sync.service';
+import { InstagramSyncService } from './services/instagram-sync.service';
+import { InstagramConversationSyncService } from './services/instagram-conversation-sync.service';
+import { InstagramController } from './instagram.controller';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { WebhookQueueConsumer } from './webhooks/webhook.consumer';
 
@@ -50,6 +53,7 @@ import { WebhookQueueConsumer } from './webhooks/webhook.consumer';
     ChannelsController,
     WebhooksController,
     FacebookOAuthController,
+    InstagramController,
   ],
   providers: [
     ChannelsService,
@@ -60,6 +64,8 @@ import { WebhookQueueConsumer } from './webhooks/webhook.consumer';
     FacebookOAuthService,
     FacebookSyncService,
     FacebookConversationSyncService,
+    InstagramSyncService,
+    InstagramConversationSyncService,
     ChannelEventListener,
     FacebookWebhookProcessor,
     InstagramWebhookProcessor,
@@ -81,7 +87,7 @@ export class ChannelsModule implements OnModuleInit {
     private readonly facebookProvider: FacebookProvider,
     private readonly googleProvider: GoogleProvider,
     private readonly omiProvider: OmiProvider,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.strategy.register('facebook', this.facebookProvider);
