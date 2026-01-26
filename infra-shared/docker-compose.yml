@@ -45,6 +45,10 @@ services:
     image: qdrant/qdrant:${QDRANT_VERSION}
     container_name: qdrant
     restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     environment:
       QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY}
       QDRANT__STORAGE__OPTIMIZERS__DELETED_THRESHOLD: 0.5
