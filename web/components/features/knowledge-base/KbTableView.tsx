@@ -5,7 +5,7 @@ import { DataTable } from '@/components/shared/DataTable';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Edit2, Trash2, Eye, Download, MoreVertical } from 'lucide-react';
+import { Edit2, Trash2, Eye, Download, MoreVertical, RotateCcw } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/DropdownMenu';
 import { cn } from '@/lib/utils';
 import { KbFileIcon } from './KbFileIcon';
@@ -22,6 +22,8 @@ interface KbItem {
   processingStatus?: string;
   updatedAt: string;
   icon?: string;
+  sourceUrl?: string | null;
+  content?: string | null;
 }
 
 interface KbTableViewProps {
@@ -38,6 +40,7 @@ interface KbTableViewProps {
   onPageSizeChange?: (pageSize: number) => void;
   onEditItem: (item: KbItem) => void;
   onDeleteItem: (item: KbItem) => void;
+  onReloadItem?: (item: KbItem) => void;
   onPreviewDocument?: (documentId: string) => void;
   onDownloadDocument?: (documentId: string, filename: string) => void;
   onDragStart?: (item: KbItem) => void;
@@ -69,6 +72,7 @@ export function KbTableView({
   onPageSizeChange,
   onEditItem,
   onDeleteItem,
+  onReloadItem,
   onPreviewDocument,
   onDownloadDocument,
   onDragStart,
@@ -152,7 +156,19 @@ export function KbTableView({
             <KbFileIcon name={row.original.name} type={row.original.type} className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{String(getValue())}</div>
+            {row.original.sourceUrl ? (
+              <a
+                href={row.original.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-sm truncate leading-tight hover:text-primary transition-colors hover:underline block"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {String(getValue())}
+              </a>
+            ) : (
+              <div className="font-bold text-sm truncate leading-tight group-hover:text-primary transition-colors">{String(getValue())}</div>
+            )}
             {row.original.description && <div className="text-[10px] text-muted-foreground truncate font-medium mt-0.5">{row.original.description}</div>}
           </div>
         </div>
@@ -215,9 +231,23 @@ export function KbTableView({
                 e.stopPropagation();
                 onPreviewDocument(row.original.id);
               }}
-              title="Preview"
+              title="Preview & Edit"
             >
               <Eye className="w-4 h-4" />
+            </Button>
+          )}
+          {row.original.type === 'document' && onReloadItem && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground hover:text-primary transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                onReloadItem(row.original);
+              }}
+              title="Reload/Re-train"
+            >
+              <RotateCcw className="w-4 h-4" />
             </Button>
           )}
           <DropdownMenu>
@@ -255,7 +285,7 @@ export function KbTableView({
         </div>
       )
     }
-  ], [items, selectedIds, onToggleSelectAll, onToggleSelection, onPreviewDocument, onDownloadDocument, onEditItem, onDeleteItem]);
+  ], [items, selectedIds, onToggleSelectAll, onToggleSelection, onPreviewDocument, onDownloadDocument, onEditItem, onDeleteItem, onReloadItem]);
 
   return (
     <div className="flex-1 min-h-0">

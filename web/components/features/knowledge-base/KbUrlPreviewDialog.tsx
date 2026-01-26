@@ -9,24 +9,64 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
-import { ExternalLink, Image as ImageIcon, Code, Clock, FileText } from 'lucide-react'
+import { ExternalLink, Image as ImageIcon, Code, Clock, FileText, RotateCcw, Save, BrainCircuit, ScanEye } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/ScrollArea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Card } from '@/components/ui/Card'
 import { KBDocument } from '@/lib/types/knowledge-base'
 import { cn } from '@/lib/utils'
+import { useState, useEffect } from 'react'
+import toast from '@/lib/toast'
 
 interface KbUrlPreviewDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     document: KBDocument | null
+    onSave?: (id: string, content: string) => Promise<void>
+    onReload?: (id: string) => Promise<void>
 }
 
 export function KbUrlPreviewDialog({
     open,
     onOpenChange,
-    document
+    document,
+    onSave,
+    onReload
 }: KbUrlPreviewDialogProps) {
+    const [activeTab, setActiveTab] = useState('content')
+    const [editedContent, setEditedContent] = useState('')
+    const [saving, setSaving] = useState(false)
+
+    useEffect(() => {
+        if (document) {
+            setEditedContent(document.content || '')
+        }
+    }, [document])
+
+    const handleSave = async () => {
+        if (!document || !onSave) return;
+        setSaving(true);
+        try {
+            await onSave(document.id, editedContent);
+            toast.success('Content updated successfully');
+        } catch (e) {
+            toast.error('Failed to update content');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleReload = async () => {
+        if (!document || !onReload) return;
+        try {
+            await onReload(document.id);
+            toast.success('Triggered re-crawl for this link');
+            onOpenChange(false);
+        } catch (e) {
+            toast.error('Failed to trigger re-crawl');
+        }
+    };
+
     if (!document) return null
 
     const statusColors = {
@@ -43,8 +83,19 @@ export function KbUrlPreviewDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
                 <DialogHeader className="px-6 py-4 border-b bg-muted/5">
-                    <DialogTitle className="flex items-center gap-2">
+                    <DialogTitle className="flex items-center justify-between gap-2 w-full">
                         <span className="truncate max-w-[400px]">Link Details</span>
+                        {onReload && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2 font-bold text-xs uppercase tracking-wider"
+                                onClick={handleReload}
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Re-train Page
+                            </Button>
+                        )}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -91,15 +142,51 @@ export function KbUrlPreviewDialog({
                         </div>
 
                         {/* Tabs for Image and Schema */}
-                        <Tabs defaultValue="image" className="w-full">
-                            <TabsList className="w-full grid grid-cols-2">
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="w-full grid grid-cols-3">
+                                <TabsTrigger value="content" className="font-bold">
+                                    <BrainCircuit className="w-4 h-4 mr-2" /> Learned Data
+                                </TabsTrigger>
                                 <TabsTrigger value="image" className="font-bold">
                                     <ImageIcon className="w-4 h-4 mr-2" /> Visual Preview
                                 </TabsTrigger>
                                 <TabsTrigger value="schema" className="font-bold">
-                                    <Code className="w-4 h-4 mr-2" /> Schema / Metadata
+                                    <Code className="w-4 h-4 mr-2" /> Metadata
                                 </TabsTrigger>
                             </TabsList>
+
+                            <TabsContent value="content" className="mt-4 space-y-4">
+                                <div className="p-4 bg-muted/10 border-border/50 border rounded-xl">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-sm font-bold flex items-center gap-2">
+                                            <ScanEye className="w-4 h-4 text-primary" />
+                                            Extracted Content
+                                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider ml-2 bg-muted px-2 py-0.5 rounded-full">Editable</span>
+                                        </h4>
+                                        {onSave && (
+                                            <Button
+                                                size="sm"
+                                                onClick={handleSave}
+                                                disabled={saving || editedContent === document.content}
+                                                className={cn("h-8 transition-all font-bold", saving && "opacity-80")}
+                                            >
+                                                <Save className="w-3.5 h-3.5 mr-2" />
+                                                {saving ? 'Saving...' : 'Save Changes'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <Textarea
+                                        value={editedContent}
+                                        onChange={(e) => setEditedContent(e.target.value)}
+                                        className="min-h-[300px] font-mono text-xs leading-relaxed bg-background"
+                                        placeholder="No content extracted yet..."
+                                    />
+                                    <p className="text-[10px] text-muted-foreground mt-2">
+                                        * This is the raw text content the AI uses for understanding. You can edit this to improve answer quality.
+                                    </p>
+                                </div>
+                            </TabsContent>
+
                             <TabsContent value="image" className="mt-4">
                                 <Card className="overflow-hidden border-dashed">
                                     {document.metadata?.ogImage ? (
@@ -125,7 +212,8 @@ export function KbUrlPreviewDialog({
                                             url: document.sourceUrl,
                                             metadata: document.metadata,
                                             tags: document.tags,
-                                            createdAt: document.createdAt
+                                            createdAt: document.createdAt,
+                                            chunkCount: document.chunkCount
                                         }, null, 2)}
                                     </pre>
                                 </Card>

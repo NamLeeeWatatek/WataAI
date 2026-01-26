@@ -283,6 +283,7 @@ export function useKnowledgeBaseController(kbId: string) {
         }));
 
         const docItems = documents.map(d => ({
+            ...d,
             id: d.id,
             name: d.name,
             type: 'document' as const,
