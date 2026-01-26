@@ -214,7 +214,7 @@ export default function PublicBotPage() {
             {/* Main Chat Container */}
             <div
                 className={cn(
-                    "fixed z-[40] overflow-hidden flex flex-col bg-background font-sans text-foreground transition-all duration-300 shadow-2xl",
+                    "fixed z-[40] overflow-hidden flex flex-col font-sans text-foreground transition-all duration-300 shadow-2xl",
                     isEmbedMode
                         ? "inset-0 w-full h-full rounded-none"
                         : cn(
@@ -223,9 +223,19 @@ export default function PublicBotPage() {
                         ),
                     !isEmbedMode && "sm:max-w-md max-sm:inset-0 max-sm:w-full max-sm:h-full max-sm:rounded-none max-sm:bottom-0 max-sm:right-0"
                 )}
+                style={{
+                    backgroundColor: bot.theme?.backgroundColor || '#ffffff',
+                    color: bot.theme?.botMessageTextColor || '#000000'
+                }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b bg-background/95 backdrop-blur-sm z-10 shrink-0">
+                <div
+                    className="flex items-center justify-between px-4 py-3 border-b backdrop-blur-sm z-10 shrink-0"
+                    style={{
+                        backgroundColor: bot.theme?.backgroundColor ? `${bot.theme.backgroundColor}F2` : 'rgba(255,255,255,0.95)', // 95% opacity
+                        borderColor: 'rgba(0,0,0,0.1)'
+                    }}
+                >
                     <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border">
                             <AvatarImage src={bot.avatarUrl} alt={bot.name} className="object-cover" />
@@ -382,9 +392,14 @@ export default function PublicBotPage() {
 
                 {/* Footer Input */}
                 {!showIdentityForm && (
-                    <div className="p-4 bg-background border-t">
+                    <div className="p-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.05)', backgroundColor: 'transparent' }}>
                         <div className="max-w-3xl mx-auto relative flex items-end gap-2">
-                            <div className="relative flex-1 rounded-3xl border border-input bg-background shadow-sm ring-offset-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                            <div className="relative flex-1 rounded-3xl border shadow-sm ring-offset-background transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                                style={{
+                                    backgroundColor: bot.theme?.inputBackgroundColor || '#ffffff',
+                                    borderColor: 'rgba(0,0,0,0.1)'
+                                }}
+                            >
                                 <Textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
@@ -398,7 +413,9 @@ export default function PublicBotPage() {
                                     placeholder={bot.placeholderText || t('chat.typeMessage', { defaultValue: 'Message...' })}
                                     className="min-h-[44px] w-full resize-none border-0 bg-transparent py-3 pl-4 pr-12 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                                     rows={1}
-                                    style={{ color: '#000000' }}
+                                    style={{
+                                        color: bot.theme?.inputTextColor || '#000000'
+                                    }}
                                 />
                                 <Button
                                     size="icon"
