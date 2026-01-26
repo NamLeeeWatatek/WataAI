@@ -48,4 +48,9 @@ export const creationJobsApi = {
         const response = await axiosClient.post<any>('/creation-jobs/preview', data);
         return response;
     },
+
+    getPublications: async (id: string): Promise<any[]> => {
+        const response = await axiosClient.get<any[]>(`/creation-jobs/${id}/publications`);
+        return response as unknown as any[];
+    },
 };

@@ -861,5 +861,51 @@
     "success_queued": "Đã đưa {{count}} bài viết vào hàng đợi thành công!",
     "failed_generate": "Tạo nội dung thất bại",
     "failed_post": "Đăng nội dung thất bại"
+  },
+  "creation_tool": {
+    "title": "Công cụ Sáng tạo",
+    "description": "Sử dụng trí tuệ AI để tạo ra nội dung đỉnh cao cho thương hiệu của bạn.",
+    "back": "Quay lại",
+    "step": "Bước",
+    "continue": "Tiếp tục",
+    "run_continue": "Chạy & Tiếp tục",
+    "launch_generation": "Bắt đầu tạo nội dung",
+    "processing": "Đang xử lý...",
+    "processing_preview": "Đang tạo bản xem trước...",
+    "executing_step": "Đang thực thi",
+    "request_received": "Yêu cầu đã được ghi nhận!",
+    "failed_generate": "Tạo nội dung thất bại",
+    "step_completed": "Bước hoàn thành",
+    "review_content": "Vui lòng xem lại kết quả dưới đây trước khi tiếp tục.",
+    "approve_continue": "Duyệt & Tiếp tục",
+    "close_modify": "Đóng & Chỉnh sửa",
+    "generated_image": "Hình ảnh được tạo bởi AI",
+    "view_raw": "Xem dữ liệu thô",
+    "view_output": "Xem kết quả",
+    "post_to_channels": "Đăng lên kênh",
+    "ai_processing": "Xử lý bởi AI",
+    "auto_save": "Tự động lưu",
+    "secure_input": "Đầu vào an toàn",
+    "prompt_required": "Vui lòng nhập mô tả prompt.",
+    "validation_error": "Lỗi xác thực"
+  },
+  "product_details": {
+    "tabs": {
+      "result": "Kết quả",
+      "process": "Quy trình & Lịch sử",
+      "publications": "Lịch sử đăng bài"
+    },
+    "publications": {
+      "title": "Lịch sử đăng tải",
+      "no_history": "Sản phẩm này chưa được đăng lên kênh nào.",
+      "channel": "Kênh",
+      "status": "Trạng thái",
+      "date": "Ngày đăng",
+      "view_post": "Xem bài viết",
+      "posted_by": "Người đăng",
+      "success": "Thành công",
+      "failed": "Thất bại",
+      "pending": "Đang chờ"
+    }
   }
 }
