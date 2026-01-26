@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -12,6 +13,7 @@ import { UpdateCreationJobDto } from './dto/update-creation-jobs.dto';
 import { CreationJobsRepository } from './infrastructure/persistence/creation-jobs.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
 import { CreationJob, CreationJobStatus } from './domain/creation-jobs';
+import { PublicationStatus } from './domain/creation-job-publication';
 import { NullableType } from '../utils/types/nullable.type';
 import { ExecutionQueueService } from '../execution/queue/execution-queue.service';
 import { CreationToolsService } from '../creation-tools/creation-tools.service';
@@ -24,9 +26,92 @@ import { ExecutionValidationService } from '../execution/validation/execution-va
 import { ExecutionFlow } from '../creation-tools/domain/creation-tool';
 import { ChannelsService } from '../channels/channels.service';
 import { OAuthService } from '../integrations/oauth.service';
+import { BotExecutionService } from '../bots/bot-execution.service';
+
+const SOCIAL_MEDIA_EXPERT_PROMPT = `Bạn là một AI chuyên viết nội dung Social Media bán hàng và truyền thông chiến dịch.
+Bạn KHÔNG viết theo cảm tính.
+Bạn viết dựa trên dữ liệu người dùng truyền vào.
+
+--------------------------------------------------
+DỮ LIỆU ĐẦU VÀO (INPUT VARIABLES)
+--------------------------------------------------
+
+1. <prompt yêu cầu>
+- Là nội dung yêu cầu chính của người dùng
+- Có thể bao gồm: sản phẩm, thương hiệu, chương trình sale, thời gian, ưu đãi, nền tảng bán, đối tượng khách hàng
+
+2. <Phong cách viết>
+- Là GIÁ TRỊ ĐƯỢC CHỌN TỪ DROPDOWNLIST
+- Bạn PHẢI viết bài đúng với phong cách này (giọng văn, từ ngữ, nhịp câu)
+
+3. <kiến thức đã học>
+- Là THƯ MỤC KIẾN THỨC mà người dùng đã huấn luyện cho AI
+- Bạn PHẢI vận dụng kiến thức này làm nền tảng khi viết bài
+- KHÔNG được mâu thuẫn hoặc bỏ qua kiến thức đã học
+
+--------------------------------------------------
+MỤC TIÊU
+--------------------------------------------------
+Viết MỘT bài đăng Social Media:
+- Dễ đọc trên mobile
+- Giàu cảm xúc, đúng insight
+- Nhấn mạnh lợi ích & ưu đãi
+- Tối ưu chuyển đổi (CTA rõ ràng)
+- Phù hợp để chia sẻ trên Social & sàn TMĐT
+
+--------------------------------------------------
+KIẾN THỨC VIẾT BÀI BẮT BUỘC ÁP DỤNG
+--------------------------------------------------
+- Copywriting: Hook → Benefit → Offer → CTA
+- AIDA / PAS (chỉ áp dụng, không giải thích)
+- FOMO: giới hạn thời gian, số lượng, tính khẩn cấp
+- Emoji dùng vừa phải, đúng ngữ cảnh
+- Định dạng ngắn gọn, dễ lướt
+
+--------------------------------------------------
+CẤU TRÚC BẮT BUỘC (PHẢI TUÂN THEO)
+--------------------------------------------------
+
+1) HOOK / TIÊU ĐỀ
+- Dòng mở đầu gây chú ý
+- Có thể IN HOA + emoji
+- Gắn với sự kiện / thời điểm / ưu đãi
+
+2) ĐOẠN DẪN CẢM XÚC
+- 1–3 dòng ngắn
+- Gắn với bối cảnh người đọc
+- Giới thiệu sản phẩm/thương hiệu một cách tự nhiên
+
+3) THÔNG TIN ƯU ĐÃI
+- Trình bày dạng bullet + emoji
+- BẮT BUỘC nêu rõ nếu có: Thời gian, Giảm giá/Voucher, Điều kiện
+
+4) CTA – KÊU GỌI HÀNH ĐỘNG
+- Nhấn mạnh: DUY NHẤT / HÔM NAY / GIỚI HẠN
+- Hướng dẫn hành động rõ ràng: săn sale, chốt đơn, click link
+
+5) LINK MUA HÀNG
+- Đặt cuối bài
+- Liệt kê rõ từng kênh (Shopee Mall, Lazada Mall, Website…)
+
+--------------------------------------------------
+QUY TẮC BẮT BUỘC
+--------------------------------------------------
+- CHỈ trả về NỘI DUNG BÀI VIẾT
+- KHÔNG giải thích, KHÔNG phân tích, KHÔNG JSON
+- KHÔNG tự bịa ưu đãi, quà tặng, điều kiện
+- Nếu thiếu dữ liệu, dùng placeholder: [GIẢM %], [VOUCHER], [QUÀ TẶNG], [ĐIỀU KIỆN], [NGÀY/THỜI GIAN]
+
+--------------------------------------------------
+CÚ PHÁP GỌI (BẮT BUỘC HIỂU ĐÚNG)
+--------------------------------------------------
+Khi người dùng truyền vào 3 DỮ LIỆU qua cú pháp:
+"<prompt yêu cầu>" ; "<Phong cách viết>" ; "<kiến thức từ tài khoản>"
+Bạn phải hiểu và áp dụng chúng để tạo ra kết quả tốt nhất.`;
 
 @Injectable()
 export class CreationJobsService {
+  private readonly logger = new Logger(CreationJobsService.name);
   constructor(
     private readonly executionQueueService: ExecutionQueueService,
     private readonly creationJobsRepository: CreationJobsRepository,
@@ -41,7 +126,9 @@ export class CreationJobsService {
     private readonly validationService: ExecutionValidationService,
     private readonly channelsService: ChannelsService,
     private readonly oauthService: OAuthService,
-  ) {}
+    @Inject(forwardRef(() => BotExecutionService))
+    private readonly botExecutionService: BotExecutionService,
+  ) { }
 
   async executePreview(
     toolId: string,
@@ -75,7 +162,20 @@ export class CreationJobsService {
 
     // 2. Resolve and Execute Strategy
     const strategy = this.strategyResolver.resolve(config.type);
-    const result = await strategy.execute(config, executionInputs, context);
+
+    // Inject system variables for consistency
+    let apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || '';
+    // Normalize URL: Remove trailing slash and /api if present to avoid duplication
+    apiUrl = apiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+
+    const finalInputs = {
+      ...executionInputs,
+      _jobId: 'preview',
+      _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/preview/complete`,
+      _workspaceId: context?.workspaceId,
+    };
+
+    const result = await strategy.execute(config, finalInputs, context);
 
     return result;
   }
@@ -130,17 +230,32 @@ export class CreationJobsService {
     // 3. Execute Step (if it has execution config)
     let executionResult = null;
     if (step.execution) {
-      // Validate inputs for this step specifically?
-      // For now, we assume the frontend sends valid data for the step.
+      let apiUrl = process.env.BACKEND_DOMAIN || process.env.API_URL || '';
+      apiUrl = apiUrl.replace(/\/$/, '').replace(/\/api$/, '');
+
+      // CRITICAL FIX: Sanitize inputs (e.g. convert file objects to URLs) using FormConfig
+      // This solves the issue where {{images}} renders as [object Object] because it wasn't processed.
+      const sanitizedData = this.validationService.prepareInputs(
+        tool.formConfig,
+        updatedInputData,
+      );
+
+      // Prepare inputs: Form Data + Previous Step Results
+      const previousResults = job.outputData || {};
+      const executionInputs = {
+        ...sanitizedData, // Use sanitized data instead of raw updatedInputData
+        ...previousResults, // Flatten for easy access {{field}}
+        prev: previousResults, // Access via {{prev.stepId.field}}
+        _jobId: job.id,
+        _callbackUrl: `${apiUrl}/api/v1/callbacks/jobs/${job.id}/complete`,
+        _workspaceId: context.workspaceId,
+      };
 
       const strategy = this.strategyResolver.resolve(step.execution.type);
 
-      // We pass the ACCUMULATED results? Or just the inputs?
-      // Usually execution needs inputs + previous results.
-
       executionResult = await strategy.execute(
-        step.execution,
-        updatedInputData,
+        step.execution.config as any,
+        executionInputs,
         { ...context, toolId, stepId, jobId: job.id } as any,
       );
     }
@@ -420,12 +535,130 @@ export class CreationJobsService {
       });
     }
   }
+
+  /**
+   * Helper to extract a comprehensive summary of the product/job result
+   */
+  private extractProductSummary(job: CreationJob): string {
+    const parts: string[] = [];
+
+    // 1. Tool Information
+    if (job.creationTool?.name) {
+      parts.push(`Sản phẩm/Dịch vụ: ${job.creationTool.name}`);
+    }
+
+    // 2. User Inputs (filter out technical/internal IDs)
+    if (job.inputData) {
+      const inputs = job.inputData as Record<string, any>;
+      const relevantInputs = Object.entries(inputs)
+        .filter(([key]) => !key.startsWith('_') && key !== 'id')
+        .map(([key, val]) => {
+          if (typeof val === 'string' && val.length > 500)
+            return `${key}: [Nội dung dài]`;
+          return `${key}: ${val}`;
+        });
+      if (relevantInputs.length > 0) {
+        parts.push(`\n[Thông tin đầu vào]:\n${relevantInputs.join('\n')}`);
+      }
+    }
+
+    // 3. Execution Results (Output Data)
+    if (job.outputData) {
+      const output = job.outputData as Record<string, any>;
+      // Look for main content fields
+      const contentFields = [
+        'content',
+        'text',
+        'result',
+        'description',
+        'caption',
+        'article',
+      ];
+      const foundContent = contentFields
+        .map((f) => output[f])
+        .find((val) => typeof val === 'string' && val.trim().length > 0);
+
+      if (foundContent) {
+        parts.push(`\n[Kết quả tạo ra]:\n${foundContent}`);
+      } else {
+        // Fallback: take all string fields that aren't URLs
+        const otherStrings = Object.entries(output)
+          .filter(
+            ([_, val]) =>
+              typeof val === 'string' &&
+              val.length > 10 &&
+              !val.startsWith('http'),
+          )
+          .map(([key, val]) => `${key}: ${val}`);
+        if (otherStrings.length > 0) {
+          parts.push(
+            `\n[Dữ liệu kết quả bổ sung]:\n${otherStrings.join('\n')}`,
+          );
+        }
+      }
+    }
+
+    return parts.join('\n');
+  }
+
+  /**
+   * Generates a professional social media post draft without posting it
+   */
+  async generatePostDraft(
+    jobId: string,
+    workspaceId: string,
+    botId?: string,
+    writingStyle?: string,
+    customUserInstructions?: string,
+  ): Promise<{ draft: string }> {
+    const job = await this.creationJobsRepository.findById(jobId, workspaceId);
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${jobId} not found`);
+    }
+
+    const productSummary = this.extractProductSummary(job);
+
+    // If no bot, just return a basic summary or previous message
+    if (!botId) {
+      return { draft: customUserInstructions || productSummary };
+    }
+
+    const prompt = `<prompt yêu cầu>: ${customUserInstructions || 'Viết một bài đăng Social Media chuyên nghiệp cho sản phẩm này.'}
+
+<Phong cách viết>: ${writingStyle || 'Chuyên gia'}
+
+<kiến thức đã học (Dữ liệu sản phẩm từ hệ thống)>:
+${productSummary}
+
+-------------------
+Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt nhất.`;
+
+    try {
+      const botResult = await this.botExecutionService.generateBotResponse(
+        botId,
+        prompt,
+        [],
+        {
+          workspaceId,
+          systemPromptOverride: SOCIAL_MEDIA_EXPERT_PROMPT,
+        },
+      );
+
+      return { draft: botResult.answer };
+    } catch (error) {
+      this.logger.error(`Social Draft generation failed: ${error.message}`);
+      throw new BadRequestException(`Không thể tạo bản nháp: ${error.message}`);
+    }
+  }
+
   async postToChannels(
     jobId: string,
     channels: string[],
     workspaceId: string,
     scheduledTime?: string,
     customMessage?: string,
+    botId?: string,
+    writingStyle?: string,
   ): Promise<any> {
     const job = await this.creationJobsRepository.findById(jobId, workspaceId);
     if (!job) {
@@ -500,26 +733,51 @@ export class CreationJobsService {
       }
     }
 
+    // NEW: Use Bot to refine/rewrite the message IF requested AND not already refined
+    // Note: If the user already used 'generate-post-draft' in the UI, message will be rich.
+    // If they click 'Post' directly, we refine it here.
+    if (botId && message && (message.length < 50 || !message.includes('\n'))) {
+      try {
+        const { draft } = await this.generatePostDraft(
+          jobId,
+          workspaceId,
+          botId,
+          writingStyle,
+          message,
+        );
+        message = draft;
+      } catch (botError) {
+        console.error('Bot refinement during posting failed:', botError);
+      }
+    }
+
     if (!message && !imageUrl) {
       throw new BadRequestException('Job has no content to post');
     }
 
     const results: any[] = [];
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     for (const rawChannelId of channels) {
       let channelId = rawChannelId;
       let targetPageId: string | undefined;
 
       // Handle composite IDs (e.g. "uuid:pageId")
-      if (rawChannelId.includes(':')) {
-        const parts = rawChannelId.split(':');
-        if (parts.length === 2) {
-          channelId = parts[0];
-          targetPageId = parts[1];
-        }
+      // We use substring to be robust against multiple colons or other formats
+      const colonIndex = rawChannelId.indexOf(':');
+      if (colonIndex !== -1) {
+        channelId = rawChannelId.substring(0, colonIndex);
+        targetPageId = rawChannelId.substring(colonIndex + 1);
       }
 
+      const isUuid = uuidRegex.test(channelId);
+
       try {
+        if (!isUuid) {
+          throw new Error(`Invalid channel ID format: ${channelId}`);
+        }
+
         const channel = await this.channelsService.findOne(
           channelId,
           workspaceId,
@@ -538,9 +796,6 @@ export class CreationJobsService {
           // Otherwise fall back to metadata.
           const pageId =
             targetPageId || channel.metadata?.pageId || channel.metadata?.id;
-
-          // If we still don't have a pageId, check if metadata.pages exists and try to find a match or default?
-          // But usually targetPageId should cover the specific selection case.
 
           const accessToken = channel.accessToken;
 
@@ -568,11 +823,67 @@ export class CreationJobsService {
             status: 'success',
             data: result,
           });
+
+          // Persistent publication record
+          if (isUuid) {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: channel.type,
+              status: PublicationStatus.SUCCESS,
+              externalId: String(result?.id || result?.postId || ''),
+              url: result?.permalink_url || result?.url,
+              metadata: result,
+              content: message,
+            });
+          }
+
+          // Optional: Still keep audit log for high-level security tracking
+          await this.auditService.log({
+            userId: job.createdBy || 'unknown',
+            workspaceId,
+            action: 'JOB_PUBLISHED',
+            resourceType: 'creation-job',
+            resourceId: jobId,
+            details: {
+              channelId: rawChannelId,
+              status: 'success',
+              platform: channel.type,
+            },
+          });
         } else {
+          const errorMsg = `Channel type ${channel.type} not supported for posting yet`;
           results.push({
             channelId: rawChannelId,
             status: 'error',
-            error: `Channel type ${channel.type} not supported for posting yet`,
+            error: errorMsg,
+          });
+
+          // Persistent publication record (Failed)
+          if (isUuid) {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: channel.type,
+              status: PublicationStatus.FAILED,
+              error: errorMsg,
+              content: message,
+            });
+          }
+
+          // Log failed publication
+          await this.auditService.log({
+            userId: job.createdBy || 'unknown',
+            workspaceId,
+            action: 'JOB_PUBLISHED',
+            resourceType: 'creation-job',
+            resourceId: jobId,
+            details: {
+              channelId: rawChannelId,
+              status: 'error',
+              platform: channel.type,
+              error: errorMsg,
+            },
           });
         }
       } catch (err) {
@@ -581,9 +892,112 @@ export class CreationJobsService {
           status: 'error',
           error: err.message,
         });
+
+        // Persistent publication record (Failed due to exception)
+        // Only try to save if we have a valid UUID, otherwise DB will throw 500
+        if (isUuid) {
+          try {
+            await this.creationJobsRepository.createPublication({
+              jobId,
+              channelId,
+              platform: 'unknown',
+              status: PublicationStatus.FAILED,
+              error: err.message,
+              content: message,
+            });
+          } catch (saveErr) {
+            console.error("Failed to save publication error record:", saveErr);
+          }
+        }
+
+        // Log failed publication due to exception
+        await this.auditService.log({
+          userId: job.createdBy || 'unknown',
+          workspaceId,
+          action: 'JOB_PUBLISHED',
+          resourceType: 'creation-job',
+          resourceId: jobId,
+          details: {
+            channelId: rawChannelId,
+            status: 'error',
+            error: err.message,
+          },
+        });
       }
     }
 
     return results;
+  }
+
+  async getPublications(jobId: string, workspaceId: string): Promise<any[]> {
+    return this.creationJobsRepository.findPublicationsByJobId(jobId);
+  }
+
+  async triggerAction(
+    jobId: string,
+    actionId: string,
+    workspaceId: string,
+    actionInputs: Record<string, any>,
+    context?: { userId?: string },
+  ): Promise<any> {
+    const job = await this.creationJobsRepository.findById(jobId, workspaceId);
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${jobId} not found`);
+    }
+
+    const tool = await this.creationToolsService.findById(job.creationToolId);
+    if (!tool) {
+      throw new NotFoundException(
+        `Tool with ID ${job.creationToolId} not found`,
+      );
+    }
+
+    // 1. Find the Action
+    const action = tool.actions?.find((a) => a.id === actionId);
+    if (!action) {
+      throw new NotFoundException(
+        `Action with ID ${actionId} not found in tool ${tool.name}`,
+      );
+    }
+
+    // 2. Prepare Inputs: Merge Original Inputs + Outputs + Action Inputs
+    const baseInputs = {
+      ...(job.inputData || {}),
+      ...(job.outputData || {}),
+      ...actionInputs,
+      _jobId: job.id,
+      _workspaceId: workspaceId,
+      _userId: context?.userId,
+      _actionId: actionId,
+    };
+
+    // 3. Resolve and Execute Strategy (The "Workflow Engine")
+    const strategy = this.strategyResolver.resolve(action.execution.type);
+
+    const result = await strategy.execute(
+      action.execution.config as any,
+      baseInputs,
+      {
+        ...context,
+        workspaceId,
+        toolId: tool.id,
+        jobId: job.id,
+        actionId,
+      } as any,
+    );
+
+    // 4. Audit Log
+    if (context?.userId) {
+      await this.auditService.log({
+        userId: context.userId,
+        workspaceId,
+        action: `ACTION_TRIGGERED:${actionId}`,
+        resourceType: 'creation-job',
+        resourceId: jobId,
+        details: { actionId, toolId: tool.id },
+      });
+    }
+
+    return result;
   }
 }

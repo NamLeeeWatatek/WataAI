@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -53,15 +54,18 @@ import { iconMap } from '@/lib/icon-map'
 import { useBots } from '@/lib/hooks/features/useBots'
 import { useDebounce } from '@/lib/hooks/useDebounce'
 
-const botFormSchema = z.object({
-    name: z.string().min(1, 'Bot name is required'),
-    description: z.string().optional(),
-    icon: z.string().optional(),
-})
-
-type BotFormValues = z.infer<typeof botFormSchema>
-
 export default function BotsPage() {
+    const { t } = useTranslation()
+
+    // ✅ Form schema with translations
+    const botFormSchema = useMemo(() => z.object({
+        name: z.string().min(1, t('bots.nameRequired', { defaultValue: 'Bot name is required' })),
+        description: z.string().optional(),
+        icon: z.string().optional(),
+    }), [t])
+
+    type BotFormValues = z.infer<typeof botFormSchema>
+
     const router = useRouter()
     const { workspaceId } = useWorkspace()
     const [showModal, setShowModal] = useState(false)
@@ -152,24 +156,24 @@ export default function BotsPage() {
         } catch { }
     }
 
-    if (isLoading && bots.length === 0) return <div className="page-container"><PageLoading message="Synchronizing agent fleet..." /></div>
+    if (isLoading && bots.length === 0) return <div className="page-container"><PageLoading message={t('bots.synchronizing', { defaultValue: 'Synchronizing agent fleet...' })} /></div>
 
     return (
         <div className="page-container h-full flex flex-col space-y-6">
             <PageHeader
-                title="AI Agent Fleet"
-                description="Manage your AI agents specialized in various tasks."
+                title={t('bots.title', { defaultValue: 'AI Agent Fleet' })}
+                description={t('bots.description', { defaultValue: 'Manage your AI agents specialized in various tasks.' })}
                 onRefresh={refetch}
                 refreshing={isLoading}
             >
                 <Button onClick={() => openModal()} className="px-6 font-bold h-10 shadow-lg shadow-primary/20">
-                    <Plus className="w-4 h-4 mr-2" /> New Agent
+                    <Plus className="w-4 h-4 mr-2" /> {t('bots.newAgent', { defaultValue: 'New Agent' })}
                 </Button>
             </PageHeader>
 
             <div className="flex items-center gap-2 max-w-sm">
                 <Search
-                    placeholder="Search neural agents..."
+                    placeholder={t('bots.searchPlaceholder', { defaultValue: 'Search neural agents...' })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onClear={() => {
@@ -186,16 +190,16 @@ export default function BotsPage() {
                         <BotIcon className="w-10 h-10 text-primary/40" />
                     </div>
                     <h3 className="text-xl font-bold mb-2">
-                        {searchQuery ? 'No Results' : 'No Agents Yet'}
+                        {searchQuery ? t('bots.noResults', { defaultValue: 'No Results' }) : t('bots.noAgentsYet', { defaultValue: 'No Agents Yet' })}
                     </h3>
                     <p className="text-muted-foreground mb-8 max-w-xs text-center text-xs font-medium">
                         {searchQuery
-                            ? `No agents matching "${searchQuery}"`
-                            : 'Create your first AI agent to help with tasks.'
+                            ? t('bots.noAgentsMatching', { query: searchQuery, defaultValue: `No agents matching "${searchQuery}"` })
+                            : t('bots.createFirstAgentDesc', { defaultValue: 'Create your first AI agent to help with tasks.' })
                         }
                     </p>
                     <Button onClick={() => openModal()} variant={searchQuery ? "outline" : "default"} className="px-8 font-bold">
-                        <Plus className="w-4 h-4 mr-2" /> Create First Agent
+                        <Plus className="w-4 h-4 mr-2" /> {t('bots.createFirstAgent', { defaultValue: 'Create First Agent' })}
                     </Button>
                 </Card>
             ) : (
@@ -217,7 +221,7 @@ export default function BotsPage() {
                                                         variant={bot.status === 'active' ? "default" : "secondary"}
                                                         className="mt-1.5 font-bold tracking-wider px-2"
                                                     >
-                                                        {bot.status === 'active' ? 'ONLINE' : 'PAUSED'}
+                                                        {bot.status === 'active' ? t('bots.online', { defaultValue: 'ONLINE' }) : t('bots.paused', { defaultValue: 'PAUSED' })}
                                                     </Badge>
                                                 </div>
                                             </div>
@@ -230,25 +234,25 @@ export default function BotsPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48">
                                                     <DropdownMenuItem onClick={() => openModal(bot)}>
-                                                        <Edit2 className="w-4 h-4 mr-2" /> Edit Details
+                                                        <Edit2 className="w-4 h-4 mr-2" /> {t('bots.editDetails', { defaultValue: 'Edit Details' })}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => toggleStatus(bot)}>
                                                         <Activity className="w-4 h-4 mr-2" />
-                                                        {bot.status === 'active' ? 'Pause Agent' : 'Start Agent'}
+                                                        {bot.status === 'active' ? t('bots.pauseAgent', { defaultValue: 'Pause Agent' }) : t('bots.startAgent', { defaultValue: 'Start Agent' })}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
                                                         onClick={() => setDeleteId(bot.id)}
                                                         className="text-destructive focus:bg-destructive/10"
                                                     >
-                                                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                                        <Trash2 className="w-4 h-4 mr-2" /> {t('bots.delete', { defaultValue: 'Delete' })}
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </div>
 
                                         <p className="text-xs font-medium text-muted-foreground line-clamp-2 min-h-[32px] leading-relaxed">
-                                            {bot.description || 'Advanced neural architecture tailored for complex workflow orchestration.'}
+                                            {bot.description || t('bots.defaultDescription', { defaultValue: 'Advanced neural architecture tailored for complex workflow orchestration.' })}
                                         </p>
 
 
@@ -272,7 +276,7 @@ export default function BotsPage() {
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
                                             <Settings className="w-4 h-4 mr-2" />
-                                            Configure Interface
+                                            {t('bots.configureInterface', { defaultValue: 'Configure Interface' })}
                                         </Button>
                                     </div>
                                 </Card>
@@ -300,7 +304,7 @@ export default function BotsPage() {
                     <DialogHeader className="p-6 bg-muted/20 border-b">
                         <DialogTitle className="text-xl font-black flex items-center gap-3">
                             <BotIcon className="w-5 h-5 text-primary" />
-                            {editingBot ? 'Edit Agent' : 'Create New Agent'}
+                            {editingBot ? t('bots.editAgent', { defaultValue: 'Edit Agent' }) : t('bots.createNewAgent', { defaultValue: 'Create New Agent' })}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="p-6">
@@ -311,10 +315,10 @@ export default function BotsPage() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bot Name</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t('bots.botName', { defaultValue: 'Bot Name' })}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="e.g. Sales Assistant"
+                                                    placeholder={t('bots.botNamePlaceholder', { defaultValue: 'e.g. Sales Assistant' })}
                                                     {...field}
                                                     className="font-bold text-lg"
                                                 />
@@ -329,9 +333,9 @@ export default function BotsPage() {
                                     name="description"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description & Instructions</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('bots.descriptionLabel', { defaultValue: 'Description & Instructions' })}</FormLabel>
                                             <FormControl>
-                                                <Textarea rows={4} placeholder="What should this agent do?" {...field} className="resize-none font-medium" />
+                                                <Textarea rows={4} placeholder={t('bots.descriptionPlaceholder', { defaultValue: 'What should this agent do?' })} {...field} className="resize-none font-medium" />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -339,9 +343,9 @@ export default function BotsPage() {
                                 />
 
                                 <div className="flex items-center justify-end gap-3 pt-2">
-                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="font-bold">Cancel</Button>
+                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="font-bold">{t('bots.cancel', { defaultValue: 'Cancel' })}</Button>
                                     <Button type="submit" loading={form.formState.isSubmitting} className="font-bold px-8 shadow-lg shadow-primary/20">
-                                        {editingBot ? 'Save Changes' : 'Create Agent'}
+                                        {editingBot ? t('bots.saveChanges', { defaultValue: 'Save Changes' }) : t('bots.createAgent', { defaultValue: 'Create Agent' })}
                                     </Button>
                                 </div>
                             </form>
@@ -353,8 +357,8 @@ export default function BotsPage() {
             <AlertDialogConfirm
                 open={deleteId !== null}
                 onOpenChange={(open) => !open && setDeleteId(null)}
-                title="Delete Agent"
-                description="Are you sure you want to delete this agent? This action cannot be undone."
+                title={t('bots.deleteAgent', { defaultValue: 'Delete Agent' })}
+                description={t('bots.deleteConfirm', { defaultValue: 'Are you sure you want to delete this agent? This action cannot be undone.' })}
                 onConfirm={confirmDelete}
                 variant="destructive"
             />

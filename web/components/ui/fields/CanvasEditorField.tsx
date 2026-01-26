@@ -8,6 +8,7 @@ import { Download, Layers, Image as ImageIcon, Type, Square, Trash2, Save } from
 import { FormField } from '@/lib/api/creation-tools'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface CanvasEditorFieldProps {
     field: FormField
@@ -40,6 +41,7 @@ export function CanvasEditorField({
     const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null)
     const canvasContainerRefs = useRef<HTMLDivElement[]>([])
     const canvasRefs = useRef<HTMLCanvasElement[]>([])
+    const { t } = useTranslation()
 
     // Get frame configurations from field config
     const frameConfigs: FrameConfig[] = field.config?.frames || [
@@ -205,9 +207,9 @@ export function CanvasEditorField({
                 timestamp: new Date().toISOString()
             })
 
-            toast.success('Canvas saved successfully!')
+            toast.success(t('success.saved'))
         } catch (error) {
-            toast.error('Failed to save canvas')
+            toast.error(t('error.general'))
             console.error(error)
         }
     }
@@ -221,12 +223,12 @@ export function CanvasEditorField({
             link.href = dataUrl
             link.click()
         })
-        toast.success('Frames exported!')
+        toast.success(t('creation_tool.export_all'))
     }
 
     // Add image from URL
     const handleAddImage = () => {
-        const imageUrl = prompt('Enter image URL:')
+        const imageUrl = prompt(t('creation_tool.add_image'))
         if (!imageUrl) return
 
         const canvas = frames[activeFrame]
@@ -251,14 +253,14 @@ export function CanvasEditorField({
             })
             .catch((error) => {
                 console.error('Failed to load image:', error)
-                toast.error('Failed to load image')
+                toast.error(t('error.general'))
             })
     }
 
     // Add text
     const handleAddText = () => {
         const canvas = frames[activeFrame]
-        const text = new fabric.IText('Double click to edit', {
+        const text = new fabric.IText(t('creation_tool.double_click_edit'), {
             left: canvas.width! / 2 - 100,
             top: canvas.height! / 2 - 20,
             fontSize: 32,
@@ -301,7 +303,7 @@ export function CanvasEditorField({
             canvas.renderAll()
             setSelectedObject(null)
             autoSave()
-            toast.success('Object deleted')
+            toast.success(t('success.deleted'))
         }
     }
 
@@ -312,17 +314,17 @@ export function CanvasEditorField({
                 <div>
                     <h3 className="font-bold text-lg">{field.label}</h3>
                     <p className="text-sm text-muted-foreground">
-                        {field.description || 'Arrange and edit your design frames'}
+                        {field.description || t('creation_tool.description')}
                     </p>
                 </div>
                 <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={handleExportAll}>
                         <Download className="w-4 h-4 mr-2" />
-                        Export All
+                        {t('creation_tool.export_all')}
                     </Button>
                     <Button size="sm" onClick={handleSave}>
                         <Save className="w-4 h-4 mr-2" />
-                        Save
+                        {t('common.save')}
                     </Button>
                 </div>
             </div>
@@ -363,17 +365,17 @@ export function CanvasEditorField({
                         <div className="flex flex-wrap gap-2 border-t pt-4">
                             <Button size="sm" variant="outline" onClick={handleAddImage}>
                                 <ImageIcon className="w-4 h-4 mr-2" />
-                                Add Image
+                                {t('creation_tool.add_image')}
                             </Button>
 
                             <Button size="sm" variant="outline" onClick={handleAddText}>
                                 <Type className="w-4 h-4 mr-2" />
-                                Add Text
+                                {t('creation_tool.add_text')}
                             </Button>
 
                             <Button size="sm" variant="outline" onClick={handleAddRectangle}>
                                 <Square className="w-4 h-4 mr-2" />
-                                Add Shape
+                                {t('creation_tool.add_shape')}
                             </Button>
 
                             {selectedObject && (
@@ -384,7 +386,7 @@ export function CanvasEditorField({
                                     className="ml-auto"
                                 >
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Selected
+                                    {t('creation_tool.delete_selected')}
                                 </Button>
                             )}
                         </div>
@@ -393,7 +395,7 @@ export function CanvasEditorField({
                         <div className="border rounded-lg p-4 bg-muted/5">
                             <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
                                 <Layers className="w-4 h-4" />
-                                Layers ({frames[idx]?.getObjects().length || 0})
+                                {t('creation_tool.layers')} ({frames[idx]?.getObjects().length || 0})
                             </h4>
                             <div className="space-y-1 max-h-48 overflow-y-auto">
                                 {frames[idx]?.getObjects().reverse().map((obj, objIdx) => (
@@ -429,7 +431,7 @@ export function CanvasEditorField({
                                 ))}
                                 {frames[idx]?.getObjects().length === 0 && (
                                     <p className="text-sm text-muted-foreground text-center py-4">
-                                        No objects yet. Add images, text, or shapes to get started.
+                                        {t('creation_tool.no_objects')}
                                     </p>
                                 )}
                             </div>

@@ -7,7 +7,7 @@ export class StripeService implements OnModuleInit {
   private stripe: Stripe;
   private readonly logger = new Logger(StripeService.name);
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
     const apiKey = this.configService.get<string>('STRIPE_SECRET_KEY', {

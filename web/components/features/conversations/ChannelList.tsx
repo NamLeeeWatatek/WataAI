@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingLogo } from '@/components/shared/LoadingLogo';
 import { cn } from '@/lib/utils';
@@ -46,7 +47,6 @@ const getChannelColor = (type: string) => {
     };
     return colors[type] || 'text-gray-500';
 };
-
 export function ChannelList({
     channels,
     selectedChannel,
@@ -54,6 +54,7 @@ export function ChannelList({
     totalUnread,
     loading
 }: ChannelListProps) {
+    const { t } = useTranslation();
     return (
         <div className="space-y-1">
             <button
@@ -72,7 +73,7 @@ export function ChannelList({
                     )}>
                         <Inbox className="w-4.5 h-4.5" />
                     </div>
-                    <span className="font-bold text-sm tracking-tight">All Messages</span>
+                    <span className="font-bold text-sm tracking-tight">{t('conversations.allMessages', { defaultValue: 'All Messages' })}</span>
                 </div>
                 {totalUnread > 0 && (
                     <Badge
@@ -97,8 +98,8 @@ export function ChannelList({
                     <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
                         <Hash className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-medium text-foreground mb-1">No channels yet</p>
-                    <p className="text-xs text-muted-foreground">Connect a channel to get started</p>
+                    <p className="text-sm font-medium text-foreground mb-1">{t('conversations.noChannels', { defaultValue: 'No channels yet' })}</p>
+                    <p className="text-xs text-muted-foreground">{t('conversations.connectChannel', { defaultValue: 'Connect a channel to get started' })}</p>
                 </div>
             ) : (
                 channels.map((channel) => (

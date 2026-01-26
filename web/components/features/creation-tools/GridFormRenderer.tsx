@@ -1,12 +1,15 @@
 'use client'
 
 import { DynamicFormField } from '@/components/ui/DynamicFormField'
+import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { FormConfig, FormField, LayoutRow, ZoneConfig, FieldRow, creationToolsApi } from '@/lib/api/creation-tools'
 import { useForm } from 'react-hook-form'
 import { Form, FormField as ShadcnFormField } from '@/components/ui/Form'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 import {
     Dialog,
@@ -17,11 +20,12 @@ import {
     DialogTitle,
 } from '@/components/ui/Dialog'
 import { creationJobsApi } from '@/lib/api/creation-jobs'
+import { Share2 } from 'lucide-react'
 
 
 interface GridFormRendererProps {
     config: FormConfig
-    onSubmit: (data: Record<string, unknown>) => void
+    onSubmit: (data: Record<string, unknown>, jobId?: string | null) => void
     isSubmitting?: boolean
     form?: any
     activeStep?: number
@@ -54,6 +58,19 @@ export function GridFormRenderer({
 
     // Timer for execution
     const [elapsedTime, setElapsedTime] = useState(0)
+    const { t } = useTranslation()
+
+    const router = useRouter()
+
+    // Reset state when toolId changes to prevent leakage across different tools
+    useEffect(() => {
+        if (toolId) {
+            setStepResults({});
+            setPreviewResults(null);
+            setCurrentJobId(null);
+            setLocalStep(0);
+        }
+    }, [toolId]);
 
     useEffect(() => {
         let timer: NodeJS.Timeout
@@ -65,6 +82,46 @@ export function GridFormRenderer({
         }
         return () => clearInterval(timer)
     }, [isExecutingStep])
+
+    // --- POLL FOR JOB UPDATES ---
+    useEffect(() => {
+        let pollingTimer: NodeJS.Timeout;
+
+        if (currentJobId && !isExecutingStep) {
+            // Poll every 3s
+            pollingTimer = setInterval(async () => {
+                try {
+                    const job = await creationJobsApi.findOne(currentJobId);
+
+                    // If polling finds a COMPLETED job, update the preview data
+                    if (job && job.status === 'COMPLETED' && job.outputData) {
+                        const output = job.outputData as any;
+
+                        // Update previewResults for the preview component
+                        setPreviewResults(output);
+
+                        // Also try to update stepResults - map them back from the steps object
+                        if (output.steps && typeof output.steps === 'object' && !Array.isArray(output.steps)) {
+                            setStepResults(prev => ({
+                                ...prev,
+                                ...output.steps
+                            }));
+                        } else if (output.results && typeof output.results === 'object') {
+                            // Support alternative 'results' key
+                            setStepResults(prev => ({
+                                ...prev,
+                                ...output.results
+                            }));
+                        }
+                    }
+                } catch (e) {
+                    console.error("Polling error", e);
+                }
+            }, 3000);
+        }
+
+        return () => clearInterval(pollingTimer);
+    }, [currentJobId, isExecutingStep]);
 
     const renderResultPreview = (data: any) => {
         if (!data) return null;
@@ -89,7 +146,7 @@ export function GridFormRenderer({
                             className="w-full h-auto max-h-[400px] object-contain bg-black/5 dark:bg-black/40"
                         />
                         <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-                            Generated Image
+                            {t('creation_tool.generated_image')}
                         </div>
                     </div>
                 )}
@@ -103,18 +160,36 @@ export function GridFormRenderer({
                 )}
 
                 {/* Always show Raw Data for debugging but collapsed if we have preview */}
-                <details className="group">
-                    <summary className="flex items-center gap-2 cursor-pointer text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors py-2">
-                        <span className="bg-muted px-1.5 py-0.5 rounded group-open:bg-primary/10">
-                            {imageUrl || textContent ? 'View Raw Data' : 'View Output Data'}
-                        </span>
-                    </summary>
-                    <div className="mt-2 rounded-lg bg-muted/50 p-4 overflow-auto max-h-[200px] border border-border/50">
-                        <pre className="text-[10px] font-mono whitespace-pre-wrap word-break-all text-muted-foreground">
-                            {JSON.stringify(data, null, 2)}
-                        </pre>
-                    </div>
-                </details>
+                <div className="flex items-center justify-between gap-4 py-2 border-t border-border/40 mt-2">
+                    <details className="group flex-1">
+                        <summary className="flex items-center gap-2 cursor-pointer text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors py-2">
+                            <span className="bg-muted px-1.5 py-0.5 rounded group-open:bg-primary/10">
+                                {imageUrl || textContent ? t('creation_tool.view_raw') : t('creation_tool.view_output')}
+                            </span>
+                        </summary>
+                        <div className="mt-2 rounded-lg bg-muted/50 p-4 overflow-auto max-h-[200px] border border-border/50">
+                            <pre className="text-[10px] font-mono whitespace-pre-wrap word-break-all text-muted-foreground">
+                                {JSON.stringify(data, null, 2)}
+                            </pre>
+                        </div>
+                    </details>
+
+                    {currentJobId && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                router.push(`/publishing/${currentJobId}` as Route);
+                            }}
+                            className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider gap-2 rounded-full border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 bg-white/50 backdrop-blur-sm shadow-sm transition-all"
+                        >
+                            <Share2 className="w-3 h-3" />
+                            {t('creation_tool.post_to_channels')}
+                        </Button>
+                    )}
+                </div>
             </div>
         )
     }
@@ -164,10 +239,10 @@ export function GridFormRenderer({
         currentFields.forEach(fieldName => {
             const currentVal = form.getValues(fieldName);
             if (typeof currentVal === 'string' && currentVal.includes('{{prev.')) {
-                const resolved = resolveValue(currentVal);
-                if (resolved !== currentVal) {
-                    // console.log(`[GRID-RENDERER] Auto-resolving variable for ${fieldName}: ${currentVal} -> ${resolved}`);
-                    form.setValue(fieldName, resolved, { shouldValidate: true, shouldDirty: true });
+                const resolve = resolveValue(currentVal);
+                if (resolve !== currentVal) {
+                    // console.log(`[GRID-RENDERER] Auto-resolving variable for ${fieldName}: ${currentVal} -> ${resolve}`);
+                    form.setValue(fieldName, resolve, { shouldValidate: true, shouldDirty: true });
                 }
             }
         });
@@ -219,7 +294,7 @@ export function GridFormRenderer({
         }
     }
 
-    const handleNext = async (e?: React.MouseEvent | React.FormEvent) => {
+    const handleAction = async (e?: React.MouseEvent | React.FormEvent) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
 
         const fieldsInCurrentStep: string[] = [];
@@ -239,6 +314,8 @@ export function GridFormRenderer({
             console.warn('%c[GRID-RENDERER] Validation Failed!', 'color: red;', form.formState.errors);
             return;
         }
+
+        let updatedJobId = currentJobId;
 
         // NEW: Check if current step has execution config
         if (currentStepConfig?.execution && toolId) {
@@ -260,16 +337,27 @@ export function GridFormRenderer({
                 // Update Job ID if returned (Draft created/updated)
                 if (result.jobId) {
                     console.log('[GRID-RENDERER] Job ID Updated:', result.jobId);
+                    updatedJobId = result.jobId;
                     setCurrentJobId(result.jobId);
                 }
 
-                // Store result
-                setStepResults(prev => ({
-                    ...prev,
-                    [currentStepConfig.id]: result.result
-                }));
+                // Store result (Immediate Sync Result)
+                if (result.result) {
+                    setStepResults(prev => ({
+                        ...prev,
+                        [currentStepConfig.id]: result.result
+                    }));
+                    // Also set as generic preview if this was the last step action
+                    setPreviewResults(result.result);
+                } else if (result.jobId) {
+                    // Async Result - we have a job ID but no immediate result.
+                    // The Polling Effect will pick this up.
+                    // We can optimistically set a "Processing" state in results if needed,
+                    // but FieldResultPreview handles nulls.
+                    console.log('Async job started, waiting for polling...');
+                }
 
-                toast.success(`Step executed successfully!`);
+                toast.success(t('creation_tool.request_received'));
 
                 // Check if requires approval
                 if (currentStepConfig.execution.trigger === 'onApproval' || currentStepConfig.requiresApproval) {
@@ -281,30 +369,28 @@ export function GridFormRenderer({
 
             } catch (error: any) {
                 console.error('[GRID-RENDERER] Step execution failed:', error);
-                toast.error(error?.message || 'Step execution failed');
-                return; // Don't proceed to next step on error
+                toast.error(error?.message || t('creation_tool.failed_generate'));
+                return; // Don't proceed to next step/submit on error
             } finally {
                 setIsExecutingStep(false);
             }
         }
 
-        // Proceed to next step if no blocking execution
-        await proceedToNextStep();
+        // --- DIRECTIONAL LOGIC ---
+        if (isLastStep) {
+            // Final Step: Submit to parent (which now handles polling/waiting)
+            onSubmit(form.getValues(), updatedJobId);
+        } else {
+            // Mid Step: Proceed to next
+            await proceedToNextStep();
+        }
     }
 
+    const handleNext = handleAction;
+
     const onFormSubmit = async (data: any) => {
-        if (!isLastStep) {
-            handleNext();
-            return;
-        }
-
-        const isActuallyValid = await form.trigger();
-        if (!isActuallyValid) {
-            console.error('[GRID-RENDERER] Blocking submission: invalid form state', form.formState.errors);
-            return;
-        }
-
-        onSubmit(data);
+        // Form submit (e.g. Enter key or last step button)
+        handleAction();
     }
 
     const handleBack = (e: React.MouseEvent) => {
@@ -332,7 +418,7 @@ export function GridFormRenderer({
                                 form.trigger(field.name as any);
                             }
                         }}
-                        allValues={{ ...form.watch(), prev: stepResults }}
+                        allValues={{ ...form.watch(), prev: stepResults, preview: previewResults }}
                         error={fieldState.error?.message}
                     />
                 )}
@@ -386,7 +472,7 @@ export function GridFormRenderer({
                                             form.trigger(f.name as any);
                                         }
                                     }}
-                                    allValues={{ ...form.watch(), prev: stepResults }}
+                                    allValues={{ ...form.watch(), prev: stepResults, preview: previewResults }}
                                     error={fieldState.error?.message}
                                 />
                             )}
@@ -422,7 +508,7 @@ export function GridFormRenderer({
                             onClick={handleBack}
                             className="h-14 px-8 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] text-muted-foreground hover:text-foreground hover:bg-white/5 transition-all"
                         >
-                            Back
+                            {t('creation_tool.back')}
                         </Button>
                     )}
                     {!isLastStep ? (
@@ -433,10 +519,10 @@ export function GridFormRenderer({
                             className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] bg-primary text-primary-foreground shadow-[0_8px_32px_-8px_rgba(var(--primary),0.5)] hover:shadow-[0_12px_40px_-8px_rgba(var(--primary),0.6)] transition-all active:scale-[0.98]"
                         >
                             {isExecutingStep
-                                ? `Executing Step... (${elapsedTime}s)`
+                                ? `${t('creation_tool.executing_step')} (${elapsedTime}s)`
                                 : isPreviewing
-                                    ? 'Processing Preview...'
-                                    : (currentStepConfig.execution ? 'Run & Continue' : 'Continue')}
+                                    ? t('creation_tool.processing_preview')
+                                    : (currentStepConfig.execution ? t('creation_tool.run_continue') : t('creation_tool.continue'))}
                         </Button>
                     ) : (
                         <Button
@@ -444,7 +530,7 @@ export function GridFormRenderer({
                             disabled={isSubmitting}
                             className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-[0.15em] text-[10px] bg-primary text-primary-foreground shadow-[0_8px_32px_-8px_rgba(var(--primary),0.5)] hover:shadow-[0_12px_40px_-8px_rgba(var(--primary),0.6)] transition-all active:scale-[0.98]"
                         >
-                            {isSubmitting ? 'Processing...' : (config.submitLabel || 'Launch Generation')}
+                            {isSubmitting ? t('creation_tool.processing') : (config.submitLabel || t('creation_tool.launch_generation'))}
                         </Button>
                     )}
                 </div>
@@ -457,10 +543,10 @@ export function GridFormRenderer({
                             <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
                                 <span className="text-green-500 text-lg">✓</span>
                             </div>
-                            Step Completed
+                            {t('creation_tool.step_completed')}
                         </DialogTitle>
                         <DialogDescription>
-                            Review the generated content below. You can proceed if it looks correct.
+                            {t('creation_tool.review_content')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -470,10 +556,10 @@ export function GridFormRenderer({
 
                     <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="ghost" onClick={() => setShowApprovalDialog(false)} className="text-muted-foreground hover:text-foreground">
-                            Close & Modify Inputs
+                            {t('creation_tool.close_modify')}
                         </Button>
                         <Button onClick={handleApprovalConfirm} className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20">
-                            Approve Result & Continue
+                            {t('creation_tool.approve_continue')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

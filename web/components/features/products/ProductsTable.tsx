@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CreationJob, CreationJobStatus } from "@/lib/types/creation-job";
@@ -17,14 +19,16 @@ import {
 } from "@/components/ui/DropdownMenu";
 import { DataTable } from "@/components/shared/DataTable";
 import { ColumnDef } from '@tanstack/react-table';
+
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
-import { PostToChannelsDialog } from "./PostToChannelsDialog";
 import { formatDateTime } from "@/lib/utils/date";
 import { toast } from "sonner";
-import { Package } from "lucide-react";
+import { Package, Zap } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PaginationInfo } from "@/components/shared/Pagination";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { TriggerActionDialog } from "./TriggerActionDialog";
+import { TriggerAction } from "@/lib/api/creation-tools";
 
 import { creationJobsApi } from "@/lib/api/creation-jobs";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/DataTableFacetedFilter";
@@ -70,9 +74,13 @@ export function ProductsTable({
     filterActions,
     actions,
 }: ProductsTableProps) {
+    const router = useRouter();
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
-    const [postDialogOpen, setPostDialogOpen] = useState(false);
-    const [selectedJobForPost, setSelectedJobForPost] = useState<CreationJob | null>(null);
+
+    // New State for Dynamic Actions
+    const [actionDialogOpen, setActionDialogOpen] = useState(false);
+    const [selectedAction, setSelectedAction] = useState<TriggerAction | null>(null);
+    const [activeJobForAction, setActiveJobForAction] = useState<CreationJob | null>(null);
 
     const getDisplayName = (job: CreationJob) => {
         const input = job.inputData as any;
@@ -219,13 +227,31 @@ export function ProductsTable({
                                             <ExternalLink className="mr-2 h-4 w-4" />
                                             View Details
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => {
-                                            setSelectedJobForPost(job);
-                                            setPostDialogOpen(true);
-                                        }}>
-                                            <Share2 className="mr-2 h-4 w-4" />
-                                            Post to Channels
-                                        </DropdownMenuItem>
+
+                                        {/* Dynamic Manual Actions from Tool Config */}
+                                        {job.creationTool?.actions?.map((action: TriggerAction) => (
+                                            <DropdownMenuItem
+                                                key={action.id}
+                                                onClick={() => {
+                                                    setActiveJobForAction(job);
+                                                    setSelectedAction(action);
+                                                    setActionDialogOpen(true);
+                                                }}
+                                            >
+                                                <Zap className="mr-2 h-4 w-4 text-primary" />
+                                                {action.name}
+                                            </DropdownMenuItem>
+                                        ))}
+
+                                        {/* Fallback Legacy Post Action (only if no actions defined) */}
+                                        {(!job.creationTool?.actions || job.creationTool.actions.length === 0) && (
+                                            <DropdownMenuItem onClick={() => {
+                                                router.push(`/publishing/${job.id}` as Route);
+                                            }}>
+                                                <Share2 className="mr-2 h-4 w-4" />
+                                                Post to Channels
+                                            </DropdownMenuItem>
+                                        )}
                                     </>
                                 )}
                                 <DropdownMenuItem
@@ -316,14 +342,20 @@ export function ProductsTable({
                 onOpenChange={(open: boolean) => !open && setSelectedJob(null)}
             />
 
-            <PostToChannelsDialog
-                open={postDialogOpen}
+
+
+            <TriggerActionDialog
+                open={actionDialogOpen}
                 onOpenChange={(open) => {
-                    setPostDialogOpen(open);
-                    if (!open) setSelectedJobForPost(null);
+                    setActionDialogOpen(open);
+                    if (!open) {
+                        setSelectedAction(null);
+                        setActiveJobForAction(null);
+                    }
                 }}
-                jobId={selectedJobForPost?.id || null}
-                productName={selectedJobForPost ? getDisplayName(selectedJobForPost) : undefined}
+                jobId={activeJobForAction?.id || null}
+                action={selectedAction}
+                productName={activeJobForAction ? getDisplayName(activeJobForAction) : undefined}
             />
         </>
     );

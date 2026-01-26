@@ -20,7 +20,7 @@ export class KnowledgeBaseQueryController {
   constructor(
     private readonly ragService: KBRagService,
     private readonly botExecutionService: BotExecutionService,
-  ) { }
+  ) {}
 
   @Post('query')
   @ApiOperation({ summary: 'Query knowledge base (vector search)' })
@@ -180,9 +180,9 @@ export class KnowledgeBaseQueryController {
       body.message,
       body.conversationHistory
         ? body.conversationHistory.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        }))
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          }))
         : [],
       undefined,
     );

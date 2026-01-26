@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import { AIProvidersTab } from '@/components/features/settings/AIProvidersTab';
 import { AISettingsTab } from '@/components/features/settings/AISettingsTab';
@@ -24,18 +25,19 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('account');
 
-  const tabs = [
-    { id: 'account', label: 'Account', icon: User },
-    { id: 'team', label: 'Team Members', icon: Users },
-    { id: 'ai-settings', label: 'AI Settings', icon: Settings },
-    { id: 'ai-providers', label: 'AI Providers', icon: Cpu },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'sharing', label: 'Sharing', icon: Share2 },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'questions', label: 'Help & FAQ', icon: HelpCircle },
-  ];
+  const tabs = useMemo(() => [
+    { id: 'account', label: t('settingsPage.account'), icon: User },
+    { id: 'team', label: t('settingsPage.team'), icon: Users },
+    { id: 'ai-settings', label: t('settingsPage.aiSettings'), icon: Settings },
+    { id: 'ai-providers', label: t('settingsPage.aiProviders'), icon: Cpu },
+    { id: 'notifications', label: t('settingsPage.notifications'), icon: Bell },
+    { id: 'sharing', label: t('settingsPage.sharing'), icon: Share2 },
+    { id: 'billing', label: t('settingsPage.billing'), icon: CreditCard },
+    { id: 'questions', label: t('settingsPage.help'), icon: HelpCircle },
+  ], [t]);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -45,8 +47,8 @@ export default function SettingsPage() {
           <div className="flex-none">
             <div className="page-container pb-4">
               <PageHeader
-                title="System Configuration"
-                description="Neural gateway orchestration and system-wide preference matrix"
+                title={t('settingsPage.title')}
+                description={t('settingsPage.description')}
                 premium
                 className="mb-0"
               />

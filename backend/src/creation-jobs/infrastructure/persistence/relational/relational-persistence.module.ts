@@ -3,9 +3,12 @@ import { CreationJobsRepository } from '../creation-jobs.repository';
 import { CreationJobsRelationalRepository } from './repositories/creation-jobs.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CreationJobEntity } from './entities/creation-jobs.entity';
+import { CreationJobPublicationEntity } from './entities/creation-job-publication.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CreationJobEntity])],
+  imports: [
+    TypeOrmModule.forFeature([CreationJobEntity, CreationJobPublicationEntity]),
+  ],
   providers: [
     {
       provide: CreationJobsRepository,

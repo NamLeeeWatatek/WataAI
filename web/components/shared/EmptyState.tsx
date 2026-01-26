@@ -3,6 +3,7 @@ import React from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface EmptyStateProps {
   icon?: React.ReactNode
@@ -76,10 +77,10 @@ export function EmptyState({
 // Specialized empty states for common use cases
 
 export function NoDataEmptyState({
-  title = "Không có dữ liệu",
-  description = "Chưa có dữ liệu nào được tạo.",
+  title,
+  description,
   onCreate,
-  createLabel = "Tạo mới",
+  createLabel,
   icon
 }: {
   title?: string
@@ -88,13 +89,14 @@ export function NoDataEmptyState({
   createLabel?: string
   icon?: React.ReactNode
 }) {
+  const { t } = useTranslation()
   return (
     <EmptyState
       icon={icon}
-      title={title}
-      description={description}
+      title={title || t('common.no_data')}
+      description={description || t('common.no_data_desc')}
       action={onCreate ? {
-        label: createLabel,
+        label: createLabel || t('common.create_new'),
         onClick: onCreate,
         variant: 'default'
       } : undefined}
@@ -103,10 +105,10 @@ export function NoDataEmptyState({
 }
 
 export function NoResultsEmptyState({
-  title = "Không tìm thấy kết quả",
-  description = "Không có kết quả nào phù hợp với tìm kiếm của bạn.",
+  title,
+  description,
   onClear,
-  clearLabel = "Xóa bộ lọc",
+  clearLabel,
   icon
 }: {
   title?: string
@@ -115,13 +117,14 @@ export function NoResultsEmptyState({
   clearLabel?: string
   icon?: React.ReactNode
 }) {
+  const { t } = useTranslation()
   return (
     <EmptyState
       icon={icon}
-      title={title}
-      description={description}
+      title={title || t('common.no_results')}
+      description={description || t('common.no_results_desc')}
       action={onClear ? {
-        label: clearLabel,
+        label: clearLabel || t('common.clear_filters'),
         onClick: onClear,
         variant: 'outline'
       } : undefined}
@@ -130,10 +133,10 @@ export function NoResultsEmptyState({
 }
 
 export function ErrorEmptyState({
-  title = "Đã xảy ra lỗi",
-  description = "Không thể tải dữ liệu. Vui lòng thử lại.",
+  title,
+  description,
   onRetry,
-  retryLabel = "Thử lại",
+  retryLabel,
   icon
 }: {
   title?: string
@@ -142,13 +145,14 @@ export function ErrorEmptyState({
   retryLabel?: string
   icon?: React.ReactNode
 }) {
+  const { t } = useTranslation()
   return (
     <EmptyState
       icon={icon}
-      title={title}
-      description={description}
+      title={title || t('common.error_occurred')}
+      description={description || t('common.error_load_failed')}
       action={onRetry ? {
-        label: retryLabel,
+        label: retryLabel || t('common.retry'),
         onClick: onRetry,
         variant: 'outline'
       } : undefined}

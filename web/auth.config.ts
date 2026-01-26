@@ -1,3 +1,4 @@
+import axios from "axios"
 import type { NextAuthConfig, Session, User, Account } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { UserRole, WorkspaceEntity } from "./types/next-auth"
@@ -31,7 +32,21 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
         return refreshLocks.get(key)!;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const normalizeApiUrl = (url: string) => {
+        let cleaned = url.replace(/\/+$/, "");
+        if (!cleaned.includes("/api")) {
+            cleaned = `${cleaned}/api`;
+        }
+        if (!cleaned.endsWith("/v1")) {
+            cleaned = `${cleaned}/v1`;
+        }
+        return cleaned;
+    };
+
+    const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const apiUrl = normalizeApiUrl(rawApiUrl);
+
+    console.log(`[Auth] Refreshing token at: ${apiUrl}/auth/refresh-token`);
 
     const refreshPromise = (async () => {
         try {
@@ -39,27 +54,11 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
                 throw new Error("No refresh token available");
             }
 
-            const response = await fetch(`${apiUrl}/auth/refresh-token`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken: token.refreshToken }),
+            const { data } = await axios.post(`${apiUrl}/auth/refresh-token`, {
+                refreshToken: token.refreshToken
+            }, {
+                headers: { "Content-Type": "application/json" }
             })
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                logger.error("[Auth] Token refresh failed with status:", response.status, errorData);
-
-                // CRITICAL FIX: Only invalidate session if it's a client error (4xx) (e.g. invalid refresh token)
-                // If it's a server error (5xx) or network error, keep the old token to allow retries.
-                if (response.status >= 400 && response.status < 500) {
-                    throw new Error("RefreshAccessTokenError");
-                }
-
-                // For 5xx errors, return old token (retry later)
-                return token;
-            }
-
-            const data = await response.json()
 
             return {
                 ...token,
@@ -116,7 +115,19 @@ export const authConfig = {
         async jwt({ token, user, account, trigger, session }) {
             // Initial Sign In
             if (account) {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                const normalizeApiUrl = (url: string) => {
+                    let cleaned = url.replace(/\/+$/, "");
+                    if (!cleaned.includes("/api")) {
+                        cleaned = `${cleaned}/api`;
+                    }
+                    if (!cleaned.endsWith("/v1")) {
+                        cleaned = `${cleaned}/v1`;
+                    }
+                    return cleaned;
+                };
+
+                const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                const apiUrl = normalizeApiUrl(rawApiUrl);
 
                 // Handle Credentials
                 if (account.provider === 'credentials' && user) {
@@ -139,21 +150,17 @@ export const authConfig = {
                 if (account.provider === 'google' || account.provider === 'facebook') {
                     try {
                         const endpoint = account.provider === 'google' ? '/auth/google/login' : '/auth/facebook/login'
+                        const loginUrl = `${apiUrl}${endpoint}`;
+                        console.log(`[Auth] Social login exchange at: ${loginUrl}`);
+
                         const body = account.provider === 'google'
                             ? { idToken: account.id_token }
                             : { accessToken: account.access_token }
 
-                        const response = await fetch(`${apiUrl}${endpoint}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(body),
+                        const { data } = await axios.post(loginUrl, body, {
+                            headers: { "Content-Type": "application/json" }
                         })
 
-                        if (!response.ok) {
-                            throw new Error(`Backend social login failed: ${response.statusText}`)
-                        }
-
-                        const data = await response.json()
                         const user = data.user
                         const userName = user.name || user.firstName || user.email
 
@@ -176,14 +183,22 @@ export const authConfig = {
                 }
             }
 
-            // Handle Session Update
-            if (trigger === "update" && session?.user) {
-                return {
-                    ...token,
-                    name: session.user.name,
-                    avatarUrl: session.user.avatarUrl,
-                    image: session.user.avatarUrl, // ensure image property is also updated
+            // Handle Session Update (Profile or Workspace switch)
+            if (trigger === "update" && session) {
+                const refreshedToken = { ...token };
+
+                if (session.user?.name) refreshedToken.name = session.user.name;
+                if (session.user?.avatarUrl) {
+                    refreshedToken.avatarUrl = session.user.avatarUrl;
+                    refreshedToken.image = session.user.avatarUrl;
                 }
+
+                // Support switching workspace context in session
+                if (session.workspace) {
+                    refreshedToken.workspace = session.workspace;
+                }
+
+                return refreshedToken;
             }
 
             // 1. If there's already a refresh error, stop trying to refresh

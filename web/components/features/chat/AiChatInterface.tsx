@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Send, Loader2, Bot, User, Copy, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
@@ -35,14 +36,14 @@ interface AiChatInterfaceProps {
   headerActions?: React.ReactNode;
 }
 
-const formatTime = (timestamp?: string) => {
+const formatTime = (timestamp?: string, i18n?: any) => {
   if (!timestamp) return '';
   try {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) {
       return '';
     }
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString(i18n?.language === 'vi' ? 'vi-VN' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -51,13 +52,15 @@ const formatTime = (timestamp?: string) => {
   }
 };
 
-const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }: {
+const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex, i18n }: {
   message: UiMessage,
   index: number,
   botName?: string,
   onCopy: (content: string, index: number) => void,
-  copiedIndex: number | null
+  copiedIndex: number | null,
+  i18n?: any
 }) => {
+  const { t } = useTranslation();
   return (
     <div
       className={cn(
@@ -109,7 +112,7 @@ const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }
                     return !inline ? (
                       <div className="relative my-4 rounded-lg overflow-hidden bg-zinc-950 border border-zinc-800">
                         <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border-b border-zinc-800">
-                          <span className="text-xs text-zinc-400">Code</span>
+                          <span className="text-xs text-zinc-400">{t('aiChat.code', { defaultValue: 'Code' })}</span>
                           <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-400 hover:text-white" onClick={() => navigator.clipboard.writeText(String(children))}>
                             <Copy className="h-3 w-3" />
                           </Button>
@@ -139,7 +142,7 @@ const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }
           {message.sources && message.sources.length > 0 && (
             <div className="mt-4 pt-3 border-t border-border/20">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Sources
+                <Sparkles className="w-3 h-3" /> {t('aiChat.sources', { defaultValue: 'Sources' })}
               </p>
               <div className="grid gap-2">
                 {message.sources.map((source: AiSource, idx: number) => (
@@ -150,7 +153,7 @@ const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }
                       </span>
                       {source.score && (
                         <Badge variant="secondary" className="h-4 text-[9px] px-1">
-                          {Math.round(source.score * 100)}% Match
+                          {Math.round(source.score * 100)}% {t('aiChat.match', { defaultValue: 'Match' })}
                         </Badge>
                       )}
                     </div>
@@ -166,7 +169,7 @@ const MessageItem = React.memo(({ message, index, botName, onCopy, copiedIndex }
 
         <div className="flex items-center gap-3 px-1">
           <span className="text-[10px] font-medium text-muted-foreground/60 uppercase">
-            {formatTime(message.sentAt || message.timestamp)}
+            {formatTime(message.sentAt || message.timestamp, i18n)}
           </span>
           <button
             onClick={() => onCopy(message.content, index)}
@@ -201,6 +204,7 @@ export function AiChatInterface({
   subtitle,
   headerActions
 }: AiChatInterfaceProps) {
+  const { t, i18n } = useTranslation();
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -233,7 +237,7 @@ export function AiChatInterface({
     try {
       await onSendMessage(message);
     } catch (error) {
-      toast.error('Failed to send message');
+      toast.error(t('aiChat.failedToSend', { defaultValue: 'Failed to send message' }));
       setInput(message); // Restore input on error
     } finally {
       setSending(false);
@@ -244,7 +248,7 @@ export function AiChatInterface({
     navigator.clipboard.writeText(content);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
-    toast.success('Copied!');
+    toast.success(t('aiChat.copied', { defaultValue: 'Copied!' }));
   };
 
   return (
@@ -276,18 +280,18 @@ export function AiChatInterface({
                 <Bot className="w-12 h-12 text-primary-foreground relative z-10" />
               </div>
               <h2 className="text-4xl font-black mb-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/60">
-                {botName || 'Wata AI Assistant'}
+                {botName || t('aiChat.assistantTitle', { defaultValue: 'Wata AI Assistant' })}
               </h2>
               <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
-                Empowering your workspace with intelligent automation. Ask me anything to get started.
+                {t('aiChat.welcomeMessage', { defaultValue: 'Empowering your workspace with intelligent automation. Ask me anything to get started.' })}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-12 w-full max-w-xl">
                 {[
-                  "How do I create a new bot?",
-                  "Show me my current analytics",
-                  "Help me configure knowledge base",
-                  "What are the latest updates?"
+                  t('aiChat.suggestions.createBot', { defaultValue: "How do I create a new bot?" }),
+                  t('aiChat.suggestions.showAnalytics', { defaultValue: "Show me my current analytics" }),
+                  t('aiChat.suggestions.configKnowledge', { defaultValue: "Help me configure knowledge base" }),
+                  t('aiChat.suggestions.latestUpdates', { defaultValue: "What are the latest updates?" })
                 ].map((suggestion, i) => (
                   <button
                     key={i}
@@ -311,6 +315,7 @@ export function AiChatInterface({
                 botName={botName}
                 onCopy={handleCopy}
                 copiedIndex={copiedIndex}
+                i18n={i18n}
               />
             ))
           )}
@@ -349,7 +354,7 @@ export function AiChatInterface({
                   handleSend();
                 }
               }}
-              placeholder="Message Wata AI..."
+              placeholder={t('aiChat.placeholder', { defaultValue: 'Message Wata AI...' })}
               className="w-full bg-transparent border-none focus:ring-0 resize-none py-3 px-4 text-base max-h-[200px] min-h-[44px] overflow-y-auto"
               rows={1}
               disabled={sending || loading}

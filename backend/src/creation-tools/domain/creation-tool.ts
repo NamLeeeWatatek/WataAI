@@ -54,6 +54,9 @@ export interface FormField {
     customMessage?: string;
   };
 
+  // NEW: Flag to use this field in Post Generation Dialog
+  useForPostGen?: boolean;
+
   // Conditional rendering
   showIf?: {
     field: string;
@@ -187,8 +190,26 @@ export type ExecutionFlow =
   | HttpExecutionConfig
   | WorkflowExecutionConfig;
 /**
+ * Trigger Action - Manual actions available for a product/result
+ */
+export interface TriggerAction {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+
+  // Optional: Specific fields required only for this manual action (e.g., "Post Caption")
+  formConfig?: {
+    fields: FormField[];
+  };
+
+  // The actual execution logic for this action
+  execution: StepExecutionConfig;
+}
+
+/**
  * CreationTool domain entity
- * Main entity that defines a creation tool with dynamic forms and execution logic
+ * Main entity that defines a creation tool with dynamic forms, execution steps, and manual actions
  */
 export class CreationTool {
   @ApiProperty({ type: String })
@@ -214,6 +235,12 @@ export class CreationTool {
 
   @ApiProperty({ type: Object, description: 'Dynamic form configuration' })
   formConfig: FormConfig;
+
+  @ApiPropertyOptional({
+    type: [Object],
+    description: 'Manual actions available for results of this tool',
+  })
+  actions?: TriggerAction[];
 
   @ApiPropertyOptional({
     type: Object,

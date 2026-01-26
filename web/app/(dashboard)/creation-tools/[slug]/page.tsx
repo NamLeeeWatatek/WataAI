@@ -5,21 +5,21 @@ import { cn } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi, CreationTool } from '@/lib/api/creation-tools';
-import { CreationJobStatus } from '@/lib/types/creation-job';
-import { templatesApi } from '@/lib/api/templates';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
+import { templatesApi } from '@/lib/api/templates';
 import { Template } from '@/lib/types/template';
-import { Button } from '@/components/ui/Button';
-import { ArrowLeft } from 'lucide-react';
+import { CreationJobStatus, CreationJob } from '@/lib/types/creation-job';
 import { GridFormRenderer } from '@/components/features/creation-tools/GridFormRenderer';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { useCreationJobs } from '@/components/providers/CreationJobsProvider';
 import { useToast } from '@/lib/hooks/use-toast';
 
 import { generateZodSchema } from '@/lib/utils/schema-generator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { completeProgressOverlay, failProgressOverlay, showProgressOverlay } from '@/components/shared/ProgressOverlay';
+import { completeProgressOverlay, failProgressOverlay, showProgressOverlay, updateProgressOverlay } from '@/components/shared/ProgressOverlay';
 import { FormSkeleton } from '@/components/shared/Skeletons';
+
 
 import { PageShell } from '@/components/layout/PageShell';
 
@@ -49,10 +49,13 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
     const searchParams = useSearchParams();
     const { toast } = useToast();
     const { addJob } = useCreationJobs();
+    const { t } = useTranslation();
 
     // State
     const [activeStep, setActiveStep] = useState(0);
     const [submitting, setSubmitting] = useState(false);
+    const [lastJobId, setLastJobId] = useState<string | null>(null);
+
 
     // Fetch Templates (still needed for URL pre-fill)
     const { data: templates = [] } = useQuery({
@@ -103,50 +106,86 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         }
     }, [searchParams, templateList, form]);
 
-    const onFormSubmit = async (data: any) => {
+    const onFormSubmit = async (data: any, existingJobId?: string | null) => {
         const isPromptEmpty = data.prompt === '' || (typeof data.prompt === 'string' && data.prompt.trim() === '');
         if (isPromptEmpty && tool.formConfig.fields.find(f => f.name === 'prompt')?.validation?.required) {
-            toast({ title: 'Validation Error', description: 'Please enter the required prompt.', variant: 'destructive' });
+            toast({ title: t('creation_tool.validation_error'), description: t('creation_tool.prompt_required'), variant: 'destructive' });
             return;
         }
 
         setSubmitting(true);
         showProgressOverlay({
-            title: 'Initializing process',
-            description: 'Preparing data and sending request...',
-            steps: ['Preparing data', 'Sending request', 'Initializing Job']
+            title: t('creation_tool.initializing'),
+            description: t('creation_tool.preparing_data_desc'),
+            steps: [t('creation_tool.preparing_data'), t('creation_tool.sending_request'), t('creation_tool.initializing_job')]
         });
 
         try {
-            const inputData = { ...data };
-            if (data.template) {
-                inputData.templateId = data.template;
+            let job: CreationJob;
+
+            if (existingJobId) {
+                // Skips calling create() again if we already have a job from step-level hooks
+                job = await creationJobsApi.findOne(existingJobId);
+            } else {
+                const { template: templateValue, ...cleanData } = data;
+                const inputData = { ...cleanData } as any;
+
+                // If template selected, use templateId as the canonical key for the backend
+                if (templateValue) {
+                    inputData.templateId = templateValue;
+                }
+
+                job = await creationJobsApi.create({
+                    creationToolId: tool.id,
+                    inputData,
+                });
             }
 
-            const job = await creationJobsApi.create({
-                creationToolId: tool.id,
-                inputData,
-            });
-
             addJob({
-                id: job.id,
-                status: CreationJobStatus.PENDING,
-                progress: 0,
-                creationToolId: tool.id,
-                inputData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                ...job,
+                createdAt: job.createdAt || new Date().toISOString(),
+                updatedAt: job.updatedAt || new Date().toISOString()
             });
 
-            setTimeout(() => {
-                completeProgressOverlay(job);
-                toast({ title: 'Success', description: 'Request received successfully.' });
-            }, 500);
+            // --- WAIT FOR REAL-TIME COMPLETION ---
+            let currentJob = job;
+            let pollingAttempts = 0;
+            const maxPollingAttempts = 60; // Up to 2 minutes
+
+            while (
+                (currentJob.status === CreationJobStatus.PENDING || currentJob.status === CreationJobStatus.PROCESSING) &&
+                pollingAttempts < maxPollingAttempts
+            ) {
+                pollingAttempts++;
+
+                // Provide visual feedback for the wait
+                updateProgressOverlay({
+                    description: `${t('creation_tool.processing')}... (${pollingAttempts * 2}s)`,
+                    progress: Math.min(98, (currentJob.progress || 0) + (pollingAttempts * 0.5)) // Smooth fake progress if real progress is stuck at 0
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                currentJob = await creationJobsApi.findOne(job.id);
+            }
+
+            if (currentJob.status === CreationJobStatus.FAILED) {
+                throw new Error(currentJob.error || t('common.error'));
+            }
+
+            completeProgressOverlay(currentJob);
+            setLastJobId(currentJob.id);
+
+            // Reset form for next run to prevent data leakage
+            form.reset();
+            setActiveStep(0);
+
+            router.push(`/publishing/${currentJob.id}` as any);
+            toast({ title: t('common.success'), description: t('creation_tool.request_received') });
 
         } catch (error: any) {
-            const errorMessage = error?.response?.data?.message || error.message || 'Unknown error';
+            const errorMessage = error?.response?.data?.message || error.message || t('common.error');
             failProgressOverlay(errorMessage);
-            toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+            toast({ title: t('common.error'), description: errorMessage, variant: 'destructive' });
         } finally {
             setSubmitting(false);
         }
@@ -156,7 +195,7 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         const firstZoneTitle = step.layout?.rows?.[0]?.zones?.[0]?.title;
         if (firstZoneTitle && firstZoneTitle !== 'Main Zone') return firstZoneTitle;
         if (step.title && !step.title.startsWith('Step ')) return step.title;
-        return `Step ${index + 1}`;
+        return `${t('creation_tool.step')} ${index + 1}`;
     };
 
     const steps = tool.formConfig?.steps || [];
@@ -253,12 +292,14 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
 
                 {/* Meta Info */}
                 <div className="mt-8 flex justify-center items-center gap-4 text-muted-foreground/40 font-bold text-[10px] uppercase tracking-[0.2em]">
-                    <span>AI Model Processing</span>
+                    <span>{t('creation_tool.ai_processing')}</span>
                     <div className="w-1 h-1 rounded-full bg-border" />
-                    <span>Auto-Save active</span>
+                    <span>{t('creation_tool.auto_save')}</span>
                     <div className="w-1 h-1 rounded-full bg-border" />
-                    <span>Secure Input</span>
+                    <span>{t('creation_tool.secure_input')}</span>
                 </div>
+
+
             </div>
         </PageShell>
     );

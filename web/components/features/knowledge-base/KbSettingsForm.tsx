@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +31,7 @@ export function KbSettingsForm({
     onCancel,
     submitLabel = 'Save Changes'
 }: KbSettingsFormProps) {
+    const { t } = useTranslation()
     // AI Provider Configurations
     const [availableProviders, setAvailableProviders] = useState<AiProviderOption[]>([])
     const [loadingProviders, setLoadingProviders] = useState(false)
@@ -221,17 +223,17 @@ export function KbSettingsForm({
                             <TabsList className="grid w-full grid-cols-3 h-9">
                                 <TabsTrigger value="essentials" className="text-xs font-bold uppercase tracking-wider relative">
                                     <ScanFace className="w-4 h-4 mr-2 opacity-70" />
-                                    Identity
+                                    {t('knowledgeBase.identity', { defaultValue: 'Identity' })}
                                     {hasEssentialsError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                                 </TabsTrigger>
                                 <TabsTrigger value="intelligence" className="text-xs font-bold uppercase tracking-wider relative">
                                     <BrainCircuit className="w-4 h-4 mr-2 opacity-70" />
-                                    Brain
+                                    {t('knowledgeBase.brain', { defaultValue: 'Brain' })}
                                     {hasAiError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                                 </TabsTrigger>
                                 <TabsTrigger value="processing" className="text-xs font-bold uppercase tracking-wider relative">
                                     <Sliders className="w-4 h-4 mr-2 opacity-70" />
-                                    Index
+                                    {t('knowledgeBase.index', { defaultValue: 'Index' })}
                                     {hasProcessingError && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
                                 </TabsTrigger>
                             </TabsList>
@@ -271,10 +273,10 @@ export function KbSettingsForm({
                     <div className="text-[10px] text-muted-foreground font-medium hidden sm:block">
                         {hasEssentialsError || hasAiError || hasProcessingError ? (
                             <span className="text-red-500 font-bold flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> Fix errors before saving
+                                <AlertCircle className="w-3 h-3" /> {t('knowledgeBase.fixErrors', { defaultValue: 'Fix errors before saving' })}
                             </span>
                         ) : (
-                            <span className="opacity-70">Review all settings before creating.</span>
+                            <span className="opacity-70">{t('knowledgeBase.reviewSettings', { defaultValue: 'Review all settings before creating.' })}</span>
                         )}
                     </div>
                     <div className="flex items-center gap-3 ml-auto">
@@ -286,7 +288,7 @@ export function KbSettingsForm({
                             className="text-xs font-bold uppercase tracking-wider"
                         >
                             <X className="w-4 h-4 mr-2" />
-                            Cancel
+                            {t('knowledgeBase.cancel', { defaultValue: 'Cancel' })}
                         </Button>
                         <Button
                             type="submit"

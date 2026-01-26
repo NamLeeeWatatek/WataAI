@@ -18,6 +18,7 @@ export class CreationToolMapper {
     }
     domainEntity.formConfig = raw.formConfig;
     domainEntity.executionFlow = raw.executionFlow;
+    domainEntity.actions = raw.actions;
     domainEntity.isActive = raw.isActive;
     domainEntity.workspaceId = raw.workspaceId;
     domainEntity.knowledgeBaseId = raw.knowledgeBaseId;
@@ -46,6 +47,7 @@ export class CreationToolMapper {
     }
     persistenceEntity.formConfig = domainEntity.formConfig;
     persistenceEntity.executionFlow = domainEntity.executionFlow;
+    persistenceEntity.actions = domainEntity.actions;
     persistenceEntity.isActive = domainEntity.isActive;
     persistenceEntity.workspaceId = domainEntity.workspaceId;
     persistenceEntity.knowledgeBaseId = domainEntity.knowledgeBaseId;

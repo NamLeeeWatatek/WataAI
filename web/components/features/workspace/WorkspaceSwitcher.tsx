@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/Select'
 import { cn } from '@/lib/utils'
 import { Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface Workspace {
   id: string
@@ -22,7 +23,9 @@ interface Workspace {
 }
 
 export function WorkspaceSwitcher() {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
+  const { data: session, status, update } = useSession()
   const { currentWorkspace, workspaces, isLoading } = useAppSelector(state => state.workspace)
 
   const [mounted, setMounted] = useState(false)
@@ -37,12 +40,29 @@ export function WorkspaceSwitcher() {
     }
   }, [currentWorkspace?.id])
 
-  const handleWorkspaceChange = (workspaceId: string) => {
+  const handleWorkspaceChange = async (workspaceId: string) => {
+    const selectedWorkspace = workspaces.find(w => w.id === workspaceId)
+    if (!selectedWorkspace) return
+
     dispatch(switchWorkspace(workspaceId))
+
+    // Sync with NextAuth session so it persists across refreshes
+    if (status === 'authenticated') {
+      try {
+        await update({
+          workspace: {
+            id: selectedWorkspace.id,
+            name: selectedWorkspace.name,
+            slug: selectedWorkspace.slug
+          }
+        })
+      } catch (err) {
+        console.error('Failed to update session workspace:', err)
+      }
+    }
+
     import('@/lib/axios-client').then(({ setActiveWorkspaceId }) => {
       setActiveWorkspaceId(workspaceId)
-      // Optional: Force reload to clear other states if needed
-      // window.location.reload()
     })
   }
 
@@ -79,7 +99,7 @@ export function WorkspaceSwitcher() {
           {ws.name}
         </span>
         <span className="truncate text-xs font-medium text-muted-foreground/80">
-          {ws.plan || 'Free'} Plan
+          {(ws.plan || 'Free') === 'Free' ? t('free') : ws.plan} {t('plan')}
         </span>
       </div>
     </div>
@@ -108,7 +128,7 @@ export function WorkspaceSwitcher() {
         align="start"
       >
         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-          Select Workspace
+          {t('common.selectWorkspace')}
         </div>
         {workspaces.map((ws) => (
           <SelectItem
@@ -129,8 +149,8 @@ export function WorkspaceSwitcher() {
             <div className="flex size-8 items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-background">
               <Plus className="size-4" />
             </div>
-            <span className="font-medium">Create Workspace</span>
-            <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/50">Soon</span>
+            <span className="font-medium">{t('common.createWorkspace')}</span>
+            <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground/50">{t('soon')}</span>
           </button>
         </div>
       </SelectContent>

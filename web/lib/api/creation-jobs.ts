@@ -1,5 +1,6 @@
 import { axiosClient } from '../axios-client';
 import { CreateCreationJobDto, CreationJob } from '../types/creation-job';
+import { CreationJobPublication } from '../types/publication';
 
 export const creationJobsApi = {
     create: async (data: CreateCreationJobDto): Promise<CreationJob> => {
@@ -47,5 +48,10 @@ export const creationJobsApi = {
     preview: async (data: CreateCreationJobDto): Promise<any> => {
         const response = await axiosClient.post<any>('/creation-jobs/preview', data);
         return response;
+    },
+
+    getPublications: async (id: string): Promise<CreationJobPublication[]> => {
+        const response = await axiosClient.get<CreationJobPublication[]>(`/creation-jobs/${id}/publications`);
+        return response as unknown as CreationJobPublication[];
     },
 };

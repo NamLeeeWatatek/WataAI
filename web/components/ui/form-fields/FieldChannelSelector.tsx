@@ -1,9 +1,7 @@
 'use client'
 
-import { Facebook, Instagram, Share2, Globe, ChevronDown, Check, Monitor, ArrowRight } from 'lucide-react'
+import { Facebook, Instagram, Share2, Globe, Check, Monitor, ArrowRight } from 'lucide-react'
 import { Button } from '../Button'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from '../DropdownMenu'
-import { Badge } from '../Badge'
 import { cn } from '@/lib/utils'
 import { useDynamicOptions, DynamicOption } from '@/lib/hooks/useDynamicOptions'
 import { DynamicFormFieldProps } from './types'
@@ -36,68 +34,7 @@ export function FieldChannelSelector({ field, value, onChange }: DynamicFormFiel
 
     return (
         <div className="space-y-4">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="outline"
-                        className="w-full justify-between bg-card/50 rounded-md"
-                    >
-                        <div className="flex flex-wrap gap-1">
-                            {selectedValues.length > 0 ? (
-                                selectedValues.map((val) => {
-                                    const platformOpt = activeChannels.find((o) => o.id === val);
-                                    // Fallback to finding by original ID if not found (backward compatibility)
-                                    const label = platformOpt
-                                        ? platformOpt.name
-                                        : ((field.options as OptionItem[])?.find((o) => o.value === val)?.label || val);
-
-                                    return (
-                                        <Badge
-                                            key={val}
-                                            variant="secondary"
-                                            className="bg-primary/10 text-primary border-primary/20"
-                                        >
-                                            {String(label || val)}
-                                        </Badge>
-                                    )
-                                })
-                            ) : (
-                                <span className="text-muted-foreground">{selectorPlaceholder}</span>
-                            )}
-                        </div>
-                        <ChevronDown className="h-4 w-4 opacity-50" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto">
-                    {activeChannels.map((channel) => {
-                        const isSelected = selectedValues.includes(String(channel.id))
-                        return (
-                            <DropdownMenuCheckboxItem
-                                key={String(channel.id)}
-                                checked={isSelected}
-                                onCheckedChange={(checked) => {
-                                    const channelId = String(channel.id);
-                                    const newValue = checked
-                                        ? [...selectedValues, channelId]
-                                        : selectedValues.filter(v => v !== channelId)
-                                    onChange(field.name, newValue)
-                                }}
-                            >
-                                <div className="flex items-center gap-2">
-                                    {getPlatformIcon(channel.type as string)}
-                                    <span className="flex flex-col">
-                                        <span>{String(channel.name || channel.type || '')}</span>
-                                        {channel.isPage && (
-                                            <span className="text-xs text-muted-foreground">via {String(channel.originalName || '')}</span>
-                                        )}
-                                    </span>
-                                </div>
-                            </DropdownMenuCheckboxItem>
-                        )
-                    })}
-                </DropdownMenuContent>
-            </DropdownMenu>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-2.5">
                 {isLoading ? (
                     <>
                         {[1, 2].map((i) => (
@@ -126,33 +63,39 @@ export function FieldChannelSelector({ field, value, onChange }: DynamicFormFiel
                                 }}
                                 aria-pressed={isSelected}
                                 className={cn(
-                                    "group flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors w-full text-left",
+                                    "group flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-all duration-300 w-full text-left relative overflow-hidden",
                                     isSelected
-                                        ? "bg-accent border-primary/50"
-                                        : "bg-card hover:bg-accent/50 border-input"
+                                        ? "bg-primary/[0.03] border-primary/40 shadow-sm"
+                                        : "bg-background/40 hover:bg-background/80 border-border/30 hover:border-border/60"
                                 )}
                             >
-                                <div className="w-8 h-8 flex items-center justify-center">
+                                <div className={cn(
+                                    "w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-300",
+                                    isSelected ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted/50 group-hover:bg-muted"
+                                )}>
                                     {isSelected ? (
-                                        <Check className="w-4 h-4 text-primary" />
+                                        <Check className="w-4 h-4" />
                                     ) : (
                                         getPlatformIcon(channel.type as string)
                                     )}
                                 </div>
-                                <div className="flex flex-col min-w-0">
-                                    <span className="text-sm font-medium truncate">
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs font-bold truncate tracking-tight">
                                         {String(channel.name || channel.type || '')}
                                     </span>
                                     {channel.isPage ? (
-                                        <span className="text-xs text-muted-foreground">
+                                        <span className="text-[10px] font-medium text-muted-foreground/60 leading-tight">
                                             Page • {String(channel.originalName || '')}
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-muted-foreground capitalize">
+                                        <span className="text-[10px] font-medium text-muted-foreground/60 leading-tight capitalize">
                                             {String(channel.type || '')}
                                         </span>
                                     )}
                                 </div>
+                                {isSelected && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary rounded-full" />
+                                )}
                             </button>
                         )
                     })

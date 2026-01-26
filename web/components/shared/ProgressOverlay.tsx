@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/Progress'
 import { CheckCircle2, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
+import { useTranslation } from 'react-i18next'
 
 export function ProgressOverlay() {
     const {
@@ -17,6 +18,7 @@ export function ProgressOverlay() {
         progress,
         cancelProgress
     } = useProgressOverlay()
+    const { t } = useTranslation()
 
     const animatedProgress = progress !== undefined
         ? progress
@@ -39,7 +41,7 @@ export function ProgressOverlay() {
 
                     {/* Header */}
                     <DialogHeader className="text-center relative z-10">
-                        <LoadingLogo size="lg" className="mb-4" showGlow />
+                        <LoadingLogo size="lg" className="mb-4" />
                         <DialogTitle className="text-xl font-semibold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                             {title}
                         </DialogTitle>
@@ -51,11 +53,11 @@ export function ProgressOverlay() {
                         <Progress value={animatedProgress} className="w-full h-2" />
                         <div className="flex justify-between items-center">
                             <p className="text-xs text-muted-foreground font-medium">
-                                {Math.round(animatedProgress)}% complete
+                                {Math.round(animatedProgress)}% {t('common.complete')}
                             </p>
                             {steps.length > 0 && (
                                 <p className="text-xs text-muted-foreground">
-                                    Step {Math.min(currentStep + 1, steps.length)} of {steps.length}
+                                    {t('common.step')} {Math.min(currentStep + 1, steps.length)} {t('common.of')} {steps.length}
                                 </p>
                             )}
                         </div>
@@ -64,7 +66,7 @@ export function ProgressOverlay() {
                     {/* Current Step Highlight */}
                     {steps.length > 0 && (
                         <div className="space-y-2 relative z-10">
-                            <p className="text-sm font-semibold text-foreground/90">Current step:</p>
+                            <p className="text-sm font-semibold text-foreground/90">{t('common.currentStep')}:</p>
                             <div className={cn(
                                 'flex items-center gap-3 p-4 rounded-md',
                                 'bg-gradient-to-r from-primary/10 to-primary/5',
@@ -73,7 +75,7 @@ export function ProgressOverlay() {
                                 'shadow-lg shadow-primary/5',
                             )}>
                                 <div className="flex-shrink-0">
-                                    <LoadingLogo size="sm" showGlow={false} />
+                                    <LoadingLogo size="sm" />
                                 </div>
                                 <span className="text-sm font-medium">
                                     {steps[currentStep] || steps[steps.length - 1]}
@@ -86,7 +88,7 @@ export function ProgressOverlay() {
                     {steps.length > 1 && (
                         <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent relative z-10">
                             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                                All Steps
+                                {t('common.allSteps')}
                             </p>
                             {steps.map((step, index) => (
                                 <div
@@ -131,7 +133,7 @@ export function ProgressOverlay() {
                                 'border border-transparent hover:border-destructive/30'
                             )}
                         >
-                            Cancel operation
+                            {t('common.cancelOperation')}
                         </button>
                     </div>
                 </div>

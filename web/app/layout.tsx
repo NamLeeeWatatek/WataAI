@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     title: 'Wata AI - One AI. Every Channel. Zero Code.',
     description: 'AI-powered omnichannel customer engagement platform with zero-code flow builder and unified inbox.',
     keywords: ['AI', 'chatbot', 'omnichannel', 'customer engagement', 'automation', 'n8n'],
+    icons: {
+        icon: '/images/logo.svg',
+    },
 }
 
 import { ThemeProviderWrapper } from '@/components/providers/ThemeProviderWrapper';
@@ -41,7 +44,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
-            <body className="font-sans antialiased">
+            <body className="font-sans antialiased" suppressHydrationWarning>
                 <QueryProvider>
                     <I18nProvider>
                         <SessionProvider>

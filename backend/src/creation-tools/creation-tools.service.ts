@@ -117,6 +117,7 @@ export class CreationToolsService {
         ? createDto.categoryIds.map((id) => ({ id }))
         : undefined,
       formConfig: createDto.formConfig,
+      actions: createDto.actions,
       executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
       workspaceId: createDto.workspaceId,
@@ -226,5 +227,39 @@ export class CreationToolsService {
     }
 
     return tool;
+  }
+
+  async clone(id: CreationTool['id']): Promise<CreationTool> {
+    const original = await this.repository.findById(id);
+    if (!original) {
+      throw new NotFoundException(
+        this.i18n.t('common.notFound', {
+          args: { resource: 'Creation tool' },
+        }),
+      );
+    }
+
+    const newSlug = `${original.slug}-copy-${Date.now()}`;
+    const newName = `${original.name} (Copy)`;
+
+    const clonedTool = await this.repository.create({
+      ...original,
+      name: newName,
+      slug: newSlug,
+      isActive: false,
+      categories: original.categories
+        ? original.categories.map((c) => ({ id: c.id }))
+        : undefined,
+      createdAt: undefined,
+      updatedAt: undefined,
+      deletedAt: undefined,
+      id: undefined,
+    } as any);
+
+    if (original.icon) await this.filesService.confirmFromUrl(original.icon);
+    if (original.coverImage)
+      await this.filesService.confirmFromUrl(original.coverImage);
+
+    return clonedTool;
   }
 }

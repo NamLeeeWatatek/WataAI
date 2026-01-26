@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, Suspense, useEffect, JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
@@ -63,11 +64,11 @@ import type { SocketConversation, SocketMessage } from '@/lib/types/socket';
 
 type Conversation = ChannelConversation;
 
-const formatRelativeTime = (dateString: string): string => {
+const formatRelativeTime = (dateString: string, t: any, i18n: any): string => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      return 'Recently';
+      return t('conversations.date.recently', { defaultValue: 'Recently' });
     }
 
     const now = new Date();
@@ -76,23 +77,23 @@ const formatRelativeTime = (dateString: string): string => {
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 1) return t('conversations.date.justNow', { defaultValue: 'Just now' });
     if (diffInMinutes < 60) return `${diffInMinutes}m`;
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInDays < 7) return `${diffInDays}d`;
 
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
       month: 'short',
       day: 'numeric'
     }).format(date);
   } catch {
-    return 'Recently';
+    return t('conversations.date.recently', { defaultValue: 'Recently' });
   }
 };
 
-const mapConversation = (conv: Record<string, unknown>): Conversation => {
+const mapConversation = (conv: Record<string, unknown>, t: any): Conversation => {
   // ✅ Try multiple sources for last message
-  let lastMessage = 'No messages yet';
+  let lastMessage = t('conversations.noMessages', { defaultValue: 'No messages yet' });
 
   if (typeof conv.lastMessage === 'string') {
     lastMessage = conv.lastMessage;
@@ -103,7 +104,7 @@ const mapConversation = (conv: Record<string, unknown>): Conversation => {
   } else if (Array.isArray(conv.messages) && conv.messages.length > 0) {
     const lastMsg = conv.messages[conv.messages.length - 1];
     if (isRecord(lastMsg)) {
-      lastMessage = String(lastMsg.content || lastMsg.text || 'No messages yet');
+      lastMessage = String(lastMsg.content || lastMsg.text || t('conversations.noMessages', { defaultValue: 'No messages yet' }));
     }
   }
 
@@ -130,8 +131,8 @@ const mapConversation = (conv: Record<string, unknown>): Conversation => {
     externalId: getString(conv.externalId || conv.external_id),
     channelId: getString(conv.channelId || conv.channel_id),
     channelType: getString(conv.channelType || conv.channel_type || 'web'),
-    channelName: getString(conv.channelName || conv.channel_name || conv.channelType || 'Unknown'),
-    customerName: getString(conv.customerName || conv.contactName || conv.contact_name || 'Unknown'),
+    channelName: getString(conv.channelName || conv.channel_name || conv.channelType || t('conversations.unknown', { defaultValue: 'Unknown' })),
+    customerName: getString(conv.customerName || conv.contactName || conv.contact_name || t('conversations.unknown', { defaultValue: 'Unknown' })),
     customerAvatar: getString(conv.customerAvatar || conv.contactAvatar || conv.contact_avatar),
     lastMessage,
     lastMessageAt,
@@ -200,6 +201,7 @@ const getChannelColorDisplay = (type: string) => {
 };
 
 function ConversationsPageContent() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -287,7 +289,7 @@ function ConversationsPageContent() {
         total = data.total || data.data.length;
       }
 
-      return { items: items.map(mapConversation), total };
+      return { items: items.map((conv: any) => mapConversation(conv, t)), total };
     },
     getNextPageParam: (lastPage: any, allPages: any[]) => {
       const currentTotal = allPages.reduce((acc, p) => acc + p.items.length, 0);
@@ -320,7 +322,7 @@ function ConversationsPageContent() {
       const exists = prev.find((c: Conversation) => c.id === updatedConversation.id);
 
       // Update data
-      const mappedUpdated = mapConversation(updatedConversation as unknown as Record<string, unknown>);
+      const mappedUpdated = mapConversation(updatedConversation as unknown as Record<string, unknown>, t);
       let newData: Conversation[];
 
       if (exists) {
@@ -350,15 +352,15 @@ function ConversationsPageContent() {
     if (notificationPrefs.onlyWhenInactive && isWindowFocused) return;
 
     if (!isCurrentlyViewing) {
-      const newMessage = mapConversation(updatedConversation as unknown as Record<string, unknown>);
+      const newMessage = mapConversation(updatedConversation as unknown as Record<string, unknown>, t);
       // Only notify for new messages from customers
-      if (newMessage.lastMessage && newMessage.lastMessage !== 'No messages yet') {
-        const customerName = newMessage.customerName || 'Customer';
+      if (newMessage.lastMessage && newMessage.lastMessage !== t('conversations.noMessages', { defaultValue: 'No messages yet' })) {
+        const customerName = newMessage.customerName || t('conversations.unknown', { defaultValue: 'Customer' });
         const messagePreview = notificationPrefs.messagePreview
           ? (newMessage.lastMessage.length > 50
             ? newMessage.lastMessage.substring(0, 50) + '...'
             : newMessage.lastMessage)
-          : 'New message received';
+          : t('conversations.newMessageReceived', { defaultValue: 'New message received' });
 
         if (notificationPrefs.sound) playSound('message');
 
@@ -414,13 +416,13 @@ function ConversationsPageContent() {
 
   const handleSync = async () => {
     if (selectedChannel === 'all') {
-      toast.error('Please select a specific Facebook channel to sync');
+      toast.error(t('conversations.selectChannelToSync', { defaultValue: 'Please select a specific Facebook channel to sync' }));
       return;
     }
 
     const channel = channels.find(c => c.id === selectedChannel);
     if (!channel || channel.type !== 'facebook') {
-      toast.error('Please select a Facebook channel to sync');
+      toast.error(t('conversations.selectFacebookChannelToSync', { defaultValue: 'Please select a Facebook channel to sync' }));
       return;
     }
 
@@ -465,8 +467,8 @@ function ConversationsPageContent() {
     <div className="h-screen flex bg-background overflow-hidden">
       <div className="w-72 border-r border-border/50 flex flex-col bg-card/30">
         <div className="px-6 py-5 border-b border-border/50">
-          <h2 className="text-base font-semibold text-foreground">Channels</h2>
-          <p className="text-xs text-muted-foreground mt-1">Select a channel to view messages</p>
+          <h2 className="text-base font-semibold text-foreground">{t('conversations.channels', { defaultValue: 'Channels' })}</h2>
+          <p className="text-xs text-muted-foreground mt-1">{t('conversations.selectChannel', { defaultValue: 'Select a channel to view messages' })}</p>
         </div>
         <ScrollArea className="flex-1 px-3 py-4">
           <div className="space-y-1">
@@ -487,7 +489,7 @@ function ConversationsPageContent() {
               <div className="p-1.5 rounded-lg bg-primary/10">
                 <Users className="w-3.5 h-3.5 text-primary" />
               </div>
-              <span className="text-sm text-muted-foreground">Total Conversations</span>
+              <span className="text-sm text-muted-foreground">{t('conversations.totalConversations', { defaultValue: 'Total Conversations' })}</span>
             </div>
             <span className="text-sm font-semibold text-foreground">{conversations.length}</span>
           </div>
@@ -503,8 +505,8 @@ function ConversationsPageContent() {
               <div className="flex items-center gap-3">
                 <h1 className="text-xl font-black bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent tracking-tight">
                   {selectedChannel === 'all'
-                    ? 'Inbox'
-                    : channels.find(c => c.id === selectedChannel)?.name || 'Messages'}
+                    ? t('conversations.inbox', { defaultValue: 'Inbox' })
+                    : channels.find(c => c.id === selectedChannel)?.name || t('conversations.messages', { defaultValue: 'Messages' })}
                 </h1>
                 <div className="flex items-center gap-1.5 ml-1">
                   <div
@@ -512,11 +514,11 @@ function ConversationsPageContent() {
                       'w-2 h-2 rounded-full',
                       isConnected ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(var(--success),0.4)]' : 'bg-muted-foreground/30'
                     )}
-                    title={isConnected ? 'Connected (Real-time)' : 'Disconnected'}
+                    title={isConnected ? t('conversations.connected', { defaultValue: 'Connected (Real-time)' }) : t('conversations.disconnected', { defaultValue: 'Disconnected' })}
                   />
                   {isConnected && (
                     <span className="text-[10px] font-black text-success uppercase tracking-widest opacity-80">
-                      Live
+                      {t('conversations.live', { defaultValue: 'Live' })}
                     </span>
                   )}
                 </div>
@@ -528,7 +530,7 @@ function ConversationsPageContent() {
                 size="icon"
                 onClick={() => router.push('/settings?tab=notifications')}
                 className="h-9 w-9 rounded-xl hover:bg-muted/80 relative"
-                title="Notification settings"
+                title={t('conversations.notificationSettings', { defaultValue: 'Notification settings' })}
               >
                 <Bell className="w-4 h-4" />
                 {permission !== 'granted' && (
@@ -545,7 +547,7 @@ function ConversationsPageContent() {
                   loading={syncing}
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span className="text-xs font-bold">Sync</span>
+                  <span className="text-xs font-bold">{t('conversations.sync', { defaultValue: 'Sync' })}</span>
                 </Button>
               )}
               <Button
@@ -562,7 +564,7 @@ function ConversationsPageContent() {
 
           <div className="relative group p-0">
             <Search
-              placeholder="Search conversations..."
+              placeholder={t('conversations.search', { defaultValue: 'Search conversations...' })}
               value={searchQuery}
               onChange={(e: any) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery("")}
@@ -573,9 +575,9 @@ function ConversationsPageContent() {
 
           <Tabs value={statusFilter} onValueChange={setStatusFilter} className="w-full">
             <TabsList variant="pills" className="w-full justify-between">
-              <TabsTrigger value="active" variant="pills" className="flex-1">Active</TabsTrigger>
-              <TabsTrigger value="closed" variant="pills" className="flex-1">Closed</TabsTrigger>
-              <TabsTrigger value="all" variant="pills" className="flex-1">All</TabsTrigger>
+              <TabsTrigger value="active" variant="pills" className="flex-1">{t('conversations.active', { defaultValue: 'Active' })}</TabsTrigger>
+              <TabsTrigger value="closed" variant="pills" className="flex-1">{t('conversations.closed', { defaultValue: 'Closed' })}</TabsTrigger>
+              <TabsTrigger value="all" variant="pills" className="flex-1">{t('conversations.all', { defaultValue: 'All' })}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -593,11 +595,11 @@ function ConversationsPageContent() {
               <div className="w-16 h-16 rounded-lg bg-muted/50 flex items-center justify-center mb-4">
                 <MessageSquare className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-base mb-2">No conversations yet</h3>
+              <h3 className="font-semibold text-base mb-2">{t('conversations.noConversations', { defaultValue: 'No conversations yet' })}</h3>
               <p className="text-sm text-muted-foreground max-w-xs leading-relaxed mb-4">
                 {selectedChannel === 'all'
-                  ? 'Conversations from your channels will appear here'
-                  : `No conversations from ${channels.find(c => c.id === selectedChannel)?.name || 'this channel'} yet`}
+                  ? t('conversations.noConversationsDesc', { defaultValue: 'Conversations from your channels will appear here' })
+                  : t('conversations.noConversationsFromChannel', { channel: channels.find(c => c.id === selectedChannel)?.name || 'this channel', defaultValue: `No conversations from ${channels.find(c => c.id === selectedChannel)?.name || 'this channel'} yet` })}
               </p>
               {selectedChannel !== 'all' && (
                 <button
@@ -606,7 +608,7 @@ function ConversationsPageContent() {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                  {syncing ? 'Syncing...' : 'Sync Now'}
+                  {syncing ? t('conversations.syncing', { defaultValue: 'Syncing...' }) : t('conversations.syncNow', { defaultValue: 'Sync Now' })}
                 </button>
               )}
             </div>
@@ -623,11 +625,11 @@ function ConversationsPageContent() {
                 {isFetchingNextPage && (
                   <div className="flex items-center gap-2 text-muted-foreground animate-in fade-in duration-300">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Loading more...</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{t('conversations.loadingMore', { defaultValue: 'Loading more...' })}</span>
                   </div>
                 )}
                 {!hasNextPage && conversations.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-bold">End of list</span>
+                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest font-bold">{t('conversations.endOfList', { defaultValue: 'End of list' })}</span>
                 )}
               </div>
             </div>
@@ -647,9 +649,9 @@ function ConversationsPageContent() {
               <div className="w-24 h-24 rounded-3xl bg-primary/5 border border-primary/10 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/5">
                 <MessageSquare className="w-12 h-12 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-foreground">Select a conversation</h3>
+              <h3 className="text-xl font-semibold mb-3 text-foreground">{t('conversations.selectConversation', { defaultValue: 'Select a conversation' })}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Choose a conversation from the list to view messages and reply to your customers
+                {t('conversations.selectConversationDesc', { defaultValue: 'Choose a conversation from the list to view messages and reply to your customers' })}
               </p>
             </div>
           </div>
@@ -660,20 +662,21 @@ function ConversationsPageContent() {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const config = {
     open: {
       icon: Circle,
-      label: 'Open',
+      label: t('conversations.open', { defaultValue: 'Open' }),
       className: 'bg-green-500/10 text-green-600 border-green-500/30 dark:text-green-400'
     },
     pending: {
       icon: Clock,
-      label: 'Pending',
+      label: t('conversations.pending', { defaultValue: 'Pending' }),
       className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30 dark:text-yellow-400'
     },
     closed: {
       icon: CheckCircle2,
-      label: 'Closed',
+      label: t('conversations.closed', { defaultValue: 'Closed' }),
       className: 'bg-gray-500/10 text-gray-600 border-gray-500/30 dark:text-gray-400'
     },
   };
@@ -688,7 +691,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatTime(dateString: string): string {
+function formatTime(dateString: string, t: any, i18n: any): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -696,12 +699,12 @@ function formatTime(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
+  if (diffMins < 1) return t('conversations.date.justNow', { defaultValue: 'Just now' });
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
   if (diffDays < 7) return `${diffDays}d`;
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(i18n.language === 'vi' ? 'vi-VN' : 'en-US');
 }
 
 function ConversationChat({
@@ -709,6 +712,7 @@ function ConversationChat({
 }: {
   conversationId: string;
 }) {
+  const { t, i18n } = useTranslation();
   const {
     conversation: rawConversation,
     isLoading: loading,
@@ -726,17 +730,17 @@ function ConversationChat({
       externalId: data.externalId || data.external_id || '',
       channelId: data.channelId || data.channel_id || '',
       channelType: data.channelType || data.channel_type || 'web',
-      channelName: data.channelName || data.channel_name || data.channelType || 'Unknown',
-      customerName: data.customerName || data.contactName || data.contact_name || 'Unknown',
+      channelName: data.channelName || data.channel_name || data.channelType || t('conversations.unknown', { defaultValue: 'Unknown' }),
+      customerName: data.customerName || data.contactName || data.contact_name || t('conversations.unknown', { defaultValue: 'Unknown' }),
       customerAvatar: data.customerAvatar || data.contactAvatar || data.contact_avatar,
-      lastMessage: data.metadata?.lastMessage || 'No messages yet',
+      lastMessage: data.metadata?.lastMessage || t('conversations.noMessages', { defaultValue: 'No messages yet' }),
       lastMessageAt: data.lastMessageAt || data.last_message_at || new Date().toISOString(),
       unreadCount: data.unreadCount || data.unread_count || 0,
       status: data.status === 'active' ? 'open' : data.status || 'open',
       assignedTo: data.assignedTo || data.assigned_to,
       metadata: data.metadata || {},
     };
-  }, [rawConversation]);
+  }, [rawConversation, t]);
 
   const handleSendMessage = async (content: string) => {
     try {
@@ -779,7 +783,7 @@ function ConversationChat({
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-muted-foreground">Conversation not found</p>
+        <p className="text-muted-foreground">{t('conversations.notFound', { defaultValue: 'Conversation not found' })}</p>
       </div>
     );
   }
@@ -792,7 +796,7 @@ function ConversationChat({
             <Avatar className="h-12 w-12 ring-2 ring-background shadow-sm">
               <AvatarImage src={conversation.customerAvatar} />
               <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 font-semibold">
-                {(conversation.customerName || 'User').charAt(0).toUpperCase()}
+                {(conversation.customerName || t('conversations.unknown', { defaultValue: 'User' })).charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
@@ -816,12 +820,12 @@ function ConversationChat({
             {conversation.metadata?.humanTakeover ? (
               <Badge variant="default" className="gap-1.5 bg-gradient-to-r from-green-500 to-emerald-500 h-6 px-2.5">
                 <User className="w-3 h-3" />
-                <span className="text-xs font-medium">Human Agent</span>
+                <span className="text-xs font-medium">{t('conversations.humanAgent', { defaultValue: 'Human Agent' })}</span>
               </Badge>
             ) : (
               <Badge variant="secondary" className="gap-1.5 h-6 px-2.5">
                 <Bot className="w-3 h-3" />
-                <span className="text-xs font-medium">AI Assistant</span>
+                <span className="text-xs font-medium">{t('conversations.aiAssistant', { defaultValue: 'AI Assistant' })}</span>
               </Badge>
             )}
 
@@ -834,7 +838,7 @@ function ConversationChat({
                 className="h-8 gap-2 text-xs"
               >
                 <Bot className="w-3.5 h-3.5" />
-                Hand Back to Bot
+                {t('conversations.handBackToBot', { defaultValue: 'Hand Back to Bot' })}
               </Button>
             ) : (
               <Button
@@ -844,7 +848,7 @@ function ConversationChat({
                 className="h-8 gap-2 text-xs bg-gradient-to-r from-primary to-primary/80"
               >
                 <UserPlus className="w-3.5 h-3.5" />
-                Take Over
+                {t('conversations.takeOver', { defaultValue: 'Take Over' })}
               </Button>
             )}
 
@@ -857,15 +861,15 @@ function ConversationChat({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
                   <Archive className="w-4 h-4 mr-2" />
-                  Archive
+                  {t('conversations.archive', { defaultValue: 'Archive' })}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Mark as Resolved
+                  {t('conversations.markAsResolved', { defaultValue: 'Mark as Resolved' })}
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive">
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  {t('conversations.delete', { defaultValue: 'Delete' })}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

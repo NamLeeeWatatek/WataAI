@@ -8,6 +8,9 @@ import { CreationJobsRepository } from '../../creation-jobs.repository';
 import { CreationJobsMapper } from '../mappers/creation-jobs.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { FilterBuilder } from 'src/utils/filter-builder';
+import { CreationJobPublicationEntity } from '../entities/creation-job-publication.entity';
+import { CreationJobPublication } from '../../../../domain/creation-job-publication';
+import { CreationJobPublicationMapper } from '../mappers/creation-job-publication.mapper';
 
 @Injectable()
 export class CreationJobsRelationalRepository
@@ -16,6 +19,8 @@ export class CreationJobsRelationalRepository
   constructor(
     @InjectRepository(CreationJobEntity)
     private readonly creationJobsRepository: Repository<CreationJobEntity>,
+    @InjectRepository(CreationJobPublicationEntity)
+    private readonly publicationRepository: Repository<CreationJobPublicationEntity>,
   ) {}
 
   async create(data: CreationJob): Promise<CreationJob> {
@@ -126,5 +131,30 @@ export class CreationJobsRelationalRepository
     workspaceId: string,
   ): Promise<void> {
     await this.creationJobsRepository.delete({ id: In(ids), workspaceId });
+  }
+
+  async createPublication(
+    data: Omit<CreationJobPublication, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<CreationJobPublication> {
+    const persistenceModel = CreationJobPublicationMapper.toPersistence(
+      data as CreationJobPublication,
+    );
+    const newEntity = await this.publicationRepository.save(
+      this.publicationRepository.create(persistenceModel),
+    );
+    return CreationJobPublicationMapper.toDomain(newEntity);
+  }
+
+  async findPublicationsByJobId(
+    jobId: string,
+  ): Promise<CreationJobPublication[]> {
+    const entities = await this.publicationRepository.find({
+      where: { jobId },
+      order: { createdAt: 'DESC' },
+    });
+
+    return entities.map((entity) =>
+      CreationJobPublicationMapper.toDomain(entity),
+    );
   }
 }

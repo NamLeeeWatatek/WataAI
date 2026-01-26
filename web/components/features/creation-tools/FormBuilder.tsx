@@ -58,11 +58,9 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
             onDragEnd={handleDragEnd}
         >
             <div className="flex flex-col h-full overflow-hidden bg-background">
-                {/* Step Stepper Header */}
-                <div className="border-b px-6 py-3 bg-muted/30 flex items-center justify-between gap-4 shrink-0">
-                    <div className="flex items-center w-full max-w-4xl mx-auto px-4 py-8 relative">
-                        <div className="absolute top-[3.25rem] left-[10%] right-[10%] h-[2px] bg-muted-foreground/10 z-0" />
-
+                {/* Top Bar - Steps */}
+                <div className="border-b px-8 py-4 bg-background sticky top-0 z-20 shadow-sm">
+                    <div className="max-w-[1600px] mx-auto flex items-center justify-between">
                         <SortableContext items={steps.map(s => s.id)} strategy={horizontalListSortingStrategy}>
                             {steps.map((step, idx) => {
                                 const isActive = activeStepIndex === idx
@@ -159,9 +157,9 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                 {/* Main Content Area */}
                 <div className="flex-1 flex overflow-hidden">
                     {/* Canvas - Zone Grid */}
-                    <div className="flex-1 overflow-y-auto p-8 bg-muted/10">
-                        <div className="h-full px-8 pb-32">
-                            <div className="max-w-[1600px] mx-auto space-y-6">
+                    <div className="flex-1 overflow-y-auto p-4 bg-muted/10">
+                        <div className="h-full px-4 pb-32">
+                            <div className="max-w-full mx-auto space-y-6">
                                 <SortableContext items={layoutRows.map(r => r.id)} strategy={verticalListSortingStrategy}>
                                     {layoutRows.map((row, rowIdx) => (
                                         <div key={row.id} className="group/row relative">
@@ -388,6 +386,90 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                                             </div>
                                                         )}
                                                     </div>
+
+                                                    {['select', 'radio', 'checkbox', 'multi-select'].includes(currentField.type) && (
+                                                        <div className="pt-4 border-t space-y-4">
+                                                            <div className="flex items-center justify-between">
+                                                                <Label className="text-sm font-bold">Options</Label>
+                                                                <div className="flex items-center gap-2">
+                                                                    {/* NEW: Use for Post Gen Switch */}
+                                                                    <div className="flex items-center gap-1.5 bg-secondary/30 pl-2 pr-1 py-0.5 rounded-full border border-secondary/50" title="Use this field's options for Social Post Style selection">
+                                                                        <Label htmlFor="use-post-gen" className="text-[9px] font-bold uppercase text-muted-foreground whitespace-nowrap cursor-pointer">Post Logic</Label>
+                                                                        <Switch
+                                                                            id="use-post-gen"
+                                                                            className="scale-75 origin-right"
+                                                                            checked={!!currentField.useForPostGen}
+                                                                            onCheckedChange={(v) => updateField({ useForPostGen: v })}
+                                                                        />
+                                                                    </div>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 text-xs hover:bg-primary/10 hover:text-primary"
+                                                                        onClick={() => {
+                                                                            const opts = Array.isArray(currentField.options) ? [...currentField.options] : []
+                                                                            opts.push({ label: 'New Option', value: 'new_option' })
+                                                                            updateField({ options: opts })
+                                                                        }}
+                                                                    >
+                                                                        <Plus className="w-3 h-3 mr-1" /> Add
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                                                                {(Array.isArray(currentField.options) ? currentField.options : []).map((opt: any, idx: number) => (
+                                                                    <div key={idx} className="flex gap-2 items-center group/opt">
+                                                                        <Input
+                                                                            value={opt.label}
+                                                                            className="h-7 text-xs bg-background"
+                                                                            placeholder="Label"
+                                                                            onChange={(e) => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                const val = e.target.value
+                                                                                // Auto-generate value from label if value was simple slug of old label
+                                                                                const oldSlug = opt.label.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+                                                                                const currentVal = opt.value
+                                                                                const newVal = val.toLowerCase().replace(/[^a-z0-9]+/g, '_')
+
+                                                                                opts[idx] = {
+                                                                                    ...opts[idx],
+                                                                                    label: val,
+                                                                                    // Update value only if it looks like it was auto-generated
+                                                                                    value: currentVal === oldSlug ? newVal : currentVal
+                                                                                }
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        />
+                                                                        <Input
+                                                                            value={opt.value}
+                                                                            className="h-7 text-xs font-mono text-muted-foreground w-20 bg-muted/20"
+                                                                            placeholder="Value"
+                                                                            onChange={(e) => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                opts[idx] = { ...opts[idx], value: e.target.value }
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        />
+                                                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground opacity-0 group-hover/opt:opacity-100 hover:text-destructive hover:bg-destructive/10"
+                                                                            onClick={() => {
+                                                                                const opts = [...(currentField.options as any[])]
+                                                                                opts.splice(idx, 1)
+                                                                                updateField({ options: opts })
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 className="w-3 h-3" />
+                                                                        </Button>
+                                                                    </div>
+                                                                ))}
+                                                                {(!currentField.options || (currentField.options as any[]).length === 0) && (
+                                                                    <div className="text-center py-4 border border-dashed rounded bg-muted/20">
+                                                                        <p className="text-[10px] text-muted-foreground italic">No options defined.</p>
+                                                                        <Button variant="link" size="sm" className="h-auto p-0 text-[10px]" onClick={() => updateField({ options: [{ label: 'Option 1', value: 'opt_1' }] })}>Add Default</Button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     <Button
                                                         variant="ghost"

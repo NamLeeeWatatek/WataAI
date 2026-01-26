@@ -12,6 +12,78 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
 
   constructor(private readonly httpService: HttpService) {
     this.engine.registerFilter('json', (v) => JSON.stringify(v));
+    this.engine.registerFilter('url_encode', (v) => encodeURIComponent(v));
+    this.engine.registerFilter('url_decode', (v) => decodeURIComponent(v));
+    this.engine.registerFilter('strip_newlines', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, '');
+    });
+    this.engine.registerFilter('newline_to_space', (v) => {
+      if (typeof v !== 'string') return v;
+      return v.replace(/\n|\r/g, ' ');
+    });
+    this.engine.registerFilter('escape_json', (v) => {
+      if (typeof v !== 'string') return v;
+      return v
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    });
+  }
+
+  /**
+   * Recursively renders string templates inside an object or array.
+   * This preserves the technical structure of the object while only rendering the values,
+   * which prevents JSON syntax errors caused by raw newlines or special characters in variables.
+   */
+  private async renderRecursive(obj: any, inputs: any): Promise<any> {
+    if (typeof obj === 'string') {
+      return this.engine.parseAndRender(obj, inputs);
+    }
+
+    if (Array.isArray(obj)) {
+      return Promise.all(obj.map((item) => this.renderRecursive(item, inputs)));
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const result: Record<string, any> = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = await this.renderRecursive(value, inputs);
+      }
+      return result;
+    }
+
+    return obj;
+  }
+
+  /**
+   * Cleans newlines and control characters from strings recursively.
+   */
+  private sanitizeData(obj: any): any {
+    if (typeof obj === 'string') {
+      return obj
+        .replace(/[\x00-\x1F\x7F]/g, (char) => {
+          if (char === '\n' || char === '\r') return ' '; // Chuyển xuống dòng thành khoảng trắng
+          return ''; // Xóa các ký tự điều khiển khác
+        })
+        .trim();
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.sanitizeData(item));
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const result: Record<string, any> = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = this.sanitizeData(value);
+      }
+      return result;
+    }
+
+    return obj;
   }
 
   async execute(
@@ -23,15 +95,30 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
       `Executing HTTP Strategy: ${config.method} ${config.urlTemplate}`,
     );
 
+    // 0. Auto-Sanitize Inputs (Global Protection against \n and control characters)
+    const sanitizedInputs = this.sanitizeData(inputs);
+
     // 1. Template Rendering
-    const url = await this.engine.parseAndRender(config.urlTemplate, inputs);
+    this.logger.debug(`Rendering URL template: ${config.urlTemplate}`);
+    const url = await this.engine.parseAndRender(
+      config.urlTemplate,
+      sanitizedInputs,
+    );
+    this.logger.debug(`Rendered URL result: "${url}"`);
+
+    if (!url || !url.startsWith('http')) {
+      const errorMsg = `Execution Failed: Rendered URL is invalid or not absolute: "${url}". Template: "${config.urlTemplate}". Make sure all variables in the template are provided in the form data.`;
+      this.logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
 
     let body: any = undefined;
     if (config.bodyTemplate) {
       if (typeof config.bodyTemplate === 'string') {
+        // CASE: String Template (e.g. JSON string with tags)
         const renderedBody = await this.engine.parseAndRender(
           config.bodyTemplate,
-          inputs,
+          sanitizedInputs,
         );
         try {
           body = JSON.parse(renderedBody);
@@ -39,19 +126,16 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
           body = renderedBody;
         }
       } else {
-        const templateString = JSON.stringify(config.bodyTemplate);
-        const renderedString = await this.engine.parseAndRender(
-          templateString,
-          inputs,
-        );
-        body = JSON.parse(renderedString);
+        // CASE: Object Template (Recommended)
+        // We render values recursively
+        body = await this.renderRecursive(config.bodyTemplate, sanitizedInputs);
       }
     } else if (['POST', 'PUT', 'PATCH'].includes(config.method)) {
-      body = inputs;
+      // If no template, use sanitized inputs directly
+      body = sanitizedInputs;
     }
 
-    // Auto-inject system metadata (Business Rule: Always provide context)
-    // This ensures that even if the bodyTemplate didn't include _callbackUrl, we force it in.
+    // Auto-inject system metadata
     if (typeof body === 'object' && body !== null && !Array.isArray(body)) {
       if (!body._callbackUrl && inputs._callbackUrl)
         body._callbackUrl = inputs._callbackUrl;
@@ -60,7 +144,7 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
         body._workspaceId = inputs._workspaceId;
     }
 
-    // 2. SSRF Protection: Block private IP ranges and localhost
+    // 2. SSRF Protection
     const isLocalOrPrivate = url.match(
       /^(https?:\/\/)?(localhost|127\.|0\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|169\.254\.)/i,
     );
@@ -71,11 +155,12 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
       );
     }
 
-    // 3. Execution
+    // 3. Execution (Always use sanitized body)
     try {
       this.logger.debug(`Request URL: ${url}`);
-      this.logger.debug(`Request Headers: ${JSON.stringify(config.headers)}`);
       this.logger.debug(`Request Body: ${JSON.stringify(body)}`);
+
+      const finalBody = this.sanitizeData(body);
 
       this.logger.debug(
         `Request timeout configured to: ${config.timeoutMs || 60000}ms`,
@@ -88,7 +173,7 @@ export class HttpExecutionStrategy implements IExecutionStrategy {
             'User-Agent': 'WataAI/1.0',
             ...config.headers,
           },
-          data: body,
+          data: finalBody,
           timeout: config.timeoutMs || 60000, // Default to 60s for slow webhooks
         }),
       );

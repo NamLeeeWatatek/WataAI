@@ -53,6 +53,13 @@ export function useCreationTools(params: any = {}) {
             toast.success(`Imported ${result.success} tools successfully. Failed: ${result.failed}`);
         },
     });
+    const cloneMutation = useMutation({
+        mutationFn: (id: string) => creationToolsApi.clone(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: toolKeys.lists() });
+            toast.success('Tool cloned successfully');
+        },
+    });
 
     return {
         ...query,
@@ -61,9 +68,10 @@ export function useCreationTools(params: any = {}) {
         createTool: createMutation.mutateAsync,
         updateTool: updateMutation.mutateAsync,
         deleteTool: deleteMutation.mutateAsync,
+        cloneTool: cloneMutation.mutateAsync,
         exportTools: exportMutation.mutateAsync,
         importTools: importMutation.mutateAsync,
-        isMutating: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || exportMutation.isPending || importMutation.isPending,
+        isMutating: createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || exportMutation.isPending || importMutation.isPending || cloneMutation.isPending,
     };
 }
 

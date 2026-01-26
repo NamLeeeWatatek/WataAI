@@ -32,6 +32,8 @@ import { WorkspaceAccessGuard } from '../workspaces/guards/workspace-access.guar
 import { PermissionsGuard } from '../permissions/guards/permissions.guard';
 import { Permissions } from '../permissions/decorators/permissions.decorator';
 import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.decorator';
+import { PostToChannelsDto } from './dto/post-to-channels.dto';
+import { TriggerActionBodyDto } from './dto/trigger-action-body.dto';
 
 @ApiTags('Creation Jobs')
 @ApiBearerAuth()
@@ -167,7 +169,7 @@ export class CreationJobsController {
   post(
     @Param('id') id: string,
     @Body()
-    body: { channels: string[]; scheduledTime?: string; message?: string },
+    body: PostToChannelsDto,
     @CurrentWorkspace() workspaceId: string,
   ) {
     return this.service.postToChannels(
@@ -176,7 +178,50 @@ export class CreationJobsController {
       workspaceId,
       body.scheduledTime,
       body.message,
+      body.botId,
+      body.writingStyle,
     );
+  }
+
+  @Post(':id/post-draft')
+  @Permissions('job:Update')
+  @ApiOkResponse({
+    description: 'Generate a social post draft using AI',
+  })
+  generatePostDraft(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      message?: string;
+      botId?: string;
+      writingStyle?: string;
+    },
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.generatePostDraft(
+      id,
+      workspaceId,
+      body.botId,
+      body.writingStyle,
+      body.message,
+    );
+  }
+
+  @Post(':id/actions/:actionId')
+  @Permissions('job:Update')
+  @ApiOkResponse({
+    description: 'Trigger a manual action for a job',
+  })
+  triggerAction(
+    @Param('id') id: string,
+    @Param('actionId') actionId: string,
+    @Body() body: TriggerActionBodyDto,
+    @Request() req,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.triggerAction(id, actionId, workspaceId, body.inputs, {
+      userId: req.user.id,
+    });
   }
 
   @Post(':id/cancel')
@@ -191,5 +236,22 @@ export class CreationJobsController {
   })
   cancel(@Param('id') id: string, @CurrentWorkspace() workspaceId: string) {
     return this.service.cancel(id, workspaceId);
+  }
+
+  @Get(':id/publications')
+  @Permissions('job:Get')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    description: 'Get publication history for a job',
+  })
+  getPublications(
+    @Param('id') id: string,
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.service.getPublications(id, workspaceId);
   }
 }

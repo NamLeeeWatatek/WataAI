@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/ScrollArea'
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
 import { MessageRole } from '@/lib/types/conversations'
+import { useTranslation } from 'react-i18next'
 
 interface Message {
   id: string
@@ -27,8 +28,9 @@ export function BotChatWidget({
   botId,
   functionId,
   className,
-  placeholder = 'Nhập tin nhắn...',
+  placeholder,
 }: BotChatWidgetProps) {
+  const { t } = useTranslation()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -58,7 +60,7 @@ export function BotChatWidget({
       const botMessage: Message = {
         id: `msg-${Date.now()}-bot`,
         role: MessageRole.ASSISTANT,
-        content: 'Tính năng chatbot đang được bảo trì để nâng cấp. Vui lòng quay lại sau!',
+        content: t('bot_config.chat_maintenance'),
         timestamp: new Date(),
       }
 
@@ -68,7 +70,7 @@ export function BotChatWidget({
       const errorMessage: Message = {
         id: `msg-${Date.now()}-error`,
         role: MessageRole.ASSISTANT,
-        content: 'Đã xảy ra lỗi. Vui lòng thử lại sau.',
+        content: t('bot_config.chat_error'),
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -94,8 +96,8 @@ export function BotChatWidget({
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="font-semibold">Trợ lý ảo</h3>
-          <p className="text-xs text-muted-foreground">Sẵn sàng hỗ trợ</p>
+          <h3 className="font-semibold">{t('bot_config.chat_title')}</h3>
+          <p className="text-xs text-muted-foreground">{t('bot_config.chat_status')}</p>
         </div>
       </div>
 
@@ -105,7 +107,7 @@ export function BotChatWidget({
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
               <Bot className="size-12 mx-auto mb-2 opacity-50" />
-              <p>Xin chào! Tôi có thể giúp gì cho bạn?</p>
+              <p>{t('bot_config.chat_welcome')}</p>
             </div>
           )}
           {messages.map((message) => (
@@ -133,7 +135,7 @@ export function BotChatWidget({
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString('vi-VN', {
+                  {message.timestamp.toLocaleTimeString(t('language') === 'Vietnamese' ? 'vi-VN' : 'en-US', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}

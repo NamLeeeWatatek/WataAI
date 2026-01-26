@@ -180,7 +180,7 @@ export default function BotDetailPage() {
 
     const handleSave = async () => {
         if (!formData.name.trim()) {
-            toast.error('Identity identifier is required');
+            toast.error(t('bots.errorNameRequired'));
             return;
         }
 
@@ -193,15 +193,15 @@ export default function BotDetailPage() {
 
     const isOnline = formData.status === 'active';
 
-    if (botLoading && !bot) return <PageLoading message="Loading bot details..." />;
+    if (botLoading && !bot) return <PageLoading message={t('bots.loadingDetails')} />;
 
     if (!bot && !botLoading) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                 <AlertCircle className="w-16 h-16 text-destructive/20 mb-4" />
-                <h2 className="text-xl font-black mb-2">Bot Not Found</h2>
-                <p className="text-muted-foreground text-sm font-medium">The requested bot could not be found in this workspace.</p>
-                <Button variant="link" onClick={() => router.push('/bots')} className="mt-4">Back to Bots</Button>
+                <h2 className="text-xl font-black mb-2">{t('bots.notFound')}</h2>
+                <p className="text-muted-foreground text-sm font-medium">{t('bots.notFoundDesc')}</p>
+                <Button variant="link" onClick={() => router.push('/bots')} className="mt-4">{t('bots.backToBots')}</Button>
             </div>
         );
     }
@@ -211,7 +211,7 @@ export default function BotDetailPage() {
             <div className="max-w-[1440px] mx-auto p-4 md:p-8">
                 <PageHeader
                     title={bot?.name || 'Bot'}
-                    description="Manage your bot settings and integrations"
+                    description={t('bots.manageInstructions')}
                     onRefresh={refetchBot}
                     refreshing={botLoading}
                     premium
@@ -225,7 +225,7 @@ export default function BotDetailPage() {
                             className="font-bold h-10 px-8 shadow-lg shadow-primary/20"
                         >
                             <Save className="w-4 h-4 mr-2" />
-                            Save Changes
+                            {t('bots.saveChanges')}
                         </Button>
                     </div>
                 </PageHeader>
@@ -235,7 +235,7 @@ export default function BotDetailPage() {
                         <CardContent className="py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
                                 <RefreshCw className="w-5 h-5 animate-spin-slow" />
-                                <p className="text-sm font-black tracking-tight uppercase">You have unsaved changes</p>
+                                <p className="text-sm font-black tracking-tight uppercase">{t('bots.unsavedChanges')}</p>
                             </div>
                         </CardContent>
                     </Card>

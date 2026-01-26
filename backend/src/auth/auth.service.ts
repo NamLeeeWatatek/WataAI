@@ -45,7 +45,7 @@ export class AuthService {
     private workspaceHelper: WorkspaceHelperService,
     private eventEmitter: EventEmitter2,
     private workspaceInvitationsService: WorkspaceInvitationsService,
-  ) { }
+  ) {}
 
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     const user = await this.usersService.findByEmail(loginDto.email);

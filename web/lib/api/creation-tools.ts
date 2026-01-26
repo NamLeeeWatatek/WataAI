@@ -19,6 +19,25 @@ export interface CreationTool {
     sortOrder: number;
     createdAt: string;
     updatedAt: string;
+    actions?: TriggerAction[];
+}
+
+/**
+ * Trigger Action - Manual actions available for a product/result
+ */
+export interface TriggerAction {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string;
+
+    // Optional: Specific fields required only for this manual action (e.g., "Post Caption")
+    formConfig?: {
+        fields: FormField[];
+    };
+
+    // The actual execution logic for this action
+    execution: StepExecutionConfig;
 }
 
 // --- New Nested Layout Types ---
@@ -102,6 +121,7 @@ export interface FormField {
     options?: string | Array<{ label: string; value: any; icon?: string }>;
     multiple?: boolean;
     config?: Record<string, any>; // For canvas-editor and other complex fields
+    useForPostGen?: boolean; // NEW: Flag to use this field in Post Generation Dialog
     validation?: {
         required?: boolean;
         min?: number;
@@ -227,5 +247,9 @@ export const creationToolsApi = {
             previousResults,
             jobId
         });
+    },
+
+    clone: async (id: string): Promise<CreationTool> => {
+        return await axiosClient.post(`/creation-tools/${id}/clone`);
     },
 };

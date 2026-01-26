@@ -24,7 +24,7 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 export class WorkspaceInvitationsController {
   constructor(
     private readonly invitationsService: WorkspaceInvitationsService,
-  ) { }
+  ) {}
 
   @Permissions('iam:InviteUser')
   @Post(':workspaceId')

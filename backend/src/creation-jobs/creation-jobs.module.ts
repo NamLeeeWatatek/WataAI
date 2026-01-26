@@ -14,6 +14,7 @@ import { CreationToolsModule } from '../creation-tools/creation-tools.module';
 import { ExecutionModule } from '../execution/execution.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
+import { BotsModule } from '../bots/bots.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { IntegrationsModule } from '../integrations/integrations.module';
     forwardRef(() => CreationToolsModule),
     ChannelsModule,
     IntegrationsModule,
+    forwardRef(() => BotsModule),
   ],
   controllers: [CreationJobsController, JobCallbacksController],
   providers: [CreationJobsService],

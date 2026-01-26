@@ -1,6 +1,7 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import {
@@ -60,18 +61,19 @@ export function ProfilePanel({
     onViewDetails,
     className
 }: ProfilePanelProps) {
+    const { t, i18n } = useTranslation();
     const getStatusConfig = (status: string) => {
         const config = {
             open: {
-                label: 'In Progress',
+                label: t('profile.inProgress', { defaultValue: 'In Progress' }),
                 variant: 'warning' as const
             },
             pending: {
-                label: 'Medium',
+                label: t('profile.medium', { defaultValue: 'Medium' }),
                 variant: 'info' as const
             },
             closed: {
-                label: 'Completed',
+                label: t('profile.completed', { defaultValue: 'Completed' }),
                 variant: 'success' as const
             },
         };
@@ -84,8 +86,8 @@ export function ProfilePanel({
         <div className={cn('w-80 border-l border-border/50 bg-background flex flex-col', className)}>
             {/* Header */}
             <div className="px-6 py-5 border-b border-border/50">
-                <h2 className="text-base font-semibold text-foreground">Profile</h2>
-                <p className="text-xs text-muted-foreground mt-1">Customer information</p>
+                <h2 className="text-base font-semibold text-foreground">{t('profile.title', { defaultValue: 'Profile' })}</h2>
+                <p className="text-xs text-muted-foreground mt-1">{t('profile.customerInfo', { defaultValue: 'Customer information' })}</p>
             </div>
 
             <ScrollArea className="flex-1">
@@ -108,14 +110,14 @@ export function ProfilePanel({
                             onClick={onViewDetails}
                         >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            View details
+                            {t('profile.viewDetails', { defaultValue: 'View details' })}
                         </Button>
                     </div>
 
                     {/* Status Badge */}
                     <div>
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 block">
-                            Status
+                            {t('profile.status', { defaultValue: 'Status' })}
                         </label>
                         <Badge
                             className="h-7 px-3 gap-2 font-bold"
@@ -128,7 +130,7 @@ export function ProfilePanel({
                     {/* Contact Information */}
                     <div className="space-y-3">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Contact
+                            {t('profile.contact', { defaultValue: 'Contact' })}
                         </label>
 
                         {email && (
@@ -137,7 +139,7 @@ export function ProfilePanel({
                                     <Mail className="w-4 h-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-muted-foreground mb-0.5">Email</p>
+                                    <p className="text-xs text-muted-foreground mb-0.5">{t('profile.email', { defaultValue: 'Email' })}</p>
                                     <p className="text-sm text-foreground truncate">{email}</p>
                                 </div>
                             </div>
@@ -149,7 +151,7 @@ export function ProfilePanel({
                                     <Phone className="w-4 h-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-muted-foreground mb-0.5">Phone</p>
+                                    <p className="text-xs text-muted-foreground mb-0.5">{t('profile.phone', { defaultValue: 'Phone' })}</p>
                                     <p className="text-sm text-foreground truncate">{phone}</p>
                                 </div>
                             </div>
@@ -161,7 +163,7 @@ export function ProfilePanel({
                                     <MapPin className="w-4 h-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-muted-foreground mb-0.5">Location</p>
+                                    <p className="text-xs text-muted-foreground mb-0.5">{t('profile.location', { defaultValue: 'Location' })}</p>
                                     <p className="text-sm text-foreground truncate">{location}</p>
                                 </div>
                             </div>
@@ -172,9 +174,13 @@ export function ProfilePanel({
                                 <Calendar className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-xs text-muted-foreground mb-0.5">Created</p>
+                                <p className="text-xs text-muted-foreground mb-0.5">{t('profile.created', { defaultValue: 'Created' })}</p>
                                 <p className="text-sm text-foreground">
-                                    {format(new Date(createdAt), 'MMM dd, yyyy')}
+                                    {new Intl.DateTimeFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    }).format(new Date(createdAt))}
                                 </p>
                             </div>
                         </div>
@@ -185,7 +191,7 @@ export function ProfilePanel({
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                    Tags
+                                    {t('profile.tags', { defaultValue: 'Tags' })}
                                 </label>
                                 <Button variant="ghost" size="icon" className="h-6 w-6">
                                     <Edit className="w-3 h-3" />
@@ -211,10 +217,10 @@ export function ProfilePanel({
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                    Tasks ({tasks.filter(t => !t.completed).length})
+                                    {t('profile.tasks', { count: tasks.filter(t => !t.completed).length, defaultValue: `Tasks (${tasks.filter(t => !t.completed).length})` })}
                                 </label>
                                 <Button variant="ghost" size="sm" className="h-6 text-xs gap-1">
-                                    <span>+ Add task</span>
+                                    <span>+ {t('profile.addTask', { defaultValue: 'Add task' })}</span>
                                 </Button>
                             </div>
                             <div className="space-y-2">
@@ -247,7 +253,11 @@ export function ProfilePanel({
                                                 <div className="flex items-center gap-1.5 mt-1 opacity-70">
                                                     <Clock className="w-3 h-3" />
                                                     <span className="text-[10px] font-bold uppercase tracking-wider">
-                                                        {format(new Date(task.dueDate), 'MMM dd, yyyy')}
+                                                        {new Intl.DateTimeFormat(i18n.language === 'vi' ? 'vi-VN' : 'en-US', {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric'
+                                                        }).format(new Date(task.dueDate))}
                                                     </span>
                                                 </div>
                                             </div>

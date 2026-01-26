@@ -9,7 +9,7 @@ import {
     setLoading,
     setError,
 } from '@/lib/store/slices/workspaceSlice';
-import { setActiveWorkspaceId, setAxiosToken } from '@/lib/axios-client';
+import { setActiveWorkspaceId, setAxiosToken, getActiveWorkspaceId } from '@/lib/axios-client';
 import axiosClient from '@/lib/axios-client';
 import { AxiosError } from 'axios';
 import { WorkspaceEntity } from '@/types/next-auth';
@@ -27,10 +27,10 @@ export function WorkspaceInitializer() {
         // Prevent fetching if already loading, already has error, or not authenticated
         if (status !== 'authenticated' || !session?.user || !session?.accessToken) return;
 
-        // CRITICAL FIX: Set axios workspace ID immediately from session if available.
-        // This prevents race conditions where other components (e.g. ToolsList) fire requests
-        // before the full /workspaces API call below finishes.
-        if (session.workspace?.id) {
+        // Initial hydration of axios workspace ID from session if locally empty.
+        // We only do this if we don't already have an activeWorkspaceId to avoid 
+        // overriding a more recent manual selection during background session refreshes.
+        if (session.workspace?.id && !getActiveWorkspaceId()) {
             setActiveWorkspaceId(session.workspace.id);
         }
 
@@ -53,7 +53,11 @@ export function WorkspaceInitializer() {
                     }
 
                     dispatch(setCurrentWorkspace(targetWorkspace as any));
-                    setActiveWorkspaceId(targetWorkspace.id);
+
+                    // Only update axios ID if it wasn't already set to something else
+                    if (!getActiveWorkspaceId()) {
+                        setActiveWorkspaceId(targetWorkspace.id);
+                    }
                 }
             } catch (err: unknown) {
                 const error = err as AxiosError<{ message?: string }>;

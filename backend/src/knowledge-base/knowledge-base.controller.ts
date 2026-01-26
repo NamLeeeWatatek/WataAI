@@ -63,7 +63,7 @@ export class KnowledgeBaseController {
     private readonly foldersService: KBFoldersService,
     private readonly documentsService: KBDocumentsService,
     private readonly embeddingsService: KBEmbeddingsService,
-  ) { }
+  ) {}
 
   @Permissions('kb:List')
   @Get()
@@ -156,7 +156,10 @@ export class KnowledgeBaseController {
     let pagedFolders: any[] = [];
     if (globalStartIndex < totalFoldersCount) {
       // We are still in folder territory (at least partially)
-      pagedFolders = allFolders.slice(globalStartIndex, globalStartIndex + limit);
+      pagedFolders = allFolders.slice(
+        globalStartIndex,
+        globalStartIndex + limit,
+      );
     }
 
     // Determine how many documents to show and from where

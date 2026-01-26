@@ -248,4 +248,13 @@ export class CreationToolsController {
       executedAt: new Date().toISOString(),
     };
   }
+  @ApiOkResponse({ type: CreationTool })
+  @ApiOperation({ summary: 'Clone creation tool' })
+  @Permissions('tool:Create')
+  @Post(':id/clone')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', type: String, required: true })
+  clone(@Param('id') id: CreationTool['id']): Promise<CreationTool> {
+    return this.service.clone(id);
+  }
 }

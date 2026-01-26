@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { Card } from '@/components/ui/Card'
@@ -36,6 +37,7 @@ import { useAiChat } from '@/lib/hooks/features/useAiChat'
 import { handleApiError } from '@/lib/utils/api-error'
 
 export default function ChatWithAIPage() {
+    const { t } = useTranslation()
     const { currentWorkspace } = useWorkspace()
     const {
         conversations,
@@ -114,7 +116,7 @@ export default function ChatWithAIPage() {
         try {
             setCreatingState(true)
             const newConv = await createConversation({
-                title: 'New Chat',
+                title: t('chat.newChat', { defaultValue: 'New Chat' }),
                 botId: config.botId !== 'none' ? config.botId : undefined,
                 useKnowledgeBase: config.useKnowledgeBase,
                 metadata: {
@@ -302,22 +304,22 @@ export default function ChatWithAIPage() {
     const clearChat = () => {
         setCurrentConversation(null)
         setMessages([])
-        toast.success('Ready for new chat')
+        toast.success(t('chat.readyForNewChat', { defaultValue: 'Ready for new chat' }))
     }
 
     const formatDate = (dateString?: string) => {
-        if (!dateString) return 'Recently'
+        if (!dateString) return t('chat.date.recently', { defaultValue: 'Recently' })
         try {
             const date = new Date(dateString)
-            if (isNaN(date.getTime())) return 'Recently'
+            if (isNaN(date.getTime())) return t('chat.date.recently', { defaultValue: 'Recently' })
             const now = new Date()
             const diff = now.getTime() - date.getTime()
             const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-            if (days === 0) return 'Today'
-            if (days === 1) return 'Yesterday'
-            if (days < 7) return `${days} days ago`
+            if (days === 0) return t('chat.date.today', { defaultValue: 'Today' })
+            if (days === 1) return t('chat.date.yesterday', { defaultValue: 'Yesterday' })
+            if (days < 7) return t('chat.date.daysAgo', { count: days, defaultValue: `${days} days ago` })
             return date.toLocaleDateString()
-        } catch { return 'Recently' }
+        } catch { return t('chat.date.recently', { defaultValue: 'Recently' }) }
     }
 
     return (
@@ -333,7 +335,7 @@ export default function ChatWithAIPage() {
                             setEditingConversationId(null)
                             setEditingTitle('')
                             setCreatingState(true)
-                            createConversation({ title: 'New Conversation' }, {
+                            createConversation({ title: t('chat.newChat', { defaultValue: 'New Conversation' }) }, {
                                 onSuccess: (data) => {
                                     setCurrentConversation(data)
                                     setMessages([])
@@ -351,7 +353,7 @@ export default function ChatWithAIPage() {
                         loading={creatingState}
                     >
                         <Plus className="w-5 h-5 mr-2" />
-                        New Chat
+                        {t('chat.newChat', { defaultValue: 'New Chat' })}
                     </Button>
                 </div>
 
@@ -359,11 +361,11 @@ export default function ChatWithAIPage() {
                     {loadingConversations ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
                             <Spinner size="lg" className="text-primary" />
-                            <p className="text-sm text-muted-foreground">Syncing history...</p>
+                            <p className="text-sm text-muted-foreground">{t('chat.syncingHistory', { defaultValue: 'Syncing history...' })}</p>
                         </div>
                     ) : conversations.length === 0 ? (
                         <div className="text-center py-12 px-4 italic text-muted-foreground text-sm">
-                            No active conversations.
+                            {t('chat.noConversations', { defaultValue: 'No active conversations.' })}
                         </div>
                     ) : (
                         conversations.map((conv) => (
@@ -452,7 +454,7 @@ export default function ChatWithAIPage() {
                 <AiChatInterface
                     messages={messages}
                     loading={loading}
-                    botName={bots.find((b: Bot) => b.id === config.botId)?.name || 'AI Assistant'}
+                    botName={bots.find((b: Bot) => b.id === config.botId)?.name || t('chat.aiAssistant', { defaultValue: 'AI Assistant' })}
                     modelName={bots.find((b: Bot) => b.id === config.botId)?.aiModelName || undefined}
                     className="flex-1"
                     headerActions={
@@ -464,7 +466,7 @@ export default function ChatWithAIPage() {
                                 className={cn(showSettings ? "" : "glass")}
                             >
                                 <Settings className="w-3.5 h-3.5 mr-2" />
-                                Settings
+                                {t('chat.settings', { defaultValue: 'Settings' })}
                             </Button>
                             {currentConversation && (
                                 <Button
@@ -474,7 +476,7 @@ export default function ChatWithAIPage() {
                                         setEditingConversationId(null)
                                         setEditingTitle('')
                                         setCreatingState(true)
-                                        createConversation({ title: 'New Conversation' }, {
+                                        createConversation({ title: t('chat.newChat', { defaultValue: 'New Conversation' }) }, {
                                             onSuccess: (data) => {
                                                 setCurrentConversation(data)
                                                 setMessages([])
@@ -489,13 +491,13 @@ export default function ChatWithAIPage() {
                                     }}
                                     className="glass"
                                 >
-                                    <Plus className="w-3.5 h-3.5 mr-2" /> New Chat
+                                    <Plus className="w-3.5 h-3.5 mr-2" /> {t('chat.newChat', { defaultValue: 'New Chat' })}
                                 </Button>
                             )}
                         </div>
                     }
-                    title={currentConversation?.title || 'New Chat'}
-                    subtitle={currentConversation ? `${messages.length} interactions` : 'Quantum intelligence engine active'}
+                    title={currentConversation?.title || t('chat.newChat', { defaultValue: 'New Chat' })}
+                    subtitle={currentConversation ? `${messages.length} ${t('chat.interactions', { defaultValue: 'interactions' })}` : t('chat.quantumEngineActive', { defaultValue: 'Quantum intelligence engine active' })}
                     onSendMessage={handleSend}
                 />
             </div>
@@ -508,7 +510,7 @@ export default function ChatWithAIPage() {
                     <div className="p-6 border-b border-border/40 flex items-center justify-between bg-white/5 backdrop-blur-sm">
                         <h3 className="font-bold flex items-center gap-2">
                             <Settings className="w-4 h-4 text-primary" />
-                            Intelligence Config
+                            {t('chat.intelligenceConfig', { defaultValue: 'Intelligence Config' })}
                         </h3>
                         <Button variant="ghost" size="icon" onClick={() => setShowSettings(false)}>
                             <X className="w-4 h-4" />
@@ -517,21 +519,21 @@ export default function ChatWithAIPage() {
 
                     <div className="p-6 space-y-8 overflow-y-auto scrollbar-thin">
                         <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-                            <span className="text-muted-foreground">Sync Status</span>
+                            <span className="text-muted-foreground">{t('chat.syncStatus', { defaultValue: 'Sync Status' })}</span>
                             <div className="flex items-center gap-2 text-primary">
                                 {savingSettings ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                                {savingSettings ? 'Syncing...' : 'Encrypted & Synced'}
+                                {savingSettings ? t('chat.syncing', { defaultValue: 'Syncing...' }) : t('chat.synced', { defaultValue: 'Encrypted & Synced' })}
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <label className="text-xs font-bold flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-primary" /> Model Routing
+                                <Zap className="w-3.5 h-3.5 text-primary" /> {t('chat.modelRouting', { defaultValue: 'Model Routing' })}
                             </label>
                             <Tabs defaultValue={config.botId === 'none' ? 'system' : 'user'} onValueChange={(v) => v === 'system' && setConfig(p => ({ ...p, botId: 'none' }))} className="w-full">
                                 <TabsList variant="pills" className="w-full">
-                                    <TabsTrigger value="system" variant="pills" className="flex-1">Pure AI</TabsTrigger>
-                                    <TabsTrigger value="user" variant="pills" className="flex-1">My Bots</TabsTrigger>
+                                    <TabsTrigger value="system" variant="pills" className="flex-1">{t('chat.pureAi', { defaultValue: 'Pure AI' })}</TabsTrigger>
+                                    <TabsTrigger value="user" variant="pills" className="flex-1">{t('chat.myBots', { defaultValue: 'My Bots' })}</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="user" className="space-y-2 pt-2">
                                     {bots.map((bot: Bot) => (
@@ -551,7 +553,7 @@ export default function ChatWithAIPage() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-bold flex items-center gap-2">
-                                    <Book className="w-3.5 h-3.5 text-primary" /> Knowledge RAG
+                                    <Book className="w-3.5 h-3.5 text-primary" /> {t('chat.knowledgeRag', { defaultValue: 'Knowledge RAG' })}
                                 </label>
                                 <input
                                     type="checkbox"
@@ -620,7 +622,7 @@ export default function ChatWithAIPage() {
                                 disabled={!isConfigDirty && !savingSettings}
                                 loading={savingSettings}
                             >
-                                {isConfigDirty ? 'Save Changes' : 'Up to Date'}
+                                {isConfigDirty ? t('chat.saveChanges', { defaultValue: 'Save Changes' }) : t('chat.upToDate', { defaultValue: 'Up to Date' })}
                             </Button>
                         </div>
                     </div>
@@ -630,8 +632,8 @@ export default function ChatWithAIPage() {
             <AlertDialogConfirm
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
-                title="Erase Memory"
-                description="This protocol will permanently delete this conversation history. Reconstitution is impossible."
+                title={t('chat.eraseMemory', { defaultValue: 'Erase Memory' })}
+                description={t('chat.deleteConfirmDesc', { defaultValue: 'This protocol will permanently delete this conversation history. Reconstitution is impossible.' })}
                 onConfirm={() => {
                     if (conversationToDelete) {
                         deleteConversation(conversationToDelete)

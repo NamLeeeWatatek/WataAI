@@ -34,6 +34,7 @@ export class AuditService {
     userId?: string;
     action?: string;
     resourceType?: string;
+    resourceId?: string;
     startDate?: Date;
     endDate?: Date;
     page?: number;
@@ -54,6 +55,11 @@ export class AuditService {
     if (options.resourceType) {
       query.andWhere('log.resourceType = :resourceType', {
         resourceType: options.resourceType,
+      });
+    }
+    if (options.resourceId) {
+      query.andWhere('log.resourceId = :resourceId', {
+        resourceId: options.resourceId,
       });
     }
     if (options.startDate) {
