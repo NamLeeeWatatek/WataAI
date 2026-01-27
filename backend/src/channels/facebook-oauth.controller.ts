@@ -37,7 +37,7 @@ export class FacebookOAuthController {
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -170,6 +170,7 @@ export class FacebookOAuthController {
           name: page.name,
           category: page.category,
           tasks: page.tasks,
+          instagram_business_account: page.instagram_business_account,
         })),
         workspaceId: wsId,
         tempToken: accessToken,

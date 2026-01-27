@@ -14,6 +14,9 @@ export interface FacebookPage {
   access_token: string;
   category: string;
   tasks: string[];
+  instagram_business_account?: {
+    id: string;
+  };
 }
 
 export interface FacebookUserPages {
@@ -25,7 +28,7 @@ export class FacebookOAuthService extends BaseOAuthService {
   protected readonly logger = new Logger(FacebookOAuthService.name);
   protected readonly providerName = 'facebook';
   private readonly baseUrl = 'https://graph.facebook.com';
-  private readonly apiVersion = 'v24.0';
+  private readonly apiVersion = 'v21.0';
 
   constructor(
     private configService: ConfigService,
@@ -47,7 +50,7 @@ export class FacebookOAuthService extends BaseOAuthService {
       );
     }
 
-    const url = new URL('https://www.facebook.com/v24.0/dialog/oauth');
+    const url = new URL('https://www.facebook.com/v21.0/dialog/oauth');
     url.searchParams.set('client_id', appId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set(
@@ -123,7 +126,8 @@ export class FacebookOAuthService extends BaseOAuthService {
         {
           params: {
             access_token: userAccessToken,
-            fields: 'id,name,access_token,category,tasks',
+            fields:
+              'id,name,access_token,category,tasks,instagram_business_account',
           },
         },
       );
