@@ -171,7 +171,7 @@ export function KbUrlPreviewDialog({
                             </TabsList>
 
                             <TabsContent value="content" className="mt-4 space-y-4">
-                                <div className="p-4 bg-muted/10 border-border/50 border rounded-xl">
+                                <div className="p-4 bg-muted/10 border-border/50 border rounded-xl max-w-full overflow-x-auto">
                                     <div className="flex items-center justify-between mb-4">
                                         <h4 className="text-sm font-bold flex items-center gap-2">
                                             <ScanEye className="w-4 h-4 text-primary" />
@@ -227,9 +227,9 @@ export function KbUrlPreviewDialog({
                             </TabsContent>
 
                             <TabsContent value="image" className="mt-4">
-                                <Card className="overflow-hidden border-dashed">
+                                <Card className="overflow-x-auto border-dashed max-w-full">
                                     {document.metadata?.ogImage ? (
-                                        <div className="relative group">
+                                        <div className="relative group bg-muted/5 min-w-[300px]">
                                             <img
                                                 src={document.metadata.ogImage}
                                                 alt="Preview"
@@ -250,8 +250,8 @@ export function KbUrlPreviewDialog({
                                 </Card>
                             </TabsContent>
                             <TabsContent value="schema" className="mt-4">
-                                <Card className="bg-slate-950 text-slate-50 p-4 border-slate-800">
-                                    <pre className="text-xs font-mono overflow-auto max-h-[300px]">
+                                <Card className="bg-slate-950 text-slate-50 p-4 border-slate-800 max-w-full overflow-x-auto">
+                                    <pre className="text-xs font-mono overflow-auto max-h-[300px] w-full">
                                         {JSON.stringify({
                                             id: document.id,
                                             title: document.title,

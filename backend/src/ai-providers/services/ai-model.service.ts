@@ -163,15 +163,18 @@ export class AiModelService {
       );
     }
 
-    const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-    const hasProtocol =
-      nativeBaseUrl.startsWith('http://') ||
-      nativeBaseUrl.startsWith('https://');
-    const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
-    const endpoint = `${validUrl}/api/chat`;
+    const performRequest = async (currentUrl: string) => {
+      // Standardize URL: Remove trailing slash to safely append /api/chat
+      // This works for both Public URLs (e.g. https://my-ollama.com) and Localhost
+      const normalizedUrl = currentUrl.endsWith('/')
+        ? currentUrl.slice(0, -1)
+        : currentUrl;
+      const hasProtocol =
+        normalizedUrl.startsWith('http://') ||
+        normalizedUrl.startsWith('https://');
+      const validUrl = hasProtocol ? normalizedUrl : `http://${normalizedUrl}`;
+      const endpoint = `${validUrl}/api/chat`;
 
-    try {
-      // Use validUrl for host parsing to ensure protocol exists
       const parsedUrl = new URL(validUrl);
       const hostHeader = parsedUrl.host;
 
@@ -215,7 +218,37 @@ export class AiModelService {
 
       const data = await response.json();
       return data.message?.content || '';
+    };
+
+    try {
+      return await performRequest(url);
     } catch (error) {
+      // Docker Compatibility: If 'localhost' fails, retry with 'host.docker.internal'
+      // This ensures functionality when running inside Docker.
+      // It DOES NOT affect public URLs which don't contain 'localhost'.
+      if (
+        url.includes('localhost') &&
+        (error.message?.includes('fetch failed') ||
+          error.message?.includes('ECONNREFUSED'))
+      ) {
+        const dockerUrl = url.replace('localhost', 'host.docker.internal');
+        this.logger.warn(
+          `Ollama localhost connection failed, retrying with ${dockerUrl}...`,
+        );
+        try {
+          return await performRequest(dockerUrl);
+        } catch (retryError) {
+          if (retryError.message?.includes('not found')) {
+            throw new BadRequestException(
+              `Model '${model}' not found on Ollama server.`,
+            );
+          }
+          throw new InternalServerErrorException(
+            `Ollama Error: ${retryError.message}`,
+          );
+        }
+      }
+
       if (error.message?.includes('not found')) {
         throw new BadRequestException(
           `Model '${model}' not found on Ollama server.`,
@@ -410,15 +443,21 @@ export class AiModelService {
       );
     }
 
-    const nativeBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
-    const hasProtocol =
-      nativeBaseUrl.startsWith('http://') ||
-      nativeBaseUrl.startsWith('https://');
-    const validUrl = hasProtocol ? nativeBaseUrl : `http://${nativeBaseUrl}`;
-    const endpoint = `${validUrl}/api/chat`;
+    const performStreamRequest = async (
+      currentUrl: string,
+    ): Promise<AsyncGenerator<string>> => {
+      // Standardize URL: Remove trailing slash to safely append /api/chat
+      // This works for both Public URLs (e.g. https://my-ollama.com) and Localhost
+      const normalizedUrl = currentUrl.endsWith('/')
+        ? currentUrl.slice(0, -1)
+        : currentUrl;
 
-    try {
-      // Use validUrl for host parsing to ensure protocol exists
+      const hasProtocol =
+        normalizedUrl.startsWith('http://') ||
+        normalizedUrl.startsWith('https://');
+      const validUrl = hasProtocol ? normalizedUrl : `http://${normalizedUrl}`;
+      const endpoint = `${validUrl}/api/chat`;
+
       const parsedUrl = new URL(validUrl);
       const hostHeader = parsedUrl.host;
 
@@ -488,7 +527,37 @@ export class AiModelService {
         }
       }
       return streamGenerator();
+    };
+
+    try {
+      return await performStreamRequest(url);
     } catch (error) {
+      // Docker Compatibility: If 'localhost' fails, retry with 'host.docker.internal'
+      // This ensures functionality when running inside Docker.
+      // It DOES NOT affect public URLs which don't contain 'localhost'.
+      if (
+        url.includes('localhost') &&
+        (error.message?.includes('fetch failed') ||
+          error.message?.includes('ECONNREFUSED'))
+      ) {
+        const dockerUrl = url.replace('localhost', 'host.docker.internal');
+        this.logger.warn(
+          `Ollama localhost connection failed, retrying with ${dockerUrl}...`,
+        );
+        try {
+          return await performStreamRequest(dockerUrl);
+        } catch (retryError) {
+          if (retryError.message?.includes('not found')) {
+            throw new BadRequestException(
+              `Model '${model}' not found on Ollama server.`,
+            );
+          }
+          throw new InternalServerErrorException(
+            `Ollama Error: ${retryError.message}`,
+          );
+        }
+      }
+
       if (error.message?.includes('not found')) {
         throw new BadRequestException(
           `Model '${model}' not found on Ollama server.`,
