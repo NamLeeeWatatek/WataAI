@@ -200,7 +200,12 @@ export default function ChannelsPage() {
     };
 
     const handleBulkConnectPages = async () => {
-        const pagesToConnect = facebookPages.filter(p => selectedPageIds.includes(p.id));
+        const visiblePages = facebookPages.filter((page: ChannelPage) => {
+            if (isConnecting === 'instagram') return page.category === 'instagram';
+            if (isConnecting === 'facebook') return page.category !== 'instagram';
+            return true;
+        });
+        const pagesToConnect = visiblePages.filter(p => selectedPageIds.includes(p.id));
         if (pagesToConnect.length === 0) return;
 
         dispatch(setConnectingPage('bulk'));
@@ -236,10 +241,16 @@ export default function ChannelsPage() {
     };
 
     const toggleSelectAllPages = () => {
-        if (selectedPageIds.length === facebookPages.length) {
+        const visiblePages = facebookPages.filter((page: ChannelPage) => {
+            if (isConnecting === 'instagram') return page.category === 'instagram';
+            if (isConnecting === 'facebook') return page.category !== 'instagram';
+            return true;
+        });
+
+        if (selectedPageIds.length === visiblePages.length) {
             setSelectedPageIds([]);
         } else {
-            setSelectedPageIds(facebookPages.map(p => p.id));
+            setSelectedPageIds(visiblePages.map(p => p.id));
         }
     };
 
@@ -349,7 +360,11 @@ export default function ChannelsPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-20 overflow-y-auto">
-                                {facebookPages.map((page: ChannelPage) => (
+                                {facebookPages.filter((page: ChannelPage) => {
+                                    if (isConnecting === 'instagram') return page.category === 'instagram';
+                                    if (isConnecting === 'facebook') return page.category !== 'instagram';
+                                    return true;
+                                }).map((page: ChannelPage) => (
                                     <AgentCard
                                         key={page.id}
                                         name={page.name}
@@ -372,7 +387,7 @@ export default function ChannelsPage() {
                                                 disabled={connectingPage === page.id || connectingPage === 'bulk'}
                                                 loading={connectingPage === page.id}
                                                 className="flex-1 font-bold"
-                                                variant={selectedPageIds.includes(page.id) ? "primary" : "outline"}
+                                                variant={selectedPageIds.length > 0 && selectedPageIds.includes(page.id) ? "primary" : "outline"}
                                             >
                                                 {t('channels.discovery.connectNow')}
                                             </Button>
