@@ -15,7 +15,7 @@ export class MarkdownProcessorUtil {
   static htmlToMarkdown(
     html: string,
     url?: string,
-  ): { title: string; content: string; excerpt: string } {
+  ): { title: string; content: string; excerpt: string; images: string[] } {
     const dom = new JSDOM(html, { url });
     const reader = new Readability(dom.window.document as unknown as Document);
     const article = reader.parse();
@@ -23,7 +23,23 @@ export class MarkdownProcessorUtil {
     if (!article) {
       // Fallback if readability fails
       const content = this.turndownService.turndown(html);
-      return { title: '', content, excerpt: '' };
+      return { title: '', content, excerpt: '', images: [] };
+    }
+
+    // Extract images from the parsed article content
+    const images: string[] = [];
+    if (article.content) {
+      try {
+        const contentDom = new JSDOM(article.content, { url });
+        const imgs = contentDom.window.document.querySelectorAll('img');
+        imgs.forEach((img) => {
+          if (img.src && !img.src.startsWith('data:')) {
+            images.push(img.src);
+          }
+        });
+      } catch (e) {
+        // Ignore image extraction errors
+      }
     }
 
     const markdown = article.content
@@ -34,6 +50,7 @@ export class MarkdownProcessorUtil {
       title: article.title || '',
       content: this.cleanMarkdown(markdown),
       excerpt: article.excerpt || '',
+      images: [...new Set(images)], // Remove duplicates
     };
   }
 

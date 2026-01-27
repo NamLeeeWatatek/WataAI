@@ -321,7 +321,7 @@ export class KBProcessor extends WorkerHost {
       // Use the unified fetcher with Jina Reader fallback to bypass 403s
       const html = await this.crawlerService.fetchUrlContent(url);
 
-      const { title, content, excerpt } = MarkdownProcessorUtil.htmlToMarkdown(
+      const { title, content, excerpt, images } = MarkdownProcessorUtil.htmlToMarkdown(
         html,
         url,
       );
@@ -347,6 +347,7 @@ export class KBProcessor extends WorkerHost {
         description: excerpt || '',
         crawledAt: new Date().toISOString(),
         contentType: 'text/html',
+        images: images || [],
       };
       // Keep status as PROCESSING so handleProcessDocument doesn't freak out
       document.processingStatus = KbProcessingStatus.PROCESSING;
