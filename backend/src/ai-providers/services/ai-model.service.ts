@@ -205,19 +205,30 @@ export class AiModelService {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes timeout
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Ollama API Error ${response.status}: ${errorText}`);
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Ollama API Error ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.message?.content || '';
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
       }
-
-      const data = await response.json();
-      return data.message?.content || '';
     };
 
     try {

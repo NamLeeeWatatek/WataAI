@@ -146,13 +146,19 @@ export default function PublicBotPage() {
         try {
             const data = await sendMessage({ conversationId, message: messageText });
 
+            if (!data.content && (!data.metadata?.sources || data.metadata.sources.length === 0)) {
+                // Empty response and no sources - treat as error or empty state
+                throw new Error('Empty response from bot');
+            }
+
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: data.content,
+                content: data.content || t('chat.noContentGenerated', { defaultValue: 'I found some information but couldn\'t generate a text response.' }),
                 timestamp: data.timestamp,
                 metadata: data.metadata,
             }])
-        } catch {
+        } catch (err) {
+            console.error('Chat error:', err);
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: t('error.general', { defaultValue: 'Sorry, something went wrong. Please try again.' }),
