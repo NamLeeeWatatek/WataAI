@@ -29,7 +29,7 @@ export class ChannelConnectionEntity extends WorkspaceOwnedEntity {
   @Column({ name: 'credential_id', type: 'uuid', nullable: true })
   credentialId?: string | null;
 
-  @ManyToOne(() => ChannelCredentialEntity, { nullable: true })
+  @ManyToOne(() => ChannelCredentialEntity, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'credential_id' })
   credential?: ChannelCredentialEntity;
 
