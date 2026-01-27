@@ -128,9 +128,30 @@ export default function ChannelsPage() {
                     const hasPages = Array.isArray(event.data.pages) && event.data.pages.length > 0;
 
                     if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && hasPages) {
-                        dispatch(setFacebookPages(event.data.pages));
+                        // Separate Instagram accounts from Pages
+                        const allItems: any[] = [];
+                        event.data.pages.forEach((page: any) => {
+                            // Add the Facebook Page
+                            allItems.push(page);
+
+                            // Check for linked Instagram account and add it as a separate item
+                            if (page.instagram_business_account) {
+                                allItems.push({
+                                    id: page.instagram_business_account.id,
+                                    name: `${page.name} (Instagram)`,
+                                    category: 'instagram',
+                                    access_token: page.access_token, // Uses page token
+                                    instagram_business_account: page.instagram_business_account,
+                                    picture: page.picture, // Inherit picture or use placeholder
+                                    original_page_id: page.id
+                                });
+                            }
+                        });
+
+
+                        dispatch(setFacebookPages(allItems));
                         dispatch(setFacebookTempToken(event.data.tempToken));
-                        toast.success(t('channels.discoveredCount', { count: event.data.pages.length }));
+                        toast.success(t('channels.discoveredCount', { count: allItems.length }));
                         refetch();
                         setActiveTab('discovery');
                     } else {

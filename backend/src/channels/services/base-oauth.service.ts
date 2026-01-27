@@ -21,7 +21,7 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     protected readonly connectionRepository: Repository<ChannelConnectionEntity>,
     protected readonly credentialRepository: Repository<ChannelCredentialEntity>,
     protected readonly conversationRepository: Repository<ConversationEntity>,
-  ) {}
+  ) { }
 
   abstract getOAuthUrl(redirectUri: string, state?: string): string;
   abstract exchangeCodeForToken(
@@ -100,11 +100,13 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     workspaceId: string,
     userId: string,
     metadata?: any,
+    overrideProviderName?: string,
   ): Promise<ChannelConnectionEntity> {
+    const provider = overrideProviderName || this.providerName;
     try {
       const allConnections = await this.connectionRepository.find({
         where: {
-          type: this.providerName as ChannelType,
+          type: provider as ChannelType,
           workspaceId: workspaceId,
         },
       });
@@ -140,8 +142,8 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
       const credential = await this.getCredential(workspaceId);
 
       const connection = this.connectionRepository.create({
-        name: `${accountName} - ${this.providerName.charAt(0).toUpperCase() + this.providerName.slice(1)}`,
-        type: this.providerName as ChannelType,
+        name: `${accountName} - ${provider.charAt(0).toUpperCase() + provider.slice(1)}`,
+        type: provider as ChannelType,
         workspaceId: workspaceId,
         credentialId: credential?.id, // âœ… Link to credential
         accessToken: accessToken,
@@ -162,7 +164,7 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     } catch (error) {
       this.logger.error('Connect account error:', error);
       throw new HttpException(
-        `Failed to connect ${this.providerName} account`,
+        `Failed to connect ${provider} account`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

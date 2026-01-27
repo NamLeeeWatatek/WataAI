@@ -201,6 +201,7 @@ export class FacebookOAuthService extends BaseOAuthService {
     workspaceId: string,
     userId: string,
     metadata?: Record<string, any>,
+    providerType?: string,
   ): Promise<ChannelConnectionEntity> {
     return this.connectAccount(
       pageId,
@@ -213,6 +214,7 @@ export class FacebookOAuthService extends BaseOAuthService {
         pageName,
         ...metadata,
       },
+      providerType,
     );
   }
 
