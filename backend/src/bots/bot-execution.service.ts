@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -94,10 +94,24 @@ export class BotExecutionService {
           kbIds,
         ); // Using public method
 
-        // Take top 5 for context
-        const topSources = ragSources.slice(0, 5);
-        if (topSources.length > 0) {
-          ragContextString = topSources
+        // SMART CONTEXT: Take as many chunks as fit in ~3000 tokens (approx 12000 chars)
+        // This is better than a fixed number (slice(0, 10)) because chunks vary in length.
+        const SAFE_CONTEXT_CHARS = 12000;
+        let currentChars = 0;
+        const selectedChunks: any[] = [];
+
+        // We already fetched top 20 candidates in previous steps (via service config) or default to all returned
+        for (const chunk of ragSources) {
+          const chunkLength = chunk.content.length;
+          if (currentChars + chunkLength > SAFE_CONTEXT_CHARS) {
+            break; // Stop if adding this chunk exceeds limit
+          }
+          selectedChunks.push(chunk);
+          currentChars += chunkLength;
+        }
+
+        if (selectedChunks.length > 0) {
+          ragContextString = selectedChunks
             .map((chunk, index) => `[Source ${index + 1}]\n${chunk.content}`)
             .join('\n\n');
         }
@@ -142,9 +156,9 @@ export class BotExecutionService {
           bot.aiConfigId,
           'workspace',
           bot.workspaceId ||
-            contextOverride?.workspaceId ||
-            bot.createdBy ||
-            'system',
+          contextOverride?.workspaceId ||
+          bot.createdBy ||
+          'system',
         );
       } else {
         // Fallback to generic chat

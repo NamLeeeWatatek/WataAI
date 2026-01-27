@@ -231,14 +231,14 @@ export class KBSearchService {
 
     for (const kbId of knowledgeBaseIds) {
       try {
-        const chunks = await this.query(message, workspaceId, kbId, 3, 0.5);
+        const chunks = await this.query(message, workspaceId, kbId, 5, 0.5);
         allChunks.push(...chunks);
       } catch (error) {
         this.logger.warn(`Failed to query KB ${kbId}: ${error.message}`);
       }
     }
 
-    return allChunks.sort((a, b) => b.score - a.score).slice(0, 10);
+    return allChunks.sort((a, b) => b.score - a.score).slice(0, 20);
   }
 
   async fetchAdjacentChunks(

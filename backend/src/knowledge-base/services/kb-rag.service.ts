@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async query(
     query: string,
@@ -445,7 +445,19 @@ export class KBRagService {
             effectiveWorkspaceId,
             knowledgeBaseIds,
           );
-          relevantChunks = relevantChunks.slice(0, 5); // Ensure top 5
+
+          // SMART CONTEXT STRATEGY:
+          // Filter chunks to fit within safe context window (e.g. 12000 chars ~ 3000 tokens)
+          const SAFE_CONTEXT_CHARS = 12000;
+          let currentChars = 0;
+          const optimizedChunks: ChunkSource[] = [];
+
+          for (const chunk of relevantChunks) {
+            if (currentChars + chunk.content.length > SAFE_CONTEXT_CHARS) break;
+            optimizedChunks.push(chunk);
+            currentChars += chunk.content.length;
+          }
+          relevantChunks = optimizedChunks;
         } catch (kbError) {
           this.logger.warn(
             `⚠️ Knowledge base query failed: ${kbError.message}. Continuing without KB context.`,
@@ -479,12 +491,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-            messages,
-            modelName,
-            aiConfigId,
-            workspaceId ? 'workspace' : 'user',
-            workspaceId || bot.createdBy || 'system',
-          )
+          messages,
+          modelName,
+          aiConfigId,
+          workspaceId ? 'workspace' : 'user',
+          workspaceId || bot.createdBy || 'system',
+        )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -545,17 +557,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-            where: { id: botId },
-            select: [
-              'id',
-              'name',
-              'workspaceId',
-              'aiConfigId',
-              'aiModelName',
-              'systemPrompt',
-              'createdBy',
-            ],
-          })
+          where: { id: botId },
+          select: [
+            'id',
+            'name',
+            'workspaceId',
+            'aiConfigId',
+            'aiModelName',
+            'systemPrompt',
+            'createdBy',
+          ],
+        })
         : null;
 
       if (botId && !bot) {
