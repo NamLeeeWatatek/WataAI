@@ -5,9 +5,10 @@ export function sanitizeText(text: string | null | undefined): string {
   if (!text) return '';
 
   return text
-    .replace(/\0/g, '')
+    .replace(/\0/g, '') // Nuke null bytes
+    .replace(/\uFFFD/g, '') // Nuke replacement chars (often from bad decoding)
     .replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
-    .replace(/[\uD800-\uDFFF]/g, '')
+    .replace(/[\uD800-\uDFFF]/g, '') // Surrogate pairs
     .replace(/\r\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -76,7 +77,7 @@ export function extractCleanText(content: string, mimeType?: string): string {
     try {
       const parsed = JSON.parse(cleaned);
       cleaned = JSON.stringify(parsed, null, 2);
-    } catch {}
+    } catch { }
   }
 
   return cleaned;
@@ -86,19 +87,22 @@ export function extractCleanText(content: string, mimeType?: string): string {
  * Detect and handle different encodings
  */
 export function normalizeEncoding(buffer: Buffer): string {
+  // Remove null bytes first
+  const cleanBuffer = buffer.filter(b => b !== 0);
+
   try {
-    const utf8Text = buffer.toString('utf-8');
+    const utf8Text = cleanBuffer.toString();
     if (isValidText(utf8Text)) {
       return sanitizeText(utf8Text);
     }
-  } catch {}
+  } catch { }
 
   try {
-    const latin1Text = buffer.toString('latin1');
+    const latin1Text = cleanBuffer.toString();
     return sanitizeText(latin1Text);
-  } catch {}
+  } catch { }
 
-  return sanitizeText(buffer.toString('ascii', 0, buffer.length));
+  return sanitizeText(cleanBuffer.toString());
 }
 
 /**
