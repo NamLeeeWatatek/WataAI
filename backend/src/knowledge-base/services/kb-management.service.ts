@@ -31,7 +31,7 @@ export class KBManagementService {
     @InjectRepository(KnowledgeBaseDocumentEntity)
     private readonly documentRepository: Repository<KbDocumentEntity>,
     private readonly kbDocumentsService: KBDocumentsService,
-  ) {}
+  ) { }
 
   async create(_userId: string, createDto: CreateKnowledgeBaseDto) {
     const kb = this.kbRepository.create({
@@ -39,7 +39,16 @@ export class KBManagementService {
       workspaceId: createDto.workspaceId,
     });
     kb.createdBy = _userId;
-    return this.kbRepository.save(kb);
+    const savedKb = await this.kbRepository.save(kb);
+    return this.kbRepository.findOne({
+      where: { id: savedKb.id },
+      relations: [
+        'aiConfig',
+        'aiConfig.provider',
+        'embeddingConfig',
+        'embeddingConfig.provider',
+      ],
+    });
   }
 
   async findManyWithPagination({
@@ -136,7 +145,16 @@ export class KBManagementService {
   async update(id: string, _userId: string, updateDto: UpdateKnowledgeBaseDto) {
     const kb = await this.findOne(id, _userId);
     Object.assign(kb, updateDto);
-    return this.kbRepository.save(kb);
+    const savedKb = await this.kbRepository.save(kb);
+    return this.kbRepository.findOne({
+      where: { id: savedKb.id },
+      relations: [
+        'aiConfig',
+        'aiConfig.provider',
+        'embeddingConfig',
+        'embeddingConfig.provider',
+      ],
+    });
   }
 
   async remove(id: string, _userId: string) {

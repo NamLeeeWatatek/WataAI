@@ -467,7 +467,8 @@ export class KBRagService {
 
       let systemPrompt = botSystemPrompt || 'You are a helpful assistant.';
       systemPrompt +=
-        "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English. Do not override this based on the retrieved context language.";
+        "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English. Do not override this based on the retrieved context language." +
+        "\n\nIMAGE FORMATTING: If you need to include an image, you MUST use standard Markdown syntax: ![Image Description](Image URL). DO NOT use `!(URL)` or `(URL)` or just the URL alone. This is critical for the image to display correctly.";
 
       if (relevantChunks.length > 0) {
         const context = relevantChunks
@@ -685,7 +686,10 @@ export class KBRagService {
         `INSTRUCTION: Answer the user's request using the context provided above. ` +
         `Keep the answer in the SAME LANGUAGE as the user message. ` +
         `If the context is in a different language, translate relevant information while maintaining accuracy. ` +
-        `If the context doesn't contain the answer, say you don't know based on the context but offer general help.`;
+        `If the context is in a different language, translate relevant information while maintaining accuracy. ` +
+        `If the context doesn't contain the answer, say you don't know based on the context but offer general help.\n\n` +
+        `IMAGE FORMATTING: If you need to include an image, you MUST use standard Markdown syntax: ![Image Description](Image URL). DO NOT use ` +
+        '`!(URL)` or `(URL)` or just the URL alone. This is critical for the image to display correctly.';
     }
 
     return [
