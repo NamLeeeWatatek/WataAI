@@ -128,7 +128,11 @@ export class BotExecutionService {
 
     // Add Multilingual instruction
     systemPrompt +=
-      "\n\nINSTRUCTION: Always respond in the same language as the user's latest message. If the context information from the knowledge base is in a different language, translate relevant points while answering.";
+      "\n\nIMPORTANT: You must ALWAYS respond in the same language as the user's latest message.\n" +
+      "- If the user asks in Vietnamese, your answer MUST be in Vietnamese.\n" +
+      "- If the user asks in English, answer in English.\n" +
+      "- Do NOT default to English unless the user speaks English.\n" +
+      "If the provided context is in a different language, TRANSLATE the information into the user's language.";
 
     // Add RAG Context
     // const lang = I18nContext.current()?.lang;

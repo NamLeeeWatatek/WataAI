@@ -44,7 +44,7 @@ export class KBCrawlerService {
     private readonly kbManagementService: KBManagementService,
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly auditService: AuditService,
-  ) {}
+  ) { }
 
   /**
    * Powerful stealth content fetcher with Jina Reader fallback.
@@ -75,6 +75,12 @@ export class KBCrawlerService {
         },
         timeout: 20000, // 20s
       });
+
+      const contentType = response.headers['content-type'] || '';
+      if (!contentType.includes('text/') && !contentType.includes('html') && !contentType.includes('json') && !contentType.includes('xml')) {
+        this.logger.warn(`Skipping non-text content at ${url}: ${contentType}`);
+        throw new Error(`Content type ${contentType} is not supported for text crawling.`);
+      }
 
       return response.data;
     } catch (error) {
