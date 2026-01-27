@@ -278,7 +278,17 @@ export function BotConfigurationTab({ formData, onChange, workspaceId, totalServ
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">{t('bot_config.ai_provider_config')}</Label>
-                    <Select value={formData.aiProviderId || undefined} onValueChange={(value) => onChange({ aiProviderId: value })}>
+                    <Select
+                      value={formData.aiProviderId || undefined}
+                      onValueChange={(value) => {
+                        const newProvider = providers.find(p => p.configId === value);
+                        const defaultModel = newProvider?.models?.[0]?.name || '';
+                        onChange({
+                          aiProviderId: value,
+                          aiModelName: defaultModel
+                        });
+                      }}
+                    >
                       <SelectTrigger className="h-11 bg-background/50">
                         <SelectValue placeholder={loading ? t('common.loading') + "..." : t('bot_config.select_provider')} />
                       </SelectTrigger>
