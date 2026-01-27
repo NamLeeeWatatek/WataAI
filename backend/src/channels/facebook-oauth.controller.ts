@@ -221,6 +221,8 @@ export class FacebookOAuthController {
         tasks?: string[];
       } | null = null;
 
+      let providerType = 'facebook';
+
       // Try to re-verify using userAccessToken (Security best practice)
       try {
         const pages = await this.facebookOAuthService.getUserPages(
@@ -229,6 +231,21 @@ export class FacebookOAuthController {
         const verifiedPage = pages.find((p) => p.id === body.pageId);
         if (verifiedPage) {
           pageToConnect = verifiedPage;
+        } else {
+          // Check for Instagram match
+          const linkedPage = pages.find(
+            (p) => p.instagram_business_account?.id === body.pageId,
+          );
+          if (linkedPage && linkedPage.instagram_business_account) {
+            pageToConnect = {
+              id: linkedPage.instagram_business_account.id,
+              name: `${linkedPage.name} (Instagram)`,
+              access_token: linkedPage.access_token,
+              category: 'instagram',
+              tasks: linkedPage.tasks,
+            };
+            providerType = 'instagram';
+          }
         }
       } catch (error) {
         this.logger.warn(
@@ -268,6 +285,7 @@ export class FacebookOAuthController {
           botId: body.botId,
           userAccessToken: body.userAccessToken,
         },
+        providerType,
       );
 
       const subscribed = await this.facebookOAuthService.subscribePageWebhooks(

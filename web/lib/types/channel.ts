@@ -68,6 +68,9 @@ export interface ChannelPage {
       url: string
     }
   }
+  instagram_business_account?: {
+    id: string
+  }
 }
 
 export interface Channel {
