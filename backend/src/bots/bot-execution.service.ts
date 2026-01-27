@@ -112,7 +112,12 @@ export class BotExecutionService {
 
         if (selectedChunks.length > 0) {
           ragContextString = selectedChunks
-            .map((chunk, index) => `[Source ${index + 1}]\n${chunk.content}`)
+            .map((chunk, index) => {
+              const sourceTitle = chunk.metadata?.documentName
+                ? ` (Title: ${chunk.metadata.documentName})`
+                : '';
+              return `[Source ${index + 1}]${sourceTitle}\n${chunk.content}`;
+            })
             .join('\n\n');
         }
       }
@@ -137,7 +142,16 @@ export class BotExecutionService {
     // Add RAG Context
     // const lang = I18nContext.current()?.lang;
     if (ragContextString) {
-      systemPrompt += `\n\nUse the following context from the knowledge base to answer questions:\n\n${ragContextString}`;
+      systemPrompt += `\n\nUse the following context from the knowledge base to answer questions.
+
+CRITICAL INSTRUCTIONS FOR USING CONTEXT:
+1. The context may contain information about multiple different products (e.g., "Related Products", "You might also like").
+2. When answering about a specific product, ONLY use information and images from the section dedicated to THAT specific product.
+3. DO NOT mix images or details from different products. 
+4. If the user asks for a specific number of images (e.g., "4 images") but the context for the CORRECT product only contains fewer valid images, ONLY return the valid images. DO NOT include images from other products to meet the number.
+5. Verify the image source matches the product name before including it.
+
+Context:\n\n${ragContextString}`;
     }
 
     // 3. Prepare Messages
