@@ -411,7 +411,8 @@
   }
 
   /* SaaS Grid Background */
-  .u-bg-grid {
+  .u-bg-grid,
+  .bg-grid-pattern {
     background-size: 40px 40px;
     background-image: linear-gradient(to right, rgb(255 255 255 / 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, rgb(255 255 255 / 0.03) 1px, transparent 1px);
@@ -426,10 +427,6 @@
   /* Status Indicators */
   .status-dot {
     @apply h-2.5 w-2.5 rounded-full ring-2 ring-background;
-  }
-
-  .bg-grid-pattern {
-    @apply u-bg-grid;
   }
 }
 
