@@ -16,7 +16,7 @@ import {
   Edit2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getChannelIcon, getChannelColor } from '@/lib/constants/channels';
+import { getChannelIcon, getChannelFullStyle } from '@/lib/constants/channels';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,8 +81,8 @@ export function ConnectedChannelsTab({
       accessorKey: 'name',
       cell: ({ row, getValue }) => (
         <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-lg", getChannelColor(row.original.type))}>
-            {getChannelIcon(row.original.type)}
+          <div className={cn("w-10 h-10 flex items-center justify-center rounded-lg border border-border/40 bg-card/40 shrink-0", getChannelFullStyle(row.original.type))}>
+            {getChannelIcon(row.original.type, "w-6 h-6")}
           </div>
           <div>
             <div className="font-semibold text-sm">{row.original.metadata?.pageName || (getValue() as React.ReactNode)}</div>
@@ -152,6 +152,7 @@ export function ConnectedChannelsTab({
         <div className="relative flex-1 w-full max-w-sm group">
           <Search
             placeholder={t('channels_config.search_placeholder')}
+            suppressHydrationWarning
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
             onClear={() => onSearchChange("")}
@@ -226,8 +227,8 @@ export function ConnectedChannelsTab({
                   <Card key={channel.id} className="group h-full flex flex-col border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden">
                     <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
                       <div className="flex gap-4">
-                        <div className={cn("p-2.5 rounded-xl border border-white/5 h-fit", getChannelColor(channel.type))}>
-                          {getChannelIcon(channel.type)}
+                        <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl border border-border/40 bg-card/50 shrink-0", getChannelFullStyle(channel.type))}>
+                          {getChannelIcon(channel.type, "w-8 h-8")}
                         </div>
                         <div className="space-y-1">
                           <CardTitle className="text-base font-bold line-clamp-1">

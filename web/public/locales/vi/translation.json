@@ -99,12 +99,12 @@
     "welcomeBack": "Chào mừng trở lại! Đây là tổng quan của bạn.",
     "downloadReport": "Tải báo cáo",
     "ugcFactory": "Nhà máy UGC",
-    "conversations": "Lịch sử tương tác",
+    "conversations": "Nhắn tin đa kênh",
     "workflows": "Workflow",
     "allWorkflows": "Tất cả workflow",
     "createNew": "Tạo mới",
-    "channels": "Cổng kết nối",
-    "knowledgeBase": "Trung tâm tri thức",
+    "channels": "Quản lý Kênh",
+    "knowledgeBase": "Kho tri thức",
     "bots": "Tác tử AI",
     "chatAI": "Chat trực tiếp",
     "signOut": "Đăng xuất",
@@ -250,7 +250,11 @@
     "clear_filters": "Xóa bộ lọc",
     "error_occurred": "Đã xảy ra lỗi",
     "error_load_failed": "Không thể tải dữ liệu. Vui lòng thử lại.",
-    "retry": "Thử lại"
+    "deselectAll": "Bỏ chọn tất cả",
+    "selectAll": "Chọn tất cả",
+    "retry": "Thử lại",
+    "callback": "Xử lý kết nối",
+    "facebook": "Facebook"
   },
   "validation": {
     "required": "Trường này là bắt buộc",

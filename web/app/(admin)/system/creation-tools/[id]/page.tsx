@@ -46,7 +46,7 @@ const toolFormSchema = z.object({
     isActive: z.boolean().default(true),
     formConfig: z.any().default({ fields: [], steps: [] }),
     actions: z.array(z.any()).default([]),
-    knowledgeBaseId: z.string().default(''),
+    knowledgeBaseId: z.string().nullable().optional(),
     executionFlow: z.any().default({ steps: [] }),
 });
 
@@ -154,8 +154,12 @@ export default function EditCreationToolPage() {
     });
 
     const onSubmit = (data: ToolFormValues) => {
-        console.log('Submitting form data:', data);
-        mutation.mutate(data);
+        const payload = {
+            ...data,
+            knowledgeBaseId: data.knowledgeBaseId === '' ? null : data.knowledgeBaseId,
+        };
+        console.log('Submitting form data:', payload);
+        mutation.mutate(payload as any);
     };
 
     const onInvalid = (errors: any) => {

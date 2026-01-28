@@ -3,9 +3,12 @@
  * Centralized utilities for platform icons and colors
  */
 import {
-  Facebook,
-  Instagram,
-  MessageCircle,
+  FacebookIcon,
+  InstagramIcon,
+  ZaloIcon,
+  WebsiteIcon
+} from '@/components/shared/icons/Logos'
+import {
   Mail,
   Youtube,
   Twitter,
@@ -14,9 +17,9 @@ import {
   Globe,
   Phone,
   ShoppingBag,
-  Chrome
+  Chrome,
+  MessageCircle
 } from 'lucide-react'
-// Removed react-icons imports
 
 /**
  * Get platform icon component
@@ -24,9 +27,9 @@ import {
  */
 export function getPlatformIcon(type: string): any {
   const iconMap: Record<string, any> = {
-    facebook: Facebook,
-    messenger: MessageCircle,
-    instagram: Instagram,
+    facebook: FacebookIcon,
+    messenger: FacebookIcon,
+    instagram: InstagramIcon,
     whatsapp: Phone,
     telegram: MessageCircle,
     email: Mail,
@@ -36,12 +39,12 @@ export function getPlatformIcon(type: string): any {
     tiktok: MessageCircle,
     discord: MessageCircle,
     slack: Slack,
-    zalo: MessageCircle,
+    zalo: ZaloIcon,
     line: MessageCircle,
     viber: MessageCircle,
     wechat: MessageCircle,
     sms: Phone,
-    webchat: Globe,
+    webchat: WebsiteIcon,
     shopify: ShoppingBag,
     google: Chrome,
     hubspot: MessageCircle,

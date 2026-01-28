@@ -4,10 +4,11 @@
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
-import { MessageSquare, Facebook, Instagram, Mail, MessageCircle, Phone, Send } from 'lucide-react';
+import React, { JSX } from 'react';
+import { MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { ChatListSkeleton } from '@/components/shared/Skeletons';
-import { JSX } from 'react';
+import { getChannelIcon, getChannelColor } from '@/lib/constants/channels';
 
 export interface ChannelConversation {
   id: string;
@@ -59,32 +60,6 @@ const formatRelativeTime = (dateString: string, t: any, i18n: any): string => {
   }
 };
 
-const getChannelIcon = (type: string) => {
-  const icons: Record<string, JSX.Element> = {
-    facebook: <Facebook className="w-4 h-4" />,
-    messenger: <MessageCircle className="w-4 h-4" />,
-    instagram: <Instagram className="w-4 h-4" />,
-    whatsapp: <Phone className="w-4 h-4" />,
-    telegram: <Send className="w-4 h-4" />,
-    email: <Mail className="w-4 h-4" />,
-    webchat: <MessageCircle className="w-4 h-4" />,
-  };
-  return icons[type] || <MessageSquare className="w-4 h-4" />;
-};
-
-const getChannelColor = (type: string) => {
-  const colors: Record<string, string> = {
-    facebook: 'text-blue-500',
-    messenger: 'text-blue-500',
-    instagram: 'text-pink-500',
-    whatsapp: 'text-green-500',
-    telegram: 'text-sky-500',
-    email: 'text-red-500',
-    webchat: 'text-cyan-500',
-  };
-  return colors[type] || 'text-gray-500';
-};
-
 export function ChannelConversationList({
   conversations,
   selectedId,
@@ -102,8 +77,8 @@ export function ChannelConversationList({
         <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
           <MessageSquare className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-base mb-2">{t('conversations.noConversations', { defaultValue: 'No conversations yet' })}</h3>
-        <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+        <h3 className="font-semibold text-base mb-2" suppressHydrationWarning>{t('conversations.noConversations', { defaultValue: 'No conversations yet' })}</h3>
+        <p className="text-sm text-muted-foreground max-w-xs leading-relaxed" suppressHydrationWarning>
           {t('conversations.noConversationsDesc', { defaultValue: 'Conversations from your channels will appear here' })}
         </p>
       </div>
@@ -136,8 +111,8 @@ export function ChannelConversationList({
                 'absolute -bottom-0.5 -right-0.5 p-1 rounded-full bg-background border border-background shadow-sm',
                 getChannelColor(conv.channelType)
               )}>
-                <div className="w-3 h-3 flex items-center justify-center">
-                  {getChannelIcon(conv.channelType)}
+                <div className="w-3.5 h-3.5 flex items-center justify-center">
+                  {getChannelIcon(conv.channelType, "w-3.5 h-3.5")}
                 </div>
               </div>
             </div>
@@ -152,7 +127,7 @@ export function ChannelConversationList({
                 )}>
                   {conv.customerName}
                 </h3>
-                <span className="text-xs text-muted-foreground shrink-0">
+                <span className="text-xs text-muted-foreground shrink-0" suppressHydrationWarning>
                   {formatRelativeTime(conv.lastMessageAt, t, i18n)}
                 </span>
               </div>

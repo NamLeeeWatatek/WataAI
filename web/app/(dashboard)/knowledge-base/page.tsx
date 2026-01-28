@@ -101,6 +101,7 @@ export default function KnowledgeBasePage() {
             <PageHeader
                 title={t('knowledgeBase.title')}
                 description={t('knowledgeBase.description')}
+                icon={Database}
                 onRefresh={refetch}
                 refreshing={loading}
                 premium

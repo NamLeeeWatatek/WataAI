@@ -21,6 +21,7 @@ import {
     Settings,
     RefreshCw,
     Activity,
+    Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -85,6 +86,43 @@ export default function ChannelsPage() {
         search: searchQuery
     });
 
+    // Handle session storage callback for single-tab flow
+    useEffect(() => {
+        const storedResult = sessionStorage.getItem('fb_oauth_result');
+        if (storedResult) {
+            try {
+                const data = JSON.parse(storedResult);
+                if (data.status === 'success' && data.channel === 'facebook') {
+                    // Separate Instagram accounts from Pages logic (DRY later)
+                    const allItems: any[] = [];
+                    data.pages.forEach((page: any) => {
+                        allItems.push(page);
+                        if (page.instagram_business_account) {
+                            allItems.push({
+                                id: page.instagram_business_account.id,
+                                name: `${page.name} (Instagram)`,
+                                category: 'instagram',
+                                access_token: page.access_token,
+                                instagram_business_account: page.instagram_business_account,
+                                picture: page.picture,
+                                original_page_id: page.id
+                            });
+                        }
+                    });
+
+                    dispatch(setFacebookPages(allItems));
+                    dispatch(setFacebookTempToken(data.tempToken));
+                    toast.success(t('channels.discoveredCount', { count: allItems.length }));
+                    setActiveTab('discovery');
+                }
+            } catch (e) {
+                console.error("Failed to parse stored OAuth result", e);
+            } finally {
+                sessionStorage.removeItem('fb_oauth_result');
+            }
+        }
+    }, [dispatch, t]);
+
     const handleConnect = async (provider: string, configId?: string) => {
         dispatch(setConnecting(provider));
 
@@ -123,8 +161,19 @@ export default function ChannelsPage() {
                 return;
             }
 
+            // Handle popup closure if user closes it manually
+            const checkClosed = setInterval(() => {
+                if (popup?.closed) {
+                    clearInterval(checkClosed);
+                    dispatch(setConnecting(null));
+                }
+            }, 1000);
+
             const messageHandler = (event: MessageEvent) => {
+                if (event.origin !== window.location.origin) return;
+
                 if (event.data?.status === 'success') {
+                    clearInterval(checkClosed);
                     const hasPages = Array.isArray(event.data.pages) && event.data.pages.length > 0;
 
                     if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && hasPages) {
@@ -157,11 +206,13 @@ export default function ChannelsPage() {
                     } else {
                         toast.success(event.data.message || t('channels.connectedSuccess', { name: event.data.channel || provider }));
                         refetch();
-                        dispatch(setConnecting(null));
                     }
+
+                    dispatch(setConnecting(null));
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
                 } else if (event.data?.status === 'error') {
+                    clearInterval(checkClosed);
                     toast.error(t('error.connectionFailed', { message: event.data.message || 'Unknown protocol error' }));
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
@@ -286,6 +337,7 @@ export default function ChannelsPage() {
         <PageShell
             title={t('channels.title')}
             description={t('channels.description')}
+            icon={Zap}
         >
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col pt-2">
                 <TabsHeader>
@@ -429,6 +481,7 @@ export default function ChannelsPage() {
                                 c.provider?.toLowerCase().includes(searchQuery.toLowerCase())
                             )}
                             isLoading={isLoading}
+                            isMutating={isMutating}
                             onConnect={handleConnect}
                             onDeleteConfig={(id: string) => setDeleteConfigId(id)}
                             onSaveConfig={(config: Partial<IntegrationConfig>) => handleSaveConfig(config)}

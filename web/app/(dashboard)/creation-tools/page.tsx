@@ -73,6 +73,7 @@ export default function CreationToolsPage() {
             <PageHeader
                 title={t('navigation.creationTools')}
                 description={t('creation_tool.description')}
+                icon={Sparkles}
                 onRefresh={handleRefresh}
                 refreshing={isLoading || isFetching}
             />

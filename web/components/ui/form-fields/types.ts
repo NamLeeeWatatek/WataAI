@@ -27,6 +27,10 @@ export type NodeProperty = Omit<ApiFormField, 'type' | 'options' | 'defaultValue
     disabled?: boolean
     icon?: string
     properties?: NodeProperty[]
+    filterParams?: {
+        ids?: string[]
+        [key: string]: unknown
+    }
 }
 
 export interface DynamicFormFieldProps {

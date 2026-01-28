@@ -136,6 +136,10 @@ export interface FormField {
         operator: 'equals' | 'not-equals' | 'contains';
         value: any;
     };
+    filterParams?: {
+        ids?: string[];
+        [key: string]: any;
+    };
 }
 
 // Polymorphic Execution Types

@@ -20,11 +20,11 @@ export class ChannelsService {
     private connectionRepository: Repository<ChannelConnectionEntity>,
     @InjectRepository(ConversationEntity)
     private conversationRepository: Repository<ConversationEntity>,
-  ) {}
+  ) { }
 
   async findAll(
     workspaceId: string,
-    query: PaginationQueryDto,
+    query: PaginationQueryDto & { ids?: string; status?: string },
   ): Promise<{ data: ChannelConnectionEntity[]; total: number }> {
     const builder = this.connectionRepository.createQueryBuilder('channel');
 
@@ -36,6 +36,17 @@ export class ChannelsService {
         '(LOWER(channel.name) LIKE LOWER(:search) OR LOWER(channel.type) LIKE LOWER(:search))',
         { search: `%${query.search}%` },
       );
+    }
+
+    if (query.ids) {
+      const ids = query.ids.split(',');
+      if (ids.length > 0) {
+        builder.andWhere('channel.id IN (:...ids)', { ids });
+      }
+    }
+
+    if (query.status) {
+      builder.andWhere('channel.status = :status', { status: query.status });
     }
 
     builder.leftJoinAndSelect('channel.credential', 'credential');

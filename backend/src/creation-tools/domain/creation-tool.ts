@@ -7,27 +7,27 @@ import { Category } from '../../categories/domain/category';
 export interface FormField {
   name: string;
   type:
-    | 'text'
-    | 'textarea'
-    | 'string'
-    | 'select'
-    | 'radio'
-    | 'checkbox'
-    | 'boolean'
-    | 'number'
-    | 'file'
-    | 'files'
-    | 'slider'
-    | 'color'
-    | 'json'
-    | 'key-value'
-    | 'channel-select'
-    | 'channel-selector'
-    | 'multi-select'
-    | 'template-selector'
-    | 'page-selector'
-    | 'result-preview'
-    | 'canvas-editor';
+  | 'text'
+  | 'textarea'
+  | 'string'
+  | 'select'
+  | 'radio'
+  | 'checkbox'
+  | 'boolean'
+  | 'number'
+  | 'file'
+  | 'files'
+  | 'slider'
+  | 'color'
+  | 'json'
+  | 'key-value'
+  | 'channel-select'
+  | 'channel-selector'
+  | 'multi-select'
+  | 'template-selector'
+  | 'page-selector'
+  | 'result-preview'
+  | 'canvas-editor';
   label: string;
   placeholder?: string;
   description?: string;
@@ -253,10 +253,10 @@ export class CreationTool {
   isActive: boolean;
 
   @ApiPropertyOptional({ type: String })
-  workspaceId?: string;
+  workspaceId?: string | null;
 
   @ApiPropertyOptional({ type: String })
-  knowledgeBaseId?: string;
+  knowledgeBaseId?: string | null;
 
   @ApiProperty({ type: Number, default: 0 })
   sortOrder: number;

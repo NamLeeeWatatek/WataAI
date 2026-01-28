@@ -39,7 +39,7 @@ export class ChannelsController {
   constructor(
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
-  ) {}
+  ) { }
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })
@@ -49,13 +49,15 @@ export class ChannelsController {
     @Request() req,
     @CurrentWorkspace() workspaceId: string,
     @Query() query: PaginationQueryDto,
+    @Query('ids') ids?: string,
+    @Query('status') status?: string,
   ) {
     this.logger.log(
       `findAll: workspaceId=${workspaceId}, query=${JSON.stringify(query)}`,
     );
     const { data: connections, total } = await this.channelsService.findAll(
       workspaceId,
-      query,
+      { ...query, ids, status },
     );
     this.logger.log(`findAll: Found ${total} connections`);
 

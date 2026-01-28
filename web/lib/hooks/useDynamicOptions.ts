@@ -40,7 +40,7 @@ export function useDynamicOptions(field: FormField) {
             : field.type === 'template-selector' ? 'templates'
                 : null);
 
-    const selectFn = useCallback((rawData: any) => {
+    const selectFn = useCallback((rawData: Channel[] | { data: Channel[] } | DynamicOption[] | { data: DynamicOption[] } | { id: string; name: string }[]) => {
         if (!optionsConfig) return [];
 
         // Safety: Extract array even if API returns { data: [...], ... }
@@ -108,8 +108,15 @@ export function useDynamicOptions(field: FormField) {
                 const response = await axiosClient.get<DynamicOption[]>(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
                 return response.data;
             } else if (optionsConfig === 'channels') {
-                const response = await axiosClient.get<Channel[]>('/channels/');
-                return response as unknown as Channel[];
+                const params: Record<string, string> = { status: 'active' };
+                if (field.filterParams?.ids && field.filterParams.ids.length > 0) {
+                    params.ids = field.filterParams.ids.join(',');
+                }
+                if (field.filterParams?.status) {
+                    params.status = field.filterParams.status;
+                }
+                const response = await axiosClient.get<Channel[]>('/channels/', { params });
+                return response.data;
             } else if (optionsConfig === 'templates') {
                 const response = await axiosClient.get<{ id: string, name: string }[]>('/templates');
                 // The API might return { data: [...] } or just [...] depending on implementation. 
