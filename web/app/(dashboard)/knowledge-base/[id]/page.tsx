@@ -55,7 +55,7 @@ import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
 import { useKnowledgeBaseController } from '@/lib/hooks/features/useKnowledgeBaseController'
 import type { KBFolder, KBDocument } from '@/lib/types/knowledge-base'
 import { queryKnowledgeBase } from '@/lib/api/knowledge-base'
-import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases'
+import { useKnowledgeBases } from '@/lib/hooks/use-kb'
 import toast from '@/lib/toast'
 
 export default function KnowledgeBaseDetailPage() {
@@ -412,7 +412,7 @@ export default function KnowledgeBaseDetailPage() {
             <KBSettingsDialog
                 open={settingsDialogOpen}
                 onOpenChange={setSettingsDialogOpen}
-                knowledgeBase={kb}
+                knowledgeBase={kb || null}
                 workspaceId={kb?.workspaceId || undefined}
                 onSave={handleSaveSettings}
             />

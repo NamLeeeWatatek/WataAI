@@ -1,17 +1,14 @@
-/**
- * Real-time Notifications Hook
- * Connects to backend WebSocket for real-time notification updates
- */
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSocketConnection } from './use-socket-connection';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
-import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { notificationsApi } from '../api/notifications';
+import { useNotificationsStore } from '@/lib/store/zustand/notifications-store';
 
-import { Notification, JobStatus } from '@/lib/types/notification';
+import { Notification } from '@/lib/types/notification';
+import { useNotificationPreferences } from './use-notification-preferences';
 
 interface UseNotificationsRealtimeConfig {
   enabled?: boolean;
@@ -40,8 +37,18 @@ export function useNotificationsRealtime({
 }: UseNotificationsRealtimeConfig = {}): UseNotificationsRealtimeReturn {
   const { user, accessToken } = useAuth();
   const preferences = useNotificationPreferences();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const notifications = useNotificationsStore((state) => state.notifications);
+  const unreadCount = useNotificationsStore((state) => state.unreadCount);
+
+  const setNotifications = useNotificationsStore((state) => state.setNotifications);
+  const addNotification = useNotificationsStore((state) => state.addNotification);
+  const updateNotification = useNotificationsStore((state) => state.updateNotification);
+  const storeMarkAsRead = useNotificationsStore((state) => state.markAsRead);
+  const storeMarkAllAsRead = useNotificationsStore((state) => state.markAllAsRead);
+  const setUnreadCount = useNotificationsStore((state) => state.setUnreadCount);
+  const setConnectionState = useNotificationsStore((state) => state.setConnectionState);
+  const setError = useNotificationsStore((state) => state.setError);
+
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | undefined>(initialWorkspaceId);
 
   const query = useMemo(() => ({ userId: user?.id }), [user?.id]);
@@ -54,6 +61,12 @@ export function useNotificationsRealtime({
     auth: { token: accessToken },
     query,
   });
+
+  // Sync socket connection state to store
+  useEffect(() => {
+    setConnectionState(socketConnection.isConnected, socketConnection.isConnecting);
+    if (socketConnection.error) setError(socketConnection.error);
+  }, [socketConnection.isConnected, socketConnection.isConnecting, socketConnection.error, setConnectionState, setError]);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
@@ -68,7 +81,7 @@ export function useNotificationsRealtime({
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     }
-  }, [user?.id, accessToken, currentWorkspaceId]);
+  }, [user?.id, currentWorkspaceId, setNotifications]);
 
   // Refresh unread count
   const refreshUnreadCount = useCallback(async () => {
@@ -80,7 +93,7 @@ export function useNotificationsRealtime({
     } catch (error) {
       console.error('Failed to refresh unread count:', error);
     }
-  }, [user?.id, accessToken, currentWorkspaceId]);
+  }, [user?.id, currentWorkspaceId, setUnreadCount]);
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -88,15 +101,7 @@ export function useNotificationsRealtime({
 
     try {
       await notificationsApi.markAsRead(notificationId);
-
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification =>
-          notification.id === notificationId
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
+      storeMarkAsRead(notificationId);
 
       // Also emit via WebSocket if connected
       if (socketConnection.isConnected) {
@@ -105,7 +110,7 @@ export function useNotificationsRealtime({
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
-  }, [user?.id, accessToken, socketConnection.isConnected]);
+  }, [user?.id, socketConnection.isConnected, socketConnection.emit, storeMarkAsRead]);
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async (workspaceId?: string) => {
@@ -113,15 +118,7 @@ export function useNotificationsRealtime({
 
     try {
       await notificationsApi.markAllAsRead(currentWorkspaceId);
-
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notification =>
-          (!workspaceId || notification.workspaceId === workspaceId)
-            ? { ...notification, isRead: true }
-            : notification
-        )
-      );
+      storeMarkAllAsRead();
 
       // Also emit via WebSocket if connected
       if (socketConnection.isConnected) {
@@ -130,7 +127,7 @@ export function useNotificationsRealtime({
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
     }
-  }, [user?.id, accessToken, socketConnection.isConnected]);
+  }, [user?.id, currentWorkspaceId, socketConnection.isConnected, socketConnection.emit, storeMarkAllAsRead]);
 
   // Subscribe to workspace
   const subscribeToWorkspace = useCallback((workspaceId: string) => {
@@ -138,7 +135,7 @@ export function useNotificationsRealtime({
       socketConnection.emit('subscribe_to_workspace', { workspaceId });
       setCurrentWorkspaceId(workspaceId);
     }
-  }, [socketConnection.isConnected]);
+  }, [socketConnection.isConnected, socketConnection.emit]);
 
   // Unsubscribe from workspace
   const unsubscribeFromWorkspace = useCallback((workspaceId: string) => {
@@ -148,7 +145,7 @@ export function useNotificationsRealtime({
         setCurrentWorkspaceId(undefined);
       }
     }
-  }, [socketConnection.isConnected, currentWorkspaceId]);
+  }, [socketConnection.isConnected, socketConnection.emit, currentWorkspaceId]);
 
   // Handle WebSocket events
   useEffect(() => {
@@ -156,22 +153,14 @@ export function useNotificationsRealtime({
 
     // New notification event
     const handleNewNotification = (notification: Notification) => {
-      console.log('New notification received:', notification);
-
-      // UX: Only add to the list if it's NOT a transient progress update
-      // job_progress events are purely for the progress bar and should not be in history.
-      const isTransient = notification.type === 'job_progress';
-
-      if (!isTransient) {
-        setNotifications(prev => [notification, ...prev]);
-      }
+      addNotification(notification);
 
       // Skip toast for background job progress updates
       if (notification.type === 'job_progress') {
         return;
       }
 
-      // Show toast notification using standard Sonner methods for better UI
+      // Show toast notification
       const toastOptions = {
         description: notification.message,
         duration: 5000,
@@ -202,19 +191,12 @@ export function useNotificationsRealtime({
 
     // Unread count update
     const handleUnreadCount = (data: { count: number }) => {
-      console.log('Unread count updated:', data.count);
       setUnreadCount(data.count);
     };
 
     // Notification updated
     const handleNotificationUpdated = (updatedNotification: Notification) => {
-      setNotifications(prev =>
-        prev.map(notification =>
-          notification.id === updatedNotification.id
-            ? updatedNotification
-            : notification
-        )
-      );
+      updateNotification(updatedNotification.id, updatedNotification);
     };
 
     // Workspace notification
@@ -226,7 +208,6 @@ export function useNotificationsRealtime({
 
     // Error handling
     const handleError = (error: { message: string }) => {
-      console.error('Notification error:', error.message);
       toast.error('Notification Error', {
         description: error.message,
       });
@@ -251,12 +232,16 @@ export function useNotificationsRealtime({
       unsubscribeError();
     };
   }, [
+    socketConnection.isConnected,
+    user?.id,
+    currentWorkspaceId,
     fetchNotifications,
     refreshUnreadCount,
+    addNotification,
+    updateNotification,
+    setUnreadCount,
+    preferences.sound
   ]);
-
-  // Helper functions
-
 
   const playNotificationSound = (type: Notification['type']) => {
     try {

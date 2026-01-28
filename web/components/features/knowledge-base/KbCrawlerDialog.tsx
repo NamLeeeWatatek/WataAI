@@ -68,6 +68,17 @@ export function KBCrawlerDialog({
                 folderId,
             })
 
+            // Backend returns { success: true, message: '...' } for background crawl
+            if (result.success && result.documentsCreated === undefined) {
+                toast.dismiss('crawling')
+                toast.success('Crawling started in the background!')
+                toast.info('Documents will appear as they are processed.', {
+                    duration: 5000
+                })
+                onSuccess?.()
+                return
+            }
+
             const successCount = result.documentsCreated - (result.errors?.length || 0)
 
             toast.dismiss('crawling')

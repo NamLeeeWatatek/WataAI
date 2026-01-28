@@ -297,6 +297,7 @@ export default function BotDetailPage() {
 
                         <TabsContent value="settings" className="m-0 focus-visible:outline-none">
                             <BotSettingsTab
+                                botName={formData.name}
                                 enableAutoLearn={formData.enableAutoLearn}
                                 status={formData.status}
                                 onChange={(updates) => handleChange(updates)}

@@ -1,159 +1,107 @@
 'use client';
 
 import { useEffect, useCallback, useMemo } from 'react';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import {
-    createFolder,
-    createDocument,
-    uploadDocument,
-    updateFolder,
-    updateDocument,
-    removeFolder,
-    removeDocument,
-    removeBatchItems,
-    moveBatchItems,
-    moveFolderToFolder,
-    moveDocumentToFolder,
-    navigateToFolder,
-    setAutoRefreshing,
-    setSearchQuery,
-    setViewMode,
-    toggleSelection,
-    toggleSelectAll,
-    clearSelection,
-    setDraggedItem,
-    setDragOverFolder,
-    setPagination,
-    resetState,
-    selectCurrentKB,
-    selectStats,
-    selectFilteredFolders,
-    selectFilteredDocuments,
-    selectLoading,
-    selectViewMode,
-    selectSearchQuery,
-    selectSelectedIds,
-    selectBreadcrumbs,
-    selectCurrentFolderId,
-    selectDraggedItem,
-    selectDragOverFolder,
-    selectTotalCount,
-    selectHasProcessingDocuments,
-} from '@/lib/store/slices/knowledgeBaseSlice';
-import { setBreadcrumbName, removeBreadcrumbName } from '@/lib/store/slices/uiSlice';
+import { useKbStore } from '@/lib/store/zustand/kb-store';
+import { useUiStore } from '@/lib/store/zustand/ui-store';
 import type { KBFolder, KBDocument, KnowledgeBase } from '@/lib/types/knowledge-base';
 import toast from '@/lib/toast';
-import { useQuery } from '@tanstack/react-query';
-import { getKnowledgeBase, getKnowledgeBaseStats, getKBContent } from '@/lib/api/knowledge-base';
-import { kbKeys } from './useKnowledgeBases';
+import { useKBContent } from '@/lib/hooks/use-kb';
 
 export function useKnowledgeBaseController(kbId: string) {
-    const dispatch = useAppDispatch();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
 
-    // Redux Selectors
-    const kb = useAppSelector(selectCurrentKB);
-    const stats = useAppSelector(selectStats);
-    const folders = useAppSelector(selectFilteredFolders);
-    const documents = useAppSelector(selectFilteredDocuments);
-    const isLoadingRedux = useAppSelector(selectLoading);
-    const viewMode = useAppSelector(selectViewMode);
-    const searchQuery = useAppSelector(selectSearchQuery);
-    const selectedIds = useAppSelector(selectSelectedIds);
-    const breadcrumbs = useAppSelector(selectBreadcrumbs);
-    const currentFolderId = useAppSelector(selectCurrentFolderId);
-    const draggedItem = useAppSelector(selectDraggedItem);
-    const dragOverFolder = useAppSelector(selectDragOverFolder);
-    const totalCount = useAppSelector(selectTotalCount);
-    const hasProcessing = useAppSelector(selectHasProcessingDocuments);
+    // Zustand Store with selectors for stability
+    const viewMode = useKbStore((state) => state.viewMode);
+    const searchQuery = useKbStore((state) => state.searchQuery);
+    const breadcrumbs = useKbStore((state) => state.breadcrumbs);
+    const selectedIds = useKbStore((state) => state.selectedIds);
+    const draggedItem = useKbStore((state) => state.draggedItem);
+    const dragOverFolder = useKbStore((state) => state.dragOverFolder);
+    const currentPage = useKbStore((state) => state.currentPage);
+    const pageSize = useKbStore((state) => state.pageSize);
+    const setViewMode = useKbStore((state) => state.setViewMode);
+    const setSearchQuery = useKbStore((state) => state.setSearchQuery);
+    const setSelectedIds = useKbStore((state) => state.setSelectedIds);
+    const clearSelection = useKbStore((state) => state.clearSelection);
+    const setDraggedItem = useKbStore((state) => state.setDraggedItem);
+    const setDragOverFolder = useKbStore((state) => state.setDragOverFolder);
+    const setPagination = useKbStore((state) => state.setPagination);
+    const resetState = useKbStore((state) => state.resetState);
+    const zustandNavigateToFolder = useKbStore((state) => state.navigateToFolder);
+    const zustandNavigateToBreadcrumb = useKbStore((state) => state.navigateToBreadcrumb);
+    const setAutoRefreshing = useKbStore((state) => state.setAutoRefreshing);
+    const toggleSelection = useKbStore((state) => state.toggleSelection);
 
-    // Pagination from Redux
-    const currentPage = useAppSelector((state) => state.knowledgeBase.currentPage);
-    const pageSize = useAppSelector((state) => state.knowledgeBase.pageSize);
+    const setBreadcrumbName = useUiStore((state) => state.setBreadcrumbName);
+    const removeBreadcrumbName = useUiStore((state) => state.removeBreadcrumbName);
 
     // Initial Load & URL Sync
     const folderParam = searchParams.get('folder');
 
-    // React Query for Data Fetching
+    // TanStack Query Hooks
     const {
-        data: serverData,
+        kb,
+        stats,
+        content,
         isLoading: isQueryLoading,
-        refetch: refresh
-    } = useQuery({
-        queryKey: [...kbKeys.detail(kbId), folderParam, currentPage, pageSize, searchQuery],
-        queryFn: async () => {
-            if (!kbId) return null;
-            const [kbRes, statsRes, contentRes] = await Promise.all([
-                getKnowledgeBase(kbId),
-                getKnowledgeBaseStats(kbId),
-                getKBContent(kbId, folderParam || null, currentPage, pageSize, searchQuery),
-            ]);
-
-            const kb = (kbRes as any)?.data || kbRes;
-            const stats = (statsRes as any)?.data || statsRes;
-
-            return {
-                kb,
-                stats,
-                folders: contentRes.folders,
-                documents: contentRes.documents.data,
-                total: contentRes.documents.total,
-                breadcrumbs: contentRes.breadcrumbs,
-            };
-        },
-        enabled: !!kbId,
-        staleTime: 60000,
+        refetch: refresh,
+        createFolder,
+        createDocument,
+        uploadDocument,
+        updateFolder,
+        updateDocument,
+        deleteFolder,
+        deleteDocument,
+        moveFolder,
+        moveDocument,
+        deleteBatch,
+        moveBatch
+    } = useKBContent(kbId, folderParam || null, {
+        page: currentPage,
+        limit: pageSize,
+        search: searchQuery
     });
 
-    // Sync Query Data to Redux
-    useEffect(() => {
-        if (serverData) {
-            dispatch({
-                type: 'knowledgeBase/load/fulfilled',
-                payload: {
-                    kb: serverData.kb,
-                    stats: serverData.stats,
-                    folders: serverData.folders,
-                    documents: serverData.documents,
-                    total: serverData.total,
-                    breadcrumbs: serverData.breadcrumbs,
-                    folderId: folderParam || null
-                },
-                meta: { arg: { kbId, folderId: folderParam, page: currentPage, limit: pageSize } }
-            });
-        }
-    }, [serverData, dispatch, kbId, folderParam, currentPage, pageSize]);
+    const folders = useMemo(() => content?.folders || [], [content]);
+    const documents = useMemo(() => content?.documents?.data || [], [content]);
+    const totalCount = useMemo(() => content?.documents?.total || 0, [content]);
+    const hasProcessing = useMemo(() => documents.some(doc => doc.processingStatus === 'processing'), [documents]);
 
     // Reset state on unmount or ID change
     useEffect(() => {
         return () => {
-            dispatch(resetState());
+            resetState();
         };
-    }, [dispatch, kbId]);
+    }, [resetState, kbId]);
+
+    const autoRefreshing = useKbStore((state) => state.autoRefreshing);
 
     // Auto Refresh Logic
     useEffect(() => {
-        dispatch(setAutoRefreshing(hasProcessing));
+        if (autoRefreshing !== hasProcessing) {
+            setAutoRefreshing(hasProcessing);
+        }
+
         if (hasProcessing) {
             const interval = setInterval(() => {
                 refresh();
             }, 5000);
             return () => clearInterval(interval);
         }
-    }, [hasProcessing, dispatch, refresh]);
+    }, [hasProcessing, autoRefreshing, setAutoRefreshing, refresh]);
 
     // Breadcrumb Name Sync
     useEffect(() => {
         if (kb?.name) {
-            dispatch(setBreadcrumbName({ id: kbId, name: kb.name }));
+            setBreadcrumbName(kbId, kb.name);
         }
         return () => {
-            dispatch(removeBreadcrumbName(kbId));
+            removeBreadcrumbName(kbId);
         };
-    }, [kb, kbId, dispatch]);
+    }, [kb, kbId, setBreadcrumbName, removeBreadcrumbName]);
 
     // Actions
     const handleNavigateToFolder = useCallback((folderId: string | null, folderName?: string) => {
@@ -166,85 +114,78 @@ export function useKnowledgeBaseController(kbId: string) {
 
         // Optimistic update
         if (folderId) {
-            dispatch(navigateToFolder({ id: folderId, name: folderName || '...' }));
+            zustandNavigateToFolder(folderId, folderName || '...');
         }
 
         router.push(`${pathname}?${params.toString()}` as any);
-    }, [searchParams, router, pathname, dispatch]);
+    }, [searchParams, router, pathname, zustandNavigateToFolder]);
 
     const handleNavigateBreadcrumb = useCallback((index: number) => {
         const targetId = index === -1 ? null : breadcrumbs[index]?.id || null;
         handleNavigateToFolder(targetId, breadcrumbs[index]?.name);
-    }, [breadcrumbs, handleNavigateToFolder]);
+        zustandNavigateToBreadcrumb(index);
+    }, [breadcrumbs, handleNavigateToFolder, zustandNavigateToBreadcrumb]);
 
     const createNewFolder = useCallback(async (name: string, description: string) => {
         try {
-            await dispatch(createFolder({
+            await createFolder({
                 knowledgeBaseId: kbId,
-                parentFolderId: currentFolderId,
+                parentFolderId: folderParam || null,
                 name,
                 description
-            })).unwrap();
-            toast.success('Folder created');
+            });
             refresh();
             return true;
         } catch (e) {
-            toast.error('Failed to create folder');
             return false;
         }
-    }, [dispatch, kbId, currentFolderId, refresh]);
+    }, [kbId, folderParam, createFolder, refresh]);
 
     const createNewDoc = useCallback(async (name: string, content: string) => {
         try {
-            await dispatch(createDocument({
+            await createDocument({
                 knowledgeBaseId: kbId,
-                folderId: currentFolderId,
+                folderId: folderParam || null,
                 name,
                 content
-            })).unwrap();
-            toast.success('Document created');
+            });
             refresh();
             return true;
         } catch (e) {
-            toast.error('Failed to create document');
             return false;
         }
-    }, [dispatch, kbId, currentFolderId, refresh]);
+    }, [kbId, folderParam, createDocument, refresh]);
 
     const uploadFiles = useCallback(async (files: File[]) => {
         try {
             for (const file of files) {
-                await dispatch(uploadDocument({ kbId, folderId: currentFolderId, file })).unwrap();
+                await uploadDocument({ kbId, folderId: folderParam || null, file });
             }
-            toast.success('Files uploaded successfully');
             refresh();
             return true;
         } catch (e) {
-            toast.error('Failed to upload files');
             return false;
         }
-    }, [dispatch, kbId, currentFolderId, refresh]);
+    }, [kbId, folderParam, uploadDocument, refresh]);
 
     const deleteItems = useCallback(async (items: { type: 'folder' | 'document'; id: string }[]) => {
         try {
             if (items.length === 1) {
                 const item = items[0];
-                if (item.type === 'folder') await dispatch(removeFolder(item.id)).unwrap();
-                else await dispatch(removeDocument(item.id)).unwrap();
+                if (item.type === 'folder') await deleteFolder(item.id);
+                else await deleteDocument(item.id);
             } else {
                 const folderIds = items.filter(i => i.type === 'folder').map(i => i.id);
                 const documentIds = items.filter(i => i.type === 'document').map(i => i.id);
-                await dispatch(removeBatchItems({ folderIds, documentIds })).unwrap();
+                await deleteBatch({ folderIds, documentIds });
             }
-            toast.success(`Deleted ${items.length} items`);
-            dispatch(clearSelection());
+            clearSelection();
             refresh();
             return true;
         } catch (e) {
-            toast.error('Failed to delete items');
             return false;
         }
-    }, [dispatch, refresh]);
+    }, [deleteFolder, deleteDocument, deleteBatch, clearSelection, refresh]);
 
     const moveItems = useCallback(async (items: { type: 'folder' | 'document'; id: string }[], targetFolderId: string | null) => {
         try {
@@ -256,24 +197,26 @@ export function useKnowledgeBaseController(kbId: string) {
 
             if (items.length === 1) {
                 const item = items[0];
-                if (item.type === 'folder') await dispatch(moveFolderToFolder({ folderId: item.id, targetFolderId })).unwrap();
-                else await dispatch(moveDocumentToFolder({ documentId: item.id, targetFolderId })).unwrap();
+                if (item.type === 'folder') await moveFolder({ folderId: item.id, targetFolderId });
+                else await moveDocument({ documentId: item.id, targetFolderId });
             } else {
                 const documentIds = items.filter(i => i.type === 'document').map(i => i.id);
-                await dispatch(moveBatchItems({ folderIds, documentIds, targetFolderId })).unwrap();
+                await moveBatch({ folderIds, documentIds, targetFolderId });
             }
-            toast.success(`Moved ${items.length} items`);
-            dispatch(clearSelection());
+            clearSelection();
             refresh();
             return true;
         } catch (e) {
-            toast.error('Failed to move items');
             return false;
         }
-    }, [dispatch, kbId, currentFolderId, refresh]);
+    }, [moveFolder, moveDocument, moveBatch, clearSelection, refresh]);
 
     const tableData = useMemo(() => {
-        const folderItems = folders.map(f => ({
+        const filteredFolders = searchQuery
+            ? folders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            : folders;
+
+        const folderItems = filteredFolders.map(f => ({
             id: f.id,
             name: f.name,
             type: 'folder' as const,
@@ -294,15 +237,24 @@ export function useKnowledgeBaseController(kbId: string) {
         }));
 
         return [...folderItems, ...docItems];
-    }, [folders, documents]);
+    }, [folders, documents, searchQuery]);
+
+    const toggleSelectAll = useCallback((checked: boolean) => {
+        if (checked) {
+            const allIds = [...folders.map(f => f.id), ...documents.map(d => d.id)];
+            setSelectedIds(allIds);
+        } else {
+            clearSelection();
+        }
+    }, [folders, documents, setSelectedIds, clearSelection]);
 
     return {
         kb,
         stats,
         items: tableData,
         breadcrumbs,
-        currentFolderId,
-        isLoading: isQueryLoading || isLoadingRedux,
+        currentFolderId: folderParam || null,
+        isLoading: isQueryLoading,
         viewMode,
         searchQuery,
         selectedIds,
@@ -312,8 +264,8 @@ export function useKnowledgeBaseController(kbId: string) {
         draggedItem,
         dragOverFolder,
 
-        setSearchQuery: (q: string) => dispatch(setSearchQuery(q)),
-        setViewMode: (m: 'grid' | 'table') => dispatch(setViewMode(m)),
+        setSearchQuery,
+        setViewMode,
         handleNavigateToFolder,
         handleNavigateBreadcrumb,
         createNewFolder,
@@ -322,14 +274,14 @@ export function useKnowledgeBaseController(kbId: string) {
         deleteItems,
         moveItems,
         refresh,
-        toggleSelection: (id: string) => dispatch(toggleSelection(id)),
-        toggleSelectAll: (checked: boolean) => dispatch(toggleSelectAll(checked)),
-        setDraggedItem: (item: { type: 'folder' | 'document'; id: string } | null) => dispatch(setDraggedItem(item)),
-        setDragOverFolder: (id: string | null) => dispatch(setDragOverFolder(id)),
-        setPagination: (p: number, s: number) => dispatch(setPagination({ page: p, pageSize: s })),
-        clearSelection: () => dispatch(clearSelection()),
+        toggleSelection,
+        toggleSelectAll,
+        setDraggedItem,
+        setDragOverFolder,
+        setPagination,
+        clearSelection,
 
-        updateFolder: (id: string, updates: any) => dispatch(updateFolder({ id, updates })).then(() => refresh()),
-        updateDocument: (id: string, updates: any) => dispatch(updateDocument({ id, updates })).then(() => refresh()),
+        updateFolder: (id: string, updates: any) => updateFolder({ id, updates }).then(() => refresh()),
+        updateDocument: (id: string, updates: any) => updateDocument({ id, updates }).then(() => refresh()),
     };
 }

@@ -1,22 +1,47 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 import { Switch } from '@/components/ui/Switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { BotStatus } from '@/lib/types/bots';
-import { Sparkles, Trash2, AlertTriangle, Settings2, ShieldAlert } from 'lucide-react';
+import { Trash2, Settings2, ShieldAlert, Sparkles, AlertTriangle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
+import { Input } from "@/components/ui/Input";
 
 interface BotSettingsTabProps {
+  botName: string;
   enableAutoLearn: boolean;
   status: BotStatus;
   onChange: (updates: { enableAutoLearn?: boolean, status?: BotStatus }) => void;
   onDelete?: () => void;
 }
 
-export function BotSettingsTab({ enableAutoLearn, status, onChange, onDelete }: BotSettingsTabProps) {
+export function BotSettingsTab({ botName, enableAutoLearn, status, onChange, onDelete }: BotSettingsTabProps) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [confirmName, setConfirmName] = useState('');
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+    setConfirmName('');
+  };
+
+  const handleConfirmDelete = () => {
+    if (confirmName === botName && onDelete) {
+      onDelete();
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <Card className="border-none shadow-xl bg-background/50 backdrop-blur-sm">
@@ -96,7 +121,7 @@ export function BotSettingsTab({ enableAutoLearn, status, onChange, onDelete }: 
             {onDelete && (
               <Button
                 variant="destructive"
-                onClick={onDelete}
+                onClick={handleDeleteClick}
                 className="px-8 font-black shadow-lg shadow-destructive/20 h-11 transition-all active:scale-95 flex items-center gap-2 relative z-10 rounded-xl"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -106,6 +131,54 @@ export function BotSettingsTab({ enableAutoLearn, status, onChange, onDelete }: 
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md bg-background border-destructive/20 shadow-2xl shadow-destructive/10">
+          <DialogHeader className="space-y-3">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2 mx-auto sm:mx-0">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
+            </div>
+            <DialogTitle className="text-xl font-bold tracking-tight text-destructive uppercase">Confirm Permanent Deletion</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              This action <strong>cannot be undone</strong>. This will permanently delete the agent
+              <span className="px-1.5 py-0.5 mx-1 bg-muted rounded font-mono text-foreground font-bold">{botName}</span>
+              and all its associated data.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">
+                To confirm, type the bot's name below:
+              </Label>
+              <Input
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder={botName}
+                className="font-bold border-destructive/20 focus-visible:ring-destructive/30"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={confirmName !== botName}
+              className="font-black px-8 shadow-lg shadow-destructive/20"
+            >
+              Confirm Purge
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

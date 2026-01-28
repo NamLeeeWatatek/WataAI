@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAppSelector } from '@/lib/store/hooks'
+import { useUiStore } from '@/lib/store/zustand/ui-store'
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -22,13 +22,9 @@ import {
     Bot,
     Sparkles,
     Library,
-    Compass,
     ShieldCheck,
-    MessageSquare,
     Workflow,
     Layers,
-    Grid,
-    Search
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -46,7 +42,7 @@ export const DashboardBreadcrumb = React.memo(() => {
     const pathname = usePathname()
     const { t } = useTranslation()
 
-    const breadcrumbNames = useAppSelector((state) => state.ui.breadcrumbNames)
+    const { breadcrumbNames } = useUiStore()
 
     // Synchronize with DashboardSidebar mapping for consistency
     const navigation = useMemo<NavigationItem[]>(() => [

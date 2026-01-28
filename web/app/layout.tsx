@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { Toaster } from '@/components/ui/Sonner'
 
-import { ReduxProvider } from '@/lib/store/Provider'
 import './globals.css'
 import { QueryProvider } from '@/components/providers/QueryProvider'
 import { I18nProvider } from '@/components/providers/I18nProvider'
@@ -48,17 +47,15 @@ export default function RootLayout({
                 <QueryProvider>
                     <I18nProvider>
                         <SessionProvider>
-                            <ReduxProvider>
-                                <ThemeProviderWrapper>
-                                    <ErrorBoundary>
-                                        <SessionWatcher />
-                                        <LazyMotion features={domMax}>
-                                            {children}
-                                        </LazyMotion>
-                                    </ErrorBoundary>
-                                    <Toaster />
-                                </ThemeProviderWrapper>
-                            </ReduxProvider>
+                            <ThemeProviderWrapper>
+                                <ErrorBoundary>
+                                    <SessionWatcher />
+                                    <LazyMotion features={domMax}>
+                                        {children}
+                                    </LazyMotion>
+                                </ErrorBoundary>
+                                <Toaster />
+                            </ThemeProviderWrapper>
                         </SessionProvider>
                     </I18nProvider>
                 </QueryProvider>

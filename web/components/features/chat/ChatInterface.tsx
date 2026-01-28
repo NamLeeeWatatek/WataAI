@@ -9,12 +9,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useMessages } from '@/lib/hooks/useMessages';
-import { useAppDispatch } from '@/lib/store/hooks';
-import { appendMessage, removeMessage } from '@/lib/store/slices/messagesSlice';
+import { useMessagesStore } from '@/lib/store/zustand/messages-store';
 import { MessagesList } from './MessagesList';
 import { MessageInput } from './MessageInput';
 import { MessageRole } from '@/lib/types/conversations';
-
 
 interface ChatInterfaceProps {
     conversationId: string;
@@ -38,7 +36,7 @@ export function ChatInterface({
     const { t } = useTranslation();
     const { data: session } = useSession();
     const currentUserName = session?.user?.name || session?.user?.email || t('chat.you', { defaultValue: 'You' });
-    const dispatch = useAppDispatch();
+    const { appendMessage, removeMessage } = useMessagesStore();
 
     // Track current conversation to prevent unnecessary joins/leaves
     const currentConversationRef = useRef<string | null>(null);
@@ -58,18 +56,15 @@ export function ChatInterface({
     const onNewMessageCallback = useCallback((message: any) => {
         // Only add if it's for this conversation
         if (message.conversationId === conversationId) {
-            dispatch(appendMessage({
-                conversationId,
-                message: {
-                    id: message.id,
-                    role: message.role,
-                    content: message.content,
-                    conversationId: message.conversationId,
-                    createdAt: message.sentAt || message.createdAt || new Date().toISOString()
-                }
-            }));
+            appendMessage(conversationId, {
+                id: message.id,
+                role: message.role,
+                content: message.content,
+                conversationId: message.conversationId,
+                createdAt: message.sentAt || message.createdAt || new Date().toISOString()
+            });
         }
-    }, [conversationId, dispatch]);
+    }, [conversationId, appendMessage]);
 
     const { joinConversation, leaveConversation } = useConversationsSocket({
         onNewMessage: onNewMessageCallback,
@@ -107,7 +102,7 @@ export function ChatInterface({
                 currentConversationRef.current = null;
             }
         };
-    }, [conversationId]); // Only depend on conversationId, not the join/leave functions
+    }, [conversationId, joinConversation, leaveConversation]);
 
     // Handle sending messages
     const handleSendMessage = useCallback(async (content: string) => {
@@ -120,16 +115,16 @@ export function ChatInterface({
             createdAt: new Date().toISOString(),
         };
 
-        dispatch(appendMessage({ conversationId, message: tempMessage }));
+        appendMessage(conversationId, tempMessage);
 
         try {
             await onSendMessage(content.trim());
         } catch (err) {
             toast.error(t('chat.failedToSend', { defaultValue: 'Failed to send message' }));
-            dispatch(removeMessage({ conversationId, messageId: tempId }));
+            removeMessage(conversationId, tempId);
             throw err;
         }
-    }, [conversationId, senderRole, onSendMessage, dispatch]);
+    }, [conversationId, senderRole, onSendMessage, appendMessage, removeMessage, t]);
 
     if (error) {
         return (

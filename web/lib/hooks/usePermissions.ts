@@ -5,10 +5,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { permissionsApi } from '@/lib/api/permissions'
 import type { UserCapabilities, ResourceType } from '@/lib/types/permissions'
-import { useAppSelector } from '@/lib/store/hooks'
+import { useWorkspaceStore } from '@/lib/store/zustand/workspace-store'
 
 export function usePermissions() {
-  const { currentWorkspace } = useAppSelector(state => state.workspace)
+  const { currentWorkspace } = useWorkspaceStore()
 
   const { data: capabilities, isLoading, error } = useQuery<UserCapabilities>({
     queryKey: ['permissions', 'capabilities', currentWorkspace?.id],

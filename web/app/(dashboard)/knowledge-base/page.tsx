@@ -29,14 +29,15 @@ import {
 import { CardGridSkeleton } from '@/components/shared/Skeletons';
 import { Pagination } from '@/components/shared/Pagination';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { useWorkspace } from '@/lib/hooks/useWorkspace';
-import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
+import { useWorkspaceStore } from '@/lib/store/zustand/workspace-store';
+import { useKnowledgeBases } from '@/lib/hooks/use-kb';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 
 export default function KnowledgeBasePage() {
     const { t } = useTranslation();
     const router = useRouter();
-    const { workspaceId } = useWorkspace();
+    const { currentWorkspace } = useWorkspaceStore();
+    const workspaceId = currentWorkspace?.id;
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [currentPage, setCurrentPage] = useState(1);
