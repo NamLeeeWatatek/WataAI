@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
@@ -17,12 +18,21 @@ import {
     LogOut,
     ArrowLeft,
     Folder,
-    Loader2
+    Loader2,
+    Settings2,
+    Bot,
+    History,
+    Brain,
+    Zap,
+    Library
 } from 'lucide-react'
 import { WorkspaceSwitcher } from '@/components/features/workspace/WorkspaceSwitcher'
 import { cn } from '@/lib/utils'
 import { paths } from '@/lib/routes'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { UserRole } from '@/types/next-auth'
 
 interface NavigationItem {
     name: string
@@ -89,26 +99,32 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
         return name.charAt(0).toUpperCase()
     }
 
+    const getRoleName = (role: any): string => {
+        if (!role) return '';
+        if (typeof role === 'string') return role;
+        if (typeof role === 'object' && 'name' in role) return role.name || '';
+        return '';
+    }
+
     return (
         <aside className={cn(
-            "flex flex-col h-full bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 border-r border-border/40",
-            // Desktop standard positioning
-            "hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-50",
-            // Allow override for Sheet usage (mobile)
-            onCloseSidebar ? "flex w-full border-r-0 relative" : ""
+            "h-full w-64 glass flex flex-col bg-card/50",
+            onCloseSidebar ? "border-r-0" : ""
         )}>
-            {/* Header */}
-            <div className="h-16 flex items-center px-6">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center ring-1 ring-red-500/20">
-                        <ShieldCheck className="w-4 h-4 text-red-500" />
-                    </div>
-                    <span className="text-lg font-bold tracking-tight text-foreground">{t('navigation.adminSystem')}</span>
+            {/* Brand Header */}
+            <div className="flex h-16 shrink-0 items-center px-6 mb-2">
+                <div className="relative w-48 h-12 transition-transform duration-500 hover:scale-105">
+                    <Image
+                        src="/images/logo.svg"
+                        alt="WataAI Logo"
+                        fill
+                        className="object-contain object-left"
+                        priority
+                    />
                 </div>
             </div>
 
-            {/* Workspace Switcher */}
-            <div className="px-4 pb-4">
+            <div className="px-4 mb-2">
                 <WorkspaceSwitcher />
             </div>
 
@@ -152,13 +168,16 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
                                     href={item.href as any}
                                     onClick={onCloseSidebar}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group",
                                         active
-                                            ? "bg-red-500/10 text-red-600 shadow-sm ring-1 ring-red-500/20"
-                                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                            ? "text-primary bg-primary/10 shadow-sm"
+                                            : "text-muted-foreground hover:bg-accent/40 hover:text-foreground"
                                     )}
                                 >
-                                    <item.icon className={cn("w-4 h-4", active ? "text-red-600" : "opacity-70")} />
+                                    {active && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-full" />
+                                    )}
+                                    <item.icon className={cn("w-4 h-4 transition-colors", active ? "text-primary" : "opacity-60 group-hover:opacity-100")} />
                                     <span>{item.name}</span>
                                 </Link>
                             )}
@@ -207,33 +226,39 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
 
             </nav>
 
-            <div className="p-3 border-t border-border/30">
-                <div className="group rounded-xl border border-border/30 bg-card/20 p-3 hover:bg-card/40 transition-all duration-200">
+            {/* User Profile Footer */}
+            <div className="p-3 border-t border-border/20">
+                <Card className="p-3 transition-all duration-300 overflow-visible border-none shadow-none bg-white/5 hover:bg-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                     <div className="flex items-center gap-3 mb-3">
-                        <Avatar className="w-9 h-9 border border-border/50">
-                            <AvatarImage src={user?.avatarUrl || ''} />
-                            <AvatarFallback className="bg-secondary text-secondary-foreground text-xs font-bold">
+                        <Avatar className="w-9 h-9 ring-2 ring-primary/10 shadow-md">
+                            <AvatarImage src={user?.avatarUrl || user?.image || ''} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-black">
                                 {getUserInitial()}
                             </AvatarFallback>
                         </Avatar>
-
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium truncate text-foreground">
+                                <p className="text-sm font-bold truncate text-foreground tracking-tight">
                                     {getUserName()}
                                 </p>
                             </div>
-                            <p className="text-[11px] text-muted-foreground truncate">
-                                {getUserEmail()}
-                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                                {user?.role && (
+                                    <Badge className="px-1.5 py-0 text-[8px] font-black uppercase tracking-wider border-none">
+                                        {getRoleName(user.role)}
+                                    </Badge>
+                                )}
+                                <p className="text-[10px] text-muted-foreground truncate opacity-70">
+                                    {getUserEmail()}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Sign Out Button */}
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full h-8 justify-start text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        className="w-full h-8 justify-start text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                         onClick={onSignOutConfirm}
                         disabled={isLoggingOut}
                     >
@@ -244,7 +269,7 @@ export const AdminSidebar = React.memo<AdminSidebarProps>(({
                         )}
                         <span>{isLoggingOut ? t('dashboard.signingOut') : t('dashboard.signOut')}</span>
                     </Button>
-                </div>
+                </Card>
             </div>
         </aside>
     )

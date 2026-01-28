@@ -24,7 +24,10 @@ import {
 import { CreationToolEntity } from '../creation-tools/infrastructure/persistence/relational/entities/creation-tool.entity';
 import { TemplateEntity } from '../templates/infrastructure/persistence/relational/entities/template.entity';
 // import { GenerationJobEntity } from '../generation-jobs/infrastructure/persistence/relational/entities/generation-job.entity';
-import { CreationJobEntity } from '../creation-jobs/infrastructure/persistence/relational/entities/creation-jobs.entity';
+import {
+  CreationJobEntity,
+  CreationJobStatus,
+} from '../creation-jobs/infrastructure/persistence/relational/entities/creation-jobs.entity';
 import * as os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -57,7 +60,6 @@ export class StatsService {
 
     const [
       users,
-      workspaces,
       creationTools,
       templates,
       jobs,
@@ -65,7 +67,6 @@ export class StatsService {
       activityTrend,
     ] = await Promise.all([
       this.getUserStats(query, startDate, endDate),
-      this.getWorkspaceStats(query, startDate, endDate),
       this.getCreationToolStats(query, startDate, endDate),
       this.getTemplateStats(query, startDate, endDate),
       this.getJobStats(query, startDate, endDate),
@@ -77,7 +78,6 @@ export class StatsService {
 
     return {
       users,
-      workspaces,
       creationTools,
       templates,
       jobs,
@@ -541,10 +541,10 @@ export class StatsService {
     });
 
     const successful = await this.creationJobRepository.count({
-      where: buildWhere({ status: 'completed' }),
+      where: buildWhere({ status: CreationJobStatus.COMPLETED }),
     });
     const failed = await this.creationJobRepository.count({
-      where: buildWhere({ status: 'failed' }),
+      where: buildWhere({ status: CreationJobStatus.FAILED }),
     });
 
     return {
