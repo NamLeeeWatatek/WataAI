@@ -317,7 +317,7 @@ export function UnifiedFileUpload({
                                     <p className="text-[10px] text-muted-foreground animate-pulse">Processing file chunk...</p>
                                 </div>
                             </div>
-                            <Progress value={progress} className="h-1 bg-primary/10 shadow-inner" indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-600 shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                            <Progress value={progress} className="h-1 bg-primary/10 shadow-inner" indicatorClassName="bg-gradient-to-r from-primary via-teal-500 to-cyan-600 shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                         </div>
                     ) : (
                         <div className="space-y-6 group/upload">

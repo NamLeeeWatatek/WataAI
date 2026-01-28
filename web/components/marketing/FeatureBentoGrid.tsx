@@ -16,7 +16,7 @@ const features = [
         description: 'Manage all your customer conversations in one centralized dashboard.',
         icon: MessageSquare,
         className: 'md:col-span-1 md:row-span-1',
-        gradient: 'from-purple-600/10 to-transparent',
+        gradient: 'from-teal-600/10 to-transparent',
     },
     {
         title: 'Smart Analytics',

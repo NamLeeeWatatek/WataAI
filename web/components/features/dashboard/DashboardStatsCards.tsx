@@ -28,9 +28,9 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
 
     const gradients = {
         primary: {
-            bg: "from-violet-500/20 via-purple-500/5 to-transparent",
-            icon: "bg-violet-500/10 text-violet-500 border-violet-500/20 shadow-violet-500/10",
-            bar: "bg-violet-500"
+            bg: "from-teal-500/20 via-cyan-500/5 to-transparent",
+            icon: "bg-teal-500/10 text-teal-500 border-teal-500/20 shadow-teal-500/10",
+            bar: "bg-teal-500"
         },
         success: {
             bg: "from-emerald-500/20 via-green-500/5 to-transparent",

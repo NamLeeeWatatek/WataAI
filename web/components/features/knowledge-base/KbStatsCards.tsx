@@ -21,9 +21,9 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
             label: 'Total Size',
             value: stats.totalSize,
             icon: Database,
-            color: 'text-purple-500',
-            bg: 'bg-purple-500/10',
-            border: 'border-purple-500/20'
+            color: 'text-teal-500',
+            bg: 'bg-teal-500/10',
+            border: 'border-teal-500/20'
         },
         {
             label: 'Embedding Model',

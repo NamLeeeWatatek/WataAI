@@ -109,14 +109,14 @@ export function FileDropzone({
                                     <Upload className="w-5 h-5 text-primary" />
                                 </div>
                                 <div className="w-full space-y-1.5 text-center">
-                                    <p className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 uppercase tracking-wider">
+                                    <p className="text-xs font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-teal-600 uppercase tracking-wider">
                                         Uploading...
                                     </p>
                                     <div className="relative pt-1">
                                         <Progress
                                             value={progress}
                                             className="h-1.5 w-full bg-primary/5 rounded-full"
-                                            indicatorClassName="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                                            indicatorClassName="bg-gradient-to-r from-teal-500 via-cyan-500 to-emerald-500"
                                         />
                                     </div>
                                     <span className="text-[10px] font-mono font-bold text-muted-foreground">{progress}%</span>
@@ -158,7 +158,7 @@ export function FileDropzone({
 
                                 <div className="flex gap-3 justify-center text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors pt-2">
                                     <ImageIcon className="w-4 h-4 hover:text-blue-500 transition-colors" />
-                                    <Video className="w-4 h-4 hover:text-purple-500 transition-colors" />
+                                    <Video className="w-4 h-4 hover:text-teal-500 transition-colors" />
                                     <Music className="w-4 h-4 hover:text-green-500 transition-colors" />
                                     <FileText className="w-4 h-4 hover:text-orange-500 transition-colors" />
                                 </div>

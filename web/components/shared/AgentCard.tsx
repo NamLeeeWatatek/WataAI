@@ -77,7 +77,7 @@ export function AgentCard({
             </CardContent>
 
             {/* Hover Glow Effect */}
-            <div className="absolute -inset-px bg-gradient-to-r from-primary/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+            <div className="absolute -inset-px bg-gradient-to-r from-primary/10 via-teal-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
         </Card >
     )
 }

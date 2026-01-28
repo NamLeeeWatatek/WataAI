@@ -136,8 +136,16 @@ export default function CreationToolsPage() {
                         return (
                             <Card
                                 key={tool.id}
-                                className="group flex flex-col h-full cursor-pointer bg-card border border-border/40 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20"
+                                className="group flex flex-col h-full cursor-pointer bg-card border border-border/40 rounded-[32px] overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 onClick={() => router.push(`/creation-tools/${tool.slug}`)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        router.push(`/creation-tools/${tool.slug}`);
+                                    }
+                                }}
                             >
                                 {/* Visual Header - Image remains the Hero */}
                                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-black/5 dark:bg-white/5">
@@ -176,11 +184,11 @@ export default function CreationToolsPage() {
                                         </p>
                                     </div>
 
-                                    <Button
-                                        className="w-full h-9 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-secondary hover:bg-primary hover:text-white transition-all duration-300 mt-auto shadow-sm"
+                                    <div
+                                        className="w-full h-9 rounded-xl font-bold uppercase tracking-wider text-[10px] bg-secondary hover:bg-primary hover:text-white transition-all duration-300 mt-auto shadow-sm flex items-center justify-center"
                                     >
                                         {analysis.cta}
-                                    </Button>
+                                    </div>
                                 </div>
                             </Card>
                         );

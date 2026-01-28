@@ -80,9 +80,9 @@ export function AiSuggestWidget({
                     AI Suggest
                 </Button>
             ) : (
-                <Card className="p-4 bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
+                <Card className="p-4 bg-teal-50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-800">
                     <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center flex-shrink-0">
                             <Zap className="w-4 h-4 text-white" />
                         </div>
                         <div className="flex-1">

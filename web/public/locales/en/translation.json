@@ -931,5 +931,19 @@
       "failed": "Failed",
       "pending": "Pending"
     }
+  },
+  "templates": {
+    "importedSuccess": "Imported {{count}} templates successfully",
+    "exportSuccess": "Exported {{count}} templates",
+    "noTemplatesToExport": "No templates to export",
+    "importFailed": "Failed to import templates. Invalid file format.",
+    "exportFailed": "Failed to export templates",
+    "deletedSuccess": "Template deleted successfully",
+    "bulkDeletedSuccess": "Deleted {{count}} templates"
+  },
+  "products": {
+    "deleteSuccess": "Product deleted successfully",
+    "deleteFailed": "Failed to delete product",
+    "selectProduct": "Select product {{name}}"
   }
 }

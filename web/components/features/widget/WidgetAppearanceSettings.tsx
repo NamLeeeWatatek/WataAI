@@ -157,12 +157,14 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                         className="w-14 p-1 h-12 cursor-pointer hover:scale-105 transition-transform bg-transparent"
                                                         value={settings.primaryColor || '#667eea'}
                                                         onChange={(e) => updateSetting('primaryColor', e.target.value)}
+                                                        aria-label="Choose primary color"
                                                     />
                                                 </div>
                                                 <Input
                                                     value={settings.primaryColor || '#667eea'}
                                                     onChange={(e) => updateSetting('primaryColor', e.target.value)}
                                                     className="uppercase font-mono text-sm tracking-widest h-12 bg-background/50"
+                                                    aria-label="Primary color hex code"
                                                 />
                                             </div>
                                             <p className="text-[10px] font-medium text-muted-foreground/60 px-1 uppercase tracking-tight">Applied to triggers, buttons, and user message bubbles.</p>
@@ -176,11 +178,13 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                     className="w-14 p-1 h-12 cursor-pointer bg-transparent"
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
+                                                    aria-label="Choose background color"
                                                 />
                                                 <Input
                                                     value={settings.backgroundColor}
                                                     onChange={(e) => updateSetting('backgroundColor', e.target.value)}
                                                     className="uppercase font-mono text-sm tracking-widest h-12 bg-background/50"
+                                                    aria-label="Background color hex code"
                                                 />
                                             </div>
                                         </div>
@@ -201,6 +205,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                     className="w-full h-10 p-1 cursor-pointer bg-transparent"
                                                     value={settings.botMessageColor}
                                                     onChange={(e) => updateSetting('botMessageColor', e.target.value)}
+                                                    aria-label="Choose bot message bubble color"
                                                 />
                                             </div>
                                             <div className="space-y-3">
@@ -210,6 +215,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                     className="w-full h-10 p-1 cursor-pointer bg-transparent"
                                                     value={settings.botMessageTextColor}
                                                     onChange={(e) => updateSetting('botMessageTextColor', e.target.value)}
+                                                    aria-label="Choose bot text color"
                                                 />
                                             </div>
                                         </div>
@@ -276,6 +282,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 onChange={(e) => updateSetting('welcomeMessage', e.target.value)}
                                                 placeholder="e.g. Protocol initialized. How can I assist?"
                                                 className="h-11 font-medium bg-background/50"
+                                                aria-label="Welcome message"
                                             />
                                             <p className="text-[10px] font-medium text-muted-foreground/60 px-1">First impression content shown when users open the widget.</p>
                                         </div>
@@ -287,6 +294,7 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                                 onChange={(e) => updateSetting('placeholderText', e.target.value)}
                                                 placeholder="e.g. Transmit your query..."
                                                 className="h-11 bg-background/50"
+                                                aria-label="Placeholder text"
                                             />
                                         </div>
                                     </div>
@@ -442,9 +450,14 @@ export function WidgetAppearanceSettings({ botId, currentSettings, onSave }: Pro
                                         <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center text-[10px] font-black uppercase", settings.headerStyle === 'minimal' ? "bg-primary/10 text-primary" : "bg-white/20")}>AI</div>
                                         <div className="text-sm font-black tracking-tight">AI Protocol</div>
                                     </div>
-                                    <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer", settings.headerStyle === 'minimal' ? "bg-muted hover:bg-muted/80 text-foreground" : "bg-black/10 hover:bg-black/20")} onClick={() => setIsPreviewOpen(false)}>
+                                    <button
+                                        type="button"
+                                        className={cn("w-8 h-8 rounded-xl flex items-center justify-center cursor-pointer border-none outline-none focus-visible:ring-2 focus-visible:ring-white/50", settings.headerStyle === 'minimal' ? "bg-muted hover:bg-muted/80 text-foreground focus-visible:ring-primary" : "bg-black/10 hover:bg-black/20")}
+                                        onClick={() => setIsPreviewOpen(false)}
+                                        aria-label="Close preview"
+                                    >
                                         <X className="w-4 h-4" />
-                                    </div>
+                                    </button>
                                 </div>
                                 <div className="flex-1 p-5 space-y-4">
                                     <div className="flex gap-3">

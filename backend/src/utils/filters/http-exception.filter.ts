@@ -32,6 +32,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? (exceptionResponse as any).message || (exceptionResponse as any).error
         : exceptionResponse;
 
+    // Get validation errors if present (from ValidationPipe)
+    const validationErrors =
+      typeof exceptionResponse === 'object' && exceptionResponse !== null
+        ? (exceptionResponse as any).errors
+        : undefined;
+
     const errorResponse = {
       statusCode: status,
       timestamp: new Date().toISOString(),
@@ -39,6 +45,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       method: request.method,
       message: Array.isArray(message) ? message.join('. ') : message,
       error: (exceptionResponse as any).error || 'Error',
+      ...(validationErrors && { errors: validationErrors }), // Include validation errors if present
     };
 
     // Log errors (excluding 404s and common 4xx if needed, but usually good to log all for debug)

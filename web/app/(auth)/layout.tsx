@@ -1,4 +1,13 @@
 import { ReactNode } from "react";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: {
+        template: '%s | WataAI',
+        default: 'Authentication | WataAI',
+    },
+    description: 'Securely log in or sign up for WataAI to access your AI-powered dashboard.',
+};
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
@@ -8,9 +17,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none opacity-50" />
             <div className="absolute right-0 bottom-0 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[100px] pointer-events-none opacity-30" />
 
-            <div className="relative z-10 w-full">
+            <main id="main-content" className="relative z-10 w-full">
                 {children}
-            </div>
+            </main>
         </div>
     );
 }

@@ -7,9 +7,15 @@ import { DashboardStatsCards } from '@/components/features/dashboard/DashboardSt
 import { DashboardTopBots } from '@/components/features/dashboard/DashboardTopBots'
 import { DashboardWorkspaceOverview } from '@/components/features/dashboard/DashboardWorkspaceOverview'
 import { useDashboardStats } from '@/lib/hooks/useDashboardStats'
-import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts'
+// import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts'
+import dynamic from 'next/dynamic'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useAuth } from '@/lib/hooks/useAuth'
+
+const DashboardCharts = dynamic(() => import('@/components/features/dashboard/DashboardCharts').then(mod => mod.DashboardCharts), {
+    loading: () => <div className="w-full h-[400px] bg-muted/10 rounded-[32px] border border-border/50 animate-pulse flex items-center justify-center text-muted-foreground/50 text-sm font-medium uppercase tracking-widest">Loading Charts...</div>,
+    ssr: false
+})
 
 import { DateRangePicker } from "@/components/shared/DateRangePicker"
 import { DateRange } from "react-day-picker"

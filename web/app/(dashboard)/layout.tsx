@@ -15,19 +15,19 @@ import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitialize
 
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
+import { PageTransition } from '@/components/shared/PageTransition'
 
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    // Redux-managed layout state
+    // Layout state
     const [expandedSections, setExpandedSections] = useState<string[]>([])
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [showNotifications, setShowNotifications] = useState(false)
 
     // Auth hooks
-    // Auth hooks - logic simplified for hybrid approach
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const { isAuthenticated, isLoading, signOut, accessToken, user } = useAuth()
     const pathname = usePathname()
@@ -36,6 +36,7 @@ export default function DashboardLayout({
 
     useEffect(() => {
         if (!isLoading && (!isAuthenticated || !accessToken)) {
+            // Unauthenticated logic handled by useAuth or global session watcher
         }
     }, [isLoading, isAuthenticated, accessToken, router])
 
@@ -55,24 +56,18 @@ export default function DashboardLayout({
         setShowNotifications(!showNotifications)
     }
 
-
     const handleSignOut = async () => {
         setIsLoggingOut(true);
-        // signOut handles backend call, client cleanup, and redirection
         await signOut({ redirect: true, callbackUrl: '/login' });
     }
 
     const isEditMode = pathname.includes('mode=edit')
-    const isCreationToolDetail = pathname.startsWith('/creation-tools/') && pathname.split('/').length > 2;
-    const isWorkflowDetail = pathname.startsWith('/workflows/') && pathname.split('/').length > 2;
-    const isSettingsPage = pathname.startsWith('/settings');
     const isChatPage = pathname.startsWith('/chat');
 
-
-
     return (
-        <div className="h-screen flex bg-background overflow-hidden">
+        <div className="h-screen flex bg-background overflow-hidden font-sans">
             <WorkspaceInitializer />
+
             {/* Mobile Sheet Navigation */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
                 <SheetContent side="left" className="p-0 w-auto border-none bg-transparent shadow-none">
@@ -89,7 +84,7 @@ export default function DashboardLayout({
                             }}
                             sidebarOpen={true}
                             onCloseSidebar={() => setSidebarOpen(false)}
-                            user={user} // Pass user data
+                            user={user}
                             isLoggingOut={isLoggingOut}
                         />
                     </div>
@@ -103,37 +98,41 @@ export default function DashboardLayout({
                     onToggleSection={toggleSection}
                     onSignOutConfirm={handleSignOut}
                     sidebarOpen={true}
-                    user={user} // Pass user data
+                    user={user}
                     isLoggingOut={isLoggingOut}
                 />
             </div>
 
             {/* Main content area */}
-            <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
+            <main
+                id="main-content"
+                className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300 outline-none"
+                tabIndex={-1}
+            >
                 <CreationJobsProvider>
-                    {/* Header with Redux-managed features */}
                     <DashboardHeader
                         showNotifications={showNotifications}
                         onToggleNotifications={handleToggleNotifications}
                         onToggleSidebar={handleToggleSidebar}
                     />
 
-                    {/* Content area with conditional container classes */}
                     <div className="flex-1 overflow-hidden relative min-h-0 bg-secondary/5">
                         <div className={cn(
                             "h-full w-full overflow-auto",
                             !isChatPage && !isEditMode && "page-container min-h-full"
                         )}>
                             <ErrorBoundary>
-                                {children}
+                                <PageTransition>
+                                    {children}
+                                </PageTransition>
                             </ErrorBoundary>
                         </div>
                     </div>
                 </CreationJobsProvider>
-            </main >
+            </main>
 
             {/* Progress Overlay for async operations */}
-            < ProgressOverlay />
-        </div >
+            <ProgressOverlay />
+        </div>
     )
 }

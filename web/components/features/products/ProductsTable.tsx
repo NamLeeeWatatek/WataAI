@@ -107,7 +107,7 @@ export function ProductsTable({
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(value: boolean | "indeterminate") => row.toggleSelected(!!value)}
-                    aria-label="Select row"
+                    aria-label={`Select product ${getDisplayName(row.original)}`}
                 />
             ),
             enableSorting: false,
@@ -176,7 +176,7 @@ export function ProductsTable({
                                 "transition-all duration-500",
                                 value === 100
                                     ? "bg-green-500"
-                                    : "bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"
+                                    : "bg-gradient-to-r from-blue-600 via-teal-500 to-cyan-500"
                             )}
                         />
                     </div>

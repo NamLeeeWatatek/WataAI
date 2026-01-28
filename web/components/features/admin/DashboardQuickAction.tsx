@@ -7,7 +7,7 @@ interface DashboardQuickActionProps {
     description: string;
     icon: LucideIcon;
     onClick: () => void;
-    color?: 'blue' | 'purple' | 'amber' | 'emerald' | 'rose' | 'indigo';
+    color?: 'blue' | 'teal' | 'amber' | 'emerald' | 'rose' | 'indigo';
 }
 
 export function DashboardQuickAction({
@@ -19,7 +19,7 @@ export function DashboardQuickAction({
 }: DashboardQuickActionProps) {
     const colorStyles = {
         blue: 'text-blue-500 group-hover:bg-blue-500',
-        purple: 'text-purple-500 group-hover:bg-purple-500',
+        teal: 'text-teal-500 group-hover:bg-teal-500',
         amber: 'text-amber-500 group-hover:bg-amber-500',
         emerald: 'text-emerald-500 group-hover:bg-emerald-500',
         rose: 'text-rose-500 group-hover:bg-rose-500',
