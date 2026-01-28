@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { TypeOrmConfigService } from '../../typeorm-config.service';
 import { RoleSeedModule } from './role/role-seed.module';
-import { StatusSeedModule } from './status/status-seed.module';
+
 import { UserSeedModule } from './user/user-seed.module';
 import { PermissionSeedModule } from './permission/permission-seed.module';
 // import { NodeTypeSeedModule } from './node-type/node-type-seed.module';
@@ -24,7 +24,7 @@ import appConfig from '../../../config/app.config';
   imports: [
     PermissionSeedModule,
     RoleSeedModule,
-    StatusSeedModule,
+
     UserSeedModule,
     BotSeedModule,
     ConversationSeedModule,
@@ -46,4 +46,4 @@ import appConfig from '../../../config/app.config';
     }),
   ],
 })
-export class SeedModule {}
+export class SeedModule { }

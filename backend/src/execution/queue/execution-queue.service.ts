@@ -3,7 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { JOB_QUEUE } from './execution-queue.constants';
 import { CreationJob } from '../../creation-jobs/domain/creation-jobs';
-import { GenerationJob } from '../../generation-jobs/domain/generation-job';
+// import { GenerationJob } from '../../generation-jobs/domain/generation-job';
 
 @Injectable()
 export class ExecutionQueueService {
@@ -12,7 +12,7 @@ export class ExecutionQueueService {
   constructor(
     @InjectQueue(JOB_QUEUE)
     private readonly queue: Queue,
-  ) {}
+  ) { }
 
   /**
    * Add a creation job to the execution queue
@@ -62,28 +62,25 @@ export class ExecutionQueueService {
     }
   }
 
-  /**
-   * Add a generation job to the execution queue
-   */
-  async addGenerationJob(generationJob: GenerationJob): Promise<void> {
-    try {
-      await this.queue.add(
-        'execute-generation-job',
-        { generationJob },
-        {
-          removeOnComplete: true,
-          removeOnFail: 100,
-        },
-      );
-      this.logger.debug(
-        `[Execution] Generation Job ${generationJob.id} queued`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Failed to queue generation job ${generationJob.id}:`,
-        error.message,
-      );
-      throw error;
-    }
-  }
+  // async addGenerationJob(generationJob: GenerationJob): Promise<void> {
+  //   try {
+  //     await this.queue.add(
+  //       'execute-generation-job',
+  //       { generationJob },
+  //       {
+  //         removeOnComplete: true,
+  //         removeOnFail: 100,
+  //       },
+  //     );
+  //     this.logger.debug(
+  //       `[Execution] Generation Job ${generationJob.id} queued`,
+  //     );
+  //   } catch (error) {
+  //     this.logger.error(
+  //       `Failed to queue generation job ${generationJob.id}:`,
+  //       error.message,
+  //     );
+  //     throw error;
+  //   }
+  // }
 }

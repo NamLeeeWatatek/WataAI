@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import bcrypt from 'bcryptjs';
 import { Model } from 'mongoose';
 import { RoleEnum } from '../../../../roles/roles.enum';
-import { StatusEnum } from '../../../../statuses/statuses.enum';
+// import { StatusEnum } from '../../../../statuses/statuses.enum';
 import { UserSchemaClass } from '../../../../users/infrastructure/persistence/document/entities/user.schema';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class UserSeedService {
   constructor(
     @InjectModel(UserSchemaClass.name)
     private readonly model: Model<UserSchemaClass>,
-  ) {}
+  ) { }
 
   async run() {
     const admin = await this.model.findOne({
@@ -30,9 +30,9 @@ export class UserSeedService {
         role: {
           _id: RoleEnum.admin.toString(),
         },
-        status: {
-          _id: StatusEnum.active.toString(),
-        },
+        // status: {
+        //   _id: StatusEnum.active.toString(),
+        // },
       });
       await data.save();
     }
@@ -53,9 +53,9 @@ export class UserSeedService {
         role: {
           _id: RoleEnum.user.toString(),
         },
-        status: {
-          _id: StatusEnum.active.toString(),
-        },
+        // status: {
+        //   _id: StatusEnum.active.toString(),
+        // },
       });
 
       await data.save();

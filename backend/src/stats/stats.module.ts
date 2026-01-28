@@ -11,7 +11,8 @@ import {
 import { WorkspaceEntity } from '../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
 import { CreationToolEntity } from '../creation-tools/infrastructure/persistence/relational/entities/creation-tool.entity';
 import { TemplateEntity } from '../templates/infrastructure/persistence/relational/entities/template.entity';
-import { GenerationJobEntity } from '../generation-jobs/infrastructure/persistence/relational/entities/generation-job.entity';
+// import { GenerationJobEntity } from '../generation-jobs/infrastructure/persistence/relational/entities/generation-job.entity';
+import { CreationJobEntity } from '../creation-jobs/infrastructure/persistence/relational/entities/creation-jobs.entity';
 
 @Module({
   imports: [
@@ -25,11 +26,12 @@ import { GenerationJobEntity } from '../generation-jobs/infrastructure/persisten
       WorkspaceEntity,
       CreationToolEntity,
       TemplateEntity,
-      GenerationJobEntity,
+      // GenerationJobEntity,
+      CreationJobEntity,
     ]),
   ],
   controllers: [StatsController],
   providers: [StatsService],
   exports: [StatsService],
 })
-export class StatsModule {}
+export class StatsModule { }
