@@ -23,6 +23,7 @@ import {
 import { UpdateBotDto, LinkKnowledgeBaseDto } from './dto/update-bot.dto';
 import { ChannelEntity } from '../channels/infrastructure/persistence/relational/entities/channel.entity';
 import { FilterBotDto, SortBotDto } from './dto/query-bot.dto';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class BotsService {
@@ -37,10 +38,11 @@ export class BotsService {
     private workspaceMemberRepository: Repository<WorkspaceMemberEntity>,
     @InjectRepository(ChannelEntity)
     private channelRepository: Repository<ChannelEntity>,
+    private readonly filesService: FilesService,
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);
@@ -72,6 +74,10 @@ export class BotsService {
       timezone: createDto.timezone ?? 'UTC',
     }) as unknown as BotEntity;
     const savedBot = await this.botRepository.save(bot);
+
+    if (savedBot.avatarUrl) {
+      await this.filesService.confirmFromUrl(savedBot.avatarUrl);
+    }
 
     try {
       this.logger.log(
@@ -324,6 +330,10 @@ export class BotsService {
 
     Object.assign(bot, botUpdate);
     await this.botRepository.save(bot);
+
+    if (bot.avatarUrl) {
+      await this.filesService.confirmFromUrl(bot.avatarUrl);
+    }
 
     // 3. Update active widget version if visual fields are present
     const hasVisualUpdates = [

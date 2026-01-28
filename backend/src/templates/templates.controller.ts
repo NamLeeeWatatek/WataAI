@@ -33,7 +33,7 @@ import { Permissions } from '../permissions/decorators/permissions.decorator';
 @UseGuards(AuthGuard('jwt'), WorkspaceAccessGuard, PermissionsGuard)
 @Controller('templates')
 export class TemplatesController {
-  constructor(private readonly templatesService: TemplatesService) {}
+  constructor(private readonly templatesService: TemplatesService) { }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -64,6 +64,17 @@ export class TemplatesController {
     });
 
     return infinityPagination(data, { page, limit }, total);
+  }
+
+  @Get('export')
+  @Permissions('template:List')
+  async exportTemplates(@Query('ids') ids: string): Promise<Template[]> {
+    const idArray = ids ? ids.split(',').filter(Boolean) : [];
+    // If no ids provided, export ALL? Or return empty?
+    // Better to require ids for specific export, or handle "all" logic if needed.
+    // For now assuming explicit selection.
+    if (idArray.length === 0) return [];
+    return this.templatesService.getTemplatesForExport(idArray);
   }
 
   @Get(':id')
@@ -129,14 +140,5 @@ export class TemplatesController {
     );
   }
 
-  @Get('export')
-  @Permissions('template:List')
-  async exportTemplates(@Query('ids') ids: string): Promise<Template[]> {
-    const idArray = ids ? ids.split(',').filter(Boolean) : [];
-    // If no IDs provided, export ALL? Or return empty?
-    // Better to require IDs for specific export, or handle "all" logic if needed.
-    // For now assuming explicit selection.
-    if (idArray.length === 0) return [];
-    return this.templatesService.getTemplatesForExport(idArray);
-  }
+  // Export moved up
 }

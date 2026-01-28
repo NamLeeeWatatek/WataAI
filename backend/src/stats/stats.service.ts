@@ -610,7 +610,7 @@ export class StatsService {
       .leftJoin(
         CreationJobEntity,
         'job',
-        'job.creationToolId = CAST(tool.id AS VARCHAR)',
+        'job.creationToolId = tool.id',
       )
       .select('tool.id', 'id')
       .addSelect('tool.name', 'name')
