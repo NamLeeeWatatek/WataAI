@@ -48,7 +48,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { SharedModule } from './shared/shared.module';
 import { TemplatesModule } from './templates/templates.module';
-import { GenerationJobsModule } from './generation-jobs/generation-jobs.module';
+
 import { CharactersModule } from './characters/characters.module';
 import { RolesModule } from './roles/roles.module';
 import { StylePresetsModule } from './style-presets/style-presets.module';
@@ -66,14 +66,14 @@ import { MongooseConfigService } from './database/mongoose-config.service';
 const infrastructureDatabaseModule =
   process.env.DATABASE_TYPE === 'mongodb'
     ? MongooseModule.forRootAsync({
-        useClass: MongooseConfigService,
-      })
+      useClass: MongooseConfigService,
+    })
     : TypeOrmModule.forRootAsync({
-        useClass: TypeOrmConfigService,
-        dataSourceFactory: async (options: DataSourceOptions) => {
-          return new DataSource(options).initialize();
-        },
-      });
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options: DataSourceOptions) => {
+        return new DataSource(options).initialize();
+      },
+    });
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
@@ -164,7 +164,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     TemplatesModule,
     CreationToolsModule,
     AiProvidersModule,
-    GenerationJobsModule,
+
     CharactersModule,
     StylePresetsModule,
     ProjectsModule,
@@ -200,4 +200,4 @@ import { WorkflowsModule } from './workflows/workflows.module';
     WorkflowsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

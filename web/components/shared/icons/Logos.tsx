@@ -59,3 +59,12 @@ export const TikTokIcon = ({ className }: IconProps) => (
         <path d="M16.69 8.69a4.83 4.83 0 0 1-3.77-4.25V4h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V11.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 2 22.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1l.1-.01" fill="white" />
     </svg>
 );
+
+export const ZaloIcon = ({ className }: IconProps) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="24" height="24" rx="8" fill="#0068FF" />
+        <path d="M15.5 16H8.5C7.67 16 7 15.33 7 14.5V9.5C7 8.67 7.67 8 8.5 8H15.5C16.33 8 17 8.67 17 9.5V14.5C17 15.33 16.33 16 15.5 16ZM9.5 11H11.5L9.5 13H14.5V11H12.5L14.5 9H9.5V11Z" fill="white" />
+        <path d="M18 6H6C4.9 6 4 6.9 4 8V16C4 17.1 4.9 18 6 18H18C19.1 18 20 17.1 20 16V8C20 6.9 19.1 6 18 6ZM18 16H6V8H18V16Z" fill="#0068FF" fillOpacity="0.01" />
+    </svg>
+);
+

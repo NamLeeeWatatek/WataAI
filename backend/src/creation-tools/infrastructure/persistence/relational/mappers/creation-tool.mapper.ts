@@ -49,8 +49,8 @@ export class CreationToolMapper {
     persistenceEntity.executionFlow = domainEntity.executionFlow;
     persistenceEntity.actions = domainEntity.actions;
     persistenceEntity.isActive = domainEntity.isActive;
-    persistenceEntity.workspaceId = domainEntity.workspaceId;
-    persistenceEntity.knowledgeBaseId = domainEntity.knowledgeBaseId;
+    persistenceEntity.workspaceId = domainEntity.workspaceId ?? undefined;
+    persistenceEntity.knowledgeBaseId = domainEntity.knowledgeBaseId ?? undefined;
     persistenceEntity.sortOrder = domainEntity.sortOrder;
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;

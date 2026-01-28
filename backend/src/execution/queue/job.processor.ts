@@ -9,7 +9,7 @@ import {
   ExecutionType,
 } from '../../creation-tools/domain/creation-tool';
 import { KBRagService } from '../../knowledge-base/services/kb-rag.service';
-import { GenerationJob } from '../../generation-jobs/domain/generation-job';
+// import { GenerationJob } from '../../generation-jobs/domain/generation-job';
 import {
   CreationJob,
   CreationJobStatus,
@@ -42,9 +42,9 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
   }
 
   async process(
-    job: Job<{ generationJob?: GenerationJob; creationJob?: CreationJob }>,
+    job: Job<{ creationJob?: CreationJob }>,
   ): Promise<any> {
-    const jobEntity = job.data.creationJob || job.data.generationJob;
+    const jobEntity = job.data.creationJob;
 
     if (!jobEntity) {
       throw new Error('Job data missing creationJob or generationJob');

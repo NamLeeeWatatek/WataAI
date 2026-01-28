@@ -23,7 +23,8 @@ import {
 } from '../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
 import { CreationToolEntity } from '../creation-tools/infrastructure/persistence/relational/entities/creation-tool.entity';
 import { TemplateEntity } from '../templates/infrastructure/persistence/relational/entities/template.entity';
-import { GenerationJobEntity } from '../generation-jobs/infrastructure/persistence/relational/entities/generation-job.entity';
+// import { GenerationJobEntity } from '../generation-jobs/infrastructure/persistence/relational/entities/generation-job.entity';
+import { CreationJobEntity } from '../creation-jobs/infrastructure/persistence/relational/entities/creation-jobs.entity';
 import * as os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -47,9 +48,9 @@ export class StatsService {
     private readonly creationToolRepository: Repository<CreationToolEntity>,
     @InjectRepository(TemplateEntity)
     private readonly templateRepository: Repository<TemplateEntity>,
-    @InjectRepository(GenerationJobEntity)
-    private readonly generationJobRepository: Repository<GenerationJobEntity>,
-  ) {}
+    @InjectRepository(CreationJobEntity)
+    private readonly creationJobRepository: Repository<CreationJobEntity>,
+  ) { }
 
   async getSystemStats(query: StatsQueryDto): Promise<any> {
     const { startDate, endDate } = this.getDateRange(query);
@@ -527,22 +528,22 @@ export class StatsService {
       return where;
     };
 
-    const total = await this.generationJobRepository.count({
+    const total = await this.creationJobRepository.count({
       where: buildWhere(),
     });
-    const current = await this.generationJobRepository.count({
+    const current = await this.creationJobRepository.count({
       where: buildWhere({ createdAt: Between(startDate, endDate) }),
     });
-    const previous = await this.generationJobRepository.count({
+    const previous = await this.creationJobRepository.count({
       where: buildWhere({
         createdAt: Between(previousStartDate, previousEndDate),
       }),
     });
 
-    const successful = await this.generationJobRepository.count({
+    const successful = await this.creationJobRepository.count({
       where: buildWhere({ status: 'completed' }),
     });
-    const failed = await this.generationJobRepository.count({
+    const failed = await this.creationJobRepository.count({
       where: buildWhere({ status: 'failed' }),
     });
 
@@ -607,7 +608,7 @@ export class StatsService {
     const qb = this.creationToolRepository
       .createQueryBuilder('tool')
       .leftJoin(
-        GenerationJobEntity,
+        CreationJobEntity,
         'job',
         'job.creationToolId = CAST(tool.id AS VARCHAR)',
       )
@@ -783,7 +784,7 @@ export class StatsService {
     endDate: Date,
     workspaceId?: string,
   ): Promise<TimeSeriesDataPoint[]> {
-    const q = this.generationJobRepository
+    const q = this.creationJobRepository
       .createQueryBuilder('job')
       .select("TO_CHAR(job.createdAt, 'YYYY-MM-DD')", 'date')
       .addSelect('COUNT(job.id)', 'value')
