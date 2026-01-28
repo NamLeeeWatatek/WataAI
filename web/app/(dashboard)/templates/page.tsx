@@ -32,8 +32,9 @@ export default function TemplatesPage() {
         deleteTemplate,
         updateTemplate,
         createTemplate,
-        importTemplates, // added
-        exportTemplates, // added
+        importTemplates,
+        exportTemplates,
+        bulkDeleteTemplates, // added
         totalCount
     } = useTemplates({
         workspaceId: currentWorkspace?.id || '',
@@ -45,6 +46,8 @@ export default function TemplatesPage() {
     const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null)
     const [deleteId, setDeleteId] = useState<string | null>(null)
+    const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
     // Reset page 1 when search changes
     useEffect(() => {
@@ -65,6 +68,20 @@ export default function TemplatesPage() {
             toast.error(message);
         } finally {
             setDeleteId(null)
+        }
+    }
+
+
+
+    const handleBulkDelete = async () => {
+        try {
+            await bulkDeleteTemplates(selectedTemplates);
+            toast.success(`Deleted ${selectedTemplates.length} templates`);
+            setSelectedTemplates([]);
+            setBulkDeleteOpen(false);
+            refreshTemplates();
+        } catch (err) {
+            toast.error('Failed to delete selected templates');
         }
     }
 
@@ -105,57 +122,107 @@ export default function TemplatesPage() {
                         onClear={() => setSearchQuery('')}
                     />
                 </div>
-                <div className="flex gap-2">
-                    <label>
+                <div className="flex gap-4 items-center">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-muted/20 rounded-lg border border-border/50">
                         <input
-                            type="file"
-                            accept=".json"
-                            className="hidden"
-                            onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-
-                                const reader = new FileReader();
-                                reader.onload = async (event) => {
-                                    try {
-                                        const content = event.target?.result as string;
-                                        const data = JSON.parse(content);
-                                        const templatesToImport = Array.isArray(data) ? data : (data.templates || [data]);
-
-                                        await importTemplates({
-                                            templates: templatesToImport,
-                                            workspaceId: currentWorkspace?.id || ''
-                                        });
-                                        toast.success(`Imported ${templatesToImport.length} templates successfully`);
-                                        refreshTemplates();
-                                    } catch (err) {
-                                        toast.error('Failed to import templates. Invalid file format.');
-                                        console.error(err);
-                                    }
-                                };
-                                reader.readAsText(file);
-                                e.target.value = ''; // reset
+                            type="checkbox"
+                            checked={templates.length > 0 && selectedTemplates.length === templates.length}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setSelectedTemplates(templates.map(t => t.id));
+                                } else {
+                                    setSelectedTemplates([]);
+                                }
                             }}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                         />
-                        <Button variant="outline" size="sm" asChild className="cursor-pointer gap-2">
-                            <span>
-                                <Upload className="w-4 h-4" />
-                                Import
-                            </span>
+                        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Select All</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <label>
+                            <input
+                                type="file"
+                                accept=".json"
+                                className="hidden"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+
+                                    const reader = new FileReader();
+                                    reader.onload = async (event) => {
+                                        try {
+                                            const content = event.target?.result as string;
+                                            const data = JSON.parse(content);
+                                            const templatesToImport = Array.isArray(data) ? data : (data.templates || [data]);
+
+                                            await importTemplates({
+                                                templates: templatesToImport,
+                                                workspaceId: currentWorkspace?.id || ''
+                                            });
+                                            toast.success(`Imported ${templatesToImport.length} templates successfully`);
+                                            refreshTemplates();
+                                        } catch (err) {
+                                            toast.error('Failed to import templates. Invalid file format.');
+                                            console.error(err);
+                                        }
+                                    };
+                                    reader.readAsText(file);
+                                    e.target.value = ''; // reset
+                                }}
+                            />
+                            <Button variant="outline" size="sm" asChild className="cursor-pointer gap-2">
+                                <span>
+                                    <Upload className="w-4 h-4" />
+                                    Import
+                                </span>
+                            </Button>
+                        </label>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={async () => {
+                                const ids = templates.map(t => t.id);
+                                if (ids.length === 0) {
+                                    toast.error("No templates to export");
+                                    return;
+                                }
+                                try {
+                                    const data = await exportTemplates(ids);
+                                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = `templates_export_${new Date().toISOString().split('T')[0]}.json`;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    document.body.removeChild(a);
+                                    URL.revokeObjectURL(url);
+                                    toast.success(`Exported ${data.length} templates`);
+                                } catch (err) {
+                                    toast.error("Failed to export templates");
+                                }
+                            }}
+                        >
+                            <Download className="w-4 h-4" />
+                            Export
                         </Button>
-                    </label>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bulk Actions Bar */}
+            {selectedTemplates.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background border border-border shadow-2xl rounded-full px-6 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-5">
+                    <span className="text-sm font-medium">{selectedTemplates.length} selected</span>
+                    <div className="h-4 w-px bg-border" />
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        className="gap-2"
+                        className="text-primary hover:bg-primary/10"
                         onClick={async () => {
-                            const ids = templates.map(t => t.id);
-                            if (ids.length === 0) {
-                                toast.error("No templates to export");
-                                return;
-                            }
                             try {
-                                const data = await exportTemplates(ids);
+                                const data = await exportTemplates(selectedTemplates);
                                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
@@ -166,21 +233,52 @@ export default function TemplatesPage() {
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
                                 toast.success(`Exported ${data.length} templates`);
+                                setSelectedTemplates([]);
                             } catch (err) {
                                 toast.error("Failed to export templates");
                             }
                         }}
                     >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 mr-2" />
                         Export
                     </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setBulkDeleteOpen(true)}
+                    >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTemplates([])}
+                    >
+                        Cancel
+                    </Button>
                 </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {templates.map(template => (
-                    <Card key={template.id} className="p-6 space-y-4 hover:shadow-lg transition-all group border-border/40 bg-card/50 backdrop-blur-sm">
-                        <div className="flex justify-between items-start">
+                    <Card key={template.id} className={`p-6 space-y-4 hover:shadow-lg transition-all group border-border/40 bg-card/50 backdrop-blur-sm relative ${selectedTemplates.includes(template.id) ? 'border-primary ring-1 ring-primary bg-primary/5' : ''}`}>
+                        <div className="absolute top-4 left-4 z-10">
+                            <input
+                                type="checkbox"
+                                checked={selectedTemplates.includes(template.id)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setSelectedTemplates(prev => [...prev, template.id]);
+                                    } else {
+                                        setSelectedTemplates(prev => prev.filter(id => id !== template.id));
+                                    }
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                        </div>
+                        <div className="flex justify-between items-start pl-6">
                             <div>
                                 <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{template.name}</h3>
                                 <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">{template.description}</p>
@@ -282,6 +380,16 @@ export default function TemplatesPage() {
                 onConfirm={confirmDelete}
                 variant="destructive"
                 confirmText="Delete"
+            />
+
+            <AlertDialogConfirm
+                open={bulkDeleteOpen}
+                onOpenChange={setBulkDeleteOpen}
+                title="Delete Multiple Templates"
+                description={`Are you sure you want to delete ${selectedTemplates.length} templates? This action cannot be undone.`}
+                onConfirm={handleBulkDelete}
+                variant="destructive"
+                confirmText="Delete Selected"
             />
         </div>
     )

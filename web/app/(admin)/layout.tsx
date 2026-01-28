@@ -107,7 +107,7 @@ export default function AdminLayout({
         <div className="h-screen flex bg-background overflow-hidden">
             {/* Mobile Sheet Navigation */}
             <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-                <SheetContent side="left" className="p-0 w-72 border-r border-border/40 bg-background/95 backdrop-blur-xl">
+                <SheetContent side="left" className="p-0 w-auto border-none bg-transparent shadow-none">
                     <SheetHeader className="sr-only">
                         <SheetTitle>Admin Navigation</SheetTitle>
                     </SheetHeader>
