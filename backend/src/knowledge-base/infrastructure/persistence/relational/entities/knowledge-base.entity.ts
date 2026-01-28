@@ -37,7 +37,6 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   @ApiProperty({ nullable: true })
   @Column({ name: 'ai_config_id', type: 'uuid', nullable: true })
   @Index()
-  @Exclude({ toPlainOnly: true })
   aiConfigId?: string | null;
 
   @ApiProperty({ type: () => AiProviderConfigEntity })
@@ -59,7 +58,6 @@ export class KnowledgeBaseEntity extends WorkspaceOwnedEntity {
   @ApiProperty({ nullable: true })
   @Column({ name: 'embedding_config_id', type: 'uuid', nullable: true })
   @Index()
-  @Exclude({ toPlainOnly: true })
   embeddingConfigId?: string | null;
 
   @ApiProperty({ type: () => AiProviderConfigEntity })

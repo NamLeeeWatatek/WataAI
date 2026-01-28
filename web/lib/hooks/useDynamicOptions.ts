@@ -47,34 +47,13 @@ export function useDynamicOptions(field: FormField) {
         const data = Array.isArray(rawData) ? rawData : (rawData?.data && Array.isArray(rawData.data) ? rawData.data : []);
 
         if (optionsConfig === 'channels') {
-            // Professional transformation with TanStack Query 'select'
-            // Flattens channels and their sub-pages into a single selectable list
             const channelData = data as Channel[];
             return channelData.flatMap((channel: Channel): DynamicOption[] => {
-                // If channel has pages in metadata (e.g. Facebook), expand them
-                if (channel.metadata?.pages && Array.isArray(channel.metadata.pages) && channel.metadata.pages.length > 0) {
-                    return channel.metadata.pages.map((page) => ({
-                        // Base properties first
-                        ...page,
-                        // Overrides
-                        label: `${page.name} (${channel.name})`,
-                        value: `${channel.id}:${page.id}`, // Composite ID
-                        id: `${channel.id}:${page.id}`,
-                        type: channel.type,
-                        // Extra metadata
-                        originalName: channel.name,
-                        isPage: true,
-                        pageId: page.id,
-                        baseChannelId: channel.id
-                    }));
-                }
-
                 // Default: Return the channel itself as a target
                 return [{
                     ...channel,
                     label: channel.name || channel.type,
                     value: channel.id,
-                    // Ensure consistent shape if needed, or allow loose shape since consumer checks types
                     isPage: false,
                     originalName: channel.name,
                     baseChannelId: channel.id,

@@ -191,11 +191,37 @@ export default function TemplatesPage() {
                             <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={async () => {
+                                    try {
+                                        const data = await exportTemplates([template.id]);
+                                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `template_${template.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                        toast.success('Template exported');
+                                    } catch (err) {
+                                        toast.error("Failed to export template");
+                                    }
+                                }}
+                                className="h-8 w-8 p-0"
+                                title="Export"
+                            >
+                                <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => {
                                     setEditingTemplate(template);
                                     setTemplateDialogOpen(true);
                                 }}
                                 className="h-8 w-8 p-0"
+                                title="Edit"
                             >
                                 <Edit className="w-4 h-4" />
                             </Button>
@@ -204,6 +230,7 @@ export default function TemplatesPage() {
                                 size="sm"
                                 className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDelete(template.id)}
+                                title="Delete"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </Button>

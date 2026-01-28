@@ -37,6 +37,7 @@ import { BotExecutionEventService } from './listeners/bot-execution-event.servic
 import { MessageBufferService } from './services/message-buffer.service';
 import { BotAppearanceService } from './services/bot-appearance.service';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { FilesModule } from '../files/files.module';
 
 import { WidgetAppearanceController } from './controllers/widget-appearance.controller';
 
@@ -60,6 +61,7 @@ import { WidgetAppearanceController } from './controllers/widget-appearance.cont
     forwardRef(() => ConversationsModule),
     MessagingModule,
     PermissionsModule,
+    FilesModule,
   ],
   controllers: [
     BotsController,
@@ -96,4 +98,4 @@ import { WidgetAppearanceController } from './controllers/widget-appearance.cont
     BotAppearanceService,
   ],
 })
-export class BotsModule {}
+export class BotsModule { }
