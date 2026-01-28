@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/shared/PageHeader'
@@ -8,6 +9,7 @@ interface PageShellProps {
     title?: string
     titleClassName?: string
     description?: string
+    icon?: React.ElementType
     actions?: React.ReactNode
     onRefresh?: () => void
     refreshing?: boolean
@@ -22,6 +24,7 @@ export const PageShell = ({
     children,
     title,
     description,
+    icon,
     actions,
     onRefresh,
     refreshing,
@@ -38,6 +41,7 @@ export const PageShell = ({
                     <PageHeader
                         title={title}
                         description={description}
+                        icon={icon}
                         onRefresh={onRefresh}
                         refreshing={refreshing}
                     >

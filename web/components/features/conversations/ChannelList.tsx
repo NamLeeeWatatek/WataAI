@@ -2,8 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingLogo } from '@/components/shared/LoadingLogo';
 import { cn } from '@/lib/utils';
-import { Inbox, Hash, MessageSquare, Facebook, Instagram, Phone, Send, Mail, MessageCircle } from 'lucide-react';
-import { JSX } from 'react';
+import { getChannelIcon, getChannelColor } from '@/lib/constants/channels';
+import { Inbox, Hash } from 'lucide-react';
+import React, { JSX } from 'react';
 
 export interface Channel {
     id: string;
@@ -22,31 +23,6 @@ interface ChannelListProps {
     loading: boolean;
 }
 
-const getChannelIcon = (type: string) => {
-    const icons: Record<string, JSX.Element> = {
-        facebook: <Facebook className="w-4.5 h-4.5" />,
-        messenger: <MessageCircle className="w-4.5 h-4.5" />,
-        instagram: <Instagram className="w-4.5 h-4.5" />,
-        whatsapp: <Phone className="w-4.5 h-4.5" />,
-        telegram: <Send className="w-4.5 h-4.5" />,
-        email: <Mail className="w-4.5 h-4.5" />,
-        webchat: <MessageCircle className="w-4.5 h-4.5" />,
-    };
-    return icons[type] || <MessageSquare className="w-4.5 h-4.5" />;
-};
-
-const getChannelColor = (type: string) => {
-    const colors: Record<string, string> = {
-        facebook: 'text-blue-500',
-        messenger: 'text-blue-500',
-        instagram: 'text-pink-500',
-        whatsapp: 'text-green-500',
-        telegram: 'text-sky-500',
-        email: 'text-red-500',
-        webchat: 'text-cyan-500',
-    };
-    return colors[type] || 'text-gray-500';
-};
 export function ChannelList({
     channels,
     selectedChannel,
@@ -73,7 +49,7 @@ export function ChannelList({
                     )}>
                         <Inbox className="w-4.5 h-4.5" />
                     </div>
-                    <span className="font-bold text-sm tracking-tight">{t('conversations.allMessages', { defaultValue: 'All Messages' })}</span>
+                    <span className="font-bold text-sm tracking-tight" suppressHydrationWarning>{t('conversations.allMessages', { defaultValue: 'All Messages' })}</span>
                 </div>
                 {totalUnread > 0 && (
                     <Badge
@@ -98,8 +74,8 @@ export function ChannelList({
                     <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
                         <Hash className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <p className="text-sm font-medium text-foreground mb-1">{t('conversations.noChannels', { defaultValue: 'No channels yet' })}</p>
-                    <p className="text-xs text-muted-foreground">{t('conversations.connectChannel', { defaultValue: 'Connect a channel to get started' })}</p>
+                    <p className="text-sm font-medium text-foreground mb-1" suppressHydrationWarning>{t('conversations.noChannels', { defaultValue: 'No channels yet' })}</p>
+                    <p className="text-xs text-muted-foreground" suppressHydrationWarning>{t('conversations.connectChannel', { defaultValue: 'Connect a channel to get started' })}</p>
                 </div>
             ) : (
                 channels.map((channel) => (
@@ -124,7 +100,7 @@ export function ChannelList({
                                     "transition-transform group-hover:scale-110 duration-300",
                                     selectedChannel === channel.id ? 'text-primary-foreground' : (channel.color || getChannelColor(channel.type))
                                 )}>
-                                    {channel.icon || getChannelIcon(channel.type)}
+                                    {channel.icon || getChannelIcon(channel.type, "w-5.5 h-5.5")}
                                 </div>
                             </div>
                             <span className="font-bold text-sm truncate tracking-tight">{channel.name}</span>

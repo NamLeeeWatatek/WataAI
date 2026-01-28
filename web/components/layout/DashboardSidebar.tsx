@@ -81,7 +81,6 @@ const getNavigationGroups = (t: any): NavigationGroup[] => [
         title: t('sidebar.groups.intelligence'),
         items: [
             { name: t('dashboard.bots'), href: '/bots', icon: Bot },
-            { name: t('dashboard.chatAI'), href: '/chat', icon: MessageSquareText },
             { name: t('dashboard.conversations'), href: '/conversations', icon: History },
         ]
     },

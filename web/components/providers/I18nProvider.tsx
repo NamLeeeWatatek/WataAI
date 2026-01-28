@@ -27,5 +27,9 @@ export function I18nProvider({ children }: I18nProviderProps) {
     }
   }, [])
 
+  if (!isReady) {
+    return <LoadingLogo />
+  }
+
   return <>{children}</>
 }

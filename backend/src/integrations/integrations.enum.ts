@@ -2,7 +2,6 @@ export enum ChannelType {
   FACEBOOK = 'facebook',
   INSTAGRAM = 'instagram',
   GOOGLE = 'google',
-  OMI = 'omi',
   TELEGRAM = 'telegram',
   WHATSAPP = 'whatsapp',
 }

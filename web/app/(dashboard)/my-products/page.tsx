@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProductsGrid } from '@/components/features/products/ProductsGrid';
 import { ProductsTable } from '@/components/features/products/ProductsTable';
-import { Package, LayoutGrid, List } from 'lucide-react';
+import { Package, LayoutGrid, List, Library } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/shared/Pagination';
@@ -16,10 +16,7 @@ import { Trash2, RotateCcw } from 'lucide-react';
 import { BulkActionsToolbar } from '@/components/shared/BulkActionsToolbar';
 import {
     Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription
+    CardContent
 } from "@/components/ui/Card";
 import {
     AlertDialog,
@@ -100,10 +97,13 @@ export default function MyProductsPage() {
 
     return (
         <div className="page-container space-y-6">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight">{t('navigation.assetLibrary')}</h1>
-                <p className="text-muted-foreground">Manage and view your generated content and products.</p>
-            </div>
+            <PageHeader
+                title={t('navigation.assetLibrary')}
+                description="Manage and view your generated content and products."
+                icon={Library}
+                onRefresh={handleRefresh}
+                refreshing={isLoading || isRefetching}
+            />
 
             <Card className="overflow-hidden flex flex-col border-border/50 bg-card/30 backdrop-blur-sm">
                 <CardContent className="p-0 flex-1">

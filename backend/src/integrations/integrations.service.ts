@@ -16,7 +16,7 @@ export class IntegrationsService {
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) {}
+  ) { }
 
   async findAll(workspaceId?: string): Promise<ChannelCredentialEntity[]> {
     const where: FindOptionsWhere<ChannelCredentialEntity> = {};
@@ -57,6 +57,21 @@ export class IntegrationsService {
         throw new NotFoundException(
           `Workspace with ID ${workspaceId} does not exist`,
         );
+      }
+
+      // Prevent duplicate configurations for the same provider + clientId
+      const existing = await this.credentialRepository.findOne({
+        where: {
+          workspaceId,
+          provider: dto.provider.toLowerCase(),
+          clientId: dto.clientId,
+        },
+      });
+
+      if (existing) {
+        // If it exists, just return the existing one or handle as conflict
+        // Returning existing one makes it idempotent
+        return existing;
       }
     }
 

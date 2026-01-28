@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from '@/lib/utils'
@@ -9,10 +10,10 @@ const pageHeaderVariants = cva(
     {
         variants: {
             variant: {
-                default: "pb-6 border-b border-border/10 mb-14", // Standardize: Always have a separator for consistency
-                sticky: "sticky top-0 z-40 glass-floating px-6 py-4 w-full mb-14",
-                dashboard: "p-0 mb-14",
-                clean: "pb-4 mb-10", // New variant for no-border headers
+                default: "pb-6 border-b border-border/10 mb-10", // Standardize: Always have a separator for consistency
+                sticky: "sticky top-0 z-40 glass-floating px-6 py-4 w-full mb-10",
+                dashboard: "p-0 mb-10",
+                clean: "pb-4 mb-8", // New variant for no-border headers
             },
         },
         defaultVariants: {
@@ -24,36 +25,47 @@ const pageHeaderVariants = cva(
 interface PageHeaderProps extends VariantProps<typeof pageHeaderVariants> {
     title: string
     description?: string
+    icon?: React.ElementType
     children?: React.ReactNode
     className?: string
     premium?: boolean
     onRefresh?: () => void
     refreshing?: boolean
+    iconClassName?: string
 }
 
 export function PageHeader({
     title,
     description,
+    icon: Icon,
     children,
     className,
     variant,
     premium = false,
     onRefresh,
     refreshing = false,
+    iconClassName
 }: PageHeaderProps) {
     return (
         <div className={cn(pageHeaderVariants({ variant, className }))}>
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5 w-full md:w-auto">
+                    {Icon && (
+                        <div className="hidden md:flex w-12 h-12 rounded-2xl bg-primary/5 items-center justify-center border border-primary/10 shadow-sm shrink-0">
+                            <Icon className={cn("w-6 h-6 text-primary", iconClassName)} />
+                        </div>
+                    )}
                     <div className="space-y-1.5 flex-1 min-w-0">
                         <h1 className={cn(
-                            "text-2xl md:text-3xl font-black tracking-tight", // Synchronized size for dashboard consistency
+                            "text-2xl md:text-3xl font-black tracking-tight flex items-center gap-3", // Synchronized size for dashboard consistency
                             premium && "bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent"
                         )}>
-                            {title}
+                            {/* Mobile-only icon */}
+                            {Icon && <Icon className={cn("w-6 h-6 md:hidden text-primary", iconClassName)} />}
+                            <span suppressHydrationWarning>{title}</span>
                         </h1>
                         {description && (
-                            <p className="line-clamp-1">
+                            <p className="text-muted-foreground text-sm line-clamp-1 opacity-70">
                                 {description}
                             </p>
                         )}
@@ -65,11 +77,11 @@ export function PageHeader({
                         <Button
                             variant="glass"
                             size="icon"
-                            className="h-10 w-10 shrink-0"
+                            className="h-10 w-10 shrink-0 rounded-xl"
                             onClick={onRefresh}
                             disabled={refreshing}
                         >
-                            <RefreshCw className={cn("w-4 h-4 text-muted-foreground")} />
+                            <RefreshCw className={cn("w-4 h-4 text-muted-foreground", refreshing && "animate-spin")} />
                         </Button>
                     )}
                     {children}

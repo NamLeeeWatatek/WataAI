@@ -163,6 +163,7 @@ export default function BotsPage() {
             <PageHeader
                 title={t('bots.title', { defaultValue: 'AI Agent Fleet' })}
                 description={t('bots.description', { defaultValue: 'Manage your AI agents specialized in various tasks.' })}
+                icon={BotIcon}
                 onRefresh={refetch}
                 refreshing={isLoading}
             >

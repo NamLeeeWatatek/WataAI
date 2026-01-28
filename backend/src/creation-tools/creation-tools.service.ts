@@ -27,7 +27,7 @@ export class CreationToolsService {
     private readonly repository: CreationToolRepository,
     private readonly filesService: FilesService,
     private readonly i18n: I18nService,
-  ) {}
+  ) { }
 
   async exportTools(ids?: string[]): Promise<CreationTool[]> {
     if (ids && ids.length > 0) {
@@ -120,8 +120,9 @@ export class CreationToolsService {
       actions: createDto.actions,
       executionFlow: createDto.executionFlow as any,
       isActive: createDto.isActive ?? true,
-      workspaceId: createDto.workspaceId,
-      knowledgeBaseId: createDto.knowledgeBaseId,
+      workspaceId: createDto.workspaceId === '' ? null : createDto.workspaceId,
+      knowledgeBaseId:
+        createDto.knowledgeBaseId === '' ? null : createDto.knowledgeBaseId,
       sortOrder: createDto.sortOrder ?? 0,
     });
 
@@ -179,6 +180,10 @@ export class CreationToolsService {
 
     if (persistencePayload.knowledgeBaseId === '') {
       persistencePayload.knowledgeBaseId = null;
+    }
+
+    if (persistencePayload.workspaceId === '') {
+      persistencePayload.workspaceId = null;
     }
 
     const tool = await this.repository.update(id, persistencePayload);

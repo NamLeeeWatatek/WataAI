@@ -185,8 +185,8 @@ export const DynamicFormField = memo(function DynamicFormField(props: DynamicFor
     const FieldComponent = fieldRegistry[field.type]
 
     return (
-        <div className={cn('mb-10 last:mb-0', className)}>
-            <div className="flex items-center justify-between mb-4">
+        <div className={cn('mb-6 last:mb-0', className)}>
+            <div className="flex items-center justify-between mb-2">
                 <div className="space-y-1">
                     <Label htmlFor={fieldId} className="text-[11px] font-bold uppercase tracking-[0.25em] text-foreground/50 transition-colors group-hover:text-primary/70">
                         {field.displayName || field.label}

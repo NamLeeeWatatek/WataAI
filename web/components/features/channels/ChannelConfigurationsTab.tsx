@@ -25,7 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import {
   getChannelIcon,
-  getChannelColor,
+  getChannelFullStyle,
   MESSAGING_CHANNELS,
   BUSINESS_INTEGRATIONS
 } from '@/lib/constants/channels';
@@ -42,6 +42,7 @@ import type { IntegrationConfig, CreateIntegrationDto, UpdateIntegrationDto } fr
 interface ChannelConfigurationsTabProps {
   configs: IntegrationConfig[];
   isLoading: boolean;
+  isMutating?: boolean;
   onSaveConfig: (config: CreateIntegrationDto | UpdateIntegrationDto) => Promise<void>;
   onDeleteConfig: (id: string) => void;
   onConnect: (provider: string, configId?: string) => void;
@@ -50,6 +51,7 @@ interface ChannelConfigurationsTabProps {
 export function ChannelConfigurationsTab({
   configs,
   isLoading,
+  isMutating,
   onSaveConfig,
   onDeleteConfig,
   onConnect
@@ -141,7 +143,7 @@ export function ChannelConfigurationsTab({
     <div className="space-y-12">
       {configs.length > 0 && (
         <section>
-          <h2 className="text-xl font-bold mb-8 flex items-center gap-2 tracking-tight">
+          <h2 className="text-xl font-bold mb-8 flex items-center gap-2 tracking-tight" suppressHydrationWarning>
             {t('channels.config.configuredTitle')}
             <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 ml-2">
               {configs.length}
@@ -156,8 +158,8 @@ export function ChannelConfigurationsTab({
                 <Card key={config.id} className="group h-full flex flex-col border-border/50 hover:border-primary/20 hover:shadow-lg transition-all duration-300 overflow-hidden">
                   <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
                     <div className="flex gap-4">
-                      <div className={cn("p-2.5 rounded-xl border border-white/5 h-fit", getChannelColor(provider))}>
-                        {getChannelIcon(provider)}
+                      <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl border border-border/40 bg-card/50", getChannelFullStyle(provider))}>
+                        {getChannelIcon(provider, "w-8 h-8")}
                       </div>
                       <div className="space-y-1">
                         <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -171,7 +173,7 @@ export function ChannelConfigurationsTab({
                         <CardDescription className="text-xs font-medium capitalize flex items-center gap-2">
                           <span className="text-foreground/80">{channelInfo?.category || 'Integration'}</span>
                           <span className="text-muted-foreground/40">•</span>
-                          <span className={cn("text-[10px] font-mono uppercase tracking-wider", config.is_active ? "text-green-500" : "text-muted-foreground")}>
+                          <span className={cn("text-[10px] font-mono uppercase tracking-wider", config.is_active ? "text-green-500" : "text-muted-foreground")} suppressHydrationWarning>
                             {config.is_active ? t('channels_config.active') : 'Offline'}
                           </span>
                         </CardDescription>
@@ -229,7 +231,7 @@ export function ChannelConfigurationsTab({
                       onClick={() => onConnect(provider, config.id)}
                     >
                       <Zap className="w-3.5 h-3.5 mr-2 fill-current" />
-                      {t('channels.config.connectChannel')}
+                      <span suppressHydrationWarning>{t('channels.config.connectChannel')}</span>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -241,14 +243,14 @@ export function ChannelConfigurationsTab({
 
       {/* Available Integrations */}
       <section className="pt-12 border-t border-border/10">
-        <h2 className="text-xl font-bold mb-8 tracking-tight">
+        <h2 className="text-xl font-bold mb-8 tracking-tight" suppressHydrationWarning>
           {t('channels.config.availableTitle')}
         </h2>
 
         {/* Messaging Channels */}
         <div className="mb-14">
           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">{t('channels.config.messagingTitle')}</h3>
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1" suppressHydrationWarning>{t('channels.config.messagingTitle')}</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -259,8 +261,8 @@ export function ChannelConfigurationsTab({
                 className="group cursor-pointer hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
                 <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <div className={cn("p-2.5 rounded-xl border border-white/5 bg-muted/20 group-hover:scale-105 transition-transform", getChannelColor(channel.id))}>
-                    {getChannelIcon(channel.id)}
+                  <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl border border-border/40 bg-card/50", getChannelFullStyle(channel.id))}>
+                    {getChannelIcon(channel.id, "w-8 h-8")}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -280,7 +282,7 @@ export function ChannelConfigurationsTab({
         {/* Business Integrations */}
         <div>
           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1">{t('channels.config.businessTitle')}</h3>
+            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] pl-1" suppressHydrationWarning>{t('channels.config.businessTitle')}</h3>
             <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -291,8 +293,8 @@ export function ChannelConfigurationsTab({
                 className="group cursor-pointer hover:border-primary/40 hover:shadow-md transition-all duration-300"
               >
                 <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <div className={cn("p-2.5 rounded-xl border border-white/5 bg-muted/20 group-hover:scale-105 transition-transform", getChannelColor(integration.id))}>
-                    {getChannelIcon(integration.id)}
+                  <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl border border-border/40 bg-card/50", getChannelFullStyle(integration.id))}>
+                    {getChannelIcon(integration.id, "w-8 h-8")}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -318,14 +320,14 @@ export function ChannelConfigurationsTab({
           <Card className="w-full max-w-3xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-center gap-5 mb-8 border-b border-border/40 pb-6">
-                <div className={cn("p-4 rounded-2xl", getChannelColor(configForm.provider))}>
-                  {getChannelIcon(configForm.provider)}
+                <div className={cn("w-16 h-16 flex items-center justify-center rounded-2xl border border-border/40 bg-card/50", getChannelFullStyle(configForm.provider))}>
+                  {getChannelIcon(configForm.provider, "w-10 h-10")}
                 </div>
                 <div className="flex-1">
                   <h3 className="text-2xl font-black tracking-tight capitalize">{configForm.provider}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5 font-bold text-[10px] text-muted-foreground/60 uppercase tracking-widest">
                     <ShieldCheck className="w-3 h-3 text-primary" />
-                    {t('channels.config.securityProtocol')}
+                    <span suppressHydrationWarning>{t('channels.config.securityProtocol')}</span>
                   </div>
                 </div>
                 <Button
@@ -344,42 +346,43 @@ export function ChannelConfigurationsTab({
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2">
-                    <Label className="mb-2 block">
+                  <div className="md:col-span-2 flex flex-col gap-2">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
                       {t('channels.config.label')} <span className="text-muted-foreground font-normal">({t('channels.config.friendlyName')})</span>
                     </Label>
                     <Input
                       type="text"
+                      className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50"
                       value={configForm.name}
                       onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
                       placeholder="e.g. Primary Facebook Portal"
                     />
                   </div>
 
-                  <div>
-                    <Label className="mb-2 block">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
                       {t('channels.config.accessId')} <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       type="text"
+                      className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50 font-mono"
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
                       placeholder="Client / App ID"
-                      className="font-mono"
                     />
                   </div>
 
-                  <div>
-                    <Label className="mb-2 block">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
                       {t('channels.config.authSecret')} <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
                       <Input
                         type={showClientSecret ? "text" : "password"}
+                        className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50 font-mono pr-12"
                         value={configForm.client_secret}
                         onChange={(e) => setConfigForm({ ...configForm, client_secret: e.target.value })}
                         placeholder={t('channels.config.secretKey')}
-                        className="font-mono pr-10"
                       />
                       <Button
                         type="button"
@@ -449,18 +452,19 @@ export function ChannelConfigurationsTab({
                         </div>
                       </div>
 
-                      <div className="md:col-span-1">
-                        <Label className="mb-2 block">
+                      <div className="md:col-span-1 flex flex-col gap-2">
+                        <Label className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
                           {t('channels.config.webhookVerification')}
                         </Label>
                         <Input
                           type="text"
+                          className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50"
                           value={configForm.verify_token}
                           onChange={(e) => setConfigForm({ ...configForm, verify_token: e.target.value })}
                           placeholder={t('channels.config.securityToken')}
                           required
                         />
-                        <p className="text-[10px] font-bold text-muted-foreground/50 mt-2 ml-1">
+                        <p className="text-[10px] font-bold text-muted-foreground/50 ml-1">
                           {t('channels.config.webhookHint')}
                         </p>
                       </div>
@@ -469,12 +473,13 @@ export function ChannelConfigurationsTab({
                 )}
 
                 {configForm.provider !== 'facebook' && configForm.provider !== 'messenger' && configForm.provider !== 'instagram' && (
-                  <div>
-                    <Label className="mb-2 block">
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-[11px] font-bold uppercase tracking-widest text-foreground/50">
                       {t('channels.config.permissionScopes')}
                     </Label>
                     <Input
                       type="text"
+                      className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50"
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
                       placeholder="e.g. read_messages, write_post"
@@ -493,9 +498,16 @@ export function ChannelConfigurationsTab({
                   <Button
                     className="flex-[2] h-12 font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                     onClick={saveConfig}
-                    disabled={!configForm.client_id || !configForm.client_secret}
+                    disabled={!configForm.client_id || !configForm.client_secret || isMutating}
                   >
-                    {configForm.id ? t('channels.config.pushUpdate') : t('channels.config.initLimit')}
+                    {isMutating ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        {t('common.processing', { defaultValue: 'Processing...' })}
+                      </span>
+                    ) : (
+                      configForm.id ? t('channels.config.pushUpdate') : t('channels.config.initLimit')
+                    )}
                   </Button>
                 </div>
               </div>
