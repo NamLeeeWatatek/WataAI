@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getChannels,
@@ -27,7 +28,7 @@ export interface UseChannelsParams {
 
 export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
     const queryClient = useQueryClient();
-    const { setGlobalLoading } = useUiStore();
+    const setGlobalLoading = useUiStore((state) => state.setGlobalLoading);
 
     const channelsQuery = useQuery({
         queryKey: channelKeys.channels(workspaceId, params),
@@ -38,13 +39,9 @@ export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
 
     const integrationsQuery = useQuery({
         queryKey: channelKeys.integrations(workspaceId),
-        queryFn: () => integrationsQueryFn(workspaceId),
+        queryFn: () => getIntegrations(workspaceId),
         enabled: !!workspaceId,
     });
-
-    async function integrationsQueryFn(wid?: string) {
-        return getIntegrations(wid);
-    }
 
     const disconnectMutation = useMutation({
         mutationFn: (id: string) => disconnectChannel(id),
@@ -110,10 +107,10 @@ export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
         integrations: integrationsQuery.data || [],
         isLoading: !workspaceId || channelsQuery.isLoading || integrationsQuery.isLoading,
         isRefetching: channelsQuery.isRefetching || integrationsQuery.isRefetching,
-        refetch: () => {
+        refetch: useCallback(() => {
             channelsQuery.refetch();
             integrationsQuery.refetch();
-        },
+        }, [channelsQuery, integrationsQuery]),
         disconnect: disconnectMutation.mutateAsync,
         deleteIntegration: deleteIntegrationMutation.mutateAsync,
         saveIntegration: saveIntegrationMutation.mutateAsync,

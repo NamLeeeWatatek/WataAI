@@ -36,7 +36,7 @@ def run_lighthouse(url: str) -> dict:
         )
         
         if os.path.exists(output_path):
-            with open(output_path, 'r') as f:
+            with open(output_path, 'r', encoding='utf-8') as f:
                 report = json.load(f)
             os.unlink(output_path)
             

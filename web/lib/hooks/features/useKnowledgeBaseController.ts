@@ -13,32 +13,30 @@ export function useKnowledgeBaseController(kbId: string) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
 
-    // Zustand Store
-    const {
-        viewMode,
-        searchQuery,
-        selectedIds,
-        breadcrumbs,
-        currentFolderId,
-        draggedItem,
-        dragOverFolder,
-        currentPage,
-        pageSize,
-        setViewMode,
-        setSearchQuery,
-        toggleSelection,
-        setSelectedIds,
-        clearSelection,
-        setDraggedItem,
-        setDragOverFolder,
-        setPagination,
-        resetState,
-        navigateToFolder: zustandNavigateToFolder,
-        navigateToBreadcrumb: zustandNavigateToBreadcrumb,
-        setAutoRefreshing,
-    } = useKbStore();
+    // Zustand Store with selectors for stability
+    const viewMode = useKbStore((state) => state.viewMode);
+    const searchQuery = useKbStore((state) => state.searchQuery);
+    const breadcrumbs = useKbStore((state) => state.breadcrumbs);
+    const selectedIds = useKbStore((state) => state.selectedIds);
+    const draggedItem = useKbStore((state) => state.draggedItem);
+    const dragOverFolder = useKbStore((state) => state.dragOverFolder);
+    const currentPage = useKbStore((state) => state.currentPage);
+    const pageSize = useKbStore((state) => state.pageSize);
+    const setViewMode = useKbStore((state) => state.setViewMode);
+    const setSearchQuery = useKbStore((state) => state.setSearchQuery);
+    const setSelectedIds = useKbStore((state) => state.setSelectedIds);
+    const clearSelection = useKbStore((state) => state.clearSelection);
+    const setDraggedItem = useKbStore((state) => state.setDraggedItem);
+    const setDragOverFolder = useKbStore((state) => state.setDragOverFolder);
+    const setPagination = useKbStore((state) => state.setPagination);
+    const resetState = useKbStore((state) => state.resetState);
+    const zustandNavigateToFolder = useKbStore((state) => state.navigateToFolder);
+    const zustandNavigateToBreadcrumb = useKbStore((state) => state.navigateToBreadcrumb);
+    const setAutoRefreshing = useKbStore((state) => state.setAutoRefreshing);
+    const toggleSelection = useKbStore((state) => state.toggleSelection);
 
-    const { setBreadcrumbName, removeBreadcrumbName } = useUiStore();
+    const setBreadcrumbName = useUiStore((state) => state.setBreadcrumbName);
+    const removeBreadcrumbName = useUiStore((state) => state.removeBreadcrumbName);
 
     // Initial Load & URL Sync
     const folderParam = searchParams.get('folder');
@@ -79,16 +77,21 @@ export function useKnowledgeBaseController(kbId: string) {
         };
     }, [resetState, kbId]);
 
+    const autoRefreshing = useKbStore((state) => state.autoRefreshing);
+
     // Auto Refresh Logic
     useEffect(() => {
-        setAutoRefreshing(hasProcessing);
+        if (autoRefreshing !== hasProcessing) {
+            setAutoRefreshing(hasProcessing);
+        }
+
         if (hasProcessing) {
             const interval = setInterval(() => {
                 refresh();
             }, 5000);
             return () => clearInterval(interval);
         }
-    }, [hasProcessing, setAutoRefreshing, refresh]);
+    }, [hasProcessing, autoRefreshing, setAutoRefreshing, refresh]);
 
     // Breadcrumb Name Sync
     useEffect(() => {

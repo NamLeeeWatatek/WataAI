@@ -15,21 +15,15 @@ export interface UseMessagesReturn {
 }
 
 export function useMessages(conversationId: string): UseMessagesReturn {
-  const {
-    byConversation,
-    isLoading,
-    hasMore: hasMoreByConv,
-    error: errorByConv,
-    setMessages,
-    setLoading,
-    setError,
-    setHasMore,
-  } = useMessagesStore();
+  const messages = useMessagesStore((state) => state.byConversation[conversationId] || []);
+  const loading = useMessagesStore((state) => state.isLoading[conversationId] || false);
+  const hasMore = useMessagesStore((state) => state.hasMore[conversationId] ?? true);
+  const error = useMessagesStore((state) => state.error[conversationId] || null);
 
-  const messages = byConversation[conversationId] || [];
-  const loading = isLoading[conversationId] || false;
-  const hasMore = hasMoreByConv[conversationId] ?? true;
-  const error = errorByConv[conversationId] || null;
+  const setMessages = useMessagesStore((state) => state.setMessages);
+  const setLoading = useMessagesStore((state) => state.setLoading);
+  const setError = useMessagesStore((state) => state.setError);
+  const setHasMore = useMessagesStore((state) => state.setHasMore);
 
   const mapApiMessageToMessage = (apiMessage: any): Message => ({
     id: apiMessage.id,

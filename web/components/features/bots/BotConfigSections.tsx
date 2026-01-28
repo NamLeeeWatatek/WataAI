@@ -15,6 +15,7 @@ import React from 'react';
 import axiosClient from '@/lib/axios-client';
 import { Badge } from '@/components/ui/Badge';
 import { useTranslation } from 'react-i18next';
+import { ModelSelector } from '@/components/shared/ModelSelector';
 
 interface BotConfigData {
     name: string;
@@ -619,49 +620,17 @@ export function AIConfigSection({ data, onChange }: AIConfigSectionProps) {
                             </p>
                         </div>
 
+
+
                         {data.aiProviderId && (
                             <div className="space-y-2">
                                 <Label htmlFor="ai-model">{t('bot_config.model_name')} *</Label>
-                                <Select
+                                <ModelSelector
                                     value={data.aiModelName}
                                     onValueChange={(value) => onChange({ aiModelName: value })}
-                                    disabled={fetchingModels}
-                                >
-                                    <SelectTrigger id="ai-model">
-                                        <SelectValue placeholder={
-                                            fetchingModels ? t('common.loading') + "..." :
-                                                data.aiModelName ? data.aiModelName : t('bot_config.select_model')
-                                        } />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {(() => {
-                                            const provider = providers.find(p => p.id === data.aiProviderId);
-                                            const models = provider?.modelList || [];
-
-                                            if (fetchingModels) {
-                                                return (
-                                                    <SelectItem value="loading" disabled>
-                                                        {t('common.loading')}...
-                                                    </SelectItem>
-                                                );
-                                            }
-
-                                            if (models.length === 0) {
-                                                return (
-                                                    <SelectItem value="none" disabled>
-                                                        {t('bot_config.no_models', { defaultValue: 'No models available' })}
-                                                    </SelectItem>
-                                                );
-                                            }
-
-                                            return models.map((model: string) => (
-                                                <SelectItem key={model} value={model}>
-                                                    {model}
-                                                </SelectItem>
-                                            ));
-                                        })()}
-                                    </SelectContent>
-                                </Select>
+                                    configId={data.aiProviderId}
+                                    placeholder={t('bot_config.select_model')}
+                                />
                                 <p className="text-xs text-muted-foreground">
                                     Choose the specific model to use
                                 </p>

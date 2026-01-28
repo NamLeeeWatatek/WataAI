@@ -37,21 +37,17 @@ export function useNotificationsRealtime({
 }: UseNotificationsRealtimeConfig = {}): UseNotificationsRealtimeReturn {
   const { user, accessToken } = useAuth();
   const preferences = useNotificationPreferences();
-  const {
-    notifications,
-    unreadCount,
-    isConnected,
-    isConnecting,
-    error,
-    setNotifications,
-    addNotification,
-    updateNotification,
-    markAsRead: storeMarkAsRead,
-    markAllAsRead: storeMarkAllAsRead,
-    setUnreadCount,
-    setConnectionState,
-    setError
-  } = useNotificationsStore();
+  const notifications = useNotificationsStore((state) => state.notifications);
+  const unreadCount = useNotificationsStore((state) => state.unreadCount);
+
+  const setNotifications = useNotificationsStore((state) => state.setNotifications);
+  const addNotification = useNotificationsStore((state) => state.addNotification);
+  const updateNotification = useNotificationsStore((state) => state.updateNotification);
+  const storeMarkAsRead = useNotificationsStore((state) => state.markAsRead);
+  const storeMarkAllAsRead = useNotificationsStore((state) => state.markAllAsRead);
+  const setUnreadCount = useNotificationsStore((state) => state.setUnreadCount);
+  const setConnectionState = useNotificationsStore((state) => state.setConnectionState);
+  const setError = useNotificationsStore((state) => state.setError);
 
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | undefined>(initialWorkspaceId);
 

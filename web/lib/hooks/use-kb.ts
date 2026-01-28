@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getKnowledgeBases,
@@ -238,11 +239,11 @@ export function useKBContent(kbId: string, folderId: string | null = null, param
         content: contentQuery.data,
         isLoading: contentQuery.isLoading || statsQuery.isLoading || kbDetailQuery.isLoading,
         isError: contentQuery.isError || statsQuery.isError || kbDetailQuery.isError,
-        refetch: () => {
+        refetch: useCallback(() => {
             contentQuery.refetch();
             statsQuery.refetch();
             kbDetailQuery.refetch();
-        },
+        }, [contentQuery, statsQuery, kbDetailQuery]),
 
         // Actions
         createFolder: createFolderMutation.mutateAsync,
