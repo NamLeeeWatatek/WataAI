@@ -10,10 +10,10 @@ const pageHeaderVariants = cva(
     {
         variants: {
             variant: {
-                default: "pb-6 border-b border-border/10 mb-10", // Standardize: Always have a separator for consistency
+                default: "pb-6 border-b border-border/10 mb-10",
                 sticky: "sticky top-0 z-40 glass-floating px-6 py-4 w-full mb-10",
                 dashboard: "p-0 mb-10",
-                clean: "pb-4 mb-8", // New variant for no-border headers
+                clean: "pb-4 mb-8",
             },
         },
         defaultVariants: {
@@ -32,6 +32,8 @@ interface PageHeaderProps extends VariantProps<typeof pageHeaderVariants> {
     onRefresh?: () => void
     refreshing?: boolean
     iconClassName?: string
+    /** Heading level to render. Use 'h2' if page already has an h1. Default: 'h1' */
+    as?: 'h1' | 'h2' | 'h3'
 }
 
 export function PageHeader({
@@ -44,7 +46,8 @@ export function PageHeader({
     premium = false,
     onRefresh,
     refreshing = false,
-    iconClassName
+    iconClassName,
+    as: HeadingTag = 'h1'
 }: PageHeaderProps) {
     return (
         <div className={cn(pageHeaderVariants({ variant, className }))}>
@@ -56,14 +59,14 @@ export function PageHeader({
                         </div>
                     )}
                     <div className="space-y-1.5 flex-1 min-w-0">
-                        <h1 className={cn(
-                            "text-2xl md:text-3xl font-black tracking-tight flex items-center gap-3", // Synchronized size for dashboard consistency
+                        <HeadingTag className={cn(
+                            "text-2xl md:text-3xl font-black tracking-tight flex items-center gap-3",
                             premium && "bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent"
                         )}>
                             {/* Mobile-only icon */}
                             {Icon && <Icon className={cn("w-6 h-6 md:hidden text-primary", iconClassName)} />}
                             <span suppressHydrationWarning>{title}</span>
-                        </h1>
+                        </HeadingTag>
                         {description && (
                             <p className="text-muted-foreground text-sm line-clamp-1 opacity-70">
                                 {description}

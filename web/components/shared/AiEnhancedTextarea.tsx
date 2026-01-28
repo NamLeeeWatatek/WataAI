@@ -61,7 +61,7 @@ export function AiEnhancedTextarea({
     return (
         <div className={cn("relative group transition-all duration-300", containerClassName)}>
             <div className={cn(
-                "absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 opacity-0 transition-opacity duration-500",
+                "absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-teal-500/10 to-cyan-500/10 opacity-0 transition-opacity duration-500",
                 enhancedPreview ? "opacity-100" : "group-hover:opacity-30"
             )} />
 
@@ -76,7 +76,7 @@ export function AiEnhancedTextarea({
                 className={cn(
                     "min-h-[100px] pr-10 transition-all duration-300 backdrop-blur-sm",
                     enhancedPreview
-                        ? "border-purple-500/50 bg-background/50 text-foreground shadow-[0_0_15px_-3px_rgba(168,85,247,0.15)]"
+                        ? "border-teal-500/50 bg-background/50 text-foreground shadow-[0_0_15px_-3px_rgba(20,184,166,0.15)]"
                         : "bg-card/30 focus:bg-card/50",
                     className
                 )}
@@ -85,7 +85,7 @@ export function AiEnhancedTextarea({
 
             <div className="absolute bottom-2.5 right-2.5 flex gap-1 z-10">
                 {enhancedPreview ? (
-                    <div className="flex items-center bg-background/90 backdrop-blur-md border border-purple-200/20 rounded-full shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 scale-100 origin-bottom-right">
+                    <div className="flex items-center bg-background/90 backdrop-blur-md border border-teal-200/20 rounded-full shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 scale-100 origin-bottom-right">
                         <Button
                             type="button"
                             size="sm"
@@ -101,7 +101,7 @@ export function AiEnhancedTextarea({
                             type="button"
                             size="sm"
                             variant="ghost"
-                            className="h-7 px-3 text-purple-600 hover:text-purple-700 hover:bg-purple-500/10 font-medium text-[10px] uppercase tracking-wide gap-1.5 rounded-none transition-colors"
+                            className="h-7 px-3 text-teal-600 hover:text-teal-700 hover:bg-teal-500/10 font-medium text-[10px] uppercase tracking-wide gap-1.5 rounded-none transition-colors"
                             onClick={applyEnhancement}
                         >
                             Apply
@@ -120,8 +120,8 @@ export function AiEnhancedTextarea({
                             className={cn(
                                 "h-7 w-7 rounded-full transition-all duration-300 shadow-sm",
                                 isEnhancing
-                                    ? "bg-purple-50 text-purple-600"
-                                    : "bg-background/80 hover:bg-purple-500 hover:text-white text-muted-foreground border border-border/50"
+                                    ? "bg-teal-50 text-teal-600"
+                                    : "bg-background/80 hover:bg-teal-500 hover:text-white text-muted-foreground border border-border/50"
                             )}
                             onClick={handleEnhance}
                             disabled={isEnhancing || !value}

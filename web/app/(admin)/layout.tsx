@@ -137,7 +137,7 @@ export default function AdminLayout({
             </div>
 
             {/* Main content area */}
-            <main className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
+            <main id="main-content" className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300">
                 <QueryClientProvider client={queryClient}>
                     <CreationJobsProvider>
                         <PermissionGuard

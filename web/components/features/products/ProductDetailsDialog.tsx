@@ -148,10 +148,10 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                     {/* Inputs Section */}
                     {(job.inputData && Object.keys(job.inputData).length > 0) && (
                         <div className="relative">
-                            <div className="absolute -left-[29px] top-0 w-4 h-4 rounded-full bg-purple-500 border-4 border-background" />
+                            <div className="absolute -left-[29px] top-0 w-4 h-4 rounded-full bg-teal-500 border-4 border-background" />
                             <div className="space-y-3">
                                 <div className="space-y-1">
-                                    <h5 className="text-xs font-bold uppercase text-purple-500">Input Data</h5>
+                                    <h5 className="text-xs font-bold uppercase text-teal-500">Input Data</h5>
                                     <p className="text-[10px] text-muted-foreground">User provided parameters</p>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">

@@ -95,7 +95,7 @@ export function KbToolbar({
               Upload Files
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCrawlWebsite} className="cursor-pointer font-medium p-2.5">
-              <Globe className="w-4 h-4 mr-2 text-purple-500" />
+              <Globe className="w-4 h-4 mr-2 text-teal-500" />
               Crawl Website
             </DropdownMenuItem>
           </DropdownMenuContent>

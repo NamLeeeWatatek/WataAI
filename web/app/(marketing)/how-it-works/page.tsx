@@ -23,9 +23,9 @@ const steps = [
         title: 'Train on your Data',
         description: 'Upload documents, link your website, or sync with your knowledge base. Your bot learns your brand voice instantly.',
         icon: Headphones,
-        color: 'text-purple-400',
-        bgColor: 'bg-purple-400/10',
-        borderColor: 'border-purple-400/20'
+        color: 'text-teal-400',
+        bgColor: 'bg-teal-400/10',
+        borderColor: 'border-teal-400/20'
     },
     {
         title: 'Deploy to any Channel',
@@ -41,7 +41,7 @@ export default function HowItWorks() {
     return (
         <div className="container mx-auto px-4 py-24">
             <div className="text-center max-w-3xl mx-auto mb-20">
-                <h2 className="text-primary font-bold tracking-widest uppercase text-sm mb-4">The Process</h2>
+                <span className="text-primary font-bold tracking-widest uppercase text-sm mb-4 block">The Process</span>
                 <h1 className="display-heading-1 mb-6">How WataAI <span className="text-gradient">Works</span></h1>
                 <p className="text-xl text-muted-foreground">From idea to live automation in minutes. Our platform handles the complexity so you can focus on your business.</p>
             </div>
@@ -66,7 +66,7 @@ export default function HowItWorks() {
                 </div>
             </div>
 
-            <div className="mt-32 p-1 bg-gradient-to-r from-primary/30 via-purple-500/30 to-pink-500/30 rounded-[2.5rem]">
+            <div className="mt-32 p-1 bg-gradient-to-r from-primary/30 via-teal-500/30 to-cyan-500/30 rounded-[2.5rem]">
                 <div className="bg-background/95 backdrop-blur-sm rounded-[2.4rem] p-12 lg:p-20 flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
                     <div className="flex-1">
                         <h2 className="display-heading-2 mb-6 text-foreground">Automation for everyone, no coding required.</h2>

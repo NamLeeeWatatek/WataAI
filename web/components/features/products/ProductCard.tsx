@@ -31,7 +31,12 @@ interface ProductCardProps {
     onSelect?: (isSelected: boolean) => void;
 }
 
+import { useTranslation } from 'react-i18next';
+
+// ...
+
 export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCardProps) {
+    const { t } = useTranslation();
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -40,10 +45,10 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
         setIsDeleting(true);
         try {
             await creationJobsApi.remove(job.id);
-            toast.success('Product deleted successfully');
+            toast.success(t('products.deleteSuccess'));
             if (onDelete) onDelete(job.id);
         } catch (error) {
-            toast.error('Failed to delete product');
+            toast.error(t('products.deleteFailed'));
             console.error(error);
         } finally {
             setIsDeleting(false);
@@ -121,6 +126,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                     <Checkbox
                         checked={isSelected}
                         onCheckedChange={(checked) => onSelect?.(!!checked)}
+                        aria-label={`Select product ${getDisplayName()}`}
                     />
                 </div>
 

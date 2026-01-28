@@ -230,7 +230,7 @@ export default function EditCreationToolPage() {
                                 <div className="lg:col-span-8 space-y-8">
                                     {/* Primary Info Card */}
                                     <div className="relative group">
-                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/10 rounded-[2.5rem] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-teal-500/10 rounded-[2.5rem] blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                                         <Card className="relative border-border/40 bg-card/60 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl">
                                             <CardContent className="p-8 lg:p-10 space-y-8">
                                                 <div className="flex items-center gap-4 mb-2">
@@ -305,7 +305,7 @@ export default function EditCreationToolPage() {
                                         <div className="flex items-center justify-between mb-8">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-1.5 h-6 bg-purple-500 rounded-full" />
+                                                    <div className="w-1.5 h-6 bg-teal-500 rounded-full" />
                                                     <h3 className="text-sm font-black uppercase tracking-[0.3em] text-foreground/80">Classification</h3>
                                                 </div>
                                                 <p className="text-[10px] text-muted-foreground font-medium ml-10">Organize this tool into relevant categories</p>

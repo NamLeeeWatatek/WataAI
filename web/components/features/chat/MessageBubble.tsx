@@ -63,10 +63,10 @@ export const MessageBubble = React.memo(function MessageBubble({
             <Avatar className="h-8 w-8 shrink-0">
                 <AvatarFallback className={cn(
                     isCustomer
-                        ? 'bg-gradient-to-br from-purple-500/30 to-purple-500/10'
+                        ? 'bg-gradient-to-br from-teal-500/30 to-teal-500/10'
                         : 'bg-gradient-to-br from-green-500/30 to-green-500/10'
                 )}>
-                    {isCustomer ? <User className="w-4 h-4 text-purple-600" /> : <User className="w-4 h-4 text-green-600" />}
+                    {isCustomer ? <User className="w-4 h-4 text-teal-600" /> : <User className="w-4 h-4 text-green-600" />}
                 </AvatarFallback>
             </Avatar>
 

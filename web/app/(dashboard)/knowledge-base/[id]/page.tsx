@@ -372,7 +372,7 @@ export default function KnowledgeBaseDetailPage() {
                                                 Upload Files
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => setCrawlerDialogOpen(true)} className="rounded-lg cursor-pointer font-bold p-2.5">
-                                                <Globe className="w-4 h-4 mr-3 text-purple-500" />
+                                                <Globe className="w-4 h-4 mr-3 text-teal-500" />
                                                 Crawl Website
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>

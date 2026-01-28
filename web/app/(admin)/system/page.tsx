@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
             description: 'RBAC configurations',
             icon: ShieldCheck,
             href: '/system/roles-permissions',
-            color: 'purple'
+            color: 'teal'
         },
         {
             title: 'Creation Tools',

@@ -4,12 +4,12 @@ import { usePermissions } from '@/lib/hooks/usePermissions'
 import type { Role, RoleBadgeProps } from '@/lib/types'
 
 const roleColors: Record<Role, string> = {
-  super_admin: 'bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-orange-500/20 text-orange-400 border-orange-400/40',
-  admin: 'bg-gradient-to-r from-pink-500/20 to-orange-500/20 text-pink-400 border-pink-400/40',
-  manager: 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 border-purple-400/40',
+  super_admin: 'bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 text-orange-400 border-orange-400/40',
+  admin: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border-cyan-400/40',
+  manager: 'bg-gradient-to-r from-teal-500/20 to-emerald-500/20 text-teal-400 border-teal-400/40',
   editor: 'bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-orange-400 border-orange-400/40',
-  viewer: 'bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-400 border-pink-400/40',
-  user: 'bg-gradient-to-r from-purple-400/15 to-pink-400/15 text-purple-300 border-purple-300/30',
+  viewer: 'bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-400/40',
+  user: 'bg-gradient-to-r from-slate-400/15 to-gray-400/15 text-slate-300 border-slate-300/30',
 }
 
 const roleLabels: Record<Role, string> = {

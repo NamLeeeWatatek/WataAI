@@ -6,6 +6,16 @@ import {
     ConnectorsSection
 } from '@/components/marketing';
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'WataAI - Unified AI Chatbot Platform & Inbox',
+    description: 'Transform customer support and sales with WataAI. One AI engine connecting WhatsApp, Facebook, Instagram, and Telegram via zero-code visual flows.',
+    alternates: {
+        canonical: 'https://wata.ai',
+    },
+};
+
 export default function MarketingPage() {
     return (
         <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/30">

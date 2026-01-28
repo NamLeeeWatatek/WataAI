@@ -81,7 +81,7 @@ export function WorkspaceSwitcher() {
     <div className="flex items-center gap-3 text-left">
       <div className={cn(
         "flex aspect-square items-center justify-center rounded-lg border border-white/10 shadow-inner",
-        isTrigger ? "size-8 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500" : "size-8 border bg-background"
+        isTrigger ? "size-8 bg-gradient-to-br from-teal-500 via-cyan-500 to-emerald-500" : "size-8 border bg-background"
       )}>
         <span className={cn("font-bold", isTrigger ? "text-white" : "text-foreground")}>
           {getInitials(ws.name || '')}

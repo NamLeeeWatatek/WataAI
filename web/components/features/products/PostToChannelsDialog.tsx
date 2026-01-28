@@ -296,7 +296,7 @@ export function PostToChannelsDialog({
                                 disabled={isGenerating || !selectedBotId}
                                 className="h-8 text-xs bg-white border shadow-sm hover:bg-gray-50"
                             >
-                                {isGenerating ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2 text-purple-500" />}
+                                {isGenerating ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2 text-teal-500" />}
                                 AI Generate / Refine
                             </Button>
                         </div>

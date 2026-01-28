@@ -170,7 +170,7 @@ export function ActiveJobsWidget() {
                                                         <Progress
                                                             value={job.progress}
                                                             className="h-1.5 w-full bg-secondary border border-primary/5 shadow-inner"
-                                                            indicatorClassName="bg-gradient-to-r from-primary via-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(var(--primary),0.3)]"
+                                                            indicatorClassName="bg-gradient-to-r from-primary via-teal-500 to-cyan-500 shadow-[0_0_8px_rgba(var(--primary),0.3)]"
                                                         />
                                                     </div>
                                                 ) : job.status === CreationJobStatus.COMPLETED ? (

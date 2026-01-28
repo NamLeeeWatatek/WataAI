@@ -25,10 +25,35 @@ const outfit = Outfit({
     variable: '--font-outfit',
 })
 
+import { SkipToMainContent } from '@/components/shared/SkipToMainContent';
+
 export const metadata: Metadata = {
     title: 'Wata AI - One AI. Every Channel. Zero Code.',
     description: 'AI-powered omnichannel customer engagement platform with zero-code flow builder and unified inbox.',
     keywords: ['AI', 'chatbot', 'omnichannel', 'customer engagement', 'automation', 'n8n'],
+    metadataBase: new URL('https://wata.ai'),
+    openGraph: {
+        title: 'Wata AI - One AI. Every Channel. Zero Code.',
+        description: 'AI-powered omnichannel customer engagement platform with zero-code flow builder and unified inbox.',
+        url: 'https://wata.ai',
+        siteName: 'Wata AI',
+        images: [
+            {
+                url: '/images/og-image.png',
+                width: 1200,
+                height: 630,
+                alt: 'Wata AI Platform Preview',
+            },
+        ],
+        locale: 'en_US',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Wata AI - One AI. Every Channel. Zero Code.',
+        description: 'AI-powered omnichannel customer engagement platform with zero-code flow builder and unified inbox.',
+        images: ['/images/og-image.png'],
+    },
     icons: {
         icon: '/images/logo.svg',
     },
@@ -44,6 +69,7 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${outfit.variable}`} suppressHydrationWarning>
             <body className="font-sans antialiased" suppressHydrationWarning>
+                <SkipToMainContent />
                 <QueryProvider>
                     <I18nProvider>
                         <SessionProvider>

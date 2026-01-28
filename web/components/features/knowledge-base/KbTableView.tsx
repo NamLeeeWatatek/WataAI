@@ -134,7 +134,7 @@ export function KbTableView({
           <Checkbox
             checked={selectedIds.includes(row.original.id)}
             onCheckedChange={() => onToggleSelection(row.original.id)}
-            aria-label="Select row"
+            aria-label={`Select ${row.original.name}`}
             className="border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
           />
         </div>
@@ -175,6 +175,7 @@ export function KbTableView({
                   rel="noopener noreferrer"
                   className="font-bold text-sm line-clamp-2 leading-tight hover:text-primary transition-colors hover:underline block break-words whitespace-normal"
                   onClick={(e) => e.stopPropagation()}
+                  aria-label={`${row.original.name} (opens in a new tab)`}
                 >
                   {String(getValue())}
                 </a>

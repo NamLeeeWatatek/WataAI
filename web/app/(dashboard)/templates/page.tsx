@@ -12,6 +12,7 @@ import { Edit, Trash2, Search as SearchIcon, Upload, Download } from 'lucide-rea
 import { PageLoading } from '@/components/shared/PageLoading'
 import toast from '@/lib/toast'
 import { TemplateDialog } from '@/components/features/creation-tools/TemplateDialog'
+import { TemplateImportExport } from '@/components/features/templates/TemplateImportExport'
 import { Template } from '@/lib/types/template'
 import { Pagination } from '@/components/shared/Pagination'
 import { Search } from '@/components/shared/Search'
@@ -126,6 +127,7 @@ export default function TemplatesPage() {
                     <div className="flex items-center gap-2 px-3 py-2 bg-muted/20 rounded-lg border border-border/50">
                         <input
                             type="checkbox"
+                            id="select-all-checkbox"
                             checked={templates.length > 0 && selectedTemplates.length === templates.length}
                             onChange={(e) => {
                                 if (e.target.checked) {
@@ -136,78 +138,15 @@ export default function TemplatesPage() {
                             }}
                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
                         />
-                        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Select All</span>
+                        <label htmlFor="select-all-checkbox" className="text-xs font-medium text-muted-foreground whitespace-nowrap cursor-pointer">Select All</label>
                     </div>
-                    <div className="flex gap-2">
-                        <label>
-                            <input
-                                type="file"
-                                accept=".json"
-                                className="hidden"
-                                onChange={async (e) => {
-                                    const file = e.target.files?.[0];
-                                    if (!file) return;
-
-                                    const reader = new FileReader();
-                                    reader.onload = async (event) => {
-                                        try {
-                                            const content = event.target?.result as string;
-                                            const data = JSON.parse(content);
-                                            const templatesToImport = Array.isArray(data) ? data : (data.templates || [data]);
-
-                                            await importTemplates({
-                                                templates: templatesToImport,
-                                                workspaceId: currentWorkspace?.id || ''
-                                            });
-                                            toast.success(`Imported ${templatesToImport.length} templates successfully`);
-                                            refreshTemplates();
-                                        } catch (err) {
-                                            toast.error('Failed to import templates. Invalid file format.');
-                                            console.error(err);
-                                        }
-                                    };
-                                    reader.readAsText(file);
-                                    e.target.value = ''; // reset
-                                }}
-                            />
-                            <Button variant="outline" size="sm" asChild className="cursor-pointer gap-2">
-                                <span>
-                                    <Upload className="w-4 h-4" />
-                                    Import
-                                </span>
-                            </Button>
-                        </label>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                            onClick={async () => {
-                                const ids = templates.map(t => t.id);
-                                if (ids.length === 0) {
-                                    toast.error("No templates to export");
-                                    return;
-                                }
-                                try {
-                                    const data = await exportTemplates(ids);
-                                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `templates_export_${new Date().toISOString().split('T')[0]}.json`;
-                                    document.body.appendChild(a);
-                                    a.click();
-                                    document.body.removeChild(a);
-                                    URL.revokeObjectURL(url);
-                                    toast.success(`Exported ${data.length} templates`);
-                                } catch (err) {
-                                    toast.error("Failed to export templates");
-                                }
-                            }}
-                        >
-                            <Download className="w-4 h-4" />
-                            Export
-                        </Button>
-                    </div>
+                    <TemplateImportExport
+                        onImport={importTemplates}
+                        onExport={exportTemplates}
+                        onRefresh={refreshTemplates}
+                        templatesToExport={templates.map(t => t.id)}
+                        disabled={loading}
+                    />
                 </div>
             </div>
 
@@ -276,6 +215,7 @@ export default function TemplatesPage() {
                                     }
                                 }}
                                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                aria-label={`Select template ${template.name}`}
                             />
                         </div>
                         <div className="flex justify-between items-start pl-6">

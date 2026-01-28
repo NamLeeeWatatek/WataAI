@@ -54,7 +54,7 @@ export default function PricingPage() {
     return (
         <div className="container mx-auto px-4 py-24">
             <div className="text-center max-w-3xl mx-auto mb-20">
-                <h2 className="text-primary font-bold tracking-widest uppercase text-sm mb-4">Pricing Plans</h2>
+                <span className="text-primary font-bold tracking-widest uppercase text-sm mb-4 block">Pricing Plans</span>
                 <h1 className="display-heading-1 mb-6">Simple, Transparent <span className="text-gradient">Pricing</span></h1>
                 <p className="text-xl text-muted-foreground">Choose the plan that fits your business needs. Scale as you grow.</p>
             </div>

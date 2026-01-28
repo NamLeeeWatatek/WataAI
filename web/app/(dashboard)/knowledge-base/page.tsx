@@ -152,8 +152,16 @@ export default function KnowledgeBasePage() {
                         {knowledgeBases.map((kb: KnowledgeBase) => (
                             <Card
                                 key={kb.id}
-                                className="group p-6 cursor-pointer hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
+                                className="group p-6 cursor-pointer hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 onClick={() => router.push(`/knowledge-base/${kb.id}`)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        router.push(`/knowledge-base/${kb.id}`);
+                                    }
+                                }}
                             >
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="w-12 h-12 rounded-lg flex items-center justify-center border border-white/5 transition-transform" style={{ backgroundColor: kb.color || '#3B82F6' }}>

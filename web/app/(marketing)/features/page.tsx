@@ -13,13 +13,13 @@ const coreFeatures = [
         title: 'Unified Inbox',
         description: 'Manage all your customer conversations in one centralized dashboard.',
         icon: MessageSquare,
-        gradient: 'from-purple-500/20 to-pink-500/20',
+        gradient: 'from-teal-500/20 to-cyan-500/20',
     },
     {
         title: 'AI Logic Engine',
         description: 'Advanced reasoning and decision making powered by multi-model orchestration.',
         icon: Cpu,
-        gradient: 'from-indigo-500/20 to-purple-500/20',
+        gradient: 'from-indigo-500/20 to-teal-500/20',
     },
     {
         title: 'Visual Flow Builder',
