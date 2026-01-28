@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TiptapEditor } from '@/components/features/chat/TiptapEditor';
 import { Button } from '@/components/ui/Button';
-import type { Message } from '@/lib/store/slices/messagesSlice';
 import { MessageRole } from '@/lib/types/conversations';
 
 interface MessageInputProps {

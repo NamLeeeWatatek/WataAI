@@ -1,24 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import { getBotConversationMessages } from '@/lib/api/conversations';
-import { useAppSelector, useAppDispatch } from '@/lib/store/hooks';
-import {
-  setMessages,
-  prependMessages,
-  setLoading,
-  setLoadingMore,
-  setHasMore,
-  setOldestMessageId,
-  setError,
-  selectMessages,
-  selectMessagesLoading,
-  selectMessagesHasMore,
-  type Message,
-} from '@/lib/store/slices/messagesSlice';
+import { useMessagesStore, type Message } from '@/lib/store/zustand/messages-store';
 import { MessageRole } from '@/lib/types/conversations';
 import { AxiosError } from 'axios';
-
-// Re-export Message type for backward compatibility
-export type { Message } from '@/lib/store/slices/messagesSlice';
 
 export interface UseMessagesReturn {
   messages: Message[];
@@ -31,15 +15,21 @@ export interface UseMessagesReturn {
 }
 
 export function useMessages(conversationId: string): UseMessagesReturn {
-  const dispatch = useAppDispatch();
+  const {
+    byConversation,
+    isLoading,
+    hasMore: hasMoreByConv,
+    error: errorByConv,
+    setMessages,
+    setLoading,
+    setError,
+    setHasMore,
+  } = useMessagesStore();
 
-  // Selectors
-  const messages = useAppSelector(selectMessages(conversationId));
-  const loading = useAppSelector(selectMessagesLoading(conversationId));
-  const hasMore = useAppSelector(selectMessagesHasMore(conversationId));
-  const loadingMore = useAppSelector((state) => state.messages.loadingMore[conversationId] ?? false);
-  const oldestMessageId = useAppSelector((state) => state.messages.oldestMessageId[conversationId]);
-  const error = useAppSelector((state) => state.messages.error[conversationId] ?? null);
+  const messages = byConversation[conversationId] || [];
+  const loading = isLoading[conversationId] || false;
+  const hasMore = hasMoreByConv[conversationId] ?? true;
+  const error = errorByConv[conversationId] || null;
 
   const mapApiMessageToMessage = (apiMessage: any): Message => ({
     id: apiMessage.id,
@@ -51,56 +41,35 @@ export function useMessages(conversationId: string): UseMessagesReturn {
 
   const loadInitialMessages = useCallback(async () => {
     try {
-      dispatch(setLoading({ conversationId, loading: true }));
+      setLoading(conversationId, true);
       const response = await getBotConversationMessages(conversationId);
 
       // Assume messages come in descending order (newest first) from API
       const mappedMessages = response.messages.map(mapApiMessageToMessage);
-      dispatch(setMessages({ conversationId, messages: mappedMessages.reverse() })); // Reverse to oldest first
+      setMessages(conversationId, mappedMessages.reverse()); // Reverse to oldest first
 
       // Set pagination state
-      dispatch(setHasMore({ conversationId, hasMore: mappedMessages.length === 50 })); // Assuming page size 50
-      if (mappedMessages.length > 0) {
-        dispatch(setOldestMessageId({ conversationId, id: mappedMessages[mappedMessages.length - 1].id }));
-      } else {
-        dispatch(setHasMore({ conversationId, hasMore: false }));
-      }
+      setHasMore(conversationId, mappedMessages.length === 50); // Assuming page size 50
     } catch (err) {
       const message = err instanceof AxiosError
         ? err.response?.data?.message || err.message
         : 'Failed to load messages';
       console.error('Failed to load initial messages:', err);
-      dispatch(setError({ conversationId, error: message }));
-      dispatch(setHasMore({ conversationId, hasMore: false }));
+      setError(conversationId, message);
+      setHasMore(conversationId, false);
     } finally {
-      dispatch(setLoading({ conversationId, loading: false }));
+      setLoading(conversationId, false);
     }
-  }, [conversationId, dispatch]);
+  }, [conversationId, setMessages, setLoading, setError, setHasMore]);
 
   const loadMoreMessages = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-
-    try {
-      dispatch(setLoadingMore({ conversationId, loading: true }));
-
-      if (!oldestMessageId) {
-        dispatch(setHasMore({ conversationId, hasMore: false }));
-        return;
-      }
-
-      // For pagination, we'd modify the API call to include before=oldestId
-      // But the current API doesn't support this, so we'll simulate
-      // In a real scenario, we'd need to extend the API to support pagination
-      dispatch(setHasMore({ conversationId, hasMore: false })); // Set to false for now as pagination isn't implemented in API
-    } catch (err) {
-      console.error('Failed to load more messages:', err);
-    } finally {
-      dispatch(setLoadingMore({ conversationId, loading: false }));
-    }
-  }, [conversationId, loadingMore, hasMore, oldestMessageId, dispatch]);
+    // Basic load more implementation (can be extended with pagination support if API allows)
+    if (loading || !hasMore) return;
+    setHasMore(conversationId, false);
+  }, [conversationId, loading, hasMore, setHasMore]);
 
   useEffect(() => {
-    if (!messages.length && !loading) {
+    if (!messages.length && !loading && conversationId) {
       loadInitialMessages();
     }
   }, [conversationId, messages.length, loading, loadInitialMessages]);
@@ -108,7 +77,7 @@ export function useMessages(conversationId: string): UseMessagesReturn {
   return {
     messages,
     loading,
-    loadingMore,
+    loadingMore: false, // Placeholder for now
     hasMore,
     error,
     loadMoreMessages,

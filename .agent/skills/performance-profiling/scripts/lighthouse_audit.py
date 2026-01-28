@@ -21,6 +21,7 @@ def run_lighthouse(url: str) -> dict:
         
         result = subprocess.run(
             [
+                "npx",
                 "lighthouse",
                 url,
                 "--output=json",
@@ -30,7 +31,8 @@ def run_lighthouse(url: str) -> dict:
             ],
             capture_output=True,
             text=True,
-            timeout=120
+            timeout=120,
+            shell=True
         )
         
         if os.path.exists(output_path):

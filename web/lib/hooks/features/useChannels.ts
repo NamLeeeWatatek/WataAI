@@ -8,9 +8,10 @@ import {
     deleteIntegration,
     createIntegration,
     updateIntegration,
-    connectFacebook
+    connectFacebook as connectFacebookApi
 } from '@/lib/api/channels';
 import toast from '@/lib/toast';
+import { useUiStore } from '@/lib/store/zustand/ui-store';
 
 export const channelKeys = {
     all: ['channels-feature'] as const,
@@ -26,35 +27,51 @@ export interface UseChannelsParams {
 
 export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
     const queryClient = useQueryClient();
+    const { setGlobalLoading } = useUiStore();
 
     const channelsQuery = useQuery({
         queryKey: channelKeys.channels(workspaceId, params),
         queryFn: () => getChannels({ ...params, workspaceId }),
         enabled: !!workspaceId,
-        placeholderData: (previousData) => previousData, // Keep previous data while fetching new page
+        placeholderData: (previousData) => previousData,
     });
 
     const integrationsQuery = useQuery({
         queryKey: channelKeys.integrations(workspaceId),
-        queryFn: () => getIntegrations(workspaceId),
+        queryFn: () => integrationsQueryFn(workspaceId),
         enabled: !!workspaceId,
     });
 
+    async function integrationsQueryFn(wid?: string) {
+        return getIntegrations(wid);
+    }
+
     const disconnectMutation = useMutation({
         mutationFn: (id: string) => disconnectChannel(id),
+        onMutate: () => {
+            setGlobalLoading('disconnect-channel', true, 'Disconnecting channel...');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
-            // Ideally we should invalidate all channel queries, or at least the current one
             toast.success('Channel disconnected successfully');
         },
+        onSettled: () => {
+            setGlobalLoading('disconnect-channel', false);
+        }
     });
 
     const deleteIntegrationMutation = useMutation({
         mutationFn: (id: string) => deleteIntegration(id),
+        onMutate: () => {
+            setGlobalLoading('delete-config', true, 'Deleting configuration...');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.integrations(workspaceId) });
             toast.success('Configuration deleted successfully');
         },
+        onSettled: () => {
+            setGlobalLoading('delete-config', false);
+        }
     });
 
     const saveIntegrationMutation = useMutation({
@@ -62,17 +79,29 @@ export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
             if (id) return updateIntegration(id, data);
             return createIntegration(data);
         },
+        onMutate: () => {
+            setGlobalLoading('save-config', true, 'Saving configuration...');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.integrations(workspaceId) });
             toast.success('Configuration saved successfully');
         },
+        onSettled: () => {
+            setGlobalLoading('save-config', false);
+        }
     });
 
     const connectFacebookMutation = useMutation({
-        mutationFn: (data: any) => connectFacebook(data),
+        mutationFn: (data: any) => connectFacebookApi(data),
+        onMutate: () => {
+            setGlobalLoading('connect-facebook', true, 'Connecting Facebook page...');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
         },
+        onSettled: () => {
+            setGlobalLoading('connect-facebook', false);
+        }
     });
 
     return {

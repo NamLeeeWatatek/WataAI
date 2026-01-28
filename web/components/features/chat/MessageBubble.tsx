@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
-import type { Message } from '@/lib/store/slices/messagesSlice';
+import { Message } from '@/lib/store/zustand/messages-store';
 import { MessageRole } from '@/lib/types/conversations';
 
 interface MessageBubbleProps {

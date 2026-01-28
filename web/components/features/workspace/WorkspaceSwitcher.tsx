@@ -1,10 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAppSelector, useAppDispatch } from '@/lib/store/hooks'
+import { useWorkspaceStore } from '@/lib/store/zustand/workspace-store'
 import { useSession } from 'next-auth/react'
-import axiosClient from '@/lib/axios-client'
-import { switchWorkspace } from '@/lib/store/slices/workspaceSlice'
 import {
   Select,
   SelectContent,
@@ -24,27 +22,26 @@ interface Workspace {
 
 export function WorkspaceSwitcher() {
   const { t } = useTranslation()
-  const dispatch = useAppDispatch()
   const { data: session, status, update } = useSession()
-  const { currentWorkspace, workspaces, isLoading } = useAppSelector(state => state.workspace)
+  const {
+    currentWorkspace,
+    workspaces,
+    isLoading,
+    switchWorkspace
+  } = useWorkspaceStore()
 
   const [mounted, setMounted] = useState(false)
 
   // Sync with axiosClient on change or hydration
   useEffect(() => {
     setMounted(true)
-    if (currentWorkspace?.id) {
-      import('@/lib/axios-client').then(({ setActiveWorkspaceId }) => {
-        setActiveWorkspaceId(currentWorkspace.id)
-      })
-    }
-  }, [currentWorkspace?.id])
+  }, [])
 
   const handleWorkspaceChange = async (workspaceId: string) => {
     const selectedWorkspace = workspaces.find(w => w.id === workspaceId)
     if (!selectedWorkspace) return
 
-    dispatch(switchWorkspace(workspaceId))
+    switchWorkspace(workspaceId)
 
     // Sync with NextAuth session so it persists across refreshes
     if (status === 'authenticated') {
@@ -60,10 +57,6 @@ export function WorkspaceSwitcher() {
         console.error('Failed to update session workspace:', err)
       }
     }
-
-    import('@/lib/axios-client').then(({ setActiveWorkspaceId }) => {
-      setActiveWorkspaceId(workspaceId)
-    })
   }
 
   // Helper to get initials

@@ -10,8 +10,7 @@ import { creationToolsApi, CreationTool, FormConfig, ExecutionFlow } from '@/lib
 import { useInfiniteCategories } from '@/lib/hooks/useCategories';
 import { handleApiError } from '@/lib/utils/api-error';
 import { toast } from 'sonner';
-import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
+import { useKnowledgeBases } from '@/lib/hooks/use-kb'
 
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/Button';
@@ -27,8 +26,7 @@ import { Label } from '@/components/ui/Label';
 import { Badge } from '@/components/ui/Badge';
 import { ScrollArea } from '@/components/ui/ScrollArea';
 import {
-    Loader2, ArrowLeft, Save, LayoutTemplate, Settings,
-    Play, Sparkles, Plus, Edit2, Trash2,
+    Loader2, ArrowLeft, Save, LayoutTemplate, Settings, Sparkles,
     ChevronDown, Table as TableIcon, Layers
 } from 'lucide-react';
 import { FormBuilder } from '@/components/features/creation-tools/FormBuilder';

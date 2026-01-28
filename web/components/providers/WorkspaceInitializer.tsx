@@ -2,34 +2,34 @@
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
-import {
-    setWorkspaces,
-    setCurrentWorkspace,
-    setLoading,
-    setError,
-} from '@/lib/store/slices/workspaceSlice';
-import { setActiveWorkspaceId, setAxiosToken, getActiveWorkspaceId } from '@/lib/axios-client';
+import { useWorkspaceStore } from '@/lib/store/zustand/workspace-store';
+import { setActiveWorkspaceId, getActiveWorkspaceId } from '@/lib/axios-client';
 import axiosClient from '@/lib/axios-client';
 import { AxiosError } from 'axios';
 import { WorkspaceEntity } from '@/types/next-auth';
 
 /**
- * Syncs session and workspace data between NextAuth and Redux/Axios
+ * Syncs session and workspace data between NextAuth and Zustand/Axios
  */
 export function WorkspaceInitializer() {
     const { data: session, status } = useSession();
-    const dispatch = useAppDispatch();
-    const { currentWorkspace, workspaces, isLoading: isWorkspaceLoading, error: workspaceError } = useAppSelector(state => state.workspace);
+    const {
+        currentWorkspace,
+        workspaces,
+        isLoading: isWorkspaceLoading,
+        error: workspaceError,
+        setWorkspaces,
+        setCurrentWorkspace,
+        setLoading,
+        setError
+    } = useWorkspaceStore();
 
-    // 1. Initialize Workspaces in Redux Store
+    // 1. Initialize Workspaces in Zustand Store
     useEffect(() => {
         // Prevent fetching if already loading, already has error, or not authenticated
         if (status !== 'authenticated' || !session?.user || !session?.accessToken) return;
 
         // Initial hydration of axios workspace ID from session if locally empty.
-        // We only do this if we don't already have an activeWorkspaceId to avoid 
-        // overriding a more recent manual selection during background session refreshes.
         if (session.workspace?.id && !getActiveWorkspaceId()) {
             setActiveWorkspaceId(session.workspace.id);
         }
@@ -37,14 +37,13 @@ export function WorkspaceInitializer() {
         if (isWorkspaceLoading || workspaceError || workspaces.length > 0) return;
 
         const fetchWorkspaces = async () => {
-            dispatch(setLoading(true));
+            setLoading(true);
             try {
-                // response is typed as WorkspaceEntity[] because of axiosClient interceptor returning data
                 const response = await axiosClient.get<WorkspaceEntity[]>('/workspaces');
                 const workspacesData = Array.isArray(response) ? response : [];
 
                 if (workspacesData.length > 0) {
-                    dispatch(setWorkspaces(workspacesData as any)); // cast to generic Workspace if internal types differ slightly
+                    setWorkspaces(workspacesData as any);
 
                     let targetWorkspace = workspacesData[0];
                     if (session.workspace?.id) {
@@ -52,7 +51,7 @@ export function WorkspaceInitializer() {
                         if (defaultWs) targetWorkspace = defaultWs;
                     }
 
-                    dispatch(setCurrentWorkspace(targetWorkspace as any));
+                    setCurrentWorkspace(targetWorkspace as any);
 
                     // Only update axios ID if it wasn't already set to something else
                     if (!getActiveWorkspaceId()) {
@@ -62,19 +61,16 @@ export function WorkspaceInitializer() {
             } catch (err: unknown) {
                 const error = err as AxiosError<{ message?: string }>;
                 console.error('Failed to fetch workspaces:', error.response?.data?.message || error.message);
-
-                // If it's a 401, axiosClient will handle the sign out.
-                // We set the error to prevent WorkspaceInitializer from looping immediately.
-                dispatch(setError('Failed to load workspaces'));
+                setError('Failed to load workspaces');
             } finally {
-                dispatch(setLoading(false));
+                setLoading(false);
             }
         };
 
         fetchWorkspaces();
-    }, [status, session, dispatch, workspaces.length, isWorkspaceLoading, workspaceError, currentWorkspace]);
+    }, [status, session, workspaces.length, isWorkspaceLoading, workspaceError, currentWorkspace, setWorkspaces, setCurrentWorkspace, setLoading, setError]);
 
-    // 3. Keep axios workspace ID in sync with Redux
+    // 2. Keep axios workspace ID in sync with Zustand
     useEffect(() => {
         if (currentWorkspace?.id) {
             setActiveWorkspaceId(currentWorkspace.id);

@@ -1,37 +1,30 @@
-'use client';
-
-import { useAuth } from './useAuth';
-import { useMemo } from 'react';
+import { useState, useCallback } from 'react';
 
 export interface NotificationPreferences {
-    desktop: boolean;
     sound: boolean;
-    messagePreview: boolean;
-    onlyWhenInactive: boolean;
+    toast: boolean;
+    desktop: boolean;
     doNotDisturb: boolean;
-    mutedConversations?: string[];
-    [key: string]: any;
+    onlyWhenInactive: boolean;
+    messagePreview: boolean;
 }
 
-const DEFAULT_PREFERENCES: NotificationPreferences = {
-    desktop: true,
-    sound: true,
-    messagePreview: true,
-    onlyWhenInactive: false,
-    doNotDisturb: false,
-    mutedConversations: [],
-};
+export function useNotificationPreferences() {
+    const [preferences, setPreferences] = useState<NotificationPreferences>({
+        sound: true,
+        toast: true,
+        desktop: true,
+        doNotDisturb: false,
+        onlyWhenInactive: false,
+        messagePreview: true,
+    });
 
-export function useNotificationPreferences(): NotificationPreferences {
-    const { user } = useAuth();
+    const updatePreferences = useCallback((newPrefs: Partial<NotificationPreferences>) => {
+        setPreferences(prev => ({ ...prev, ...newPrefs }));
+    }, []);
 
-    const preferences = useMemo(() => {
-        const fullUser = user as any;
-        if (fullUser?.notificationPreferences) {
-            return { ...DEFAULT_PREFERENCES, ...fullUser.notificationPreferences } as NotificationPreferences;
-        }
-        return DEFAULT_PREFERENCES;
-    }, [user]);
-
-    return preferences;
+    return {
+        ...preferences,
+        updatePreferences,
+    };
 }

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useConversationsSocket } from '@/lib/hooks/useConversationsSocket';
 import { useNotifications } from '@/lib/hooks/useNotifications';
-import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import {
   MessageSquare,
@@ -47,6 +46,7 @@ import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { MessageRole } from '@/lib/types/conversations';
 import type { SocketConversation, SocketMessage } from '@/lib/types/socket';
 import { getChannelIcon, getChannelColor, getChannelBgColor } from '@/lib/constants/channels';
+import { useNotificationPreferences } from '@/lib/hooks/use-notification-preferences';
 
 type Conversation = ChannelConversation;
 

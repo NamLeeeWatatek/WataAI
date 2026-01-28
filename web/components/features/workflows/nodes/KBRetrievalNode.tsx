@@ -5,7 +5,7 @@ import { Handle, Position } from 'reactflow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { Database, Search } from 'lucide-react';
-import { useKnowledgeBases } from '@/lib/hooks/features/useKnowledgeBases';
+import { useKnowledgeBases } from '@/lib/hooks/use-kb'
 
 // Mock workspace ID for now, or get from context
 const WORKSPACE_ID = 'default-workspace';

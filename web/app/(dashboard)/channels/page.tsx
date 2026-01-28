@@ -1,25 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
-import { useWorkspace } from '@/lib/hooks/useWorkspace';
+import { useWorkspaceStore } from '@/lib/store/zustand/workspace-store';
+import { useChannelsStore } from '@/lib/store/zustand/channels-store';
 import toast from '@/lib/toast';
-import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
-import {
-    setConnecting,
-    setFacebookPages,
-    setFacebookTempToken,
-    setConnectingPage,
-    setSelectedBotId,
-    clearFacebookState,
-} from '@/lib/store/slices/channelsSlice';
 import {
     X,
     Facebook,
     Settings,
-    RefreshCw,
     Activity,
     Zap,
 } from 'lucide-react';
@@ -30,43 +20,48 @@ import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ManagePagesDialog } from '@/components/features/channels/ManagePagesDialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent, TabsHeader } from '@/components/ui/Tabs';
 import { ConnectedChannelsTab, ChannelConfigurationsTab } from '@/components/features/channels';
-import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { ScrollArea } from '@/components/ui/ScrollArea';
 import { useChannels } from '@/lib/hooks/features/useChannels';
 import { getOAuthUrl } from '@/lib/api/channels';
-import { useBots } from '@/lib/hooks/features/useBots';
-import { type Bot } from '@/lib/api/bots';
 import { AgentCard } from '@/components/shared/AgentCard';
 import type { Channel, ChannelPage, IntegrationConfig } from '@/lib/types/channel';
 
 
 export default function ChannelsPage() {
-    const { currentWorkspace } = useWorkspace();
+    const { currentWorkspace } = useWorkspaceStore();
     const { t } = useTranslation();
     const workspaceId = currentWorkspace?.id;
-    const dispatch = useAppDispatch();
 
-    // Redux state for Facebook OAuth flow specifically
+    // Zustand state for Channels UI and Facebook discovery
     const {
         facebookPages,
         facebookTempToken,
         connectingPage,
         selectedBotId,
-        isConnecting
-    } = useAppSelector(state => state.channels);
+        activeTab,
+        setActiveTab,
+        setFacebookPages,
+        setFacebookTempToken,
+        setConnectingPage,
+        setSelectedBotId,
+        clearFacebookState,
+        setSelectedChannel,
+        selectedChannel,
+        disconnectId,
+        setDisconnectId,
+        deleteConfigId,
+        setDeleteConfigId,
+        assignBotDialogOpen: managePagesDialogOpen,
+        setAssignBotDialogOpen: setManagePagesDialogOpen,
+    } = useChannelsStore();
 
-    // Local UI State
-    const [activeTab, setActiveTab] = useState<'connected' | 'configurations' | 'discovery'>('connected');
+    // Local UI State (keeping some page-specific state local)
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(12);
-    const [disconnectId, setDisconnectId] = useState<string | null>(null);
-    const [deleteConfigId, setDeleteConfigId] = useState<string | null>(null);
-    const [managePagesDialogOpen, setManagePagesDialogOpen] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
     const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
+    const [isConnecting, setIsConnecting] = useState<string | null>(null);
 
     // TanStack Query Hooks
     const {
@@ -93,7 +88,6 @@ export default function ChannelsPage() {
             try {
                 const data = JSON.parse(storedResult);
                 if (data.status === 'success' && data.channel === 'facebook') {
-                    // Separate Instagram accounts from Pages logic (DRY later)
                     const allItems: any[] = [];
                     data.pages.forEach((page: any) => {
                         allItems.push(page);
@@ -110,10 +104,10 @@ export default function ChannelsPage() {
                         }
                     });
 
-                    dispatch(setFacebookPages(allItems));
-                    dispatch(setFacebookTempToken(data.tempToken));
+                    setFacebookPages(allItems);
+                    setFacebookTempToken(data.tempToken);
                     toast.success(t('channels.discoveredCount', { count: allItems.length }));
-                    setActiveTab('discovery');
+                    setActiveTab('discovery' as any);
                 }
             } catch (e) {
                 console.error("Failed to parse stored OAuth result", e);
@@ -121,10 +115,10 @@ export default function ChannelsPage() {
                 sessionStorage.removeItem('fb_oauth_result');
             }
         }
-    }, [dispatch, t]);
+    }, [setFacebookPages, setFacebookTempToken, setActiveTab, t]);
 
     const handleConnect = async (provider: string, configId?: string) => {
-        dispatch(setConnecting(provider));
+        setIsConnecting(provider);
 
         try {
             let oauthUrl: string;
@@ -137,7 +131,7 @@ export default function ChannelsPage() {
                 const config = configId ? configs.find(c => String(c.id) === String(configId)) : configs.find(c => c.provider === provider);
                 if (!config) {
                     toast.error(t('error.configureProviderFirst', { provider }));
-                    dispatch(setConnecting(null));
+                    setIsConnecting(null);
                     return;
                 }
                 const response = await getOAuthUrl(provider, configId, workspaceId);
@@ -157,15 +151,14 @@ export default function ChannelsPage() {
 
             if (!popup) {
                 toast.error(t('error.popupBlocked'));
-                dispatch(setConnecting(null));
+                setIsConnecting(null);
                 return;
             }
 
-            // Handle popup closure if user closes it manually
             const checkClosed = setInterval(() => {
                 if (popup?.closed) {
                     clearInterval(checkClosed);
-                    dispatch(setConnecting(null));
+                    setIsConnecting(null);
                 }
             }, 1000);
 
@@ -177,38 +170,34 @@ export default function ChannelsPage() {
                     const hasPages = Array.isArray(event.data.pages) && event.data.pages.length > 0;
 
                     if ((provider === 'facebook' || provider === 'messenger' || provider === 'instagram') && hasPages) {
-                        // Separate Instagram accounts from Pages
                         const allItems: any[] = [];
                         event.data.pages.forEach((page: any) => {
-                            // Add the Facebook Page
                             allItems.push(page);
-
-                            // Check for linked Instagram account and add it as a separate item
                             if (page.instagram_business_account) {
                                 allItems.push({
                                     id: page.instagram_business_account.id,
                                     name: `${page.name} (Instagram)`,
                                     category: 'instagram',
-                                    access_token: page.access_token, // Uses page token
+                                    access_token: page.access_token,
                                     instagram_business_account: page.instagram_business_account,
-                                    picture: page.picture, // Inherit picture or use placeholder
+                                    picture: page.picture,
                                     original_page_id: page.id
                                 });
                             }
                         });
 
 
-                        dispatch(setFacebookPages(allItems));
-                        dispatch(setFacebookTempToken(event.data.tempToken));
+                        setFacebookPages(allItems);
+                        setFacebookTempToken(event.data.tempToken);
                         toast.success(t('channels.discoveredCount', { count: allItems.length }));
                         refetch();
-                        setActiveTab('discovery');
+                        setActiveTab('discovery' as any);
                     } else {
                         toast.success(event.data.message || t('channels.connectedSuccess', { name: event.data.channel || provider }));
                         refetch();
                     }
 
-                    dispatch(setConnecting(null));
+                    setIsConnecting(null);
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
                 } else if (event.data?.status === 'error') {
@@ -216,20 +205,20 @@ export default function ChannelsPage() {
                     toast.error(t('error.connectionFailed', { message: event.data.message || 'Unknown protocol error' }));
                     popup?.close();
                     window.removeEventListener('message', messageHandler);
-                    dispatch(setConnecting(null));
+                    setIsConnecting(null);
                 }
             };
 
             window.addEventListener('message', messageHandler);
         } catch (error) {
             toast.error(t('error.failedConnectionUrl'));
-            dispatch(setConnecting(null));
+            setIsConnecting(null);
         }
     };
 
     const handleConnectFacebookPage = async (page: any) => {
         try {
-            dispatch(setConnectingPage(page.id));
+            setConnectingPage(page.id);
             await connectFacebook({
                 pageId: page.id,
                 pageName: page.name,
@@ -240,13 +229,13 @@ export default function ChannelsPage() {
             });
 
             toast.success(t('channels.connectedSuccess', { name: page.name }));
-            dispatch(setFacebookPages(facebookPages.filter(p => p.id !== page.id)));
+            setFacebookPages(facebookPages.filter(p => p.id !== page.id));
             setSelectedPageIds(prev => prev.filter(id => id !== page.id));
             refetch();
         } catch (error: any) {
             toast.error(t('error.connectionFailed', { message: page.name }));
         } finally {
-            dispatch(setConnectingPage(null));
+            setConnectingPage(null);
         }
     };
 
@@ -259,7 +248,7 @@ export default function ChannelsPage() {
         const pagesToConnect = visiblePages.filter(p => selectedPageIds.includes(p.id));
         if (pagesToConnect.length === 0) return;
 
-        dispatch(setConnectingPage('bulk'));
+        setConnectingPage('bulk');
         let successCount = 0;
 
         for (const page of pagesToConnect) {
@@ -279,9 +268,9 @@ export default function ChannelsPage() {
         }
 
         toast.success(t('channels.bulkConnectSuccess', { count: successCount }));
-        dispatch(setFacebookPages(facebookPages.filter(p => !selectedPageIds.includes(p.id))));
+        setFacebookPages(facebookPages.filter(p => !selectedPageIds.includes(p.id)));
         setSelectedPageIds([]);
-        dispatch(setConnectingPage(null));
+        setConnectingPage(null);
         refetch();
     };
 
@@ -401,7 +390,7 @@ export default function ChannelsPage() {
                                         {t('channels.discovery.connectSelected', { count: selectedPageIds.length })}
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => {
-                                        dispatch(clearFacebookState());
+                                        clearFacebookState();
                                         setSelectedPageIds([]);
                                         setActiveTab('connected');
                                     }}>
@@ -468,7 +457,7 @@ export default function ChannelsPage() {
                             onDisconnect={(id: string) => setDisconnectId(id)}
                             onManagePages={(channel: Channel) => {
                                 setSelectedChannel(channel);
-                                dispatch(setSelectedBotId(channel.metadata?.botId || ''));
+                                setSelectedBotId(channel.metadata?.botId || '');
                                 setManagePagesDialogOpen(true);
                             }}
                             onLoadData={refetch}
@@ -514,7 +503,7 @@ export default function ChannelsPage() {
                 channel={selectedChannel}
                 workspaceId={workspaceId!}
                 onSuccess={() => {
-                    dispatch(setSelectedBotId(''));
+                    setSelectedBotId('');
                     setManagePagesDialogOpen(false);
                     refetch();
                 }}
