@@ -249,6 +249,27 @@ export function GridFormRenderer({
     }, [currentStepIndex, stepResults, form]);
     // --- END DYNAMIC VARIABLE RESOLUTION ---
 
+    // Helper to transform form data for backend (Split template objects)
+    const transformFormData = (data: Record<string, any>) => {
+        const transformed: Record<string, any> = { ...data };
+
+        // Only look for fields that are actually defined as template-selector in config
+        config.fields.forEach(field => {
+            if (field.type === 'template-selector') {
+                const val = data[field.name];
+
+                // If value matches our object structure
+                if (val && typeof val === 'object' && val !== null && 'url' in val && 'description' in val) {
+                    // Split into specific keys for the flow
+                    transformed[`${field.name}Image`] = val.url;
+                    transformed[`${field.name}Description`] = val.description;
+                }
+            }
+        });
+
+        return transformed;
+    }
+
     const proceedToNextStep = async () => {
         // --- PREVIEW LOGIC ---
         const nextStepIndex = currentStepIndex + 1;
@@ -273,9 +294,10 @@ export function GridFormRenderer({
                     setIsPreviewing(true);
                     const currentData = form.getValues();
                     console.log('%c[GRID-RENDERER] Triggering Preview Execution...', 'color: #8b5cf6;');
+                    console.log('%c[GRID-RENDERER] Triggering Preview Execution...', 'color: #8b5cf6;');
                     const result = await creationJobsApi.preview({
                         creationToolId: toolId,
-                        inputData: currentData
+                        inputData: transformFormData(currentData)
                     });
                     setPreviewResults(result);
                 } catch (err) {
@@ -321,7 +343,7 @@ export function GridFormRenderer({
         if (currentStepConfig?.execution && toolId) {
             try {
                 setIsExecutingStep(true);
-                const currentData = form.getValues();
+                const currentData = transformFormData(form.getValues());
 
                 console.log('%c[GRID-RENDERER] Executing step:', 'color: #10b981; font-weight: bold;', currentStepConfig.id);
 
@@ -379,7 +401,7 @@ export function GridFormRenderer({
         // --- DIRECTIONAL LOGIC ---
         if (isLastStep) {
             // Final Step: Submit to parent (which now handles polling/waiting)
-            onSubmit(form.getValues(), updatedJobId);
+            onSubmit(transformFormData(form.getValues()), updatedJobId);
         } else {
             // Mid Step: Proceed to next
             await proceedToNextStep();
