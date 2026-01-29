@@ -89,11 +89,6 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
             description: template.description || ''
         } as any);
 
-        // Prefill other fields
-        if (template.description) {
-            setValue('description', template.description, { shouldValidate: true, shouldDirty: true });
-            setValue('prompt', template.description, { shouldValidate: true, shouldDirty: true });
-        }
 
         if (template.prefilledData) {
             Object.entries(template.prefilledData).forEach(([key, val]) => {
