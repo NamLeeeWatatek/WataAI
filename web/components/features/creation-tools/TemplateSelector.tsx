@@ -59,6 +59,16 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
         placeholderData: keepPreviousData,
     });
 
+    // Robust selection check
+    const getIsSelected = (template: Template) => {
+        if (!value) return false;
+        if (typeof value === 'string') return value === template.thumbnailUrl;
+        if (typeof value === 'object' && value !== null) {
+            return (value as any).url === template.thumbnailUrl;
+        }
+        return false;
+    }
+
     // Extract Categories
     const categories = useMemo(() => {
         if (templates.length === 0) return ['all'];
@@ -73,10 +83,18 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
 
     // Handle Selection
     const handleSelect = (template: Template) => {
-        // Update own value: Pass thumbnail URL (image link) instead of ID
-        onChange?.(template.thumbnailUrl || '');
+        // Update own value: Pass object with both URL and description
+        onChange?.({
+            url: template.thumbnailUrl || '',
+            description: template.description || ''
+        } as any);
 
         // Prefill other fields
+        if (template.description) {
+            setValue('description', template.description, { shouldValidate: true, shouldDirty: true });
+            setValue('prompt', template.description, { shouldValidate: true, shouldDirty: true });
+        }
+
         if (template.prefilledData) {
             Object.entries(template.prefilledData).forEach(([key, val]) => {
                 setValue(key, val, { shouldValidate: true, shouldDirty: true });
@@ -155,7 +173,7 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
                                 onClick={() => handleSelect(template)}
                                 className={cn(
                                     "group relative aspect-video rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300",
-                                    value === template.thumbnailUrl
+                                    getIsSelected(template)
                                         ? "border-primary"
                                         : "border-transparent bg-muted/20 hover:border-primary/30"
                                 )}
@@ -169,9 +187,14 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
                                 />
 
                                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-20 pb-5 px-5 flex flex-col justify-end opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                    <h3 className="text-white font-bold text-lg leading-tight tracking-tight drop-shadow-sm group-hover:text-primary-foreground transition-colors">
+                                    <h3 className="text-white font-bold text-lg leading-tight tracking-tight drop-shadow-sm group-hover:text-primary-foreground transition-colors line-clamp-1">
                                         {template.name}
                                     </h3>
+                                    {template.description && (
+                                        <p className="text-white/60 text-xs line-clamp-1 mt-0.5 group-hover:text-white/90 transition-colors">
+                                            {template.description}
+                                        </p>
+                                    )}
                                     {template.category && (
                                         <div className="flex items-center gap-2 mt-1.5">
                                             <Badge variant="secondary" className="bg-white/20 text-white">
@@ -181,7 +204,7 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
                                     )}
                                 </div>
 
-                                {value === template.thumbnailUrl && (
+                                {getIsSelected(template) && (
                                     <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary flex items-center justify-center animate-in zoom-in spin-in-90 duration-300 z-10">
                                         <Check className="w-5 h-5 text-primary-foreground stroke-[3]" />
                                     </div>
