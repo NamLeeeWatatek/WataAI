@@ -130,18 +130,33 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                 const { template: templateValue, ...cleanData } = data;
                 const inputData = { ...cleanData } as any;
 
-                // Priority: URL param > Form Value > null
-                const templateId = searchParams.get('templateId') || templateValue;
+                // Priority: URL param > Form Value
+                let effectiveTemplateId = searchParams.get('templateId');
+
+                // If not in URL, check form value
+                if (!effectiveTemplateId && templateValue) {
+                    if (typeof templateValue === 'object') {
+                        effectiveTemplateId = templateValue.id || templateValue._id;
+                        // Use metadata from object if available
+                        if (!inputData.templateImage && templateValue.thumbnailUrl) inputData.templateImage = templateValue.thumbnailUrl;
+                        if (!inputData.templateImage && templateValue.url) inputData.templateImage = templateValue.url;
+                        if (!inputData.templateDescription && templateValue.description) inputData.templateDescription = templateValue.description;
+                    } else {
+                        effectiveTemplateId = templateValue;
+                    }
+                }
 
                 // If template selected, inject ID and metadata
-                if (templateId) {
-                    inputData.templateId = templateId;
+                if (effectiveTemplateId) {
+                    inputData.templateId = effectiveTemplateId;
 
-                    // Find template to get metadata
-                    const selectedTemplate = templateList.find((t: Template) => t.id === templateId);
-                    if (selectedTemplate) {
-                        inputData.templateImage = selectedTemplate.thumbnailUrl;
-                        inputData.templateDescription = selectedTemplate.description;
+                    // If still missing metadata, lookup in template list
+                    if (!inputData.templateImage && templateList.length > 0) {
+                        const selectedTemplate = templateList.find((t: Template) => t.id === effectiveTemplateId);
+                        if (selectedTemplate) {
+                            inputData.templateImage = selectedTemplate.thumbnailUrl;
+                            inputData.templateDescription = selectedTemplate.description;
+                        }
                     }
                 }
 
