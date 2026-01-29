@@ -16,8 +16,8 @@ import { useFormContext } from 'react-hook-form';
 
 interface TemplateSelectorProps {
     creationToolId: string;
-    value?: string; // Selected Template ID
-    onChange?: (templateId: string) => void;
+    value?: string | { url: string; description: string }; // Selected Template
+    onChange?: (value: string | { url: string; description: string }) => void;
     className?: string;
 }
 
