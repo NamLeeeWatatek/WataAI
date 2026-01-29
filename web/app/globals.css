@@ -414,10 +414,6 @@
   .status-dot {
     @apply h-2.5 w-2.5 rounded-full ring-2 ring-background;
   }
-
-  .bg-grid-pattern {
-    @apply u-bg-grid;
-  }
 }
 
 /* SaaS Grid Background Utilities (Tailwind v4 Top-level) */
