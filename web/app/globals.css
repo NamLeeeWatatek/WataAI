@@ -410,24 +410,23 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70;
   }
 
-  /* SaaS Grid Background */
-  .u-bg-grid,
-  .bg-grid-pattern {
-    background-size: 40px 40px;
-    background-image: linear-gradient(to right, rgb(255 255 255 / 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(255 255 255 / 0.03) 1px, transparent 1px);
-  }
-
-  .u-bg-dots {
-    background-image:
-      radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.07) 1px, transparent 0);
-    background-size: 24px 24px;
-  }
-
   /* Status Indicators */
   .status-dot {
     @apply h-2.5 w-2.5 rounded-full ring-2 ring-background;
   }
+}
+
+/* SaaS Grid Background Utilities (Tailwind v4 Top-level) */
+@utility u-bg-grid {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgb(255 255 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+}
+
+@utility u-bg-dots {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.07) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 /* Tiptap & Editor Overrides */
