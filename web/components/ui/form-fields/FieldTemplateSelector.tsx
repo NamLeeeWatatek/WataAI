@@ -137,11 +137,6 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
                                         description: opt.description || ''
                                     })
 
-                                    // Prefill logic: if there are other fields like 'description' or 'prompt', fill them too
-                                    if (opt.description) {
-                                        setValue('description', opt.description, { shouldValidate: true, shouldDirty: true });
-                                        setValue('prompt', opt.description, { shouldValidate: true, shouldDirty: true });
-                                    }
 
                                     // Prefill from template-specific data
                                     if (opt.prefilledData) {
