@@ -222,9 +222,13 @@ export class CreationJobsService {
 
     // 2. Prepare Inputs (Merge current step inputs with job history)
     // We update the job's global input data with the new step data
+
+    // Normalize new inputs first
+    const normalizedStepInput = this.normalizeInputData(inputData);
+
     const updatedInputData = {
       ...(job.inputData || {}),
-      ...inputData,
+      ...normalizedStepInput,
     };
 
     // 3. Execute Step (if it has execution config)
@@ -282,11 +286,41 @@ export class CreationJobsService {
     };
   }
 
+  private normalizeInputData(inputs: Record<string, any>): Record<string, any> {
+    const normalized = { ...inputs };
+
+    // Auto-flatten Template Object if present
+    // This ensures that efficient Template DTO handling automatically populates
+    // individual fields (templateImage, templateDescription) required by N8N/Webhooks.
+    if (normalized.template && typeof normalized.template === 'object') {
+      const tpl = normalized.template;
+      // Prioritize existing values, fallback to template object values
+      if (!normalized.templateImage) {
+        normalized.templateImage = tpl.thumbnailUrl || tpl.url || tpl.image;
+      }
+      if (!normalized.templateDescription) {
+        normalized.templateDescription =
+          tpl.description || tpl.desc || tpl.name;
+      }
+
+      // Also ensure template ID is set if it's an object
+      if (!normalized.templateId && (tpl.id || tpl._id)) {
+        normalized.templateId = tpl.id || tpl._id;
+      }
+    }
+
+    return normalized;
+  }
+
   async create(
     createDto: CreateCreationJobDto,
     userId?: string,
     workspaceId?: string,
   ): Promise<CreationJob> {
+
+    // 1. Normalize Inputs (Flatten Template Object -> fields)
+    createDto.inputData = this.normalizeInputData(createDto.inputData);
+
     // Validate Input against Tool Config
     const tool = await this.creationToolsService.findById(
       createDto.creationToolId,
