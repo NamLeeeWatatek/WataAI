@@ -130,9 +130,19 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
                 const { template: templateValue, ...cleanData } = data;
                 const inputData = { ...cleanData } as any;
 
-                // If template selected, use templateId as the canonical key for the backend
-                if (templateValue) {
-                    inputData.templateId = templateValue;
+                // Priority: URL param > Form Value > null
+                const templateId = searchParams.get('templateId') || templateValue;
+
+                // If template selected, inject ID and metadata
+                if (templateId) {
+                    inputData.templateId = templateId;
+
+                    // Find template to get metadata
+                    const selectedTemplate = templateList.find((t: Template) => t.id === templateId);
+                    if (selectedTemplate) {
+                        inputData.templateImage = selectedTemplate.thumbnailUrl;
+                        inputData.templateDescription = selectedTemplate.description;
+                    }
                 }
 
                 job = await creationJobsApi.create({
