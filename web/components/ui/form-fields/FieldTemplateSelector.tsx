@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { Input } from "@/components/ui/Input"
 import { templatesApi } from "@/lib/api/templates"
 import { creationToolsApi } from "@/lib/api/creation-tools"
+import { useFormContext } from "react-hook-form"
 
 interface Template {
     id: string
@@ -14,6 +15,7 @@ interface Template {
     description?: string
     thumbnailUrl?: string
     creationToolId?: string
+    prefilledData?: Record<string, any>
 }
 
 interface CreationTool {
@@ -25,6 +27,7 @@ interface CreationTool {
 export function FieldTemplateSelector({ field, value, onChange, error }: DynamicFormFieldProps) {
     const params = useParams()
     const slug = params?.slug as string
+    const { setValue } = useFormContext()
 
     // Local state for search
     const [searchQuery, setSearchQuery] = useState("")
@@ -81,7 +84,16 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
     })
 
     const isLoading = isLoadingTool || isLoadingTemplates
-    const selectValue = value ? String(value) : undefined
+
+    // Robust selection check for both string (legacy) and object values
+    const getIsSelected = (opt: Template) => {
+        if (!value) return false;
+        if (typeof value === 'string') return value === opt.thumbnailUrl;
+        if (typeof value === 'object' && value !== null) {
+            return (value as any).url === opt.thumbnailUrl;
+        }
+        return false;
+    }
 
     return (
         <div className="space-y-4">
@@ -96,10 +108,6 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
                         className="pl-9 h-10 w-full"
                     />
                 </div>
-                {/* Future: Add Category Filter here if API supports it */}
-                {/* <Button variant="outline" size="icon" className="shrink-0">
-                     <Filter className="h-4 w-4" />
-                 </Button> */}
             </div>
 
             {/* Templates Grid */}
@@ -118,11 +126,30 @@ export function FieldTemplateSelector({ field, value, onChange, error }: Dynamic
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {templates.map((opt) => {
-                        const isSelected = selectValue === opt.thumbnailUrl;
+                        const isSelected = getIsSelected(opt);
                         return (
                             <div
                                 key={opt.id}
-                                onClick={() => onChange(field.name, opt.thumbnailUrl || '')}
+                                onClick={() => {
+                                    // Pass both image and description
+                                    onChange(field.name, {
+                                        url: opt.thumbnailUrl || '',
+                                        description: opt.description || ''
+                                    })
+
+                                    // Prefill logic: if there are other fields like 'description' or 'prompt', fill them too
+                                    if (opt.description) {
+                                        setValue('description', opt.description, { shouldValidate: true, shouldDirty: true });
+                                        setValue('prompt', opt.description, { shouldValidate: true, shouldDirty: true });
+                                    }
+
+                                    // Prefill from template-specific data
+                                    if (opt.prefilledData) {
+                                        Object.entries(opt.prefilledData).forEach(([key, val]) => {
+                                            setValue(key, val, { shouldValidate: true, shouldDirty: true });
+                                        });
+                                    }
+                                }}
                                 className={cn(
                                     "cursor-pointer group relative flex flex-col items-start gap-3 rounded-2xl border-2 p-4 text-left text-sm transition-all duration-300",
                                     "hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98]",
