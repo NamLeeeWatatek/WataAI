@@ -34,6 +34,7 @@ import { creationJobsApi } from "@/lib/api/creation-jobs";
 import { DataTableFacetedFilter } from "@/components/shared/data-table/DataTableFacetedFilter";
 import { Search } from "@/components/shared/Search";
 import { X } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/Tooltip";
 
 interface ProductsTableProps {
     jobs: CreationJob[];
@@ -119,34 +120,70 @@ export function ProductsTable({
             cell: ({ row }) => {
                 const job = row.original;
                 if (job.status === CreationJobStatus.FAILED) {
+                    const errorMsg = job.error ? `Error: ${job.error}` : "Job Failed";
                     return (
                         <div className="flex flex-col">
-                            <span className="font-medium text-sm text-destructive line-clamp-2 max-w-[300px]" title={job.error || "Unknown error"}>
-                                {job.error ? `Error: ${job.error}` : "Job Failed"}
-                            </span>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span className="font-medium text-sm text-destructive truncate max-w-[200px] cursor-help">
+                                            {errorMsg}
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-[300px] break-words">
+                                        {errorMsg}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                             <span className="text-[10px] text-muted-foreground font-mono uppercase">
                                 ID: {job.id.substring(0, 8)}
                             </span>
                         </div>
                     );
                 }
+                const displayName = getDisplayName(job);
                 return (
                     <div className="flex flex-col">
-                        <span className="font-medium text-sm line-clamp-1 max-w-[300px]">
-                            {getDisplayName(job)}
-                        </span>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="font-medium text-sm truncate max-w-[200px] cursor-help">
+                                        {displayName}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="max-w-[300px] break-words">
+                                    {displayName}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                         <span className="text-[10px] text-muted-foreground font-mono uppercase">
                             ID: {job.id.substring(0, 8)}
                         </span>
                     </div>
                 );
             },
-            size: 300,
+            size: 200,
         },
         {
             id: 'creationToolId',
             header: 'Tool Name',
-            cell: ({ row, getValue }) => <span className="text-sm font-medium">{row.original.creationTool?.name || (getValue() as React.ReactNode)}</span>,
+            cell: ({ row, getValue }) => {
+                const toolName = row.original.creationTool?.name || (getValue() as string) || '';
+                return (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="text-sm font-medium truncate max-w-[150px] cursor-help">
+                                    {toolName}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                                {toolName}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                );
+            },
             size: 150,
         },
         {
