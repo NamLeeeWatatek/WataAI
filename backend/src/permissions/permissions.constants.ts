@@ -99,4 +99,12 @@ export const PermissionConstants = {
     READ: `analytics:${PermissionAction.READ}`,
     EXPORT: `analytics:Export`,
   },
+  TOOL: {
+    CREATE: `tool:${PermissionAction.CREATE}`,
+    LIST: `tool:${PermissionAction.LIST}`,
+    GET: `tool:${PermissionAction.GET}`,
+    UPDATE: `tool:${PermissionAction.UPDATE}`,
+    DELETE: `tool:${PermissionAction.DELETE}`,
+    EXECUTE: `tool:${PermissionAction.EXECUTE}`, // Fix for missing permission
+  },
 };

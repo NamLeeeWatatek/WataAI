@@ -1,4 +1,5 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PermissionEntity } from '../../../../permissions/infrastructure/persistence/relational/entities/permission.entity';
@@ -8,7 +9,7 @@ export class PermissionSeedService {
   constructor(
     @InjectRepository(PermissionEntity)
     private repository: Repository<PermissionEntity>,
-  ) {}
+  ) { }
 
   async run() {
     const permissions = [
@@ -266,6 +267,12 @@ export class PermissionSeedService {
         description: 'Delete tools',
         resource: 'tool',
         action: 'Delete',
+      },
+      {
+        name: 'tool:Execute',
+        description: 'Execute tool steps',
+        resource: 'tool',
+        action: 'Execute',
       },
 
       // Templates
