@@ -251,13 +251,19 @@ export function FormBuilder({ config, onChange, onFieldRename }: FormBuilderProp
                                             title: s.title,
                                             fields: s.layout?.rows?.flatMap(r =>
                                                 r.zones.flatMap(z =>
-                                                    z.fieldRows.flatMap(fr => fr.fields)
+                                                    z.fieldRows.flatMap(fr => fr.fields.map(fieldName => {
+                                                        const f = config.fields.find(field => field.name === fieldName);
+                                                        return { name: fieldName, type: f?.type || 'text' };
+                                                    }))
                                                 )
                                             ) || []
                                         }))}
                                         currentFields={currentStep.layout?.rows?.flatMap(r =>
                                             r.zones.flatMap(z =>
-                                                z.fieldRows.flatMap(fr => fr.fields)
+                                                z.fieldRows.flatMap(fr => fr.fields.map(fieldName => {
+                                                    const f = config.fields.find(field => field.name === fieldName);
+                                                    return { name: fieldName, type: f?.type || 'text' };
+                                                }))
                                             )
                                         ) || []}
                                     />

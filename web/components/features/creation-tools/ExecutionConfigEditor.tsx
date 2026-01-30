@@ -20,8 +20,8 @@ interface ExecutionConfigEditorProps {
     stepId: string
     execution?: StepExecutionConfig
     onChange: (execution?: StepExecutionConfig) => void
-    availableSteps: Array<{ id: string; title: string, fields?: string[] }>
-    currentFields?: string[]
+    availableSteps: Array<{ id: string; title: string, fields?: Array<{ name: string, type: string }> }>
+    currentFields?: Array<{ name: string, type: string }>
 }
 
 export function ExecutionConfigEditor({
@@ -89,11 +89,20 @@ export function ExecutionConfigEditor({
             }
         };
 
+        // Helper to add field variables
+        const addFieldToPayload = (f: { name: string, type: string }) => {
+            if (f.type === 'template-selector' || f.name === 'template') {
+                payload[`${f.name}Image`] = `{{${f.name}Image}}`;
+                payload[`${f.name}Description`] = `{{${f.name}Description}}`;
+                payload[`${f.name}Id`] = `{{${f.name}Id}}`;
+            } else {
+                payload[f.name] = `{{${f.name}}}`;
+            }
+        };
+
         // Current Step fields
         if (currentFields.length > 0) {
-            currentFields.forEach(f => {
-                payload[f] = `{{${f}}}`;
-            });
+            currentFields.forEach(addFieldToPayload);
         }
 
         // Previous steps fields (flattened as per backend strategy)
@@ -101,8 +110,8 @@ export function ExecutionConfigEditor({
             if (step.fields && step.fields.length > 0) {
                 step.fields.forEach(f => {
                     // Only add if not already present (current step fields might overlap or previous steps might overlap)
-                    if (!payload[f]) {
-                        payload[f] = `{{${f}}}`;
+                    if (!payload[f.name] && !payload[`${f.name}Image`]) {
+                        addFieldToPayload(f);
                     }
                 });
             } else {
@@ -301,14 +310,36 @@ export function ExecutionConfigEditor({
                                             </p>
                                             <div className="flex flex-wrap gap-2">
                                                 {currentFields.map(f => (
-                                                    <Badge
-                                                        key={f}
-                                                        variant="outline"
-                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
-                                                        onClick={() => copyVariable(`{{${f}}}`)}
-                                                    >
-                                                        {`{{${f}}}`}
-                                                    </Badge>
+                                                    <React.Fragment key={f.name}>
+                                                        {f.type === 'template-selector' || f.name === 'template' ? (
+                                                            <>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2 border-primary/20 bg-primary/20"
+                                                                    onClick={() => copyVariable(`{{${f.name}Image}}`)}
+                                                                    title="Template Image URL"
+                                                                >
+                                                                    {`{{${f.name}Image}}`}
+                                                                </Badge>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2 border-primary/20 bg-primary/20"
+                                                                    onClick={() => copyVariable(`{{${f.name}Description}}`)}
+                                                                    title="Template Description"
+                                                                >
+                                                                    {`{{${f.name}Description}}`}
+                                                                </Badge>
+                                                            </>
+                                                        ) : (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
+                                                                onClick={() => copyVariable(`{{${f.name}}}`)}
+                                                            >
+                                                                {`{{${f.name}}}`}
+                                                            </Badge>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))}
                                                 {currentFields.length === 0 && (
                                                     <p className="text-[10px] text-muted-foreground italic">No fields in this step</p>
@@ -324,15 +355,38 @@ export function ExecutionConfigEditor({
                                                 </p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {(step.fields || []).map(f => (
-                                                        <Badge
-                                                            key={f}
-                                                            variant="outline"
-                                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
-                                                            onClick={() => copyVariable(`{{${f}}}`)}
-                                                            title={`Previous step field: ${f}`}
-                                                        >
-                                                            {`{{${f}}}`}
-                                                        </Badge>
+                                                        <React.Fragment key={f.name}>
+                                                            {f.type === 'template-selector' || f.name === 'template' ? (
+                                                                <>
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2 border-primary/20 bg-primary/20"
+                                                                        onClick={() => copyVariable(`{{${f.name}Image}}`)}
+                                                                        title={`Previous step template image: ${f.name}`}
+                                                                    >
+                                                                        {`{{${f.name}Image}}`}
+                                                                    </Badge>
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2 border-primary/20 bg-primary/20"
+                                                                        onClick={() => copyVariable(`{{${f.name}Description}}`)}
+                                                                        title={`Previous step template description: ${f.name}`}
+                                                                    >
+                                                                        {`{{${f.name}Description}}`}
+                                                                    </Badge>
+                                                                </>
+                                                            ) : (
+                                                                <Badge
+                                                                    key={f.name}
+                                                                    variant="outline"
+                                                                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 font-mono text-[10px] py-1 px-2"
+                                                                    onClick={() => copyVariable(`{{${f.name}}}`)}
+                                                                    title={`Previous step field: ${f.name}`}
+                                                                >
+                                                                    {`{{${f.name}}}`}
+                                                                </Badge>
+                                                            )}
+                                                        </React.Fragment>
                                                     ))}
                                                     <Badge
                                                         variant="outline"
