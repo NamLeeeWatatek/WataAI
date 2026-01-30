@@ -253,19 +253,31 @@ export function GridFormRenderer({
     const transformFormData = (data: Record<string, any>) => {
         const transformed: Record<string, any> = { ...data };
 
-        // Only look for fields that are actually defined as template-selector in config
+        // 1. Discovery based on config
         config.fields.forEach(field => {
             if (field.type === 'template-selector') {
                 const val = data[field.name];
 
-                // If value matches our object structure
-                if (val && typeof val === 'object' && val !== null && 'url' in val && 'description' in val) {
-                    // Split into specific keys for the flow
-                    transformed[`${field.name}Image`] = val.url;
-                    transformed[`${field.name}Description`] = val.description;
+                if (val && typeof val === 'object' && val !== null) {
+                    // Extract values (supporting both .url and .thumbnailUrl)
+                    transformed[`${field.name}Image`] = (val as any).url || (val as any).thumbnailUrl || (val as any).image;
+                    transformed[`${field.name}Description`] = (val as any).description || (val as any).desc;
+                    transformed[`${field.name}Id`] = (val as any).id || (val as any)._id;
+
+                    // DELETE the original object to prevent "gộp vô" (duplicates) in N8N/Webhooks
+                    delete transformed[field.name];
                 }
             }
         });
+
+        // 2. Global fallback for 'template' key
+        if (transformed.template && typeof transformed.template === 'object') {
+            const tpl = transformed.template;
+            if (!transformed.templateImage) transformed.templateImage = tpl.url || tpl.thumbnailUrl || tpl.image;
+            if (!transformed.templateDescription) transformed.templateDescription = tpl.description || tpl.desc;
+            if (!transformed.templateId) transformed.templateId = tpl.id || tpl._id;
+            delete transformed.template;
+        }
 
         return transformed;
     }
