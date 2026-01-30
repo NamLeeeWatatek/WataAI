@@ -89,6 +89,18 @@ export function TemplateSelector({ creationToolId, value, onChange, className }:
             description: template.description || ''
         } as any);
 
+        // Prefill standard fields if they exist in the form
+        if (template.thumbnailUrl) {
+            setValue('images', template.thumbnailUrl, { shouldValidate: true, shouldDirty: true });
+            setValue('Image', template.thumbnailUrl, { shouldValidate: true, shouldDirty: true });
+        }
+
+        if (template.description) {
+            setValue('prompt', template.description, { shouldValidate: true, shouldDirty: true });
+            setValue('Description', template.description, { shouldValidate: true, shouldDirty: true });
+            setValue('description', template.description, { shouldValidate: true, shouldDirty: true });
+        }
+
 
         if (template.prefilledData) {
             Object.entries(template.prefilledData).forEach(([key, val]) => {

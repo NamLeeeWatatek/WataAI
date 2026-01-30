@@ -259,10 +259,20 @@ export function GridFormRenderer({
                 const val = data[field.name];
 
                 if (val && typeof val === 'object' && val !== null) {
-                    // Extract values (supporting both .url and .thumbnailUrl)
-                    transformed[`${field.name}Image`] = (val as any).url || (val as any).thumbnailUrl || (val as any).image;
-                    transformed[`${field.name}Description`] = (val as any).description || (val as any).desc;
-                    transformed[`${field.name}Id`] = (val as any).id || (val as any)._id;
+                    const img = (val as any).url || (val as any).thumbnailUrl || (val as any).image;
+                    const desc = (val as any).description || (val as any).desc;
+                    const id = (val as any).id || (val as any)._id;
+
+                    // Extract values with specialized names
+                    transformed[`${field.name}Image`] = img;
+                    transformed[`${field.name}Description`] = desc;
+                    transformed[`${field.name}Id`] = id;
+
+                    // ALSO map to generic names if not already occupied by other fields
+                    if (img && !transformed.Image) transformed.Image = img;
+                    if (img && !transformed.images) transformed.images = img;
+                    if (desc && !transformed.Description) transformed.Description = desc;
+                    if (desc && !transformed.prompt) transformed.prompt = desc;
 
                     // DELETE the original object to prevent "gộp vô" (duplicates) in N8N/Webhooks
                     delete transformed[field.name];
@@ -270,12 +280,23 @@ export function GridFormRenderer({
             }
         });
 
-        // 2. Global fallback for 'template' key
+        // 2. Global fallback for 'template' key (standard name)
+        // Note: Field loop above might have already deleted 'template' if that was the field name
         if (transformed.template && typeof transformed.template === 'object') {
             const tpl = transformed.template;
-            if (!transformed.templateImage) transformed.templateImage = tpl.url || tpl.thumbnailUrl || tpl.image;
-            if (!transformed.templateDescription) transformed.templateDescription = tpl.description || tpl.desc;
-            if (!transformed.templateId) transformed.templateId = tpl.id || tpl._id;
+            const img = tpl.url || tpl.thumbnailUrl || tpl.image;
+            const desc = tpl.description || tpl.desc;
+            const id = tpl.id || tpl._id;
+
+            if (!transformed.templateImage) transformed.templateImage = img;
+            if (!transformed.templateDescription) transformed.templateDescription = desc;
+            if (!transformed.templateId) transformed.templateId = id;
+
+            if (img && !transformed.Image) transformed.Image = img;
+            if (img && !transformed.images) transformed.images = img;
+            if (desc && !transformed.Description) transformed.Description = desc;
+            if (desc && !transformed.prompt) transformed.prompt = desc;
+
             delete transformed.template;
         }
 
