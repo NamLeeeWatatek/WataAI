@@ -23,7 +23,7 @@ import { AuditService } from '../audit/audit.service';
 
 import { ExecutionStrategyResolver } from '../execution/execution-strategy.resolver';
 import { ExecutionValidationService } from '../execution/validation/execution-validation.service';
-import { ExecutionFlow } from '../creation-tools/domain/creation-tool';
+import { ExecutionFlow, FormConfig } from '../creation-tools/domain/creation-tool';
 import { ChannelsService } from '../channels/channels.service';
 import { OAuthService } from '../integrations/oauth.service';
 import { BotExecutionService } from '../bots/bot-execution.service';
@@ -155,7 +155,7 @@ export class CreationJobsService {
 
     const executionInputs = this.validationService.prepareInputs(
       tool.formConfig,
-      validatedInputs,
+      this.normalizeInputData(validatedInputs, tool.formConfig),
     );
 
     const config = tool.executionFlow as ExecutionFlow;
@@ -224,7 +224,7 @@ export class CreationJobsService {
     // We update the job's global input data with the new step data
 
     // Normalize new inputs first
-    const normalizedStepInput = this.normalizeInputData(inputData);
+    const normalizedStepInput = this.normalizeInputData(inputData, tool.formConfig);
 
     const updatedInputData = {
       ...(job.inputData || {}),
@@ -286,15 +286,44 @@ export class CreationJobsService {
     };
   }
 
-  private normalizeInputData(inputs: Record<string, any>): Record<string, any> {
+  private normalizeInputData(
+    inputs: Record<string, any>,
+    config?: FormConfig,
+  ): Record<string, any> {
     const normalized = { ...inputs };
 
-    // Auto-flatten Template Object if present
-    // This ensures that efficient Template DTO handling automatically populates
-    // individual fields (templateImage, templateDescription) required by N8N/Webhooks.
+    // 1. Dynamic discovery based on field types in FormConfig
+    if (config?.fields) {
+      for (const field of config.fields) {
+        if (field.type === 'template-selector') {
+          const val = normalized[field.name];
+          if (val && typeof val === 'object' && val !== null) {
+            // Extract Image and Description if not already set
+            if (!normalized[`${field.name}Image` || 'templateImage']) {
+              normalized[`${field.name}Image` || 'templateImage'] =
+                val.thumbnailUrl || val.url || val.image;
+            }
+            if (
+              !normalized[`${field.name}Description` || 'templateDescription']
+            ) {
+              normalized[`${field.name}Description` || 'templateDescription'] =
+                val.description || val.desc || val.name;
+            }
+            if (!normalized[`${field.name}Id` || 'templateId']) {
+              normalized[`${field.name}Id` || 'templateId'] =
+                val.id || val._id;
+            }
+
+            // REMOVE the original object to avoid "gộp vô" (duplicates) in webhooks
+            delete normalized[field.name];
+          }
+        }
+      }
+    }
+
+    // 2. Legacy/Hardcoded fallback for 'template' key (Global Safety)
     if (normalized.template && typeof normalized.template === 'object') {
       const tpl = normalized.template;
-      // Prioritize existing values, fallback to template object values
       if (!normalized.templateImage) {
         normalized.templateImage = tpl.thumbnailUrl || tpl.url || tpl.image;
       }
@@ -302,11 +331,12 @@ export class CreationJobsService {
         normalized.templateDescription =
           tpl.description || tpl.desc || tpl.name;
       }
-
-      // Also ensure template ID is set if it's an object
       if (!normalized.templateId && (tpl.id || tpl._id)) {
         normalized.templateId = tpl.id || tpl._id;
       }
+
+      // REMOVE the original object
+      delete normalized.template;
     }
 
     return normalized;
@@ -318,9 +348,6 @@ export class CreationJobsService {
     workspaceId?: string,
   ): Promise<CreationJob> {
 
-    // 1. Normalize Inputs (Flatten Template Object -> fields)
-    createDto.inputData = this.normalizeInputData(createDto.inputData);
-
     // Validate Input against Tool Config
     const tool = await this.creationToolsService.findById(
       createDto.creationToolId,
@@ -330,6 +357,12 @@ export class CreationJobsService {
         `Creation Tool with ID ${createDto.creationToolId} not found`,
       );
     }
+
+    // 1. Normalize Inputs (Flatten Template Object -> fields)
+    createDto.inputData = this.normalizeInputData(
+      createDto.inputData,
+      tool.formConfig,
+    );
 
     if (tool.formConfig && Array.isArray(tool.formConfig.fields)) {
       for (const field of tool.formConfig.fields) {
