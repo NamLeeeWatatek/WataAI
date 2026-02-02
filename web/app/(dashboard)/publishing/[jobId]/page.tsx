@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import { WritingStyle } from '@/lib/types';
 
 interface PostDraft {
     id: string;
@@ -261,15 +262,17 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[
-                                                { label: t('writingStyle.professional'), value: 'Professional' },
-                                                { label: t('writingStyle.friendly'), value: 'Friendly' },
-                                                { label: t('writingStyle.humorous'), value: 'Humorous' },
-                                                { label: t('writingStyle.persuasive'), value: 'Persuasive' },
-                                                { label: t('writingStyle.inspirational'), value: 'Inspirational' },
-                                                { label: t('writingStyle.trendy'), value: 'Trendy' },
-                                                { label: t('writingStyle.storytelling'), value: 'Storytelling' },
-                                                { label: t('writingStyle.concise'), value: 'Concise' },
-                                                { label: t('writingStyle.saleHard'), value: 'Sale Hard' }
+                                                { label: t('writingStyle.professional'), value: WritingStyle.PROFESSIONAL },
+                                                { label: t('writingStyle.friendly'), value: WritingStyle.FRIENDLY },
+                                                { label: t('writingStyle.humorous'), value: WritingStyle.HUMOROUS },
+                                                { label: t('writingStyle.persuasive'), value: WritingStyle.PERSUASIVE },
+                                                { label: t('writingStyle.inspirational'), value: WritingStyle.INSPIRATIONAL },
+                                                { label: t('writingStyle.trendy'), value: WritingStyle.TRENDY },
+                                                { label: t('writingStyle.storytelling'), value: WritingStyle.STORYTELLING },
+                                                { label: t('writingStyle.concise'), value: WritingStyle.CONCISE },
+                                                { label: t('writingStyle.saleHard'), value: WritingStyle.SALE_HARD },
+                                                { label: t('writingStyle.nutritionExpert'), value: WritingStyle.NUTRITION_EXPERT },
+                                                { label: t('writingStyle.marketingExpert'), value: WritingStyle.MARKETING_EXPERT }
                                             ].map((style) => (
                                                 <SelectItem key={style.value} value={style.value}>
                                                     {style.label}
