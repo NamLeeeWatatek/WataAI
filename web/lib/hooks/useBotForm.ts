@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import * as z from 'zod'
-import axiosClient from '@/lib/axios-client'
+import { botsApi } from '@/lib/api/bots'
 import { handleFormError } from '@/lib/utils/form-errors'
 
 // Schema definitions
@@ -27,14 +27,7 @@ export type BotFormData = {
   avatarUrl?: string | null;
 }
 
-// API functions
-const createBot = async (data: BotFormData) => {
-  return axiosClient.post('/bots', data)
-}
-
-const updateBot = async ({ id, data }: { id: string; data: BotFormData }) => {
-  return axiosClient.put(`/bots/${id}`, data)
-}
+// API functions are now in botsApi
 
 // Hook for bot form logic
 export function useBotForm(workspaceId: string, bot?: {
@@ -88,7 +81,7 @@ export function useBotForm(workspaceId: string, bot?: {
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: createBot,
+    mutationFn: (data: BotFormData) => botsApi.create(data as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bots'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
@@ -99,7 +92,7 @@ export function useBotForm(workspaceId: string, bot?: {
   })
 
   const updateMutation = useMutation({
-    mutationFn: updateBot,
+    mutationFn: ({ id, data }: { id: string; data: BotFormData }) => botsApi.update(id, data as any),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bots'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })

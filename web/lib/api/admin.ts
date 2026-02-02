@@ -21,7 +21,66 @@ export interface CreatePermissionDto {
     description: string;
 }
 
+export interface SystemHealth {
+    health: string;
+    uptime: number;
+    resources: {
+        cpu: number;
+        memory: {
+            total: number;
+            used: number;
+            percent: number;
+        };
+        storage: {
+            percent: number;
+        };
+    };
+    services: {
+        name: string;
+        status: 'operational' | 'degraded' | 'down';
+        uptime: string;
+    }[];
+}
+
+export interface Invoice {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    periodStart: string;
+    createdAt: string;
+    providerInvoiceId: string;
+    subscription?: {
+        planId: string;
+    };
+    user?: {
+        email: string;
+        name: string;
+    }
+}
+
+export interface InvoiceResponse {
+    data: Invoice[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
+
 export const adminApi = {
+    // Stats
+    getDashboardStats: (params: Record<string, any>) =>
+        apiClient.get('/stats/dashboard', { params }),
+
+    getSystemHealth: () =>
+        apiClient.get<SystemHealth>('/stats/admin/control-plane'),
+
+    getSystemStats: (params: { period?: string }) =>
+        apiClient.get('/stats/system', { params }),
+
+    // Billing
+    getInvoices: (params: Record<string, any>) =>
+        apiClient.get<InvoiceResponse>('/billing/admin/invoices', { params }),
     // Users
     getUsers: async (params: PaginationParams): Promise<PaginatedResponse<User>> => {
         return apiClient.get('/users', { params })

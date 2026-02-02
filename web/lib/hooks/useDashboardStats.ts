@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import axiosClient from '@/lib/axios-client'
+import { adminApi } from '@/lib/api/admin'
 import { CACHE_TIMES } from '@/lib/constants/app'
 import type { DashboardStats } from '@/lib/types'
 
@@ -25,11 +25,9 @@ export function useDashboardStats(
             if (dateRange?.from) params.startDate = dateRange.from.toISOString();
             if (dateRange?.to) params.endDate = dateRange.to.toISOString();
 
-            const result = await axiosClient.get<DashboardStats>('/stats/dashboard', { params })
-            if (!result) {
-                throw new Error('API returned no data')
-            }
-            return result as unknown as DashboardStats
+            const response: any = await adminApi.getDashboardStats(params);
+            const data = response.data || response;
+            return data as unknown as DashboardStats
         },
         initialData,
         staleTime: CACHE_TIMES.SHORT,

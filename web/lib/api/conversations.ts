@@ -178,3 +178,22 @@ export async function handbackConversation(id: string): Promise<any> {
   return axiosClient.post(`/conversations/${id}/handback`)
 }
 
+export const conversationsApi = {
+  getBotConversations,
+  getBotConversation,
+  createBotConversation,
+  getBotConversationMessages,
+  addBotConversationMessage,
+  getAIConversations,
+  getAIConversation,
+  createAIConversation,
+  updateAIConversation,
+  deleteAIConversation,
+  addAIConversationMessage,
+  archiveBotConversation,
+  deleteBotConversation,
+  syncFacebookConversations,
+  syncInstagramConversations,
+  takeoverConversation,
+  handbackConversation,
+}

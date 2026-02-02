@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { chatWithKBSimple, chatWithBotAndRAG } from '@/lib/api/knowledge-base';
+import { knowledgeBaseApi } from '@/lib/api/knowledge-base';
 import { botsApi } from '@/lib/api/bots';
 import { MessageRole } from '@/lib/types/conversations';
 
@@ -15,7 +15,7 @@ export function useAiChat() {
         }) => {
             // Mapping to the singular knowledgeBaseId if plural is not supported by this endpoint
             // or if the backend actually supports plural but the types are slightly off
-            return chatWithKBSimple(data as any);
+            return knowledgeBaseApi.chatWithKBSimple(data as any);
         },
     });
 

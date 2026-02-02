@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axiosClient from '@/lib/axios-client';
+import { adminApi, type SystemHealth, type InvoiceResponse } from '@/lib/api/admin';
 
 export const adminKeys = {
     all: ['admin'] as const,
@@ -7,57 +7,11 @@ export const adminKeys = {
     invoices: (params: Record<string, any>) => [...adminKeys.all, 'invoices', params] as const,
 };
 
-export interface SystemHealth {
-    health: string;
-    uptime: number;
-    resources: {
-        cpu: number;
-        memory: {
-            total: number;
-            used: number;
-            percent: number;
-        };
-        storage: {
-            percent: number;
-        };
-    };
-    services: {
-        name: string;
-        status: 'operational' | 'degraded' | 'down';
-        uptime: string;
-    }[];
-}
-
-export interface Invoice {
-    id: string;
-    amount: number;
-    currency: string;
-    status: string;
-    periodStart: string;
-    createdAt: string;
-    providerInvoiceId: string;
-    subscription?: {
-        planId: string;
-    };
-    user?: {
-        email: string;
-        name: string;
-    }
-}
-
-export interface InvoiceResponse {
-    data: Invoice[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-}
-
 export function useSystemHealth() {
     return useQuery({
         queryKey: adminKeys.health(),
         queryFn: async () => {
-            const result = await axiosClient.get<SystemHealth>('/stats/admin/control-plane');
+            const result = await adminApi.getSystemHealth();
             return result as unknown as SystemHealth;
         },
         refetchInterval: 10000,
@@ -73,7 +27,7 @@ export function useAdminInvoices(params: {
     return useQuery({
         queryKey: adminKeys.invoices(params),
         queryFn: async () => {
-            const result = await axiosClient.get<InvoiceResponse>('/billing/admin/invoices', { params });
+            const result = await adminApi.getInvoices(params);
             return result as unknown as InvoiceResponse;
         },
         placeholderData: (previousData) => previousData, // Keep previous data while fetching next page

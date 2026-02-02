@@ -38,5 +38,8 @@ export const workflowsApi = {
 
     delete: async (id: string) => {
         await client.delete(`/workflows/${id}`);
+    },
+    execute: async (id: string, data: any) => {
+        return await client.post(`/flows/${id}/execute`, data);
     }
 };

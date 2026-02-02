@@ -10,31 +10,28 @@ export interface GetNotificationsParams {
 }
 
 export const notificationsApi = {
-    getAll: async (params?: GetNotificationsParams) => {
-        const response = await axiosClient.get<PaginatedResponse<Notification>>('/notifications', {
+    getAll: async (params?: GetNotificationsParams): Promise<PaginatedResponse<Notification>> => {
+        return axiosClient.get('/notifications', {
             params,
-        });
-        return response as unknown as PaginatedResponse<Notification>;
+        }) as any;
     },
 
-    getUnreadCount: async (workspaceId?: string) => {
-        const response = await axiosClient.get<{ count: number }>('/notifications/unread-count', {
+    getUnreadCount: async (workspaceId?: string): Promise<{ count: number }> => {
+        return axiosClient.get('/notifications/unread-count', {
             params: { workspaceId },
-        });
-        return response as unknown as { count: number };
+        }) as any;
     },
 
-    markAsRead: async (id: string) => {
-        const response = await axiosClient.post<Notification>(`/notifications/${id}/read`);
-        return response as unknown as Notification;
+    markAsRead: async (id: string): Promise<Notification> => {
+        return axiosClient.post(`/notifications/${id}/read`) as any;
     },
 
-    markAllAsRead: async (workspaceId?: string) => {
-        const response = await axiosClient.post<{ updated: number }>('/notifications/read-all', {
+    markAllAsRead: async (workspaceId?: string): Promise<{ updated: number }> => {
+        return axiosClient.post('/notifications/read-all', {
             workspaceId,
-        });
-        return response as unknown as { updated: number };
-    }, // ... delete methods don't return data usually or void
+        }) as any;
+    },
+    // ... delete methods don't return data usually or void
 
     delete: async (id: string) => {
         await axiosClient.delete(`/notifications/${id}`);

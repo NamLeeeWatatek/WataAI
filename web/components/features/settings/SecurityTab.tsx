@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/Form';
 import { ShieldCheck, Lock, Key, Loader2, AlertCircle } from 'lucide-react';
-import { axiosClient } from '@/lib/axios-client';
 import { toast } from 'sonner';
+import { useMe } from '@/lib/hooks/features/useMe';
+import { useTranslation } from 'react-i18next';
 
 const securitySchema = z.object({
     oldPassword: z.string().min(6, 'Old password is required'),
@@ -25,6 +26,9 @@ const securitySchema = z.object({
 type SecurityFormValues = z.infer<typeof securitySchema>;
 
 export function SecurityTab() {
+    const { updateMe, isUpdating } = useMe();
+    const { t } = useTranslation();
+
     const form = useForm<SecurityFormValues>({
         resolver: zodResolver(securitySchema),
         defaultValues: {
@@ -34,22 +38,17 @@ export function SecurityTab() {
         },
     });
 
-    const changePasswordMutation = useMutation({
-        mutationFn: (data: SecurityFormValues) => axiosClient.patch('/auth/me', {
-            oldPassword: data.oldPassword,
-            password: data.password,
-        }),
-        onSuccess: () => {
+    const onSubmit = async (data: SecurityFormValues) => {
+        try {
+            await updateMe({
+                oldPassword: data.oldPassword,
+                password: data.password,
+            });
             form.reset();
             toast.success('Password updated successfully');
-        },
-        onError: (error: any) => {
+        } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to update password. Check your old password.');
-        },
-    });
-
-    const onSubmit = (data: SecurityFormValues) => {
-        changePasswordMutation.mutate(data);
+        }
     };
 
     return (
@@ -143,10 +142,10 @@ export function SecurityTab() {
                             <div className="flex justify-end pt-4">
                                 <Button
                                     type="submit"
-                                    disabled={changePasswordMutation.isPending}
+                                    disabled={isUpdating}
                                     className="px-10 h-14 font-bold shadow-xl shadow-amber-500/20 active:scale-95 transition-all text-base bg-amber-600 hover:bg-amber-500"
                                 >
-                                    {changePasswordMutation.isPending ? (
+                                    {isUpdating ? (
                                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                     ) : (
                                         <ShieldCheck className="w-5 h-5 mr-2" />

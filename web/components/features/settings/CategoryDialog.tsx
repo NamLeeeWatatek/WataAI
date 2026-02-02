@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import axiosClient from '@/lib/axios-client';
+import { useCategories } from '@/lib/hooks/features/useCategories';
 import {
   Dialog,
   DialogContent,
@@ -31,13 +31,13 @@ export function CategoryDialog({
   entityType,
   onSave
 }: CategoryDialogProps) {
+  const { createCategory, updateCategory, isMutating: loading } = useCategories();
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [icon, setIcon] = useState<string>('FiFolder');
   const [color, setColor] = useState('#6366f1');
   const [description, setDescription] = useState('');
   const [order, setOrder] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (category) {
@@ -66,7 +66,6 @@ export function CategoryDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       const data = {
@@ -80,16 +79,15 @@ export function CategoryDialog({
       };
 
       if (category) {
-        await axiosClient.patch(`/metadata/categories/${category.id}`, data);
+        await updateCategory({ id: category.id, data });
       } else {
-        await axiosClient.post('/metadata/categories', data);
+        await createCategory(data);
       }
 
       onSave();
+      onOpenChange(false);
     } catch {
-      toast.error('Failed to save category');
-    } finally {
-      setLoading(false);
+      // Error handled by mutation
     }
   };
 

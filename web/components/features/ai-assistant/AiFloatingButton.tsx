@@ -6,12 +6,13 @@ import { MessageCircle, X, Send, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
-import axiosClient from '@/lib/axios-client'
+import { useAiChat } from '@/lib/hooks/features/useAiChat'
 import toast from '@/lib/toast'
 import type { Message } from '@/lib/types'
 import { MessageRole } from '@/lib/types/conversations'
 
 export function AIFloatingButton() {
+    const { chatWithKB } = useAiChat()
     const [isOpen, setIsOpen] = useState(false)
     const [message, setMessage] = useState('')
     const [messages, setMessages] = useState<Message[]>([])
@@ -37,16 +38,21 @@ export function AIFloatingButton() {
         setLoading(true)
 
         try {
-            const response: any = await axiosClient.post('',)
+            const response: any = await chatWithKB({
+                message: userMessage,
+                conversationHistory: messages.map(m => ({ role: m.role, content: m.content }))
+            })
+
+            const responseText = response.answer || response.response || 'I am sorry, I could not process that request.';
 
             setMessages(prev => [...prev, {
                 id: (Date.now() + 1).toString(),
                 role: MessageRole.ASSISTANT,
-                content: response.response,
+                content: responseText,
                 timestamp: new Date().toISOString()
             }])
-        } catch {
-            toast.error('Failed to get response: ')
+        } catch (error: any) {
+            toast.error('Failed to get response: ' + (error.message || 'Unknown error'))
         } finally {
             setLoading(false)
         }

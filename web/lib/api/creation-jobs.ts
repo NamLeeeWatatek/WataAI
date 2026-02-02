@@ -54,4 +54,16 @@ export const creationJobsApi = {
         const response = await axiosClient.get<CreationJobPublication[]>(`/creation-jobs/${id}/publications`);
         return response as unknown as CreationJobPublication[];
     },
+
+    generatePostDraft: async (id: string, data: any): Promise<{ draft: string }> => {
+        return await axiosClient.post(`/creation-jobs/${id}/post-draft`, data);
+    },
+
+    postToChannels: async (id: string, data: any): Promise<any> => {
+        return await axiosClient.post(`/creation-jobs/${id}/post`, data);
+    },
+
+    executeAction: async (jobId: string, actionId: string, inputs: any): Promise<any> => {
+        return await axiosClient.post(`/creation-jobs/${jobId}/actions/${actionId}`, { inputs });
+    }
 };

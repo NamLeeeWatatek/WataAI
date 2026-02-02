@@ -19,8 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/Select'
-import axiosClient from '@/lib/axios-client'
-import toast from '@/lib/toast'
+import { useBot } from '@/lib/hooks/features/useBots'
 
 interface BotFunction {
     id: string
@@ -70,7 +69,7 @@ export function BotFunctionModal({
     botFunction,
     onSuccess,
 }: BotFunctionModalProps) {
-    const [saving, setSaving] = useState(false)
+    const { createFunction, updateFunction, isSavingFunction: saving } = useBot(botId)
     const [formData, setFormData] = useState({
         function_type: 'ai_suggest',
         name: '',
@@ -101,27 +100,25 @@ export function BotFunctionModal({
 
     const saveFunction = async () => {
         if (!formData.name.trim()) {
-            toast.error('Function name is required')
             return
         }
 
         try {
-            setSaving(true)
             if (botFunction) {
-                await axiosClient.patch(`/bots/functions/${botFunction.id}`, formData)
-                toast.success('Function updated')
+                await updateFunction({
+                    functionId: botFunction.id,
+                    data: formData
+                })
             } else {
-                await axiosClient.post(`/bots/${botId}/functions`, {
+                await createFunction({
                     ...formData,
                     bot_id: botId,
                 })
-                toast.success('Function created')
             }
             onSuccess()
+            onClose()
         } catch {
-            toast.error('Failed to save function')
-        } finally {
-            setSaving(false)
+            // Error handled by mutation toast
         }
     }
 

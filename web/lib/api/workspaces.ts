@@ -55,15 +55,15 @@ export interface WorkspaceInvitation {
 
 export const workspacesApi = {
     async getCurrent(): Promise<Workspace> {
-        return axiosClient.get<Workspace>('/workspaces/current') as unknown as Workspace
+        return axiosClient.get('/workspaces/current') as any
     },
 
     async getAll(): Promise<Workspace[]> {
-        return axiosClient.get<Workspace[]>('/workspaces') as unknown as Workspace[]
+        return axiosClient.get('/workspaces') as any
     },
 
     async getMembers(id: string): Promise<WorkspaceMember[]> {
-        return axiosClient.get<WorkspaceMember[]>(`/workspaces/${id}/members`) as unknown as WorkspaceMember[]
+        return axiosClient.get(`/workspaces/${id}/members`) as any
     },
 
     async inviteMember(workspaceId: string, data: CreateInvitationDto) {
@@ -79,6 +79,6 @@ export const workspacesApi = {
     },
 
     async getPendingInvitations(workspaceId: string): Promise<WorkspaceInvitation[]> {
-        return axiosClient.get<WorkspaceInvitation[]>(`/workspaces/invitations/${workspaceId}`) as unknown as WorkspaceInvitation[]
+        return axiosClient.get(`/workspaces/invitations/${workspaceId}`) as any
     }
 }

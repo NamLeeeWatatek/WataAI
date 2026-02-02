@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
-import axiosClient from '@/lib/axios-client'
 import toast from '@/lib/toast'
 import { Zap, Check, X } from 'lucide-react'
+import { useBotFunction } from '@/lib/hooks/features/useBots'
 export interface AiSuggestWidgetProps {
     functionId: string;
     task: string;
@@ -22,20 +22,19 @@ export function AiSuggestWidget({
     onApply,
     className = '',
 }: AiSuggestWidgetProps) {
-    const [loading, setLoading] = useState(false)
+    const { execute, isExecuting: loading } = useBotFunction()
     const [suggestion, setSuggestion] = useState<string | null>(null)
     const [showSuggestion, setShowSuggestion] = useState(false)
 
     const getSuggestion = async () => {
         try {
-            setLoading(true)
-            const response = await axiosClient.post('/bots/functions/execute', {
+            const response = await execute({
                 functionId,
                 input: {
                     task,
                     context,
                 },
-            }) as any
+            });
 
             if (response.success) {
                 setSuggestion(response.suggestion)
@@ -45,8 +44,6 @@ export function AiSuggestWidget({
             }
         } catch {
             toast.error('Failed to get AI suggestion')
-        } finally {
-            setLoading(false)
         }
     }
 

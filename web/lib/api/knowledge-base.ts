@@ -45,63 +45,63 @@ import { PaginationParams } from '../types/pagination'
  * @param params - Optional pagination and filter parameters
  */
 export async function getKnowledgeBases(params?: PaginationParams): Promise<GetKnowledgeBasesResponse> {
-  return axiosClient.get('/knowledge-bases', { params }) as unknown as Promise<GetKnowledgeBasesResponse>
+  return axiosClient.get('/knowledge-bases', { params })
 }
 
 /**
  * Get knowledge base by ID
  */
 export async function getKnowledgeBase(id: string): Promise<GetKnowledgeBaseResponse> {
-  return axiosClient.get(`/knowledge-bases/${id}`) as unknown as Promise<GetKnowledgeBaseResponse>
+  return axiosClient.get(`/knowledge-bases/${id}`)
 }
 
 /**
  * Create knowledge base
  */
 export async function createKnowledgeBase(data: CreateKnowledgeBaseDto): Promise<CreateKnowledgeBaseResponse> {
-  return axiosClient.post('/knowledge-bases', data, { params: { workspaceId: data.workspaceId } }) as unknown as Promise<CreateKnowledgeBaseResponse>
+  return axiosClient.post('/knowledge-bases', data, { params: { workspaceId: data.workspaceId } })
 }
 
 /**
  * Update knowledge base
  */
 export async function updateKnowledgeBase(id: string, data: UpdateKnowledgeBaseDto): Promise<UpdateKnowledgeBaseResponse> {
-  return axiosClient.patch(`/knowledge-bases/${id}`, data) as unknown as Promise<UpdateKnowledgeBaseResponse>
+  return axiosClient.patch(`/knowledge-bases/${id}`, data)
 }
 
 /**
  * Delete knowledge base
  */
 export async function deleteKnowledgeBase(id: string): Promise<DeleteKnowledgeBaseResponse> {
-  return axiosClient.delete(`/knowledge-bases/${id}`) as unknown as Promise<DeleteKnowledgeBaseResponse>
+  return axiosClient.delete(`/knowledge-bases/${id}`)
 }
 
 /**
  * Get knowledge base statistics
  */
 export async function getKnowledgeBaseStats(id: string): Promise<GetKnowledgeBaseStatsResponse> {
-  return axiosClient.get(`/knowledge-bases/${id}/stats`) as unknown as Promise<GetKnowledgeBaseStatsResponse>
+  return axiosClient.get(`/knowledge-bases/${id}/stats`)
 }
 
 /**
  * Create folder
  */
 export async function createKBFolder(data: CreateFolderDto): Promise<CreateFolderResponse> {
-  return axiosClient.post('/knowledge-bases/folders', data) as unknown as Promise<CreateFolderResponse>
+  return axiosClient.post('/knowledge-bases/folders', data)
 }
 
 /**
  * Get folders in knowledge base
  */
 export async function getKBFolders(kbId: string): Promise<GetFoldersResponse> {
-  return axiosClient.get(`/knowledge-bases/${kbId}/folders`) as unknown as Promise<GetFoldersResponse>
+  return axiosClient.get(`/knowledge-bases/${kbId}/folders`)
 }
 
 /**
  * Get folder tree structure
  */
 export async function getKBFolderTree(kbId: string): Promise<GetFolderTreeResponse> {
-  return axiosClient.get(`/knowledge-bases/${kbId}/folders/tree`) as unknown as Promise<GetFolderTreeResponse>
+  return axiosClient.get(`/knowledge-bases/${kbId}/folders/tree`)
 }
 
 /**
@@ -121,46 +121,35 @@ export async function getKBContent(kbId: string, folderId?: string | null, page:
 }> {
   return axiosClient.get(`/knowledge-bases/${kbId}/content`, {
     params: { folderId: folderId || 'null', page, limit, search }
-  }) as unknown as Promise<{
-    folders: KBFolder[]
-    documents: { data: KBDocument[]; total: number }
-    meta?: {
-      totalFolders: number
-      totalDocuments: number
-      unifiedTotal: number
-      page: number
-      limit: number
-    }
-    breadcrumbs: Array<{ id: string; name: string }>
-  }>
+  })
 }
 
 /**
  * Update folder
  */
 export async function updateKBFolder(folderId: string, data: UpdateFolderDto): Promise<UpdateFolderResponse> {
-  return axiosClient.patch(`/knowledge-bases/folders/${folderId}`, data) as unknown as Promise<UpdateFolderResponse>
+  return axiosClient.patch(`/knowledge-bases/folders/${folderId}`, data)
 }
 
 /**
  * Move folder to another parent folder
  */
 export async function moveKBFolder(folderId: string, parentFolderId: string | null): Promise<UpdateFolderResponse> {
-  return axiosClient.patch(`/knowledge-bases/folders/${folderId}`, { parentFolderId }) as unknown as Promise<UpdateFolderResponse>
+  return axiosClient.patch(`/knowledge-bases/folders/${folderId}`, { parentFolderId })
 }
 
 /**
  * Delete folder
  */
 export async function deleteKBFolder(folderId: string): Promise<DeleteFolderResponse> {
-  return axiosClient.delete(`/knowledge-bases/folders/${folderId}`) as unknown as Promise<DeleteFolderResponse>
+  return axiosClient.delete(`/knowledge-bases/folders/${folderId}`)
 }
 
 /**
  * Create document
  */
 export async function createKBDocument(data: CreateDocumentDto): Promise<CreateDocumentResponse> {
-  return axiosClient.post('/knowledge-bases/documents', data) as unknown as Promise<CreateDocumentResponse>
+  return axiosClient.post('/knowledge-bases/documents', data)
 }
 
 /**
@@ -169,35 +158,35 @@ export async function createKBDocument(data: CreateDocumentDto): Promise<CreateD
 export async function getKBDocuments(kbId: string, params?: PaginationParams): Promise<GetDocumentsResponse> {
   return axiosClient.get(`/knowledge-bases/${kbId}/documents`, {
     params: params
-  }) as unknown as Promise<GetDocumentsResponse>
+  })
 }
 
 /**
  * Get document by ID
  */
 export async function getKBDocument(documentId: string): Promise<GetDocumentResponse> {
-  return axiosClient.get(`/knowledge-bases/documents/${documentId}`) as unknown as Promise<GetDocumentResponse>
+  return axiosClient.get(`/knowledge-bases/documents/${documentId}`)
 }
 
 /**
  * Update document
  */
 export async function updateKBDocument(documentId: string, data: UpdateDocumentDto): Promise<UpdateDocumentResponse> {
-  return axiosClient.patch(`/knowledge-bases/documents/${documentId}`, data) as unknown as Promise<UpdateDocumentResponse>
+  return axiosClient.patch(`/knowledge-bases/documents/${documentId}`, data)
 }
 
 /**
  * Delete document
  */
 export async function deleteKBDocument(documentId: string): Promise<DeleteDocumentResponse> {
-  return axiosClient.delete(`/knowledge-bases/documents/${documentId}`) as unknown as Promise<DeleteDocumentResponse>
+  return axiosClient.delete(`/knowledge-bases/documents/${documentId}`)
 }
 
 /**
  * Move document to folder
  */
 export async function moveKBDocument(documentId: string, folderId: string | null): Promise<MoveDocumentResponse> {
-  return axiosClient.patch(`/knowledge-bases/documents/${documentId}/move`, { folderId }) as unknown as Promise<MoveDocumentResponse>
+  return axiosClient.patch(`/knowledge-bases/documents/${documentId}/move`, { folderId })
 }
 
 /**
@@ -208,11 +197,7 @@ export async function getKBDocumentDownloadUrl(documentId: string): Promise<{
   filename: string
   mimeType: string
 }> {
-  return axiosClient.get(`/knowledge-bases/documents/${documentId}/download`) as unknown as Promise<{
-    url: string
-    filename: string
-    mimeType: string
-  }>
+  return axiosClient.get(`/knowledge-bases/documents/${documentId}/download`)
 }
 
 /**
@@ -226,7 +211,7 @@ export async function uploadKBDocument(file: File, kbId: string, folderId?: stri
     formData.append('folderId', folderId)
   }
 
-  return axiosClient.post('/knowledge-bases/documents/upload', formData) as unknown as Promise<CreateDocumentResponse>
+  return axiosClient.post('/knowledge-bases/documents/upload', formData)
   // axiosClient handles multipart form data automatically with proper encoding
 }
 
@@ -234,7 +219,7 @@ export async function uploadKBDocument(file: File, kbId: string, folderId?: stri
  * Query knowledge base (vector search)
  */
 export async function queryKnowledgeBase(data: QueryKnowledgeBaseDto): Promise<QueryResponse> {
-  return axiosClient.post('/knowledge-bases/query', data) as unknown as Promise<QueryResponse>
+  return axiosClient.post('/knowledge-bases/query', data)
 }
 
 /**
@@ -245,7 +230,7 @@ export async function generateKBAnswer(data: {
   knowledgeBaseId: string
   conversationHistory?: Array<{ role: MessageRole; content: string }>
 }): Promise<GenerateAnswerResponse> {
-  return axiosClient.post('/knowledge-bases/answer', data) as unknown as Promise<GenerateAnswerResponse>
+  return axiosClient.post('/knowledge-bases/answer', data)
 }
 
 /**
@@ -267,15 +252,7 @@ export async function chatWithBotAndRAG(data: {
     metadata?: Record<string, any>
   }>
 }> {
-  return axiosClient.post('/knowledge-bases/chat-with-bot-rag', data) as unknown as Promise<{
-    success: boolean
-    answer: string
-    sources: Array<{
-      content: string
-      score: number
-      metadata?: Record<string, any>
-    }>
-  }>
+  return axiosClient.post('/knowledge-bases/chat-with-bot-rag', data)
 }
 
 /**
@@ -287,7 +264,7 @@ export async function chatWithKBSimple(data: {
   conversationHistory?: Array<{ role: MessageRole; content: string }>
   model?: string
 }): Promise<{ success: boolean; answer: string }> {
-  return axiosClient.post('/knowledge-bases/chat', data) as unknown as Promise<{ success: boolean; answer: string }>
+  return axiosClient.post('/knowledge-bases/chat', data)
 }
 
 /**
@@ -302,7 +279,7 @@ export async function crawlWebsite(data: {
   includePatterns?: string[]
   excludePatterns?: string[]
 }): Promise<{ success: boolean; documentsCreated: number; errors: string[] }> {
-  return axiosClient.post('/knowledge-bases/crawl/website', data) as unknown as Promise<{ success: boolean; documentsCreated: number; errors: string[] }>
+  return axiosClient.post('/knowledge-bases/crawl/website', data)
 }
 
 
@@ -311,34 +288,34 @@ export async function crawlWebsite(data: {
  * Assign agent to knowledge base
  */
 export async function assignAgentToKB(kbId: string, data: AssignAgentDto): Promise<AssignAgentResponse> {
-  return axiosClient.post(`/knowledge-bases/${kbId}/agents`, data) as unknown as Promise<AssignAgentResponse>
+  return axiosClient.post(`/knowledge-bases/${kbId}/agents`, data)
 }
 
 /**
  * Unassign agent from knowledge base
  */
 export async function unassignAgentFromKB(kbId: string, agentId: string): Promise<UnassignAgentResponse> {
-  return axiosClient.delete(`/knowledge-bases/${kbId}/agents/${agentId}`) as unknown as Promise<UnassignAgentResponse>
+  return axiosClient.delete(`/knowledge-bases/${kbId}/agents/${agentId}`)
 }
 
 /**
  * Get agent assignments
  */
 export async function getKBAgentAssignments(kbId: string): Promise<GetAgentAssignmentsResponse> {
-  return axiosClient.get(`/knowledge-bases/${kbId}/agents`) as unknown as Promise<GetAgentAssignmentsResponse>
+  return axiosClient.get(`/knowledge-bases/${kbId}/agents`)
 }
 /**
  * Batch Delete Folders/Documents
  */
 export async function deleteKBBatch(data: BatchDeleteDto): Promise<BatchOperationResponse> {
-  return axiosClient.post('/knowledge-bases/batch/delete', data) as unknown as Promise<BatchOperationResponse>
+  return axiosClient.post('/knowledge-bases/batch/delete', data)
 }
 
 /**
  * Batch Move Folders/Documents
  */
 export async function moveKBBatch(data: BatchMoveDto): Promise<BatchOperationResponse> {
-  return axiosClient.post('/knowledge-bases/batch/move', data) as unknown as Promise<BatchOperationResponse>
+  return axiosClient.post('/knowledge-bases/batch/move', data)
 }
 
 /**
@@ -349,11 +326,7 @@ export async function clearAllVectors(): Promise<{
   message: string
   deleted: string[]
 }> {
-  return axiosClient.post('/knowledge-bases/vector/clear-all') as unknown as Promise<{
-    success: boolean
-    message: string
-    deleted: string[]
-  }>
+  return axiosClient.post('/knowledge-bases/vector/clear-all')
 }
 /**
  * Get processing status for knowledge base
@@ -370,23 +343,72 @@ export async function getKBProcessingStatus(kbId: string): Promise<{
     error?: string
   }>
 }> {
-  return axiosClient.get(`/knowledge-bases/${kbId}/processing-status`) as unknown as Promise<{
-    jobs: Array<{
-      jobId: string
-      documentId: string
-      documentName?: string
-      status: string
-      progress: number
-      processedChunks: number
-      totalChunks: number
-      error?: string
-    }>
-  }>
+  return axiosClient.get(`/knowledge-bases/${kbId}/processing-status`)
 }
 
 /**
  * Cancel a processing job
  */
 export async function cancelKBJob(jobId: string): Promise<{ success: boolean }> {
-  return axiosClient.post(`/knowledge-bases/processing/${jobId}/cancel`) as unknown as Promise<{ success: boolean }>
+  return axiosClient.post(`/knowledge-bases/processing/${jobId}/cancel`)
 }
+
+/**
+ * Verify vector collection health
+ */
+export async function verifyKBCollection(kbId: string): Promise<{ totalChunks: number; missingVectors: number; failedEmbeddings: number }> {
+  return axiosClient.get(`/knowledge-bases/${kbId}/verify-collection`)
+}
+
+/**
+ * Sync missing vectors
+ */
+export async function syncKBMissing(kbId: string): Promise<{ synced: number; errors: number }> {
+  return axiosClient.post(`/knowledge-bases/${kbId}/sync-missing`)
+}
+
+/**
+ * Rebuild entire collection
+ */
+export async function rebuildKBCollection(kbId: string): Promise<{ chunksProcessed: number; errors: number }> {
+  return axiosClient.post(`/knowledge-bases/${kbId}/rebuild-collection`)
+}
+export const knowledgeBaseApi = {
+  getKnowledgeBases,
+  getKnowledgeBase,
+  createKnowledgeBase,
+  updateKnowledgeBase,
+  deleteKnowledgeBase,
+  getKnowledgeBaseStats,
+  createKBFolder,
+  getKBFolders,
+  getKBFolderTree,
+  getKBContent,
+  updateKBFolder,
+  moveKBFolder,
+  deleteKBFolder,
+  createKBDocument,
+  getKBDocuments,
+  getKBDocument,
+  updateKBDocument,
+  deleteKBDocument,
+  moveKBDocument,
+  getKBDocumentDownloadUrl,
+  uploadKBDocument,
+  queryKnowledgeBase,
+  generateKBAnswer,
+  chatWithBotAndRAG,
+  chatWithKBSimple,
+  crawlWebsite,
+  assignAgentToKB,
+  unassignAgentFromKB,
+  getKBAgentAssignments,
+  deleteKBBatch,
+  moveKBBatch,
+  clearAllVectors,
+  getKBProcessingStatus,
+  cancelKBJob,
+  verifyKBCollection,
+  syncKBMissing,
+  rebuildKBCollection,
+};

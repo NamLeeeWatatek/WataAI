@@ -51,27 +51,27 @@ export interface AiProviderMetadata {
 
 export const aiProvidersApi = {
   // Available providers (global list)
-  getAvailableProviders: () =>
-    axiosClient.get<AiProviderMetadata[]>('/ai-providers') as unknown as AiProviderMetadata[],
+  getAvailableProviders: (): Promise<AiProviderMetadata[]> =>
+    axiosClient.get('/ai-providers'),
 
   // User provider configs
-  getUserConfigs: () =>
-    axiosClient.get<UserAiProviderConfig[]>('/ai-providers/user/configs') as unknown as UserAiProviderConfig[],
+  getUserConfigs: (): Promise<UserAiProviderConfig[]> =>
+    axiosClient.get('/ai-providers/user/configs'),
 
-  getUserConfig: (id: string) =>
-    axiosClient.get<UserAiProviderConfig>(`/ai-providers/user/configs/${id}`) as unknown as UserAiProviderConfig,
+  getUserConfig: (id: string): Promise<UserAiProviderConfig> =>
+    axiosClient.get(`/ai-providers/user/configs/${id}`),
 
-  createUserConfig: (data: CreateUserAiProviderDto) =>
-    axiosClient.post<UserAiProviderConfig>('/ai-providers/user/configs', data) as unknown as UserAiProviderConfig,
+  createUserConfig: (data: CreateUserAiProviderDto): Promise<UserAiProviderConfig> =>
+    axiosClient.post('/ai-providers/user/configs', data),
 
-  updateUserConfig: (id: string, data: UpdateUserAiProviderDto) =>
-    axiosClient.patch<UserAiProviderConfig>(`/ai-providers/user/configs/${id}`, data) as unknown as UserAiProviderConfig,
+  updateUserConfig: (id: string, data: UpdateUserAiProviderDto): Promise<UserAiProviderConfig> =>
+    axiosClient.patch(`/ai-providers/user/configs/${id}`, data),
 
-  deleteUserConfig: (id: string) =>
-    axiosClient.delete(`/ai-providers/user/configs/${id}`) as unknown as void,
+  deleteUserConfig: (id: string): Promise<void> =>
+    axiosClient.delete(`/ai-providers/user/configs/${id}`),
 
-  verifyUserConfig: (id: string) =>
-    axiosClient.post<UserAiProviderConfig>(`/ai-providers/user/configs/${id}/verify`) as unknown as UserAiProviderConfig,
+  verifyUserConfig: (id: string): Promise<UserAiProviderConfig> =>
+    axiosClient.post(`/ai-providers/user/configs/${id}/verify`),
 
   // Legacy methods (for backward compatibility)
   getUserProviders: () =>
@@ -119,4 +119,13 @@ export const aiProvidersApi = {
 
   getConfigDetails: (id: string, workspaceId?: string) =>
     axiosClient.get<UserAiProviderConfig | WorkspaceAiProviderConfig>(`/ai-providers/unified-config/${id}/details`, { params: { workspaceId } }) as unknown as Promise<UserAiProviderConfig | WorkspaceAiProviderConfig>,
+
+  getModels: (params: { limit?: number; filters?: string }) =>
+    axiosClient.get('/ai-providers/models', { params }),
+
+  getSystemSettings: () =>
+    axiosClient.get('/ai-providers/system/settings'),
+
+  updateSystemSettings: (data: any) =>
+    axiosClient.patch('/ai-providers/system/settings', data),
 };

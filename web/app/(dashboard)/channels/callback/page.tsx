@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import axiosClient from '@/lib/axios-client';
+import { facebookCallback } from '@/lib/api/channels';
+import { useMutation } from '@tanstack/react-query';
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
@@ -15,6 +16,46 @@ function ChannelCallbackContent() {
   const [message, setMessage] = useState('Processing connection...');
   const [processed, setProcessed] = useState(false);
   const [isPopup, setIsPopup] = useState(true);
+
+  const callbackMutation = useMutation({
+    mutationFn: facebookCallback,
+    onSuccess: (response) => {
+      if (response.success && response.pages && response.pages.length > 0) {
+        setStatus('success');
+        setMessage(`Successfully found ${response.pages.length} page(s)`);
+
+        const data = {
+          pages: response.pages,
+          tempToken: response.tempToken,
+          workspaceId: response.workspaceId,
+        };
+
+        if (window.opener) {
+          notifyParent('success', 'facebook', data);
+        } else {
+          sessionStorage.setItem('fb_oauth_result', JSON.stringify({
+            status: 'success',
+            channel: 'facebook',
+            ...data
+          }));
+
+          setTimeout(() => {
+            router.push('/channels');
+          }, 2000);
+        }
+      } else {
+        setStatus('error');
+        setMessage('No pages found or permission denied');
+        notifyParent('error', 'No pages found');
+      }
+    },
+    onError: (error: any) => {
+      setStatus('error');
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to process callback';
+      setMessage(errorMessage);
+      notifyParent('error', errorMessage);
+    }
+  });
 
   useEffect(() => {
     // Detect if this is a popup or a main window
@@ -48,58 +89,21 @@ function ChannelCallbackContent() {
   }, [searchParams, params, processed]);
 
   const handleCallback = async (code: string, provider: string, state: string) => {
-    try {
-      if (provider === 'facebook') {
-        const redirectUri = `${window.location.origin}/channels/callback/facebook`;
-        const res: any = await axiosClient.get(
-          `/channels/facebook/oauth/callback?code=${code}&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}`
-        );
-        const response = res.data || res;
+    if (provider === 'facebook') {
+      const redirectUri = `${window.location.origin}/channels/callback/facebook`;
+      callbackMutation.mutate({
+        code,
+        state,
+        redirect_uri: redirectUri
+      });
+    } else {
+      setStatus('success');
+      setMessage('Connected successfully');
+      notifyParent('success', provider);
 
-        if (response.success && response.pages && response.pages.length > 0) {
-          setStatus('success');
-          setMessage(`Successfully found ${response.pages.length} page(s)`);
-
-          const data = {
-            pages: response.pages,
-            tempToken: response.tempToken,
-            workspaceId: response.workspaceId,
-          };
-
-          if (window.opener) {
-            notifyParent('success', 'facebook', data);
-          } else {
-            // Store in sessionStorage for single-tab flow
-            sessionStorage.setItem('fb_oauth_result', JSON.stringify({
-              status: 'success',
-              channel: 'facebook',
-              ...data
-            }));
-
-            // Auto redirect after delay
-            setTimeout(() => {
-              router.push('/channels');
-            }, 2000);
-          }
-        } else {
-          setStatus('error');
-          setMessage('No pages found or permission denied');
-          notifyParent('error', 'No pages found');
-        }
-      } else {
-        setStatus('success');
-        setMessage('Connected successfully');
-        notifyParent('success', provider);
-
-        if (!window.opener) {
-          setTimeout(() => router.push('/channels'), 2000);
-        }
+      if (!window.opener) {
+        setTimeout(() => router.push('/channels'), 2000);
       }
-    } catch (error: any) {
-      setStatus('error');
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to process callback';
-      setMessage(errorMessage);
-      notifyParent('error', errorMessage);
     }
   };
 

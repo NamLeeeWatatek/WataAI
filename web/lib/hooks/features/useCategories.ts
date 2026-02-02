@@ -27,7 +27,7 @@ export function useCategories(params: any = {}) {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => categoriesApi.update(id, data),
+        mutationFn: ({ id, data }: { id: string | number; data: any }) => categoriesApi.update(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
             toast.success('Category updated successfully');
@@ -35,7 +35,7 @@ export function useCategories(params: any = {}) {
     });
 
     const deleteMutation = useMutation({
-        mutationFn: (id: string) => categoriesApi.delete(id),
+        mutationFn: (id: string | number) => categoriesApi.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
             toast.success('Category deleted successfully');
