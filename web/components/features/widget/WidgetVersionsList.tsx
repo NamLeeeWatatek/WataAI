@@ -67,7 +67,7 @@ export function WidgetVersionsList({ botId, versions, isLoading, onRefresh }: Pr
         }
 
         try {
-            await doRollback(rollbackVersion.id, rollbackReason);
+            await doRollback({ versionId: rollbackVersion.id, reason: rollbackReason });
             setRollbackVersion(null);
             setRollbackReason('');
             onRefresh();

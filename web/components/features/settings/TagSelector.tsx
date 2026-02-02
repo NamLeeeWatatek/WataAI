@@ -47,7 +47,7 @@ export function TagSelector({ selectedTags = [], onChange, maxTags = 5 }: TagSel
         onChange(selectedTags.filter(id => id !== tagId));
     };
 
-    const availableTags = tags.filter(t => !selectedTags.includes(t.id));
+    const availableTags = tags.filter(t => typeof t.id === 'number' && !selectedTags.includes(t.id));
     const filteredTags = availableTags.filter(tag =>
         tag.name.toLowerCase().includes(search.toLowerCase())
     );
@@ -71,7 +71,7 @@ export function TagSelector({ selectedTags = [], onChange, maxTags = 5 }: TagSel
                     >
                         {tag.name}
                         <button
-                            onClick={() => handleRemove(tag.id)}
+                            onClick={() => handleRemove(tag.id as number)}
                             className="ml-1 hover:bg-black/10 rounded-full p-0.5 transition-colors"
                         >
                             <X className="w-3 h-3" />
@@ -108,7 +108,7 @@ export function TagSelector({ selectedTags = [], onChange, maxTags = 5 }: TagSel
                                     filteredTags.map(tag => (
                                         <button
                                             key={tag.id}
-                                            onClick={() => handleSelect(tag.id)}
+                                            onClick={() => handleSelect(tag.id as number)}
                                             className="w-full text-left px-2 py-1.5 hover:bg-muted rounded-sm text-xs flex items-center gap-2"
                                         >
                                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
