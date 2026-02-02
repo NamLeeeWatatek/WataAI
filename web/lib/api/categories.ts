@@ -45,15 +45,15 @@ export const categoriesApi = {
         });
     },
 
-    findById: async (id: string): Promise<Category> => {
+    findById: async (id: string | number): Promise<Category> => {
         return axiosClient.get(`/categories/${id}`);
     },
 
-    update: async (id: string, data: UpdateCategoryDto): Promise<Category> => {
+    update: async (id: string | number, data: UpdateCategoryDto): Promise<Category> => {
         return axiosClient.patch(`/categories/${id}`, data);
     },
 
-    delete: async (id: string): Promise<void> => {
+    delete: async (id: string | number): Promise<void> => {
         return axiosClient.delete(`/categories/${id}`);
     },
 };

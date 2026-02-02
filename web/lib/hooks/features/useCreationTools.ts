@@ -81,3 +81,11 @@ function responseToArray(response: any): CreationTool[] {
     if (Array.isArray(response.data)) return response.data;
     return [];
 }
+
+export function useCreationTool(id?: string) {
+    return useQuery({
+        queryKey: [...toolKeys.all, 'detail', id],
+        queryFn: () => creationToolsApi.getById(id!),
+        enabled: !!id,
+    });
+}

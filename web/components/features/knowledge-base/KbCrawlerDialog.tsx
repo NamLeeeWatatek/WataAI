@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/Input'
 import { Switch } from '@/components/ui/Switch'
 import { Globe, AlertCircle } from "lucide-react"
 import { toast } from 'sonner'
-import axiosClient from '@/lib/axios-client'
+import { useKBContent } from '@/lib/hooks/use-kb'
 
 const websiteFormSchema = z.object({
     url: z.string().url('Please enter a valid URL'),
@@ -41,7 +41,7 @@ export function KBCrawlerDialog({
     folderId,
     onSuccess
 }: CrawlerDialogProps) {
-    const [loading, setLoading] = useState(false)
+    const { crawlWebsite } = useKBContent(knowledgeBaseId);
 
     const form = useForm<z.infer<typeof websiteFormSchema>>({
         resolver: zodResolver(websiteFormSchema),
@@ -62,11 +62,10 @@ export function KBCrawlerDialog({
         try {
             toast.loading(`Crawling ${values.url}...`, { id: 'crawling' })
 
-            const result: any = await axiosClient.post('/knowledge-bases/crawl/website', {
+            const result: any = await crawlWebsite({
                 ...values,
-                knowledgeBaseId,
                 folderId,
-            })
+            });
 
             // Backend returns { success: true, message: '...' } for background crawl
             if (result.success && result.documentsCreated === undefined) {

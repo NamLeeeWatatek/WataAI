@@ -20,7 +20,11 @@ import {
     moveKBFolder,
     moveKBDocument,
     deleteKBBatch,
-    moveKBBatch
+    moveKBBatch,
+    verifyKBCollection,
+    syncKBMissing,
+    rebuildKBCollection,
+    crawlWebsite
 } from '@/lib/api/knowledge-base';
 import toast from '@/lib/toast';
 import { useUiStore } from '@/lib/store/zustand/ui-store';
@@ -258,6 +262,11 @@ export function useKBContent(kbId: string, folderId: string | null = null, param
         moveFolder: moveFolderMutation.mutateAsync,
         moveDocument: moveDocumentMutation.mutateAsync,
         deleteBatch: deleteBatchMutation.mutateAsync,
-        moveBatch: moveBatchMutation.mutateAsync
+        moveBatch: moveBatchMutation.mutateAsync,
+
+        verifyCollection: () => verifyKBCollection(kbId),
+        syncMissing: () => syncKBMissing(kbId),
+        rebuildCollection: () => rebuildKBCollection(kbId),
+        crawlWebsite: (data: any) => crawlWebsite({ ...data, knowledgeBaseId: kbId })
     };
 }

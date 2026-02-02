@@ -5,10 +5,9 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
-import axiosClient from '@/lib/axios-client'
-import toast from '@/lib/toast'
 import { Save, X, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
+import { useAgentConfig } from '@/lib/hooks/features/useAgentConfigs'
 
 interface AgentConfig {
     id?: number
@@ -41,6 +40,13 @@ const tones = [
 ]
 
 export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelProps) {
+    const {
+        config: serverConfig,
+        isLoading: loading,
+        saveConfig,
+        isSaving: saving
+    } = useAgentConfig(flowId);
+
     const [config, setConfig] = useState<AgentConfig>({
         flow_id: flowId,
         name: 'AI Assistant',
@@ -50,45 +56,22 @@ export function AgentConfigPanel({ flowId, onClose, onSave }: AgentConfigPanelPr
         system_prompt: 'You are a helpful AI assistant.',
         temperature: 0.7,
         max_tokens: 150,
-        model: 'gpt-4o' // Default model
-    })
-    const [loading, setLoading] = useState(true)
-    const [saving, setSaving] = useState(false)
+        model: 'gpt-4o'
+    });
 
     useEffect(() => {
-        loadConfig()
-    }, [flowId])
-
-    const loadConfig = async () => {
-        try {
-            setLoading(true)
-            const data: any = await axiosClient.get(`/agent-configs/${flowId}`)
-            setConfig(data)
-        } catch {
-
-        } finally {
-            setLoading(false)
+        if (serverConfig) {
+            setConfig(serverConfig);
         }
-    }
+    }, [serverConfig]);
 
     const handleSave = async () => {
         try {
-            setSaving(true)
-
-            if (config.id) {
-                await axiosClient.patch(`/agent-configs/${flowId}`, config)
-            } else {
-                await axiosClient.post('/agent-configs/', config)
-            }
-
-            toast.success('Agent configuration saved!')
-            onSave?.()
-            onClose()
+            await saveConfig(config);
+            onSave?.();
+            onClose();
         } catch {
-            toast.error('Failed to save configuration')
-
-        } finally {
-            setSaving(false)
+            // Error handled by mutation
         }
     }
 

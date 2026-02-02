@@ -7,18 +7,15 @@ export const templatesApi = {
         if (params.filters && typeof params.filters === 'object') {
             params.filters = JSON.stringify(params.filters);
         }
-        const response = await axiosClient.get<{ data: Template[]; hasNextPage: boolean; total: number }>('/templates', { params });
-        return response as unknown as { data: Template[]; hasNextPage: boolean; total: number };
+        return axiosClient.get('/templates', { params }) as any;
     },
 
     findOne: async (id: string): Promise<Template> => {
-        const response = await axiosClient.get<Template>(`/templates/${id}`);
-        return response as unknown as Template;
+        return axiosClient.get(`/templates/${id}`) as any;
     },
 
     findByWorkspace: async (workspaceId: string): Promise<Template[]> => {
-        const response = await axiosClient.get<Template[]>(`/templates/workspace/${workspaceId}`);
-        return response as unknown as Template[];
+        return axiosClient.get(`/templates/workspace/${workspaceId}`) as any;
     },
 
     create: async (template: Partial<Template>): Promise<Template> => {
@@ -36,15 +33,15 @@ export const templatesApi = {
     },
 
     activate: async (id: string): Promise<Template> => {
-        return axiosClient.post<Template>(`/templates/${id}/activate`) as unknown as Template;
+        return axiosClient.post(`/templates/${id}/activate`) as any;
     },
 
     deactivate: async (id: string): Promise<Template> => {
-        return axiosClient.post<Template>(`/templates/${id}/deactivate`) as unknown as Template;
+        return axiosClient.post(`/templates/${id}/deactivate`) as any;
     },
 
     execute: async (id: string, data: any): Promise<{ executionId: string; status: string }> => {
-        return axiosClient.post<{ executionId: string; status: string }>(`/templates/${id}/execute`, data) as unknown as { executionId: string; status: string };
+        return axiosClient.post(`/templates/${id}/execute`, data) as any;
     },
 
     bulkUpdate: async (ids: string[], data: Partial<Template>): Promise<void> => {
@@ -56,11 +53,10 @@ export const templatesApi = {
     },
 
     import: async (templates: any[], workspaceId: string): Promise<Template[]> => {
-        return axiosClient.post<Template[]>('/templates/import', { templates, workspaceId }) as unknown as Template[];
+        return axiosClient.post('/templates/import', { templates, workspaceId }) as any;
     },
 
     export: async (ids: string[]): Promise<Template[]> => {
-        return axiosClient.get<Template[]>('/templates/export', { params: { ids: ids.join(',') } }) as unknown as Template[];
+        return axiosClient.get('/templates/export', { params: { ids: ids.join(',') } }) as any;
     }
 };
-

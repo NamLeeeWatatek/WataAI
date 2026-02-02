@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import axiosClient from '@/lib/axios-client'
+import { adminApi } from '@/lib/api/admin'
 import { CACHE_TIMES } from '@/lib/constants/app'
 
 import { AdminStats } from '@/lib/types/stats'
@@ -13,10 +13,9 @@ export function useSystemStats(period: string = 'last_30_days') {
     return useQuery<AdminStats>({
         queryKey: systemStatsKeys.stats(period),
         queryFn: async () => {
-            const response = await axiosClient.get('/stats/system', {
-                params: { period }
-            })
-            return response as unknown as AdminStats
+            const response: any = await adminApi.getSystemStats({ period })
+            const data = response.data || response
+            return data as unknown as AdminStats
         },
         staleTime: CACHE_TIMES.SHORT,
         gcTime: CACHE_TIMES.MEDIUM,

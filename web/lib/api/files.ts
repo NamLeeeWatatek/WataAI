@@ -27,14 +27,14 @@ export const filesApi = {
     ): Promise<UploadResponse> {
         const { onProgress, bucket = 'images' } = options
 
-        const presignedResponse = await axiosClient.post<UploadResponse>(
+        const presignedResponse: any = await axiosClient.post<UploadResponse>(
             '/files/upload',
             {
                 fileName: file.name,
                 fileSize: file.size,
                 bucket,
             }
-        ) as unknown as UploadResponse
+        )
 
         const { uploadSignedUrl, file: fileData } = presignedResponse
 

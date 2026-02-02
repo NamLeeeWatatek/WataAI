@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axiosClient from '@/lib/axios-client';
-import { FormField } from '@/lib/api/creation-tools';
+import { creationToolsApi, FormField } from '@/lib/api/creation-tools';
 import { useCallback } from 'react';
 
 export interface DynamicOption {
@@ -82,27 +81,14 @@ export function useDynamicOptions(field: FormField) {
         queryFn: async () => {
             if (!optionsConfig) return [];
 
-            if (optionsConfig.startsWith('ai-models:')) {
-                const typeFilter = optionsConfig.split(':')[1];
-                const response = await axiosClient.get<DynamicOption[]>(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
-                return response.data;
-            } else if (optionsConfig === 'channels') {
-                const params: Record<string, string> = { status: 'active' };
-                if (field.filterParams?.ids && field.filterParams.ids.length > 0) {
-                    params.ids = field.filterParams.ids.join(',');
-                }
-                if (field.filterParams?.status) {
-                    params.status = field.filterParams.status;
-                }
-                const response = await axiosClient.get<Channel[]>('/channels/', { params });
-                return response.data;
-            } else if (optionsConfig === 'templates') {
-                const response = await axiosClient.get<{ id: string, name: string }[]>('/templates');
-                // The API might return { data: [...] } or just [...] depending on implementation. 
-                // Usually it's response.data. Assuming standard axiosClient behavior.
-                return response.data;
+            const params: Record<string, string> = { status: 'active' };
+            if (optionsConfig === 'channels' && field.filterParams) {
+                if (field.filterParams.ids?.length) params.ids = field.filterParams.ids.join(',');
+                if (field.filterParams.status) params.status = field.filterParams.status;
             }
-            return [];
+
+            const response = await creationToolsApi.getDynamicOptions(optionsConfig, params);
+            return response.data || response;
         },
         select: selectFn, // Transformation happens here, memoized by TanStack Query
         enabled: !!optionsConfig,

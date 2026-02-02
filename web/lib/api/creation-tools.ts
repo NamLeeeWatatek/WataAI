@@ -256,4 +256,17 @@ export const creationToolsApi = {
     clone: async (id: string): Promise<CreationTool> => {
         return await axiosClient.post(`/creation-tools/${id}/clone`);
     },
+    getDynamicOptions: async (config: string, params?: Record<string, any>): Promise<any> => {
+        if (config.startsWith('ai-models:')) {
+            const typeFilter = config.split(':')[1];
+            return axiosClient.get(`/node-types/dynamic-options/ai-models?type=${typeFilter}`);
+        }
+        if (config === 'channels') {
+            return axiosClient.get('/channels/', { params });
+        }
+        if (config === 'templates') {
+            return axiosClient.get('/templates');
+        }
+        return [];
+    }
 };

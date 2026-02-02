@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import type { Node } from 'reactflow';
 import { useSocketConnection } from './use-socket-connection';
-import axiosClient from '@/lib/axios-client';
+import { workflowsApi } from '@/lib/api/workflows';
 
 export type ExecutionTransport = 'websocket' | 'sse';
 
@@ -101,8 +101,8 @@ export function useExecution(
       const execId = executionId || `exec-${Date.now()}`;
 
       try {
-        // Start execution via standardized axios client (auth/workspace handled in interceptors)
-        const responsePromise = axiosClient.post(`/flows/${flowId}/execute`, inputData || {});
+        // Start execution via standardized API (auth/workspace handled in interceptors)
+        const responsePromise = workflowsApi.execute(flowId, inputData || {});
 
         // Set up WebSocket event handlers
         const unsubscribeProgress = onWs('execution:progress', (data: any) => {

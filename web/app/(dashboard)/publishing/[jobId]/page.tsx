@@ -21,8 +21,9 @@ import { toast } from 'sonner';
 import { Loader2, Share2, Sparkles, BrainCircuit, Calendar as CalendarIcon, Clock, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
-import axiosClient from '@/lib/axios-client';
 import { useBots } from '@/lib/hooks/features/useBots';
+import { useCreationJob, usePostManagement } from '@/lib/hooks/features/useCreationJobs';
+import { useCreationTool } from '@/lib/hooks/features/useCreationTools';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -47,8 +48,11 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     const { workspaceId } = useWorkspace();
     const { data: bots } = useBots(workspaceId || undefined);
 
-    const [productName, QPsetName] = useState<string>('');
-    const [isLoadingJob, setIsLoadingJob] = useState(true);
+    // Server State
+    const { data: job, isLoading: isLoadingJob } = useCreationJob(jobId, workspaceId || undefined);
+    const { data: tool } = useCreationTool(job?.creationToolId);
+
+    const productName = tool?.name || 'Content';
 
     // Drafts State
     const [posts, setPosts] = useState<PostDraft[]>([
@@ -56,9 +60,9 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     ]);
     const [activePostId, setActivePostId] = useState<string>('1');
 
-    // UI State
-    const [isPosting, setIsPosting] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
+    // AI/Posting Actions
+    const { generateDraft, postToChannels, isGenerating, isPosting } = usePostManagement(jobId);
+
     const [isScheduled, setIsScheduled] = useState(false);
     const [selectedBotId, setSelectedBotId] = useState<string>('');
     const [selectedStyle, setSelectedStyle] = useState<string>('');
@@ -67,42 +71,25 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
     const selectedChannels = activePost.channelIds;
     const setSelectedChannels = (val: string[]) => updateActivePost({ channelIds: val });
 
-    // Fetch Job Info
+    // Initialize editor content from job result
     useEffect(() => {
-        const fetchJob = async () => {
-            try {
-                const job = await axiosClient.get(`/creation-jobs/${jobId}`) as any;
-                if (job) {
-                    const tool = await axiosClient.get(`/creation-tools/${job.creationToolId}`) as any;
-                    QPsetName(tool?.name || 'Content');
+        if (job?.outputData && posts.length === 1 && posts[0].content === '') {
+            let content = '';
+            if (typeof job.outputData.content === 'string') content = job.outputData.content;
+            else if (typeof job.outputData.text === 'string') content = job.outputData.text;
+            else if (typeof job.outputData.result === 'string' && job.outputData.result !== 'Success') content = job.outputData.result;
 
-                    // Pre-fill content from job output if available and empty
-                    if (job.outputData && posts[0].content === '') {
-                        let content = '';
-                        if (typeof job.outputData.content === 'string') content = job.outputData.content;
-                        else if (typeof job.outputData.text === 'string') content = job.outputData.text;
-                        else if (typeof job.outputData.result === 'string' && job.outputData.result !== 'Success') content = job.outputData.result;
+            let imageUrl = '';
+            if (typeof job.outputData.imageUrl === 'string') imageUrl = job.outputData.imageUrl;
+            else if (typeof job.outputData.image === 'string') imageUrl = job.outputData.image;
+            else if (typeof job.outputData.url === 'string') imageUrl = job.outputData.url;
+            else if (Array.isArray(job.outputData.images) && job.outputData.images[0]) imageUrl = job.outputData.images[0];
 
-                        let imageUrl = '';
-                        if (typeof job.outputData.imageUrl === 'string') imageUrl = job.outputData.imageUrl;
-                        else if (typeof job.outputData.image === 'string') imageUrl = job.outputData.image;
-                        else if (typeof job.outputData.url === 'string') imageUrl = job.outputData.url;
-                        else if (Array.isArray(job.outputData.images) && job.outputData.images[0]) imageUrl = job.outputData.images[0];
-
-                        if (content || imageUrl) {
-                            setPosts([{ id: '1', content, imageUrl, channelIds: [] }]);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error("Failed to fetch job", error);
-                toast.error(t('publishing.error_load_job'));
-            } finally {
-                setIsLoadingJob(false);
+            if (content || imageUrl) {
+                setPosts([{ id: '1', content, imageUrl, channelIds: [] }]);
             }
-        };
-        fetchJob();
-    }, [jobId]);
+        }
+    }, [job]);
 
     const updateActivePost = (data: Partial<PostDraft>) => {
         setPosts(prev => prev.map(p => p.id === activePostId ? { ...p, ...data } : p));
@@ -131,13 +118,12 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
             return;
         }
 
-        setIsGenerating(true);
         try {
-            const response = await axiosClient.post(`/creation-jobs/${jobId}/post-draft`, {
+            const response = await generateDraft({
                 message: activePost.content,
                 botId: selectedBotId,
                 writingStyle: selectedStyle
-            }) as any;
+            });
 
             if (response && response.draft) {
                 updateActivePost({ content: response.draft });
@@ -145,8 +131,6 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
             }
         } catch (error: any) {
             toast.error(error.message || t('publishing.failed_generate'));
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -157,10 +141,9 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
             return;
         }
 
-        setIsPosting(true);
         try {
             const promises = posts.map(post =>
-                axiosClient.post(`/creation-jobs/${jobId}/post`, {
+                postToChannels({
                     channels: selectedChannels,
                     message: post.content,
                     botId: selectedBotId,
@@ -179,10 +162,8 @@ export default function PublishingStudioPage(props: { params: Promise<{ jobId: s
                 router.push('/my-products');
             }, 1000);
         } catch (error: any) {
-            const message = error.response?.data?.message || t('publishing.failed_post');
-            toast.error(message);
-        } finally {
-            setIsPosting(false);
+            console.error(error);
+            toast.error(t('publishing.failed_post'));
         }
     };
 

@@ -4,25 +4,21 @@ import { InfinityPaginationResponseDto } from '@/lib/types/pagination';
 
 export const usersApi = {
     findAll: async (query?: any): Promise<InfinityPaginationResponseDto<User>> => {
-        const response = await axiosClient.get<InfinityPaginationResponseDto<User>>('/users', {
+        return axiosClient.get('/users', {
             params: query,
-        });
-        return response as unknown as InfinityPaginationResponseDto<User>;
+        }) as any;
     },
 
     findOne: async (id: string): Promise<User> => {
-        const response = await axiosClient.get<User>(`/users/${id}`);
-        return response as unknown as User;
+        return axiosClient.get(`/users/${id}`) as any;
     },
 
     create: async (data: CreateUserDto): Promise<User> => {
-        const response = await axiosClient.post<User>('/users', data);
-        return response as unknown as User;
+        return axiosClient.post('/users', data) as any;
     },
 
     update: async (id: string, data: UpdateUserDto): Promise<User> => {
-        const response = await axiosClient.patch<User>(`/users/${id}`, data);
-        return response as unknown as User;
+        return axiosClient.patch(`/users/${id}`, data) as any;
     },
 
     remove: async (id: string): Promise<void> => {
@@ -30,17 +26,14 @@ export const usersApi = {
     },
 
     verifyEmail: async (id: string): Promise<User> => {
-        const response = await axiosClient.post<User>(`/users/${id}/verify-email`);
-        return response as unknown as User;
+        return axiosClient.post(`/users/${id}/verify-email`) as any;
     },
 
     activate: async (id: string): Promise<User> => {
-        const response = await axiosClient.post<User>(`/users/${id}/activate`);
-        return response as unknown as User;
+        return axiosClient.post(`/users/${id}/activate`) as any;
     },
 
     deactivate: async (id: string): Promise<User> => {
-        const response = await axiosClient.post<User>(`/users/${id}/deactivate`);
-        return response as unknown as User;
+        return axiosClient.post(`/users/${id}/deactivate`) as any;
     },
 };

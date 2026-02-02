@@ -13,7 +13,7 @@ import {
 import { DynamicFormField } from '@/components/ui/DynamicFormField';
 import { toast } from 'sonner';
 import { Loader2, Zap, AlertCircle } from 'lucide-react';
-import axiosClient from '@/lib/axios-client';
+import { useJobAction } from '@/lib/hooks/features/useCreationJobs';
 import { TriggerAction } from '@/lib/api/creation-tools';
 
 interface TriggerActionDialogProps {
@@ -33,8 +33,8 @@ export function TriggerActionDialog({
     productName,
     onSuccess
 }: TriggerActionDialogProps) {
+    const { executeAction, isExecuting } = useJobAction(jobId || '');
     const [formValues, setFormValues] = useState<Record<string, any>>({});
-    const [isExecuting, setIsExecuting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Reset form when action changes
@@ -79,10 +79,9 @@ export function TriggerActionDialog({
         if (!jobId || !action) return;
         if (!validate()) return;
 
-        setIsExecuting(true);
         try {
-            // Updated to use { inputs: ... } wrapper to stay compatible with NestJS whitelist logic
-            const response = await axiosClient.post(`/creation-jobs/${jobId}/actions/${action.id}`, {
+            const response = await executeAction({
+                actionId: action.id,
                 inputs: formValues
             });
 
@@ -93,8 +92,6 @@ export function TriggerActionDialog({
             console.error(error);
             const message = error.response?.data?.message || `Failed to execute ${action.name}`;
             toast.error(message);
-        } finally {
-            setIsExecuting(false);
         }
     };
 

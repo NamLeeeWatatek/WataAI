@@ -10,8 +10,8 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/Popover';
-import axiosClient from '@/lib/axios-client';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useModels } from '@/lib/hooks/features/useModels';
 
 interface ModelSelectorProps {
     value: string;
@@ -30,45 +30,18 @@ export function ModelSelector({
 }: ModelSelectorProps) {
     const [open, setOpen] = React.useState(false);
     const [search, setSearch] = React.useState('');
-    const [models, setModels] = React.useState<string[]>([]);
-    const [loading, setLoading] = React.useState(false);
     const debouncedSearch = useDebounce(search, 300);
 
-    const loadModels = React.useCallback(async (searchTerm: string) => {
-        if (!configId) return;
-        setLoading(true);
-        try {
-            const response = await axiosClient.get('/ai-providers/models', {
-                params: {
-                    limit: 50,
-                    filters: JSON.stringify({
-                        configId,
-                        search: searchTerm,
-                    }),
-                },
-            });
+    const {
+        models,
+        isLoading: loading,
+        refetch
+    } = useModels({
+        configId,
+        search: debouncedSearch
+    });
 
-            const result = (response as any).data || response;
-            const data = Array.isArray(result) ? result : (result.data || []);
-            setModels(data.map((m: any) => m.name));
-        } catch (error) {
-            console.error('Failed to load models:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [configId]);
-
-    React.useEffect(() => {
-        if (open && configId) {
-            loadModels(debouncedSearch);
-        }
-    }, [open, configId, debouncedSearch, loadModels]);
-
-    React.useEffect(() => {
-        if (value && models.length === 0 && !loading) {
-            setModels([value]);
-        }
-    }, [value, models.length, loading]);
+    // No extra effects needed
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -102,7 +75,7 @@ export function ModelSelector({
                                 No models found.
                             </div>
                         )}
-                        {models.map((model) => (
+                        {models.map((model: string) => (
                             <button
                                 key={model}
                                 onClick={() => {
@@ -128,7 +101,7 @@ export function ModelSelector({
                             variant="ghost"
                             size="sm"
                             className="w-full text-[10px] h-7 font-bold uppercase tracking-wider"
-                            onClick={() => loadModels(search)}
+                            onClick={() => refetch()}
                         >
                             <Loader2 className={cn("w-3 h-3 mr-2", loading && "animate-spin")} />
                             Refresh Model List

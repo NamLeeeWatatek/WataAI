@@ -9,7 +9,6 @@ import {
 } from '@/lib/api/ai-providers';
 import type { AiProviderConfig, UserAiProviderConfig } from '@/lib/types/ai-provider';
 import toast from '@/lib/toast';
-import axiosClient from '@/lib/axios-client';
 
 export const aiProviderKeys = {
     all: ['ai-providers-feature'] as const,
@@ -54,11 +53,14 @@ export function useAiProviders() {
 
     const systemSettingsQuery = useQuery({
         queryKey: aiProviderKeys.systemSettings(),
-        queryFn: () => axiosClient.get('/ai-providers/system/settings') as Promise<SystemSettings>,
+        queryFn: async () => {
+            const response: any = await aiProvidersApi.getSystemSettings();
+            return (response.data || response) as SystemSettings;
+        },
     });
 
     const createConfigMutation = useMutation({
-        mutationFn: (data: CreateUserAiProviderDto) => Promise.resolve(aiProvidersApi.createUserConfig(data)),
+        mutationFn: (data: CreateUserAiProviderDto) => aiProvidersApi.createUserConfig(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('Neural gateway initialized');
@@ -66,7 +68,7 @@ export function useAiProviders() {
     });
 
     const updateConfigMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateUserAiProviderDto }) => Promise.resolve(aiProvidersApi.updateUserConfig(id, data)),
+        mutationFn: ({ id, data }: { id: string; data: UpdateUserAiProviderDto }) => aiProvidersApi.updateUserConfig(id, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfig(variables.id) });
@@ -75,7 +77,7 @@ export function useAiProviders() {
     });
 
     const deleteConfigMutation = useMutation({
-        mutationFn: (id: string) => Promise.resolve(aiProvidersApi.deleteUserConfig(id)),
+        mutationFn: (id: string) => aiProvidersApi.deleteUserConfig(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('Neural link purged');
@@ -83,7 +85,7 @@ export function useAiProviders() {
     });
 
     const verifyConfigMutation = useMutation({
-        mutationFn: (id: string) => Promise.resolve(aiProvidersApi.verifyUserConfig(id)),
+        mutationFn: (id: string) => aiProvidersApi.verifyUserConfig(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.userConfigs() });
             toast.success('API Signature verified');
@@ -107,7 +109,7 @@ export function useAiProviders() {
     });
 
     const updateSystemSettingsMutation = useMutation({
-        mutationFn: (data: Partial<SystemSettings>) => axiosClient.patch('/ai-providers/system/settings', data),
+        mutationFn: (data: Partial<SystemSettings>) => aiProvidersApi.updateSystemSettings(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: aiProviderKeys.systemSettings() });
             toast.success('Matrix parameters updated');

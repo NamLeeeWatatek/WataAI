@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData, useMutation } from '@tanstack/react-query';
 import { creationJobsApi } from '@/lib/api/creation-jobs';
 import { useSocketConnection } from '@/lib/hooks/use-socket-connection';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -129,5 +129,42 @@ export function useCreationJobs(initialParams: {
         setSearchFilter,
         refresh: refetch,
         deleteJob,
+    };
+}
+
+export function useCreationJob(id: string, workspaceId?: string) {
+    return useQuery({
+        queryKey: [...jobKeys.all, 'detail', id],
+        queryFn: () => creationJobsApi.findOne(id),
+        enabled: !!id,
+    });
+}
+
+export function usePostManagement(jobId: string) {
+    const generateMutation = useMutation({
+        mutationFn: (data: any) => creationJobsApi.generatePostDraft(jobId, data),
+    });
+
+    const postMutation = useMutation({
+        mutationFn: (data: any) => creationJobsApi.postToChannels(jobId, data),
+    });
+
+    return {
+        generateDraft: generateMutation.mutateAsync,
+        postToChannels: postMutation.mutateAsync,
+        isGenerating: generateMutation.isPending,
+        isPosting: postMutation.isPending,
+    };
+}
+
+export function useJobAction(jobId: string) {
+    const actionMutation = useMutation({
+        mutationFn: ({ actionId, inputs }: { actionId: string; inputs: any }) =>
+            creationJobsApi.executeAction(jobId, actionId, inputs),
+    });
+
+    return {
+        executeAction: actionMutation.mutateAsync,
+        isExecuting: actionMutation.isPending,
     };
 }

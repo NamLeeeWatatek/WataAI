@@ -16,9 +16,10 @@ import {
 import { Database, Plus, Trash2, BookOpen, Link as LinkIcon } from 'lucide-react';
 import { Search } from '@/components/shared/Search';
 import { toast } from 'sonner';
-import axiosClient from '@/lib/axios-client';
 import { cn } from '@/lib/utils';
 import type { KnowledgeBase } from '@/lib/types/knowledge-base';
+import { useBot } from '@/lib/hooks/features/useBots';
+import { useKnowledgeBases } from '@/lib/hooks/use-kb';
 import { DataTable } from '@/components/shared/DataTable';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ColumnDef } from '@tanstack/react-table';
@@ -40,54 +41,34 @@ interface BotKnowledgeBase {
 }
 
 export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props) {
-    const [linkedKnowledgeBases, setLinkedKnowledgeBases] = useState<BotKnowledgeBase[]>([]);
-    const [availableKnowledgeBases, setAvailableKnowledgeBases] = useState<KnowledgeBase[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0);
-    const [unlinkTarget, setUnlinkTarget] = useState<BotKnowledgeBase | null>(null);
+    const {
+        linkedKnowledgeBases,
+        isLoading: isBotKBLoading,
+        linkKB,
+        unlinkKB,
+        toggleKB
+    } = useBot(botId);
 
+    const {
+        knowledgeBases: availableKnowledgeBases,
+        isLoading: isAllKBLoading
+    } = useKnowledgeBases(workspaceId);
+
+    const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+    const [unlinkTarget, setUnlinkTarget] = useState<BotKnowledgeBase | null>(null);
     const [availableSearch, setAvailableSearch] = useState('');
 
-    useEffect(() => {
-        loadData();
-    }, [botId, refreshKey]);
-
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const [linkedResponse, availableResponse] = await Promise.all([
-                axiosClient.get(`/bots/${botId}/knowledge-bases`),
-                axiosClient.get(workspaceId ? `/knowledge-bases?workspaceId=${workspaceId}` : '/knowledge-bases')
-            ]);
-
-            setLinkedKnowledgeBases(Array.isArray(linkedResponse) ? linkedResponse : (linkedResponse as any).data || []);
-            setAvailableKnowledgeBases(Array.isArray(availableResponse) ? availableResponse : (availableResponse as any).data || []);
-        } catch (error) {
-            console.error('Failed to load knowledge bases:', error);
-            toast.error('Failed to load knowledge bases');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const loading = isBotKBLoading || isAllKBLoading;
 
     const handleToggleActive = async (row: BotKnowledgeBase, isActive: boolean) => {
         try {
-            // Optimistic update
-            const updated = linkedKnowledgeBases.map(kb =>
-                kb.id === row.id ? { ...kb, isActive: !isActive } : kb
-            );
-            setLinkedKnowledgeBases(updated);
-
-            await axiosClient.patch(`/bots/${botId}/knowledge-bases/${row.knowledgeBaseId}/toggle`, {
-                isActive: !isActive,
+            await toggleKB({
+                kbId: row.knowledgeBaseId,
+                isActive: !isActive
             });
-
             if (onRefresh) onRefresh();
             toast.success(isActive ? 'Knowledge base deactivated' : 'Knowledge base activated');
         } catch (error: any) {
-            // Revert
-            setLinkedKnowledgeBases(linkedKnowledgeBases);
             toast.error(error?.response?.data?.message || 'Failed to update status');
         }
     };
@@ -100,14 +81,10 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
         if (!unlinkTarget) return;
 
         try {
-            setLinkedKnowledgeBases(prev => prev.filter(item => item.id !== unlinkTarget.id));
-            await axiosClient.delete(`/bots/${botId}/knowledge-bases/${unlinkTarget.knowledgeBaseId}`);
-            toast.success('Knowledge base unlinked');
-            setRefreshKey(k => k + 1);
+            await unlinkKB(unlinkTarget.knowledgeBaseId);
             if (onRefresh) onRefresh();
         } catch (error) {
             toast.error('Failed to unlink');
-            setRefreshKey(k => k + 1); // reload just in case
         } finally {
             setUnlinkTarget(null);
         }
@@ -115,12 +92,8 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
 
     const handleLink = async (kb: KnowledgeBase) => {
         try {
-            await axiosClient.post(`/bots/${botId}/knowledge-bases`, {
-                knowledgeBaseId: kb.id,
-            });
-            toast.success('Linked successfully');
+            await linkKB(kb.id);
             setIsLinkDialogOpen(false);
-            setRefreshKey(k => k + 1);
             if (onRefresh) onRefresh();
         } catch (error) {
             toast.error('Failed to link knowledge base');
@@ -128,7 +101,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     };
 
     const linkedIds = new Set(linkedKnowledgeBases.map(l => l.knowledgeBaseId));
-    const availableToLink = availableKnowledgeBases.filter(kb => !linkedIds.has(kb.id));
+    const availableToLink = availableKnowledgeBases.filter((kb: KnowledgeBase) => !linkedIds.has(kb.id));
 
     // Linked Table Columns
     const linkedColumns = React.useMemo<ColumnDef<BotKnowledgeBase>[]>(() => [
@@ -267,7 +240,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                 />
                                 <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                     <DataTable
-                                        data={availableToLink.filter(kb =>
+                                        data={availableToLink.filter((kb: KnowledgeBase) =>
                                             kb.name.toLowerCase().includes(availableSearch.toLowerCase()) ||
                                             kb.description?.toLowerCase().includes(availableSearch.toLowerCase())
                                         )}

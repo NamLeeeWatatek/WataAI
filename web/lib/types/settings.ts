@@ -1,6 +1,6 @@
 
 export interface Category {
-  id: number
+  id: string | number
   name: string
   slug: string
   icon?: string
@@ -21,13 +21,13 @@ export interface CategoryDialogProps {
 
 export interface CategorySelectorProps {
   entityType: string
-  value?: number
-  onChange: (categoryId: number | undefined) => void
+  value?: string | number
+  onChange: (categoryId: string | number | undefined) => void
   placeholder?: string
 }
 
 export interface Tag {
-  id: number
+  id: string | number
   name: string
   color: string
   description?: string

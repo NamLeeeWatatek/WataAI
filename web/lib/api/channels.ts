@@ -135,3 +135,10 @@ export interface ConnectFacebookDto {
 export async function connectFacebook(data: ConnectFacebookDto): Promise<void> {
   return axiosClient.post('/channels/facebook/connect', data)
 }
+
+/**
+ * Handle Facebook OAuth callback
+ */
+export async function facebookCallback(params: { code: string; state?: string; redirect_uri: string }): Promise<any> {
+  return axiosClient.get('/channels/facebook/oauth/callback', { params })
+}

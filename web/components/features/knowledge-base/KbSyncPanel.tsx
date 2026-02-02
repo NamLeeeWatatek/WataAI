@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { RefreshCw, AlertTriangle, CheckCircle } from "lucide-react"
 import { toast } from 'sonner'
-import axiosClient from '@/lib/axios-client'
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm'
+import { useKBContent } from '@/lib/hooks/use-kb'
 
 interface SyncPanelProps {
     knowledgeBaseId: string
@@ -18,6 +18,8 @@ interface VerifyResult {
 }
 
 export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
+    const { verifyCollection, syncMissing, rebuildCollection } = useKBContent(knowledgeBaseId);
+
     const [verifying, setVerifying] = useState(false)
     const [syncing, setSyncing] = useState(false)
     const [rebuilding, setRebuilding] = useState(false)
@@ -27,7 +29,7 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
     const handleVerify = async () => {
         setVerifying(true)
         try {
-            const result = await axiosClient.get<VerifyResult>(`/knowledge-bases/${knowledgeBaseId}/verify-collection`) as unknown as VerifyResult
+            const result = await verifyCollection();
             setVerifyResult(result)
 
             if (result.missingVectors === 0 && result.failedEmbeddings === 0) {
@@ -37,7 +39,6 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
             }
         } catch {
             toast.error('Failed to verify collection')
-
         } finally {
             setVerifying(false)
         }
@@ -46,14 +47,11 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
     const handleSyncMissing = async () => {
         setSyncing(true)
         try {
-            const result = await axiosClient.post<{ synced: number; errors: number }>(`/knowledge-bases/${knowledgeBaseId}/sync-missing`) as unknown as { synced: number; errors: number }
-
+            const result = await syncMissing();
             toast.success(`Synced ${result.synced} vectors (${result.errors} errors)`)
-
             handleVerify()
         } catch {
             toast.error('Failed to sync missing vectors')
-
         } finally {
             setSyncing(false)
         }
@@ -66,14 +64,11 @@ export function KBSyncPanel({ knowledgeBaseId }: SyncPanelProps) {
     const confirmRebuild = async () => {
         setRebuilding(true)
         try {
-            const result = await axiosClient.post<{ chunksProcessed: number; errors: number }>(`/knowledge-bases/${knowledgeBaseId}/rebuild-collection`) as unknown as { chunksProcessed: number; errors: number }
-
+            const result = await rebuildCollection();
             toast.success(`Rebuilt ${result.chunksProcessed} chunks (${result.errors} errors)`)
-
             handleVerify()
         } catch {
             toast.error('Failed to rebuild collection')
-
         } finally {
             setRebuilding(false)
         }

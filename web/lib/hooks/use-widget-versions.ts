@@ -1,9 +1,9 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import toast from '@/lib/toast';
-import axiosClient from '@/lib/axios-client';
+import { botsApi } from '@/lib/api/bots';
 import { useAuth } from './useAuth';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -43,18 +43,14 @@ interface WidgetDeployment {
 }
 
 /**
- * Generic fetcher function that uses axiosClient to make API requests.
- * Removes the API_BASE prefix from the URL since axiosClient handles it.
+ * Fetcher logic moved to botsApi
  */
-const fetcher = async <T>(url: string): Promise<T> => {
-    return axiosClient.get<T>(url.replace(API_BASE, '')) as unknown as T;
-};
 
 export function useWidgetVersions(botId: string) {
     const queryClient = useQueryClient();
     const { data, error, isLoading } = useQuery<WidgetVersion[]>({
         queryKey: ['widget-versions', botId],
-        queryFn: () => fetcher(`${API_BASE}/bots/${botId}/widget/versions`),
+        queryFn: () => botsApi.getWidgetVersions(botId),
         enabled: !!botId,
     });
 
@@ -74,7 +70,7 @@ export function useWidgetVersion(botId: string, versionId: string) {
     const queryClient = useQueryClient();
     const { data, error, isLoading } = useQuery<WidgetVersionDetail>({
         queryKey: ['widget-version', botId, versionId],
-        queryFn: () => fetcher(`${API_BASE}/bots/${botId}/widget/versions/${versionId}`),
+        queryFn: () => botsApi.getWidgetVersion(botId, versionId),
         enabled: !!(botId && versionId),
     });
 
@@ -94,7 +90,7 @@ export function useWidgetDeployments(botId: string) {
     const queryClient = useQueryClient();
     const { data, error, isLoading } = useQuery<WidgetDeployment[]>({
         queryKey: ['widget-deployments', botId],
-        queryFn: () => fetcher(`${API_BASE}/bots/${botId}/widget/deployments`),
+        queryFn: () => botsApi.getWidgetDeployments(botId),
         enabled: !!botId,
     });
 
@@ -111,139 +107,77 @@ export function useWidgetDeployments(botId: string) {
 }
 
 export function useWidgetVersionActions(botId: string) {
-    const { accessToken: token } = useAuth();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const createVersion = async (data: {
-        version: string;
-        config: any;
-        changelog?: string;
-        notes?: string;
-    }) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
+    const queryClient = useQueryClient();
 
-        setIsSubmitting(true);
-        try {
-            const result = await axiosClient.post(`/bots/${botId}/widget/versions`, data);
+    const createMutation = useMutation({
+        mutationFn: (data: any) => botsApi.createWidgetVersion(botId, data),
+        onSuccess: () => {
             toast.success('Version created successfully');
-            return result as any;
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const updateVersion = async (
-        versionId: string,
-        data: {
-            config?: any;
-            changelog?: string;
-            notes?: string;
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
         },
-    ) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
+        onError: (error: any) => toast.error(error.message)
+    });
 
-        setIsSubmitting(true);
-        try {
-            const result = await axiosClient.patch(`/bots/${botId}/widget/versions/${versionId}`, data);
+    const updateMutation = useMutation({
+        mutationFn: ({ versionId, data }: { versionId: string, data: any }) =>
+            botsApi.updateWidgetVersion(botId, versionId, data),
+        onSuccess: (_, { versionId }) => {
             toast.success('Version updated successfully');
-            return result as any;
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
+            queryClient.invalidateQueries({ queryKey: ['widget-version', botId, versionId] });
+        },
+        onError: (error: any) => toast.error(error.message)
+    });
 
-    const publishVersion = async (versionId: string) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const result = await axiosClient.post(`/bots/${botId}/widget/versions/${versionId}/publish`);
+    const publishMutation = useMutation({
+        mutationFn: (versionId: string) => botsApi.publishWidgetVersion(botId, versionId),
+        onSuccess: (_, versionId) => {
             toast.success('Version published successfully');
-            return result as any;
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
+            queryClient.invalidateQueries({ queryKey: ['widget-version', botId, versionId] });
+            queryClient.invalidateQueries({ queryKey: ['widget-deployments', botId] });
+        },
+        onError: (error: any) => toast.error(error.message)
+    });
 
-    const rollbackVersion = async (versionId: string, reason: string) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const result = await axiosClient.post(`/bots/${botId}/widget/versions/${versionId}/rollback`, { reason });
+    const rollbackMutation = useMutation({
+        mutationFn: ({ versionId, reason }: { versionId: string, reason: string }) =>
+            botsApi.rollbackWidgetVersion(botId, versionId, reason),
+        onSuccess: (_, { versionId }) => {
             toast.success('Rollback successful');
-            return result as any;
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
+            queryClient.invalidateQueries({ queryKey: ['widget-deployments', botId] });
+        },
+        onError: (error: any) => toast.error(error.message)
+    });
 
-    const archiveVersion = async (versionId: string) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await axiosClient.post(`/bots/${botId}/widget/versions/${versionId}/archive`);
+    const archiveMutation = useMutation({
+        mutationFn: (versionId: string) => botsApi.archiveWidgetVersion(botId, versionId),
+        onSuccess: (_, versionId) => {
             toast.success('Version archived successfully');
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
+        },
+        onError: (error: any) => toast.error(error.message)
+    });
 
-    const deleteVersion = async (versionId: string) => {
-        if (!token) {
-            toast.error('Not authenticated');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            await axiosClient.delete(`/bots/${botId}/widget/versions/${versionId}`);
+    const deleteMutation = useMutation({
+        mutationFn: (versionId: string) => botsApi.deleteWidgetVersion(botId, versionId),
+        onSuccess: () => {
             toast.success('Version deleted successfully');
-        } catch (error: any) {
-            toast.error(error.message);
-            throw error;
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+            queryClient.invalidateQueries({ queryKey: ['widget-versions', botId] });
+        },
+        onError: (error: any) => toast.error(error.message)
+    });
 
     return {
-        createVersion,
-        updateVersion,
-        publishVersion,
-        rollbackVersion,
-        archiveVersion,
-        deleteVersion,
-        isSubmitting,
+        createVersion: createMutation.mutateAsync,
+        updateVersion: updateMutation.mutateAsync,
+        publishVersion: publishMutation.mutateAsync,
+        rollbackVersion: rollbackMutation.mutateAsync,
+        archiveVersion: archiveMutation.mutateAsync,
+        deleteVersion: deleteMutation.mutateAsync,
+        isSubmitting: createMutation.isPending || updateMutation.isPending ||
+            publishMutation.isPending || rollbackMutation.isPending ||
+            archiveMutation.isPending || deleteMutation.isPending,
     };
 }

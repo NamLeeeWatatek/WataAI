@@ -32,8 +32,8 @@ import { toast } from 'sonner';
 import { Loader2, Share2, Sparkles, BrainCircuit, Calendar as CalendarIcon, Clock, Plus, Trash2, Copy } from 'lucide-react';
 import { Textarea } from '@/components/ui/Textarea';
 import { Label } from '@/components/ui/Label';
-import axiosClient from '@/lib/axios-client';
 import { useBots } from '@/lib/hooks/features/useBots';
+import { usePostManagement } from '@/lib/hooks/features/useCreationJobs';
 import { useWorkspace } from '@/lib/hooks/useWorkspace';
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -77,9 +77,8 @@ export function PostToChannelsDialog({
     ]);
     const [activePostId, setActivePostId] = useState<string>('1');
 
-    // UI State
-    const [isPosting, setIsPosting] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
+    // AI/Posting Actions
+    const { generateDraft, postToChannels, isGenerating, isPosting } = usePostManagement(jobId || '');
 
     const [isScheduled, setIsScheduled] = useState(false);
 
@@ -113,13 +112,12 @@ export function PostToChannelsDialog({
             return;
         }
 
-        setIsGenerating(true);
         try {
-            const response = await axiosClient.post(`/creation-jobs/${jobId}/post-draft`, {
+            const response = await generateDraft({
                 message: activePost.content, // Context/Refinement
                 botId: selectedBotId,
                 writingStyle: selectedStyle
-            }) as any;
+            });
 
             if (response && response.draft) {
                 updateActivePost({ content: response.draft });
@@ -127,8 +125,6 @@ export function PostToChannelsDialog({
             }
         } catch (error: any) {
             toast.error(error.message || "Failed to generate");
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -139,15 +135,9 @@ export function PostToChannelsDialog({
             return;
         }
 
-        setIsPosting(true);
         try {
-            // Post items one by one or batch endpoint? 
-            // For now, let's assume we iterate if multiple
-            // But realistically, user might want to post specific content to specific channels.
-            // Simplified: All posts go to all selected channels.
-
             const promises = posts.map(post =>
-                axiosClient.post(`/creation-jobs/${jobId}/post`, {
+                postToChannels({
                     channels: selectedChannels,
                     message: post.content,
                     botId: selectedBotId,
@@ -163,10 +153,7 @@ export function PostToChannelsDialog({
             setPosts([{ id: '1', content: '' }]);
             setSelectedChannels([]);
         } catch (error: any) {
-            const message = error.response?.data?.message || "Failed to post content";
-            toast.error(message);
-        } finally {
-            setIsPosting(false);
+            toast.error(error.message || "Failed to post content");
         }
     };
 

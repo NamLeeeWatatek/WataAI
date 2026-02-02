@@ -72,7 +72,7 @@ export function CategorySelector({
     loadCategories();
   }, [entityType]);
 
-  const selectedCategory = categories.find(c => c.id === value);
+  const selectedCategory = categories.find(c => c.id?.toString() === value?.toString());
 
   if (loading) {
     return <div className="h-10 bg-muted animate-pulse rounded-md" />;
@@ -81,10 +81,10 @@ export function CategorySelector({
   return (
     <Select
       value={value?.toString()}
-      onValueChange={(val) => onChange(val ? parseInt(val) : undefined)}
+      onValueChange={(val) => onChange(val || undefined)}
     >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder} aria-label={`Ch?n danh m?c${selectedCategory ? `: ${selectedCategory.name}` : ''}`}>
+        <SelectValue placeholder={placeholder}>
           {selectedCategory && (
             <div className="flex items-center gap-2">
               {(() => {
@@ -110,7 +110,7 @@ export function CategorySelector({
             : Folder;
 
           return (
-            <SelectItem key={category.id} value={category.id.toString()}>
+            <SelectItem key={category.id.toString()} value={category.id.toString()}>
               <div className="flex items-center gap-2">
                 <IconComponent
                   className="size-4"

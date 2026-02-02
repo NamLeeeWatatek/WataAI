@@ -25,14 +25,26 @@ export interface ProviderModelsResponse {
 
 export const metadataApi = {
     async getCategories(entityType: string): Promise<Category[]> {
-        return axiosClient.get<Category[]>(`/metadata/categories?entity_type=${entityType}`) as unknown as Category[]
+        return axiosClient.get(`/metadata/categories?entity_type=${entityType}`)
     },
 
     async getTags(): Promise<Tag[]> {
-        return axiosClient.get<Tag[]>('/metadata/tags') as unknown as Tag[]
+        return axiosClient.get('/metadata/tags')
+    },
+
+    async createTag(data: Partial<Tag>): Promise<Tag> {
+        return axiosClient.post('/metadata/tags', data)
+    },
+
+    async updateTag(id: string | number, data: Partial<Tag>): Promise<Tag> {
+        return axiosClient.patch(`/metadata/tags/${id}`, data)
+    },
+
+    async deleteTag(id: string | number): Promise<void> {
+        await axiosClient.delete(`/metadata/tags/${id}`)
     },
 
     async getModels(): Promise<ProviderModelsResponse[]> {
-        return axiosClient.get<ProviderModelsResponse[]>('/ai-providers/models') as unknown as ProviderModelsResponse[]
+        return axiosClient.get('/ai-providers/models')
     }
 }

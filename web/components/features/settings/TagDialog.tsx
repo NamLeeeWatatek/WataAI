@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import axiosClient from '@/lib/axios-client';
+import { useTags } from '@/lib/hooks/features/useMetadata';
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,10 @@ const PRESET_COLORS = [
 ];
 
 export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
+  const { createTag, updateTag, isMutating: loading } = useTags();
   const [name, setName] = useState('');
   const [color, setColor] = useState('#6366f1');
   const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (tag) {
@@ -41,22 +41,20 @@ export function TagDialog({ open, onOpenChange, tag, onSave }: TagDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       const data = { name, color, description: description || undefined };
 
       if (tag) {
-        await axiosClient.patch(`/metadata/tags/${tag.id}`, data);
+        await updateTag({ id: tag.id, data });
       } else {
-        await axiosClient.post('/metadata/tags', data);
+        await createTag(data);
       }
 
       onSave();
+      onOpenChange(false);
     } catch {
-      toast.error('Failed to save tag');
-    } finally {
-      setLoading(false);
+      // Error handled by mutation
     }
   };
 
