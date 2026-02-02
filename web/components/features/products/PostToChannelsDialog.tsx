@@ -40,6 +40,8 @@ import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/ScrollArea";
 import { Card } from "@/components/ui/Card";
 import { Separator } from "@/components/ui/Separator";
+import { useTranslation } from 'react-i18next';
+import { WritingStyle } from '@/lib/types';
 
 interface PostToChannelsDialogProps {
     open: boolean;
@@ -61,6 +63,7 @@ export function PostToChannelsDialog({
     productName
 }: PostToChannelsDialogProps) {
     const { workspaceId } = useWorkspace();
+    const { t } = useTranslation();
     const { data: bots } = useBots(workspaceId || undefined);
 
     // Core selections
@@ -176,7 +179,7 @@ export function PostToChannelsDialog({
                         <DialogHeader className="p-6 border-b bg-background">
                             <DialogTitle className="flex items-center gap-2">
                                 <Share2 className="w-5 h-5 text-primary" />
-                                Publishing Studio
+                                {t('publishing.title')}
                             </DialogTitle>
                             <DialogDescription className="line-clamp-1">
                                 {productName}
@@ -186,7 +189,7 @@ export function PostToChannelsDialog({
                         <ScrollArea className="flex-1 p-6 space-y-6">
                             {/* Channels */}
                             <div className="space-y-3 mb-6">
-                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Destinations</Label>
+                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('publishing.destinations')}</Label>
                                 <FieldChannelSelector
                                     field={{ name: 'channels', type: 'channel-selector', label: '' } as any}
                                     value={selectedChannels}
@@ -201,12 +204,12 @@ export function PostToChannelsDialog({
                             <div className="space-y-4 mb-6">
                                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <BrainCircuit className="w-3.5 h-3.5" />
-                                    AI Writer Config
+                                    {t('publishing.ai_config')}
                                 </Label>
 
                                 <Select value={selectedBotId} onValueChange={setSelectedBotId}>
                                     <SelectTrigger className="bg-background">
-                                        <SelectValue placeholder="Select a Bot..." />
+                                        <SelectValue placeholder={t('publishing.select_bot')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {bots?.data?.map((bot) => (
@@ -217,22 +220,24 @@ export function PostToChannelsDialog({
 
                                 <Select value={selectedStyle} onValueChange={setSelectedStyle}>
                                     <SelectTrigger className="bg-background">
-                                        <SelectValue placeholder="Select Writing Style..." />
+                                        <SelectValue placeholder={t('publishing.select_style')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {[
-                                            "Chuyên gia (Professional)",
-                                            "Thân thiện (Friendly)",
-                                            "Hài hước (Humorous)",
-                                            "Thuyết phục (Persuasive)",
-                                            "Truyền cảm hứng (Inspirational)",
-                                            "Bắt trend (Trendy)",
-                                            "Kể chuyện (Storytelling)",
-                                            "Ngắn gọn (Concise)",
-                                            "Quảng cáo (Sale Hard)"
+                                            { label: t('writingStyle.professional'), value: WritingStyle.PROFESSIONAL },
+                                            { label: t('writingStyle.friendly'), value: WritingStyle.FRIENDLY },
+                                            { label: t('writingStyle.humorous'), value: WritingStyle.HUMOROUS },
+                                            { label: t('writingStyle.persuasive'), value: WritingStyle.PERSUASIVE },
+                                            { label: t('writingStyle.inspirational'), value: WritingStyle.INSPIRATIONAL },
+                                            { label: t('writingStyle.trendy'), value: WritingStyle.TRENDY },
+                                            { label: t('writingStyle.storytelling'), value: WritingStyle.STORYTELLING },
+                                            { label: t('writingStyle.concise'), value: WritingStyle.CONCISE },
+                                            { label: t('writingStyle.saleHard'), value: WritingStyle.SALE_HARD },
+                                            { label: t('writingStyle.nutritionExpert'), value: WritingStyle.NUTRITION_EXPERT },
+                                            { label: t('writingStyle.marketingExpert'), value: WritingStyle.MARKETING_EXPERT }
                                         ].map((style) => (
-                                            <SelectItem key={style} value={style}>
-                                                {style}
+                                            <SelectItem key={style.value} value={style.value}>
+                                                {style.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -242,7 +247,7 @@ export function PostToChannelsDialog({
                             {/* Multi-Post Manager (Mini List) */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Post Queue</Label>
+                                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('publishing.post_queue')}</Label>
                                     <Button variant="ghost" size="sm" onClick={addNewPost} className="h-6 w-6 p-0">
                                         <Plus className="w-3.5 h-3.5" />
                                     </Button>
@@ -281,7 +286,7 @@ export function PostToChannelsDialog({
                         {/* Toolbar */}
                         <div className="h-16 border-b flex items-center justify-between px-6 bg-muted/5">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold">Post Editor</span>
+                                <span className="text-sm font-semibold">{t('publishing.editor')}</span>
                                 {activePost.scheduledAt && isScheduled && (
                                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
@@ -296,15 +301,15 @@ export function PostToChannelsDialog({
                                 disabled={isGenerating || !selectedBotId}
                                 className="h-8 text-xs bg-white border shadow-sm hover:bg-gray-50"
                             >
-                                {isGenerating ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2 text-teal-500" />}
-                                AI Generate / Refine
+                                {isGenerating ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-2 text-primary" />}
+                                {t('publishing.ai_magic')}
                             </Button>
                         </div>
 
                         {/* Text Area */}
                         <div className="flex-1 p-6 overflow-y-auto">
                             <Textarea
-                                placeholder="Start writing your amazing post here..."
+                                placeholder={t('publishing.editor_placeholder')}
                                 value={activePost.content}
                                 onChange={(e) => updateActivePost({ content: e.target.value })}
                                 className="min-h-[300px] h-full resize-none border-none focus-visible:ring-0 text-base leading-relaxed p-0 shadow-none"
@@ -316,7 +321,7 @@ export function PostToChannelsDialog({
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-2">
                                     <Switch id="schedule-mode" checked={isScheduled} onCheckedChange={setIsScheduled} />
-                                    <Label htmlFor="schedule-mode" className="text-sm font-medium">Schedule for later</Label>
+                                    <Label htmlFor="schedule-mode" className="text-sm font-medium">{t('publishing.queue_schedule')}</Label>
                                 </div>
 
                                 {isScheduled && (
@@ -332,7 +337,7 @@ export function PostToChannelsDialog({
                                                     )}
                                                 >
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {activePost.scheduledAt ? format(activePost.scheduledAt, "PPP") : <span>Pick a date</span>}
+                                                    {activePost.scheduledAt ? format(activePost.scheduledAt, "PPP") : <span>{t('publishing.select_date')}</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">
@@ -367,7 +372,7 @@ export function PostToChannelsDialog({
                                             }}
                                         >
                                             <SelectTrigger className="w-[100px] h-9">
-                                                <SelectValue placeholder="Time" />
+                                                <SelectValue placeholder={t('publishing.time')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {Array.from({ length: 24 * 2 }).map((_, i) => {
@@ -383,14 +388,14 @@ export function PostToChannelsDialog({
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-2">
-                                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                                <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
                                 <Button
                                     onClick={handlePost}
                                     disabled={isPosting || selectedChannels.length === 0 || !activePost.content}
                                     className="px-8 font-bold"
                                 >
                                     {isPosting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {isScheduled ? 'Schedule Campaign' : 'Publish Now'}
+                                    {isScheduled ? t('publishing.schedule_campaign') : t('publishing.blast_content')}
                                 </Button>
                             </div>
                         </div>
