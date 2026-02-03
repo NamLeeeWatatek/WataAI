@@ -885,6 +885,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
             const targetPage = pages.find((p) => p.id === pageId);
             if (targetPage && targetPage.access_token) {
               finalAccessToken = targetPage.access_token;
+              this.logger.log(`Successfully exchanged token for Page ID ${pageId}`);
             } else {
               this.logger.warn(
                 `Could not find Page Access Token for page ${pageId}, falling back to default Token`,
@@ -892,10 +893,12 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
             }
           } catch (tokenErr) {
             const errorData = tokenErr.response?.data?.error;
-            this.logger.warn(
+            this.logger.error(
               `Failed to fetch pages for token exchange: ${tokenErr.message} - ${JSON.stringify(errorData)}`,
             );
           }
+
+          this.logger.log(`Attempting to post to Facebook Page ${pageId} with token ending in ...${finalAccessToken?.slice(-10)}`);
 
           const result = await this.oauthService.postToFacebookPage(
             finalAccessToken,
@@ -906,6 +909,9 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
               ? Math.floor(new Date(scheduledTime).getTime() / 1000)
               : undefined,
           );
+
+          this.logger.log(`Facebook Post Success: ${JSON.stringify(result)}`);
+
           results.push({
             channelId: rawChannelId,
             status: 'success',

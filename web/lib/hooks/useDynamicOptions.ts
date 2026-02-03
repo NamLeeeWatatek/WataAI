@@ -74,9 +74,14 @@ export function useDynamicOptions(field: FormField) {
                     pageOptions.push(...pages);
                 }
 
-                // If pages exist, we prioritized them, but we still return baseOption
-                // so users can see the main connection (though it might fail if no default page is set).
-                return [baseOption, ...pageOptions];
+                // If pages exist (e.g. Facebook Pages under a User account), return ONLY the pages.
+                // This prevents duplicates where the User Connection and the Page (same name) both appear.
+                // It also forces precise selection of the target Page.
+                if (pageOptions.length > 0) {
+                    return pageOptions;
+                }
+
+                return [baseOption];
             });
         }
 
