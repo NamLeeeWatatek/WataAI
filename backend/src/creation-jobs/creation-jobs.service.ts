@@ -876,8 +876,26 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
             continue;
           }
 
+          // Fetch Page Access Token to post AS the page
+          let finalAccessToken = accessToken;
+          try {
+            const pages = await this.oauthService.getFacebookPages(accessToken);
+            const targetPage = pages.find((p) => p.id === pageId);
+            if (targetPage && targetPage.access_token) {
+              finalAccessToken = targetPage.access_token;
+            } else {
+              this.logger.warn(
+                `Could not find Page Access Token for page ${pageId}, falling back to User Token`,
+              );
+            }
+          } catch (tokenErr) {
+            this.logger.warn(
+              `Failed to fetch pages for token exchange: ${tokenErr.message}`,
+            );
+          }
+
           const result = await this.oauthService.postToFacebookPage(
-            accessToken,
+            finalAccessToken,
             pageId,
             message,
             imageUrl,
