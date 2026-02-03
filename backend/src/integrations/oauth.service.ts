@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class OAuthService {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   getFacebookAuthUrl(clientId: string, state?: string): string {
     const redirectUri = this.getRedirectUri('facebook');
@@ -76,12 +76,14 @@ export class OAuthService {
     scheduledTime?: number,
   ): Promise<any> {
     const params: any = {
-      message,
       access_token: pageAccessToken,
     };
 
     if (imageUrl) {
       params.url = imageUrl;
+      params.caption = message;
+    } else {
+      params.message = message;
     }
 
     if (scheduledTime) {
@@ -94,12 +96,14 @@ export class OAuthService {
       : `https://graph.facebook.com/v24.0/${pageId}/feed`;
 
     try {
+      console.log(`[OAuth] Posting to ${endpoint} with params:`, { ...params, access_token: '***' });
       const response = await axios.post(endpoint, null, { params });
       return response.data;
     } catch (error) {
+      console.error('[OAuth] Facebook Post Error Details:', error.response?.data || error.message);
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(
-          `Facebook API Error: ${error.response.data.error.message}`,
+          `Facebook API Error: ${error.response.data.error.message} (Code: ${error.response.data.error.code})`,
         );
       }
       throw error;
