@@ -48,8 +48,7 @@ export function useDynamicOptions(field: FormField) {
         if (optionsConfig === 'channels') {
             const channelData = data as Channel[];
             return channelData.flatMap((channel: Channel): DynamicOption[] => {
-                // Default: Return the channel itself as a target
-                return [{
+                const baseOption: DynamicOption = {
                     ...channel,
                     label: channel.name || channel.type,
                     value: channel.id,
@@ -57,7 +56,27 @@ export function useDynamicOptions(field: FormField) {
                     originalName: channel.name,
                     baseChannelId: channel.id,
                     pageId: undefined
-                }];
+                };
+
+                const pageOptions: DynamicOption[] = [];
+                if (channel.metadata?.pages && Array.isArray(channel.metadata.pages)) {
+                    const pages = channel.metadata.pages.map(page => ({
+                        label: page.name,
+                        value: `${channel.id}:${page.id}`,
+                        id: `${channel.id}:${page.id}`,
+                        type: channel.type,
+                        status: channel.status,
+                        isPage: true,
+                        pageId: page.id,
+                        originalName: page.name,
+                        baseChannelId: channel.id
+                    }));
+                    pageOptions.push(...pages);
+                }
+
+                // If pages exist, we prioritized them, but we still return baseOption
+                // so users can see the main connection (though it might fail if no default page is set).
+                return [baseOption, ...pageOptions];
             });
         }
 
