@@ -25,10 +25,11 @@ export class OAuthService {
       redirect_uri: redirectUri,
       scope: scopes,
       response_type: 'code',
+      auth_type: 'rerequest', // FORCE Facebook to ask for new permissions
       state: state || '',
     });
 
-    return `https://www.facebook.com/v24.0/dialog/oauth?${params.toString()}`;
+    return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
   }
 
   async exchangeFacebookCode(
@@ -49,7 +50,7 @@ export class OAuthService {
     });
 
     const response = await axios.get(
-      `https://graph.facebook.com/v24.0/oauth/access_token?${params.toString()}`,
+      `https://graph.facebook.com/v21.0/oauth/access_token?${params.toString()}`,
     );
 
     return {
@@ -60,9 +61,12 @@ export class OAuthService {
 
   async getFacebookPages(accessToken: string): Promise<any[]> {
     const response = await axios.get(
-      `https://graph.facebook.com/v24.0/me/accounts`,
+      `https://graph.facebook.com/v21.0/me/accounts`,
       {
-        params: { access_token: accessToken },
+        params: {
+          access_token: accessToken,
+          fields: 'name,access_token,id,tasks,category', // Explicitly request token
+        },
       },
     );
 
@@ -93,8 +97,8 @@ export class OAuthService {
     }
 
     const endpoint = imageUrl
-      ? `https://graph.facebook.com/v24.0/${pageId}/photos`
-      : `https://graph.facebook.com/v24.0/${pageId}/feed`;
+      ? `https://graph.facebook.com/v21.0/${pageId}/photos`
+      : `https://graph.facebook.com/v21.0/${pageId}/feed`;
 
     try {
       console.log(`[OAuth] Posting to ${endpoint} with params:`, { ...params, access_token: '***' });
