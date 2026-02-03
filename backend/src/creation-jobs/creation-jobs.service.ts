@@ -864,9 +864,11 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           const pageId =
             targetPageId || channel.metadata?.pageId || channel.metadata?.id;
 
-          const accessToken = channel.accessToken;
+          // Prefer userAccessToken from metadata if available (typical for User connections managing multiple pages)
+          // otherwise fallback to the main accessToken column
+          const rawToken = channel.metadata?.userAccessToken || channel.accessToken;
 
-          if (!pageId || !accessToken) {
+          if (!pageId || !rawToken) {
             results.push({
               channelId: rawChannelId,
               status: 'error',
@@ -877,20 +879,21 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           }
 
           // Fetch Page Access Token to post AS the page
-          let finalAccessToken = accessToken;
+          let finalAccessToken = channel.accessToken || rawToken; // Default to main token if exchange fails
           try {
-            const pages = await this.oauthService.getFacebookPages(accessToken);
+            const pages = await this.oauthService.getFacebookPages(rawToken);
             const targetPage = pages.find((p) => p.id === pageId);
             if (targetPage && targetPage.access_token) {
               finalAccessToken = targetPage.access_token;
             } else {
               this.logger.warn(
-                `Could not find Page Access Token for page ${pageId}, falling back to User Token`,
+                `Could not find Page Access Token for page ${pageId}, falling back to default Token`,
               );
             }
           } catch (tokenErr) {
+            const errorData = tokenErr.response?.data?.error;
             this.logger.warn(
-              `Failed to fetch pages for token exchange: ${tokenErr.message}`,
+              `Failed to fetch pages for token exchange: ${tokenErr.message} - ${JSON.stringify(errorData)}`,
             );
           }
 
