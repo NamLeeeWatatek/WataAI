@@ -173,7 +173,10 @@ export function ProductsTable({
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <span className="text-sm font-medium truncate max-w-[150px] cursor-help">
+                                <span className={cn(
+                                    "text-sm font-medium cursor-help block truncate",
+                                    "max-w-[150px]"
+                                )}>
                                     {toolName}
                                 </span>
                             </TooltipTrigger>

@@ -878,7 +878,7 @@
     "launch_generation": "Bắt đầu tạo nội dung",
     "processing": "Đang xử lý...",
     "processing_preview": "Đang tạo bản xem trước...",
-    "executing_step": "Đang thực thi",
+    "executing_step": "Đang xử lý",
     "request_received": "Yêu cầu đã được ghi nhận!",
     "failed_generate": "Tạo nội dung thất bại",
     "step_completed": "Bước hoàn thành",
