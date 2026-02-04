@@ -60,17 +60,46 @@ export class OAuthService {
   }
 
   async getFacebookPages(accessToken: string): Promise<any[]> {
-    const response = await axios.get(
-      `https://graph.facebook.com/v21.0/me/accounts`,
-      {
-        params: {
-          access_token: accessToken,
-          fields: 'name,access_token,id,tasks,category', // Explicitly request token
-        },
-      },
-    );
+    let pages: any[] = [];
+    let url: string | undefined = `https://graph.facebook.com/v21.0/me/accounts`;
+    let params: any = {
+      access_token: accessToken,
+      fields: 'name,access_token,id,tasks,category', // Explicitly request token
+      limit: 100,
+    };
 
-    return response.data.data || [];
+    while (url) {
+      const response = await axios.get(url, { params });
+      const data = response.data;
+      if (data.data) {
+        pages = pages.concat(data.data);
+      }
+      url = data.paging?.next;
+      params = undefined; // Subsequent URLs already contain params
+    }
+
+
+    return pages;
+  }
+
+  async getFacebookPage(accessToken: string, pageId: string): Promise<any> {
+    try {
+      const response = await axios.get(
+        `https://graph.facebook.com/v21.0/${pageId}`,
+        {
+          params: {
+            access_token: accessToken,
+            fields: 'name,access_token,id,tasks,category',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response && (error.response.status === 400 || error.response.status === 404)) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async postToFacebookPage(
