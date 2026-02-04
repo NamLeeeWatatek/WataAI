@@ -879,22 +879,32 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           }
 
           // Fetch Page Access Token to post AS the page
-          let finalAccessToken = channel.accessToken || rawToken; // Default to main token if exchange fails
+          let finalAccessToken: string;
           try {
-            const targetPage = await this.oauthService.getFacebookPage(rawToken, pageId);
+            const targetPage = await this.oauthService.getFacebookPage(
+              rawToken,
+              pageId,
+            );
             if (targetPage && targetPage.access_token) {
               finalAccessToken = targetPage.access_token;
-              this.logger.log(`Successfully exchanged token for Page ID ${pageId}`);
+              this.logger.log(
+                `Successfully exchanged token for Page ID ${pageId}`,
+              );
             } else {
-              this.logger.warn(
-                `Could not find Page Access Token for page ${pageId}, falling back to default Token`,
+              throw new Error(
+                `Could not find Page Access Token for page ${pageId}. Verify permissions (pages_manage_posts) or if User is Admin. DO NOT FALLBACK to User Token.`,
               );
             }
           } catch (tokenErr) {
             const errorData = tokenErr.response?.data?.error;
-            this.logger.error(
-              `Failed to fetch pages for token exchange: ${tokenErr.message} - ${JSON.stringify(errorData)}`,
-            );
+            const errMsg = `Failed to fetch Page Access Token: ${tokenErr.message} - ${JSON.stringify(errorData)}`;
+            this.logger.error(errMsg);
+            results.push({
+              channelId: rawChannelId,
+              status: 'error',
+              error: errMsg,
+            });
+            continue;
           }
 
           this.logger.log(`Attempting to post to Facebook Page ${pageId} with token ending in ...${finalAccessToken?.slice(-10)}`);

@@ -146,7 +146,8 @@
       "conversationsLabel": "cuộc hội thoại",
       "executions": "lần thực thi",
       "avgMsgs": "tb tin nhắn",
-      "avgTime": "tb"
+      "avgTime": "tb",
+      "monthOverMonth": "So sánh theo tháng"
     },
     "admin": {
       "stats": {
@@ -255,6 +256,55 @@
     "retry": "Thử lại",
     "callback": "Xử lý kết nối",
     "facebook": "Facebook"
+  },
+  "notificationList": {
+    "title": "Thông báo",
+    "connected": "Đã kết nối",
+    "disconnected": "Mất kết nối",
+    "count": "{{count}} thông báo",
+    "loading": "Đang tải thông báo...",
+    "empty": {
+      "title": "Không có thông báo nào",
+      "desc": "Bạn đã đọc hết! Thông báo mới sẽ xuất hiện ở đây."
+    },
+    "progress": "Tiến độ",
+    "viewResults": "Xem kết quả",
+    "soundOn": "Bật âm thanh",
+    "soundOff": "Tắt âm thanh",
+    "markAllRead": "Đánh dấu tất cả là đã đọc",
+    "justNow": "Vừa xong",
+    "secondsAgo": "{{count}} giây trước",
+    "minutesAgo": "{{count}} phút trước",
+    "hoursAgo": "{{count}} giờ trước",
+    "daysAgo": "{{count}} ngày trước"
+  },
+  "globalActivity": {
+    "title": "Hoạt động hệ thống",
+    "active": "Đang hoạt động",
+    "description": "Theo dõi các quy trình thời gian thực và xem lại lịch sử hoạt động.",
+    "tabs": {
+      "activeTasks": "Tác vụ đang chạy",
+      "historyFeed": "Lịch sử hoạt động"
+    },
+    "systemProcess": "Quy trình hệ thống",
+    "currentProgress": "Tiến độ hiện tại",
+    "status": {
+      "completed": "Tác vụ hoàn thành thành công",
+      "failed": "Quá trình gặp lỗi",
+      "stopped": "Quá trình đã dừng",
+      "canceled": "Đã hủy"
+    },
+    "viewResult": "Xem kết quả",
+    "empty": {
+      "title": "Không có tác vụ nào",
+      "desc": "Các quy trình đang chạy sẽ xuất hiện ở đây theo thời gian thực.",
+      "feedEmpty": "Lịch sử trống"
+    },
+    "actions": {
+      "updateAll": "Cập nhật tất cả",
+      "refresh": "Làm mới",
+      "refreshFeed": "Làm mới lịch sử"
+    }
   },
   "validation": {
     "required": "Trường này là bắt buộc",
@@ -658,7 +708,57 @@
       "configure": "Cấu hình",
       "deleteTitle": "Xóa nhà cung cấp",
       "deleteConfirm": "Bạn có chắc chắn muốn xóa nhà cung cấp AI này? Hành động này không thể hoàn tác và có thể ảnh hưởng đến các bot đang sử dụng nhà cung cấp này.",
-      "deleteText": "Xóa nhà cung cấp"
+      "deleteText": "Xóa nhà cung cấp",
+      "models": "Mô hình",
+      "showing_providers": "Hiển thị nhà cung cấp {{count}} trong số {{total}}"
+    },
+    "aiSettingsTab": {
+      "title": "Cài đặt AI toàn cục",
+      "description": "Cấu hình mô hình AI mặc định và hành vi cho hệ thống",
+      "defaultProvider": "Nhà cung cấp AI mặc định",
+      "selectProvider": "Chọn nhà cung cấp",
+      "defaultModel": "Mô hình mặc định",
+      "selectModel": "Chọn mô hình",
+      "noModels": "Không tìm thấy mô hình",
+      "temperature": "Phạm vi nhiệt độ (Tone)",
+      "minTemp": "Tối thiểu (Sáng tạo)",
+      "maxTemp": "Tối đa (Chính xác)",
+      "safety": "An toàn & Hành vi",
+      "safetyDesc": "Kiểm soát việc tạo nội dung AI",
+      "contentModeration": "Kiểm duyệt nội dung",
+      "contentModerationDesc": "Quét và lọc nội dung không phù hợp",
+      "safeFallbacks": "Dự phòng an toàn",
+      "safeFallbacksDesc": "Sử dụng phản hồi an toàn khi tạo thất bại",
+      "contextAware": "Nhận thức ngữ cảnh",
+      "contextAwareDesc": "Cho phép bộ nhớ hội thoại đa lượt",
+      "rateLimiting": "Giới hạn tốc độ",
+      "requestsPerHourSystem": "Yêu cầu / Giờ (Hệ thống)",
+      "requestsPerHourUser": "Yêu cầu / Giờ (Người dùng)",
+      "saveSettings": "Lưu cài đặt"
+    },
+    "aiProviderDialog": {
+      "editTitle": "Chỉnh sửa nhà cung cấp",
+      "addTitle": "Thêm nhà cung cấp",
+      "description": "Cấu hình cài đặt và thông tin xác thực nhà cung cấp AI",
+      "providerLabel": "Nhà cung cấp",
+      "selectProviderPlaceholder": "Chọn nhà cung cấp",
+      "displayNameLabel": "Tên hiển thị",
+      "displayNamePlaceholder": "VD: Production GPT-4",
+      "authentication": "Xác thực",
+      "required": "Bắt buộc",
+      "optional": "Tùy chọn",
+      "connecting": "Đang kết nối...",
+      "refreshModels": "Làm mới mô hình",
+      "availableModels": "Mô hình khả dụng",
+      "manualModelPlaceholder": "Thêm ID mô hình thủ công (VD: gpt-4-turbo)",
+      "add": "Thêm",
+      "cancel": "Hủy",
+      "saveChanges": "Lưu thay đổi",
+      "modelAdded": "Đã thêm mô hình",
+      "verificationFailed": "Xác minh thất bại",
+      "foundModels": "Tìm thấy {{count}} mô hình, đã gộp với danh sách hiện tại",
+      "providerRequired": "Nhà cung cấp là bắt buộc",
+      "displayNameRequired": "Tên hiển thị là bắt buộc"
     },
     "notifications": "Thông báo",
     "sharing": "Chia sẻ",
@@ -744,7 +844,12 @@
       "pushUpdate": "Cập nhật cấu hình",
       "initLimit": "Khởi tạo cấu hình",
       "copiedOAuth": "Đã sao chép URL OAuth",
-      "copiedWebhook": "Đã sao chép URL Webhook"
+      "copiedWebhook": "Đã sao chép URL Webhook",
+      "statusOffline": "Ngoại tuyến",
+      "integrationCategory": "Tích hợp",
+      "namePlaceholder": "VD: Cổng Facebook chính",
+      "clientIdPlaceholder": "Client / App ID",
+      "scopesPlaceholder": "VD: read_messages, write_post"
     }
   },
   "channels_config": {

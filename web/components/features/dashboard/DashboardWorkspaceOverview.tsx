@@ -58,7 +58,7 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
                 <div className="mt-10 pt-6 border-t border-border/10 flex items-center justify-between">
                     <div className="flex flex-col">
                         <p className="text-sm font-bold">{t('dashboard.stats.growthRate')}</p>
-                        <p className="text-xs text-muted-foreground opacity-70">Month over month comparison</p>
+                        <p className="text-xs text-muted-foreground opacity-70">{t('dashboard.stats.monthOverMonth')}</p>
                     </div>
                     {stats?.workspaces && formatGrowthRate(stats.workspaces.growthRate)}
                 </div>

@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Switch } from '@/components/ui/Switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
-import { Zap, ShieldCheck, Settings2, Loader2, Gauge } from 'lucide-react';
+import { Zap, ShieldCheck, Settings2, Gauge } from 'lucide-react';
 import { useAiProviders, type SystemSettings } from '@/lib/hooks/features/useAiProviders';
 import { FormActions } from '@/components/shared/FormActions';
+import { useTranslation } from 'react-i18next';
 
 export function AISettingsTab() {
+  const { t } = useTranslation();
   const {
     userConfigs,
     systemSettings: serverSettings,
@@ -33,7 +34,7 @@ export function AISettingsTab() {
   const isDirty = JSON.stringify(localSettings) !== JSON.stringify(serverSettings);
   const activeProviders = userConfigs.filter(c => c.isActive);
 
-  if (isLoading) return <div className="p-20 text-center text-muted-foreground animate-pulse">Loading configuration...</div>;
+  if (isLoading) return <div className="p-20 text-center text-muted-foreground animate-pulse" suppressHydrationWarning>{t('common.loading')}</div>;
 
   return (
     <div className="space-y-12">
@@ -46,20 +47,20 @@ export function AISettingsTab() {
                 <Zap className="size-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Global AI Settings</CardTitle>
-                <CardDescription>Configure default AI models and behavior for the system</CardDescription>
+                <CardTitle suppressHydrationWarning>{t('aiSettingsTab.title')}</CardTitle>
+                <CardDescription suppressHydrationWarning>{t('aiSettingsTab.description')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <Label>Default AI Provider</Label>
+              <Label suppressHydrationWarning>{t('aiSettingsTab.defaultProvider')}</Label>
               <Select
                 value={localSettings.defaultProviderId}
                 onValueChange={(val) => setLocalSettings((p: SystemSettings) => ({ ...p, defaultProviderId: val, defaultModel: '' }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Provider" />
+                  <SelectValue placeholder={t('aiSettingsTab.selectProvider')} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeProviders.map((config) => (
@@ -72,28 +73,28 @@ export function AISettingsTab() {
             </div>
 
             <div className="space-y-3">
-              <Label>Default Model</Label>
+              <Label suppressHydrationWarning>{t('aiSettingsTab.defaultModel')}</Label>
               <Select
                 value={localSettings.defaultModel}
                 onValueChange={(val) => setLocalSettings((p: SystemSettings) => ({ ...p, defaultModel: val }))}
                 disabled={!localSettings.defaultProviderId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Model" />
+                  <SelectValue placeholder={t('aiSettingsTab.selectModel')} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeProviders.find(c => c.id === localSettings.defaultProviderId)?.modelList?.map((model: string) => (
                     <SelectItem key={model} value={model}>{model}</SelectItem>
-                  )) || <div className="p-4 text-center text-sm text-muted-foreground">No models found</div>}
+                  )) || <div className="p-4 text-center text-sm text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.noModels')}</div>}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <Label>Temperature Range</Label>
+              <Label suppressHydrationWarning>{t('aiSettingsTab.temperature')}</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="min-temp" className="text-xs text-muted-foreground">Minimum (Creative)</Label>
+                  <Label htmlFor="min-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.minTemp')}</Label>
                   <Input
                     id="min-temp"
                     type="number"
@@ -105,7 +106,7 @@ export function AISettingsTab() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="max-temp" className="text-xs text-muted-foreground">Maximum (Precise)</Label>
+                  <Label htmlFor="max-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.maxTemp')}</Label>
                   <Input
                     id="max-temp"
                     type="number"
@@ -129,17 +130,17 @@ export function AISettingsTab() {
                 <ShieldCheck className="size-5 text-green-500" />
               </div>
               <div>
-                <CardTitle>Safety & Behavior</CardTitle>
-                <CardDescription>Controls for AI content generation</CardDescription>
+                <CardTitle suppressHydrationWarning>{t('aiSettingsTab.safety')}</CardTitle>
+                <CardDescription suppressHydrationWarning>{t('aiSettingsTab.safetyDesc')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               {[
-                { key: 'contentModeration', label: 'Content Moderation', desc: 'Scan and filter inappropriate content' },
-                { key: 'safeFallbacks', label: 'Safe Fallbacks', desc: 'Use safe responses when generation fails' },
-                { key: 'contextAware', label: 'Context Awareness', desc: 'Enable multi-turn conversation memory' }
+                { key: 'contentModeration', label: t('aiSettingsTab.contentModeration'), desc: t('aiSettingsTab.contentModerationDesc') },
+                { key: 'safeFallbacks', label: t('aiSettingsTab.safeFallbacks'), desc: t('aiSettingsTab.safeFallbacksDesc') },
+                { key: 'contextAware', label: t('aiSettingsTab.contextAware'), desc: t('aiSettingsTab.contextAwareDesc') }
               ].map((policy) => (
                 <div key={policy.key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-1">
@@ -157,11 +158,11 @@ export function AISettingsTab() {
             <div className="pt-6 border-t space-y-4">
               <div className="flex items-center gap-2">
                 <Gauge className="size-4 text-muted-foreground" />
-                <h4 className="font-medium text-sm text-foreground">Rate Limiting</h4>
+                <h4 className="font-medium text-sm text-foreground" suppressHydrationWarning>{t('aiSettingsTab.rateLimiting')}</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Requests / Hour (System)</Label>
+                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.requestsPerHourSystem')}</Label>
                   <Input
                     type="number"
                     value={localSettings.maxRequestsPerHour}
@@ -169,7 +170,7 @@ export function AISettingsTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Requests / Hour (User)</Label>
+                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.requestsPerHourUser')}</Label>
                   <Input
                     type="number"
                     value={localSettings.maxRequestsPerUser}
@@ -186,7 +187,7 @@ export function AISettingsTab() {
         onSave={handleSave}
         disabled={!isDirty}
         loading={isMutating}
-        saveLabel="Save Settings"
+        saveLabel={t('aiSettingsTab.saveSettings')}
         icon={<Settings2 className="mr-3 h-5 w-5" />}
       />
     </div>

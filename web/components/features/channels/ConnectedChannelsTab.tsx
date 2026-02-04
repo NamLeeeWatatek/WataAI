@@ -283,9 +283,9 @@ export function ConnectedChannelsTab({
 
                       {sameTypeCount > 1 && (
                         <div className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
-                          <span className="text-muted-foreground font-medium">Account</span>
+                          <span className="text-muted-foreground font-medium">{t('settingsPage.account')}</span>
                           <span className="font-semibold text-foreground">
-                            {channel.metadata?.accountName || `Account ${channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1}`}
+                            {channel.metadata?.accountName || `${t('settingsPage.account')} ${channels.findIndex(c => c.id === channel.id) % sameTypeCount + 1}`}
                           </span>
                         </div>
                       )}
