@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useDateLocale } from '@/lib/hooks/use-date-locale';
 
 export interface Invoice {
     id: string;
@@ -30,6 +31,7 @@ interface BillingHistoryTableProps {
 }
 
 export function BillingHistoryTable({ invoices = [] }: BillingHistoryTableProps) {
+    const locale = useDateLocale();
     const safeInvoices = Array.isArray(invoices) ? invoices : [];
     return (
         <div className="rounded-md border">
@@ -54,7 +56,7 @@ export function BillingHistoryTable({ invoices = [] }: BillingHistoryTableProps)
                         safeInvoices.map((invoice) => (
                             <TableRow key={invoice.id}>
                                 <TableCell>
-                                    {format(new Date(invoice.createdAt), 'MMM dd, yyyy')}
+                                    {format(new Date(invoice.createdAt), 'MMM dd, yyyy', { locale })}
                                 </TableCell>
                                 <TableCell>
                                     {new Intl.NumberFormat('en-US', {

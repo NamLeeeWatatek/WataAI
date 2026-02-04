@@ -23,7 +23,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { formatDate } from '@/lib/utils/date';
+// import { formatDate } from '@/lib/utils/date'; // Removed
+import { format } from 'date-fns';
+import { useDateLocale } from '@/lib/hooks/use-date-locale';
 import { Search } from '@/components/shared/Search';
 import type { Channel } from '@/lib/types/channel';
 import { ColumnDef } from '@tanstack/react-table';
@@ -67,6 +69,7 @@ export function ConnectedChannelsTab({
   isLoading = false
 }: ConnectedChannelsTabProps) {
   const { t } = useTranslation();
+  const locale = useDateLocale();
 
 
 
@@ -113,7 +116,7 @@ export function ConnectedChannelsTab({
       id: 'createdAt',
       header: t('channels_config.connected'),
       accessorKey: 'createdAt',
-      cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground">{formatDate(getValue() as string)}</span>
+      cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground">{getValue() ? format(new Date(getValue() as string), 'P', { locale }) : 'N/A'}</span>
     },
     {
       id: 'actions',

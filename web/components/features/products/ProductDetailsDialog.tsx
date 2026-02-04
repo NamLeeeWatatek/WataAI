@@ -13,6 +13,7 @@ import { isImageUrl, isVideoUrl } from '@/lib/utils/media';
 import { getKnowledgeBase } from '@/lib/api/knowledge-base';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDateLocale } from '@/lib/hooks/use-date-locale';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { useQuery } from '@tanstack/react-query';
 import { creationToolsApi } from '@/lib/api/creation-tools';
@@ -28,6 +29,7 @@ interface ProductDetailsDialogProps {
 
 export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetailsDialogProps) {
     const { t } = useTranslation();
+    const locale = useDateLocale();
     const [kbName, setKbName] = useState<string | null>(null);
     const { currentWorkspace } = useWorkspace();
     const { channels } = useChannels(currentWorkspace?.id);
@@ -275,7 +277,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                         <div className="absolute -left-[29px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background" />
                         <div className="space-y-1">
                             <h5 className="text-xs font-bold uppercase text-primary">Job Started</h5>
-                            <p className="text-[10px] text-muted-foreground">{format(new Date(job.createdAt), 'PPpp')}</p>
+                            <p className="text-[10px] text-muted-foreground">{format(new Date(job.createdAt), 'PPpp', { locale })}</p>
                         </div>
                     </div>
 
@@ -373,7 +375,7 @@ export function ProductDetailsDialog({ job, open, onOpenChange }: ProductDetails
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-sm font-bold">{channel?.name || item.platform || t('common.notAvailable')}</p>
-                                            <p className="text-[10px] text-muted-foreground">{format(new Date(item.createdAt), 'PPpp')}</p>
+                                            <p className="text-[10px] text-muted-foreground">{format(new Date(item.createdAt), 'PPpp', { locale })}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">

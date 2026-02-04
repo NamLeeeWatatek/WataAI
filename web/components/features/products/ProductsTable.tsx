@@ -21,7 +21,9 @@ import { DataTable } from "@/components/shared/DataTable";
 import { ColumnDef } from '@tanstack/react-table';
 
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
-import { formatDateTime } from "@/lib/utils/date";
+// import { formatDateTime } from "@/lib/utils/date"; // Removed
+import { format } from "date-fns";
+import { useDateLocale } from "@/lib/hooks/use-date-locale";
 import { toast } from "sonner";
 import { Package, Zap } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -82,6 +84,7 @@ export function ProductsTable({
     const [actionDialogOpen, setActionDialogOpen] = useState(false);
     const [selectedAction, setSelectedAction] = useState<TriggerAction | null>(null);
     const [activeJobForAction, setActiveJobForAction] = useState<CreationJob | null>(null);
+    const locale = useDateLocale();
 
     const getDisplayName = (job: CreationJob) => {
         const input = job.inputData as any;
@@ -230,7 +233,7 @@ export function ProductsTable({
             accessorKey: 'createdAt',
             cell: ({ getValue }) => (
                 <span className="text-muted-foreground text-sm">
-                    {formatDateTime(getValue() as string | Date)}
+                    {getValue() ? format(new Date(getValue() as string), 'PPpp', { locale }) : 'N/A'}
                 </span>
             ),
             size: 180,

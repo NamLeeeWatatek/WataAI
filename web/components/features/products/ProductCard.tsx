@@ -3,8 +3,10 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { CreationJob, CreationJobStatus } from '@/lib/types/creation-job';
-import { ExternalLink, Calendar, CheckCircle, Clock, AlertCircle, Trash2 } from 'lucide-react';
-import { formatDateTime } from '@/lib/utils/date';
+import { ExternalLink, Calendar, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+// import { formatDateTime } from '@/lib/utils/date'; // Removed
+import { format, isValid } from 'date-fns';
+import { useDateLocale } from '@/lib/hooks/use-date-locale';
 import { useState } from 'react';
 import { ProductDetailsDialog } from './ProductDetailsDialog';
 import { toast } from 'sonner';
@@ -37,6 +39,7 @@ import { useTranslation } from 'react-i18next';
 
 export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCardProps) {
     const { t } = useTranslation();
+    const locale = useDateLocale();
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -145,7 +148,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                     <CardDescription className="flex items-center gap-2 text-xs text-muted-foreground/60">
                         <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            {formatDateTime(job.createdAt)}
+                            {job.createdAt && isValid(new Date(job.createdAt)) ? format(new Date(job.createdAt), 'PPpp', { locale }) : 'N/A'}
                         </span>
                     </CardDescription>
                 </CardHeader>
