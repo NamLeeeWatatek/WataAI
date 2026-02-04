@@ -213,6 +213,30 @@ export class FacebookOAuthController {
         `[FacebookOAuth] Page Token received (exists): ${!!body.pageAccessToken}`,
       );
 
+      // Exchange Short-Lived User Token for Long-Lived Token
+      let finalUserToken = body.userAccessToken;
+      try {
+        const credential = await this.facebookOAuthService.getCredential(
+          workspaceId,
+          req.user.id,
+        );
+
+        if (credential?.clientId && credential?.clientSecret) {
+          finalUserToken = await this.facebookOAuthService.exchangeForLongLivedToken(
+            body.userAccessToken,
+            credential.clientId,
+            credential.clientSecret,
+          );
+          this.logger.log(
+            `[FacebookOAuth] Exchanged User Token for Long-Lived Token`,
+          );
+        }
+      } catch (tokenErr) {
+        this.logger.warn(
+          `[FacebookOAuth] Failed to exchange for Long-Lived token, using original: ${tokenErr.message}`,
+        );
+      }
+
       let pageToConnect: {
         id: string;
         name: string;
@@ -283,7 +307,7 @@ export class FacebookOAuthController {
           category: verifiedPageToConnect.category,
           tasks: verifiedPageToConnect.tasks,
           botId: body.botId,
-          userAccessToken: body.userAccessToken,
+          userAccessToken: finalUserToken,
         },
         providerType,
       );
