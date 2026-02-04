@@ -15,15 +15,18 @@ interface KbProcessingTabProps {
     form: UseFormReturn<KbFormValues>
 }
 
+import { useTranslation } from 'react-i18next'
+
 export function KbProcessingTab({ form }: KbProcessingTabProps) {
+    const { t } = useTranslation()
     return (
         <div className="space-y-6">
             <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-wide">Advance Configuration</p>
+                    <p className="text-xs font-bold uppercase tracking-wide">{t('knowledgeBase.advanceConfig', { defaultValue: 'Advance Configuration' })}</p>
                     <p className="text-[11px] opacity-90 leading-relaxed">
-                        Adjusting these settings after creation will require re-indexing all documents. Leave as default if unsure.
+                        {t('knowledgeBase.advanceConfigDesc', { defaultValue: 'Adjusting these settings after creation will require re-indexing all documents. Leave as default if unsure.' })}
                     </p>
                 </div>
             </div>
@@ -35,7 +38,7 @@ export function KbProcessingTab({ form }: KbProcessingTabProps) {
                     render={({ field }) => (
                         <FormItem>
                             <div className="flex items-center justify-between mb-2">
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chunk Size (Tokens)</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.chunkSize', { defaultValue: 'Chunk Size' })} (Tokens)</FormLabel>
                                 <span className="text-xs font-mono font-medium bg-muted px-2 py-0.5 rounded">{field.value}</span>
                             </div>
                             <FormControl>
@@ -49,7 +52,7 @@ export function KbProcessingTab({ form }: KbProcessingTabProps) {
                                 </div>
                             </FormControl>
                             <FormDescription className="text-[10px]">
-                                Maximum number of tokens per document segment.
+                                {t('knowledgeBase.chunkSizeDesc', { defaultValue: 'Maximum number of tokens per document segment.' })}
                             </FormDescription>
                             <FormMessage />
                         </FormItem>
@@ -62,7 +65,7 @@ export function KbProcessingTab({ form }: KbProcessingTabProps) {
                     render={({ field }) => (
                         <FormItem>
                             <div className="flex items-center justify-between mb-2">
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Chunk Overlap</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.chunkOverlap', { defaultValue: 'Chunk Overlap' })}</FormLabel>
                                 <span className="text-xs font-mono font-medium bg-muted px-2 py-0.5 rounded">{field.value}</span>
                             </div>
                             <FormControl>
@@ -74,7 +77,7 @@ export function KbProcessingTab({ form }: KbProcessingTabProps) {
                                 />
                             </FormControl>
                             <FormDescription className="text-[10px]">
-                                Number of tokens to repeat between chunks to maintain context.
+                                {t('knowledgeBase.chunkOverlapDesc', { defaultValue: 'Number of tokens to repeat between chunks to maintain context.' })}
                             </FormDescription>
                             <FormMessage />
                         </FormItem>
