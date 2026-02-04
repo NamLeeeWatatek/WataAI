@@ -84,27 +84,38 @@ export class OAuthService {
 
   async getFacebookPage(accessToken: string, pageId: string): Promise<any> {
     try {
-      console.log(`[OAuth] Fetching Page ${pageId} with token ending ...${accessToken.slice(-10)}`);
-      const response = await axios.get(
-        `https://graph.facebook.com/v21.0/${pageId}`,
-        {
-          params: {
-            access_token: accessToken,
-            fields: 'name,access_token,id,tasks,category,permissions', // Added permissions field if available
-          },
-        },
-      );
-      console.log(`[OAuth] Facebook Page Response:`, JSON.stringify(response.data));
+      console.log(`[OAuth] Fetching Page ${pageId} via /me/accounts using User Token ending ...${accessToken.slice(-10)}`);
 
-      if (!response.data.access_token) {
-        console.warn(`[OAuth] WARNING: No access_token found in response for Page ${pageId}. User might lack 'pages_manage_posts' or Admin role.`);
+      let url: string | undefined = `https://graph.facebook.com/v21.0/me/accounts`;
+      let params: any = {
+        access_token: accessToken,
+        fields: 'name,access_token,id,tasks,category',
+        limit: 100,
+      };
+
+      while (url) {
+        const response = await axios.get(url, { params });
+        const data = response.data;
+
+        if (data.data && Array.isArray(data.data)) {
+          const foundPage = data.data.find((p: any) => p.id === pageId);
+          if (foundPage) {
+            console.log(`[OAuth] Successfully found Page ${pageId} and retrieved Page Access Token.`);
+            return foundPage;
+          }
+        }
+
+        url = data.paging?.next;
+        params = undefined; // Next URL already contains the necessary parameters
       }
 
-      return response.data;
+      console.warn(`[OAuth] Page ${pageId} not found in the user's accounts list. User might not have permission or role.`);
+      return null;
+
     } catch (error) {
       console.error(`[OAuth] getFacebookPage Failed: ${error.message}`, error.response?.data);
-      if (axios.isAxiosError(error) && error.response && (error.response.status === 400 || error.response.status === 404)) {
-        return null;
+      if (axios.isAxiosError(error) && error.response && (error.response.status === 400 || error.response.status === 401)) {
+        console.error(`[OAuth] Possible Token/Permission Issue. Scope 'pages_show_list' might be missing.`);
       }
       throw error;
     }
