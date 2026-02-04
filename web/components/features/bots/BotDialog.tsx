@@ -24,7 +24,10 @@ interface BotDialogProps {
     workspaceId: string
 }
 
+import { useTranslation } from 'react-i18next'
+
 export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogProps) {
+    const { t } = useTranslation()
     const { form, handleSubmit, isSubmitting, errors } = useBotForm(workspaceId, bot || undefined)
 
     const onSubmit = async (data: any) => {
@@ -37,7 +40,7 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>{bot ? 'Edit Bot' : 'Create New Bot'}</DialogTitle>
+                    <DialogTitle>{bot ? t('bots.editBot', { defaultValue: 'Edit Bot' }) : t('bots.createNewAgent', { defaultValue: 'Create New Bot' })}</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -68,9 +71,9 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                             name="name"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Name</FormLabel>
+                                    <FormLabel>{t('bots.botName', { defaultValue: 'Name' })}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Customer Support Bot" {...field} />
+                                        <Input placeholder={t('bots.botNamePlaceholder', { defaultValue: 'Customer Support Bot' })} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -81,10 +84,10 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel>{t('bots.descriptionLabel', { defaultValue: 'Description' })}</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Handles customer inquiries..."
+                                            placeholder={t('bots.descriptionPlaceholder', { defaultValue: 'Handles customer inquiries...' })}
                                             rows={3}
                                             {...field}
                                         />
@@ -99,7 +102,7 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                 name="defaultLanguage"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Language</FormLabel>
+                                        <FormLabel>{t('bots.language', { defaultValue: 'Language' })}</FormLabel>
                                         <FormControl>
                                             <Input placeholder="en" {...field} />
                                         </FormControl>
@@ -113,7 +116,7 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                 name="timezone"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Timezone</FormLabel>
+                                        <FormLabel>{t('bots.timezone', { defaultValue: 'Timezone' })}</FormLabel>
                                         <FormControl>
                                             <Input placeholder="UTC" {...field} />
                                         </FormControl>
@@ -129,7 +132,7 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                             name="tags"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Purpose Tags</FormLabel>
+                                    <FormLabel>{t('bot_config.purpose_tags', { defaultValue: 'Purpose Tags' })}</FormLabel>
                                     <div className="flex flex-wrap gap-1.5 mb-2 min-h-[32px] p-2 border border-border/40 rounded-xl bg-muted/10">
                                         {field.value?.map((tag: string) => (
                                             <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-0.5 gap-1 text-[10px] font-bold bg-primary/5 hover:bg-primary/10 border-primary/20 transition-all">
@@ -144,12 +147,12 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                             </Badge>
                                         ))}
                                         {(!field.value || field.value.length === 0) && (
-                                            <span className="text-[10px] text-muted-foreground/50 self-center px-1 italic">No tags added yet</span>
+                                            <span className="text-[10px] text-muted-foreground/50 self-center px-1 italic">{t('bot_config.no_tags', { defaultValue: 'No tags added yet' })}</span>
                                         )}
                                     </div>
                                     <div className="flex gap-2">
                                         <Input
-                                            placeholder="Support, Marketing, Sales..."
+                                            placeholder={t('bot_config.tags_placeholder', { defaultValue: 'Support, Marketing, Sales...' })}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -163,17 +166,17 @@ export function BotDialog({ open, onOpenChange, bot, workspaceId }: BotDialogPro
                                             className="h-9 text-xs bg-background/50"
                                         />
                                     </div>
-                                    <p className="text-[10px] text-muted-foreground/60 italic pl-1">Press Enter to add tags quickly</p>
+                                    <p className="text-[10px] text-muted-foreground/60 italic pl-1">{t('bot_config.press_enter_tags', { defaultValue: 'Press Enter to add tags quickly' })}</p>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                                Cancel
+                                {t('bots.cancel', { defaultValue: 'Cancel' })}
                             </Button>
                             <Button type="submit" loading={form.formState.isSubmitting}>
-                                {bot ? 'Update' : 'Create'}
+                                {bot ? t('bots.update', { defaultValue: 'Update' }) : t('bots.createAgent', { defaultValue: 'Create' })}
                             </Button>
                         </DialogFooter>
                     </form>

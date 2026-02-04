@@ -15,7 +15,10 @@ interface KbEssentialsTabProps {
     form: UseFormReturn<KbFormValues>
 }
 
+import { useTranslation } from 'react-i18next'
+
 export function KbEssentialsTab({ form }: KbEssentialsTabProps) {
+    const { t } = useTranslation()
     return (
         <div className="space-y-4">
             <div className="flex gap-4">
@@ -25,9 +28,9 @@ export function KbEssentialsTab({ form }: KbEssentialsTabProps) {
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Knowledge Name</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.nameLabel', { defaultValue: 'Knowledge Name' })}</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="E.g., Engineering Docs" {...field} className="h-11 font-bold" />
+                                    <Input placeholder={t('knowledgeBase.namePlaceholder', { defaultValue: 'E.g., Engineering Docs' })} {...field} className="h-11 font-bold" />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -40,7 +43,7 @@ export function KbEssentialsTab({ form }: KbEssentialsTabProps) {
                         name="color"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Theme</FormLabel>
+                                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.themeColor', { defaultValue: 'Theme' })}</FormLabel>
                                 <div className="flex relative">
                                     <Input
                                         type="color"
@@ -66,10 +69,10 @@ export function KbEssentialsTab({ form }: KbEssentialsTabProps) {
                 name="description"
                 render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.descriptionLabel', { defaultValue: 'Description' })}</FormLabel>
                         <FormControl>
                             <Textarea
-                                placeholder="What knowledge does this engine contain?"
+                                placeholder={t('knowledgeBase.descriptionPlaceholder', { defaultValue: 'What knowledge does this engine contain?' })}
                                 className="resize-none min-h-[120px] leading-relaxed"
                                 {...field}
                             />
@@ -85,9 +88,9 @@ export function KbEssentialsTab({ form }: KbEssentialsTabProps) {
                 render={({ field }) => (
                     <FormItem className="flex items-center justify-between p-4 border rounded-xl bg-muted/30 space-y-0">
                         <div className="space-y-1">
-                            <FormLabel className="text-sm font-bold">Public Access</FormLabel>
+                            <FormLabel className="text-sm font-bold">{t('knowledgeBase.accessLevel', { defaultValue: 'Public Access' })}</FormLabel>
                             <p className="text-[11px] text-muted-foreground font-medium pr-4">
-                                Allow this knowledge base to be queried by other workspaces or public agents.
+                                {t('knowledgeBase.accessPublic', { defaultValue: 'Allow this knowledge base to be queried by other workspaces or public agents.' })}
                             </p>
                         </div>
                         <FormControl>

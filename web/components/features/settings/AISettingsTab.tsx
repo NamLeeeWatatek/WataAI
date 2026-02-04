@@ -47,20 +47,20 @@ export function AISettingsTab() {
                 <Zap className="size-5 text-primary" />
               </div>
               <div>
-                <CardTitle suppressHydrationWarning>{t('aiSettingsTab.title')}</CardTitle>
-                <CardDescription suppressHydrationWarning>{t('aiSettingsTab.description')}</CardDescription>
+                <CardTitle suppressHydrationWarning>{t('settingsPage.aiSettingsTab.title')}</CardTitle>
+                <CardDescription suppressHydrationWarning>{t('settingsPage.aiSettingsTab.description')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <Label suppressHydrationWarning>{t('aiSettingsTab.defaultProvider')}</Label>
+              <Label suppressHydrationWarning>{t('settingsPage.aiSettingsTab.defaultProvider')}</Label>
               <Select
                 value={localSettings.defaultProviderId}
                 onValueChange={(val) => setLocalSettings((p: SystemSettings) => ({ ...p, defaultProviderId: val, defaultModel: '' }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('aiSettingsTab.selectProvider')} />
+                  <SelectValue placeholder={t('settingsPage.aiSettingsTab.selectProvider')} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeProviders.map((config) => (
@@ -73,28 +73,28 @@ export function AISettingsTab() {
             </div>
 
             <div className="space-y-3">
-              <Label suppressHydrationWarning>{t('aiSettingsTab.defaultModel')}</Label>
+              <Label suppressHydrationWarning>{t('settingsPage.aiSettingsTab.defaultModel')}</Label>
               <Select
                 value={localSettings.defaultModel}
                 onValueChange={(val) => setLocalSettings((p: SystemSettings) => ({ ...p, defaultModel: val }))}
                 disabled={!localSettings.defaultProviderId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('aiSettingsTab.selectModel')} />
+                  <SelectValue placeholder={t('settingsPage.aiSettingsTab.selectModel')} />
                 </SelectTrigger>
                 <SelectContent>
                   {activeProviders.find(c => c.id === localSettings.defaultProviderId)?.modelList?.map((model: string) => (
                     <SelectItem key={model} value={model}>{model}</SelectItem>
-                  )) || <div className="p-4 text-center text-sm text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.noModels')}</div>}
+                  )) || <div className="p-4 text-center text-sm text-muted-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.noModels')}</div>}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <Label suppressHydrationWarning>{t('aiSettingsTab.temperature')}</Label>
+              <Label suppressHydrationWarning>{t('settingsPage.aiSettingsTab.temperature')}</Label>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="min-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.minTemp')}</Label>
+                  <Label htmlFor="min-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.minTemp')}</Label>
                   <Input
                     id="min-temp"
                     type="number"
@@ -106,7 +106,7 @@ export function AISettingsTab() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="max-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.maxTemp')}</Label>
+                  <Label htmlFor="max-temp" className="text-xs text-muted-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.maxTemp')}</Label>
                   <Input
                     id="max-temp"
                     type="number"
@@ -130,17 +130,17 @@ export function AISettingsTab() {
                 <ShieldCheck className="size-5 text-green-500" />
               </div>
               <div>
-                <CardTitle suppressHydrationWarning>{t('aiSettingsTab.safety')}</CardTitle>
-                <CardDescription suppressHydrationWarning>{t('aiSettingsTab.safetyDesc')}</CardDescription>
+                <CardTitle suppressHydrationWarning>{t('settingsPage.aiSettingsTab.safety')}</CardTitle>
+                <CardDescription suppressHydrationWarning>{t('settingsPage.aiSettingsTab.safetyDesc')}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               {[
-                { key: 'contentModeration', label: t('aiSettingsTab.contentModeration'), desc: t('aiSettingsTab.contentModerationDesc') },
-                { key: 'safeFallbacks', label: t('aiSettingsTab.safeFallbacks'), desc: t('aiSettingsTab.safeFallbacksDesc') },
-                { key: 'contextAware', label: t('aiSettingsTab.contextAware'), desc: t('aiSettingsTab.contextAwareDesc') }
+                { key: 'contentModeration', label: t('settingsPage.aiSettingsTab.contentModeration'), desc: t('settingsPage.aiSettingsTab.contentModerationDesc') },
+                { key: 'safeFallbacks', label: t('settingsPage.aiSettingsTab.safeFallbacks'), desc: t('settingsPage.aiSettingsTab.safeFallbacksDesc') },
+                { key: 'contextAware', label: t('settingsPage.aiSettingsTab.contextAware'), desc: t('settingsPage.aiSettingsTab.contextAwareDesc') }
               ].map((policy) => (
                 <div key={policy.key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-1">
@@ -158,11 +158,11 @@ export function AISettingsTab() {
             <div className="pt-6 border-t space-y-4">
               <div className="flex items-center gap-2">
                 <Gauge className="size-4 text-muted-foreground" />
-                <h4 className="font-medium text-sm text-foreground" suppressHydrationWarning>{t('aiSettingsTab.rateLimiting')}</h4>
+                <h4 className="font-medium text-sm text-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.rateLimiting')}</h4>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.requestsPerHourSystem')}</Label>
+                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.requestsPerHourSystem')}</Label>
                   <Input
                     type="number"
                     value={localSettings.maxRequestsPerHour}
@@ -170,7 +170,7 @@ export function AISettingsTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('aiSettingsTab.requestsPerHourUser')}</Label>
+                  <Label className="text-xs text-muted-foreground" suppressHydrationWarning>{t('settingsPage.aiSettingsTab.requestsPerHourUser')}</Label>
                   <Input
                     type="number"
                     value={localSettings.maxRequestsPerUser}
@@ -187,7 +187,7 @@ export function AISettingsTab() {
         onSave={handleSave}
         disabled={!isDirty}
         loading={isMutating}
-        saveLabel={t('aiSettingsTab.saveSettings')}
+        saveLabel={t('settingsPage.aiSettingsTab.saveSettings')}
         icon={<Settings2 className="mr-3 h-5 w-5" />}
       />
     </div>

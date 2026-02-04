@@ -35,6 +35,8 @@ interface KbIntelligenceTabProps {
     setIsManualEmbedding: (val: boolean) => void
 }
 
+import { useTranslation } from 'react-i18next'
+
 export function KbIntelligenceTab({
     form,
     availableProviders,
@@ -47,6 +49,7 @@ export function KbIntelligenceTab({
     isManualEmbedding,
     setIsManualEmbedding
 }: KbIntelligenceTabProps) {
+    const { t } = useTranslation()
     const aiConfigId = form.watch('aiConfigId')
     const embeddingConfigId = form.watch('embeddingConfigId')
 
@@ -60,10 +63,10 @@ export function KbIntelligenceTab({
                         <div className="space-y-1">
                             <FormLabel className="text-sm font-bold flex items-center gap-2">
                                 <Cpu className="w-4 h-4 text-indigo-500" />
-                                Use System Default AI
+                                {t('knowledgeBase.systemAIOptimization', { defaultValue: 'Use System Default AI' })}
                             </FormLabel>
                             <p className="text-[11px] text-muted-foreground font-medium pr-4">
-                                Automatically use the system-wide AI settings. Highly recommended for most users.
+                                {t('knowledgeBase.systemAIDesc', { defaultValue: 'Automatically use the system-wide AI settings. Highly recommended for most users.' })}
                             </p>
                         </div>
                         <FormControl>
@@ -83,7 +86,7 @@ export function KbIntelligenceTab({
                     <div className="space-y-6">
                         <div className="flex items-center gap-2 pb-2 border-b border-primary/10">
                             <BrainCircuit className="w-4 h-4 text-primary" />
-                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Generation Intelligence</h3>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">{t('knowledgeBase.genIntelligence', { defaultValue: 'Generation Intelligence' })}</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -92,7 +95,7 @@ export function KbIntelligenceTab({
                                 name="aiConfigId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">AI Provider</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.aiProvider', { defaultValue: 'AI Provider' })}</FormLabel>
                                         <Select
                                             value={field.value || ''}
                                             onValueChange={(val) => {
@@ -102,7 +105,7 @@ export function KbIntelligenceTab({
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="h-11 bg-background/50 backdrop-blur-sm border-primary/10 hover:border-primary/30 transition-all">
-                                                    <SelectValue placeholder="Select Provider" />
+                                                    <SelectValue placeholder={t('knowledgeBase.selectProvider', { defaultValue: 'Select Provider' })} />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -126,9 +129,9 @@ export function KbIntelligenceTab({
                                 render={({ field }) => (
                                     <FormItem>
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Model Name</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.modelName', { defaultValue: 'Model Name' })}</FormLabel>
                                             <div className="flex items-center gap-2 mr-1">
-                                                <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">{t('knowledgeBase.manual', { defaultValue: 'Manual' })}</span>
                                                 <Switch
                                                     checked={isManualRag}
                                                     onCheckedChange={setIsManualRag}
@@ -155,7 +158,7 @@ export function KbIntelligenceTab({
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="h-11 bg-background/50 border-primary/10">
-                                                            <SelectValue placeholder={loadingRagModels ? "Loading models..." : "Select Model"} />
+                                                            <SelectValue placeholder={loadingRagModels ? t('common.loading') : t('knowledgeBase.selectModel', { defaultValue: 'Select Model' })} />
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
@@ -182,7 +185,7 @@ export function KbIntelligenceTab({
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Thermometer className="w-4 h-4 text-orange-500" />
-                                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Temperature</FormLabel>
+                                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">{t('knowledgeBase.temperature', { defaultValue: 'Temperature' })}</FormLabel>
                                             </div>
                                             <Badge variant="outline" className="font-mono text-[10px] bg-background">
                                                 {field.value?.toFixed(1) ?? '0.7'}
@@ -198,8 +201,8 @@ export function KbIntelligenceTab({
                                             />
                                         </FormControl>
                                         <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                                            <span>Precise</span>
-                                            <span>Creative</span>
+                                            <span>{t('bot_config.precise', { defaultValue: 'Precise' })}</span>
+                                            <span>{t('bot_config.creative', { defaultValue: 'Creative' })}</span>
                                         </div>
                                     </FormItem>
                                 )}
@@ -213,7 +216,7 @@ export function KbIntelligenceTab({
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <Zap className="w-4 h-4 text-yellow-500" />
-                                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">Max Tokens</FormLabel>
+                                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-foreground/70">{t('knowledgeBase.maxTokens', { defaultValue: 'Max Tokens' })}</FormLabel>
                                             </div>
                                             <Badge variant="outline" className="font-mono text-[10px] bg-background">
                                                 {field.value ?? '1000'}
@@ -229,8 +232,8 @@ export function KbIntelligenceTab({
                                             />
                                         </FormControl>
                                         <div className="flex justify-between text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                                            <span>Short</span>
-                                            <span>Long</span>
+                                            <span>{t('bot_config.short', { defaultValue: 'Short' })}</span>
+                                            <span>{t('bot_config.long', { defaultValue: 'Long' })}</span>
                                         </div>
                                     </FormItem>
                                 )}
@@ -244,7 +247,7 @@ export function KbIntelligenceTab({
                     <div className="space-y-6">
                         <div className="flex items-center gap-2 pb-2 border-b border-emerald-500/10">
                             <Database className="w-4 h-4 text-emerald-500" />
-                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Vector Intelligence</h3>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-foreground">{t('knowledgeBase.vectorIntelligence', { defaultValue: 'Vector Intelligence' })}</h3>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -253,7 +256,7 @@ export function KbIntelligenceTab({
                                 name="embeddingConfigId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Embedding Provider</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.embeddingProvider', { defaultValue: 'Embedding Provider' })}</FormLabel>
                                         <Select
                                             value={field.value || ''}
                                             onValueChange={(val) => {
@@ -263,7 +266,7 @@ export function KbIntelligenceTab({
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10 hover:border-emerald-500/30 transition-all">
-                                                    <SelectValue placeholder="Select Provider" />
+                                                    <SelectValue placeholder={t('knowledgeBase.selectProvider', { defaultValue: 'Select Provider' })} />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -287,9 +290,9 @@ export function KbIntelligenceTab({
                                 render={({ field }) => (
                                     <FormItem>
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vector Model</FormLabel>
+                                            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{t('knowledgeBase.vectorModel', { defaultValue: 'Vector Model' })}</FormLabel>
                                             <div className="flex items-center gap-2 mr-1">
-                                                <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">Manual</span>
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-50">{t('knowledgeBase.manual', { defaultValue: 'Manual' })}</span>
                                                 <Switch
                                                     checked={isManualEmbedding}
                                                     onCheckedChange={setIsManualEmbedding}
@@ -316,7 +319,7 @@ export function KbIntelligenceTab({
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="h-11 bg-background/50 border-emerald-500/10">
-                                                            <SelectValue placeholder={loadingEmbeddingModels ? "Loading models..." : "Select Model"} />
+                                                            <SelectValue placeholder={loadingEmbeddingModels ? t('common.loading') : t('knowledgeBase.selectModel', { defaultValue: 'Select Model' })} />
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
@@ -342,9 +345,9 @@ export function KbIntelligenceTab({
                     <div className="mx-auto w-16 h-16 bg-gradient-to-br from-indigo-500 to-primary rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/20 rotate-3">
                         <Sparkles className="w-8 h-8 text-white animate-pulse" />
                     </div>
-                    <h3 className="text-lg font-black text-foreground mb-2">System Intelligence Active</h3>
+                    <h3 className="text-lg font-black text-foreground mb-2">{t('knowledgeBase.systemActive', { defaultValue: 'System Intelligence Active' })}</h3>
                     <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                        This engine is utilizing the global WataAI brain. Settings are optimized automatically for maximum performance and accuracy.
+                        {t('knowledgeBase.systemActiveDesc', { defaultValue: 'This engine is utilizing the global WataAI brain. Settings are optimized automatically for maximum performance and accuracy.' })}
                     </p>
                 </div>
             )}
