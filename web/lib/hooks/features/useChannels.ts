@@ -16,7 +16,8 @@ import { useUiStore } from '@/lib/store/zustand/ui-store';
 
 export const channelKeys = {
     all: ['channels-feature'] as const,
-    channels: (workspaceId?: string, params?: any) => [...channelKeys.all, 'connected', workspaceId, params] as const,
+    lists: (workspaceId?: string) => [...channelKeys.all, 'connected', workspaceId] as const,
+    channels: (workspaceId?: string, params?: any) => [...channelKeys.lists(workspaceId), params] as const,
     integrations: (workspaceId?: string) => [...channelKeys.all, 'integrations', workspaceId] as const,
 };
 
@@ -49,7 +50,7 @@ export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
             setGlobalLoading('disconnect-channel', true, 'Disconnecting channel...');
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
+            queryClient.invalidateQueries({ queryKey: channelKeys.lists(workspaceId) });
             toast.success('Channel disconnected successfully');
         },
         onSettled: () => {
@@ -94,7 +95,7 @@ export function useChannels(workspaceId?: string, params?: UseChannelsParams) {
             setGlobalLoading('connect-facebook', true, 'Connecting Facebook page...');
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: channelKeys.channels(workspaceId) });
+            queryClient.invalidateQueries({ queryKey: channelKeys.lists(workspaceId) });
         },
         onSettled: () => {
             setGlobalLoading('connect-facebook', false);

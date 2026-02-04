@@ -6,12 +6,15 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { ChannelCredentialEntity } from './infrastructure/persistence/relational/entities/channel-credential.entity';
+import { ChannelConnectionEntity } from './infrastructure/persistence/relational/entities/channel-connection.entity';
 import { CreateCredentialDto } from './dto/create-credential.dto';
 import { WorkspaceEntity } from '../workspaces/infrastructure/persistence/relational/entities/workspace.entity';
 
 @Injectable()
 export class IntegrationsService {
   constructor(
+    @InjectRepository(ChannelConnectionEntity)
+    private connectionRepository: Repository<ChannelConnectionEntity>,
     @InjectRepository(ChannelCredentialEntity)
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
@@ -133,6 +136,16 @@ export class IntegrationsService {
     if (workspaceId) {
       criteria.workspaceId = workspaceId;
     }
+
+    // 1. Manually Cascade Delete: Remove connections that use this credential
+    // because the DB constraint might be RESTRICT or NO ACTION, causing the error.
+    const connectionCriteria: any = { credentialId: id };
+    if (workspaceId) {
+      connectionCriteria.workspaceId = workspaceId;
+    }
+    await this.connectionRepository.delete(connectionCriteria);
+
+    // 2. Now safe to delete the credential
     await this.credentialRepository.delete(criteria);
   }
 }
