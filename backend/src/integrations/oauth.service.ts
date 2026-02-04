@@ -84,17 +84,25 @@ export class OAuthService {
 
   async getFacebookPage(accessToken: string, pageId: string): Promise<any> {
     try {
+      console.log(`[OAuth] Fetching Page ${pageId} with token ending ...${accessToken.slice(-10)}`);
       const response = await axios.get(
         `https://graph.facebook.com/v21.0/${pageId}`,
         {
           params: {
             access_token: accessToken,
-            fields: 'name,access_token,id,tasks,category',
+            fields: 'name,access_token,id,tasks,category,permissions', // Added permissions field if available
           },
         },
       );
+      console.log(`[OAuth] Facebook Page Response:`, JSON.stringify(response.data));
+
+      if (!response.data.access_token) {
+        console.warn(`[OAuth] WARNING: No access_token found in response for Page ${pageId}. User might lack 'pages_manage_posts' or Admin role.`);
+      }
+
       return response.data;
     } catch (error) {
+      console.error(`[OAuth] getFacebookPage Failed: ${error.message}`, error.response?.data);
       if (axios.isAxiosError(error) && error.response && (error.response.status === 400 || error.response.status === 404)) {
         return null;
       }

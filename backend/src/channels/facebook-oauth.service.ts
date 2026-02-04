@@ -115,6 +115,40 @@ export class FacebookOAuthService extends BaseOAuthService {
     }
   }
 
+  async exchangeForLongLivedToken(
+    shortLivedToken: string,
+    appId?: string,
+    appSecret?: string,
+  ): Promise<string> {
+    this.validateCredentials(appId, appSecret);
+
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/${this.apiVersion}/oauth/access_token`,
+        {
+          params: {
+            grant_type: 'fb_exchange_token',
+            client_id: appId,
+            client_secret: appSecret,
+            fb_exchange_token: shortLivedToken,
+          },
+        },
+      );
+
+      return response.data.access_token;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.warn(
+          `Long-lived token exchange failed: ${error.response?.data?.error?.message || error.message}`,
+        );
+      } else {
+        this.logger.warn(`Long-lived token exchange failed: ${error}`);
+      }
+      // Return original token if exchange fails (graceful degradation)
+      return shortLivedToken;
+    }
+  }
+
   async getConnectableAccounts(accessToken: string): Promise<FacebookPage[]> {
     return this.getUserPages(accessToken);
   }
