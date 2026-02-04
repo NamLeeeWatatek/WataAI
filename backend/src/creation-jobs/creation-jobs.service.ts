@@ -881,8 +881,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
           // Fetch Page Access Token to post AS the page
           let finalAccessToken = channel.accessToken || rawToken; // Default to main token if exchange fails
           try {
-            const pages = await this.oauthService.getFacebookPages(rawToken);
-            const targetPage = pages.find((p) => p.id === pageId);
+            const targetPage = await this.oauthService.getFacebookPage(rawToken, pageId);
             if (targetPage && targetPage.access_token) {
               finalAccessToken = targetPage.access_token;
               this.logger.log(`Successfully exchanged token for Page ID ${pageId}`);
