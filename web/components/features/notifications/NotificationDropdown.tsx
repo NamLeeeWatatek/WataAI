@@ -16,6 +16,7 @@ import { useNotificationPreferences } from '@/lib/hooks/use-notification-prefere
 import { cn } from '@/lib/utils';
 import { Notification, JobStatus } from '@/lib/types/notification';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationDropdownProps {
   className?: string;
@@ -33,6 +34,7 @@ export function NotificationDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const preferences = useNotificationPreferences();
   const {
@@ -91,7 +93,7 @@ export function NotificationDropdown({
       await markAllAsRead();
     } catch (error) {
       console.error('Failed to mark all as read:', error);
-      toast.error('Failed to mark notifications as read');
+      toast.error(t('error.general'));
     }
   };
 
@@ -112,6 +114,27 @@ export function NotificationDropdown({
       case 'info': default: return 'bg-info/10 border-info/20 text-info';
     }
   };
+
+  const formatTimeAgo = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      if (diffInSeconds < 60) return t('notificationList.secondsAgo', { count: diffInSeconds });
+      if (diffInSeconds < 3600) return t('notificationList.minutesAgo', { count: Math.floor(diffInSeconds / 60) });
+      if (diffInSeconds < 86400) return t('notificationList.hoursAgo', { count: Math.floor(diffInSeconds / 3600) });
+      if (diffInSeconds < 2592000) return t('notificationList.daysAgo', { count: Math.floor(diffInSeconds / 86400) });
+
+      return date.toLocaleDateString('vi-VN', { // Assuming default locale, but ideally should match i18n
+        month: 'short',
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+      });
+    } catch {
+      return t('notificationList.justNow');
+    }
+  }
 
   return (
     <div className={cn('relative', className)}>
@@ -158,23 +181,23 @@ export function NotificationDropdown({
                 <Bell className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">Notifications</h3>
+                <h3 className="font-semibold text-sm" suppressHydrationWarning>{t('notificationList.title')}</h3>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                   <div className="flex items-center gap-1">
                     {isConnected ? (
                       <>
                         <div className="h-2 w-2 rounded-full bg-success" />
-                        <span>Connected</span>
+                        <span suppressHydrationWarning>{t('notificationList.connected')}</span>
                       </>
                     ) : (
                       <>
                         <div className="h-2 w-2 rounded-full bg-destructive" />
-                        <span>Disconnected</span>
+                        <span suppressHydrationWarning>{t('notificationList.disconnected')}</span>
                       </>
                     )}
                   </div>
                   <span>•</span>
-                  <span>{notifications.length} notifications</span>
+                  <span suppressHydrationWarning>{t('notificationList.count', { count: notifications.length })}</span>
                 </div>
               </div>
             </div>
@@ -193,14 +216,14 @@ export function NotificationDropdown({
             {isLoading ? (
               <div className="p-6 text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto" />
-                <p className="text-sm text-muted-foreground mt-3">Loading notifications...</p>
+                <p className="text-sm text-muted-foreground mt-3" suppressHydrationWarning>{t('notificationList.loading')}</p>
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-6 text-center">
                 <Bell className="w-10 h-10 text-muted-foreground mx-auto" />
-                <h4 className="font-medium mt-3">No notifications</h4>
-                <p className="text-sm text-muted-foreground mt-1">
-                  You're all caught up! Notifications will appear here.
+                <h4 className="font-medium mt-3" suppressHydrationWarning>{t('notificationList.empty.title')}</h4>
+                <p className="text-sm text-muted-foreground mt-1" suppressHydrationWarning>
+                  {t('notificationList.empty.desc')}
                 </p>
               </div>
             ) : (
@@ -241,14 +264,14 @@ export function NotificationDropdown({
                           <h4 className="text-sm font-medium truncate">
                             {notification.title}
                           </h4>
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap" suppressHydrationWarning>
                             {formatTimeAgo(notification.createdAt)}
                           </span>
                         </div>
                         {notification.type === 'job_progress' && notification.data?.progress !== undefined && (
                           <div className="mt-2 space-y-1">
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>Progress</span>
+                              <span suppressHydrationWarning>{t('notificationList.progress')}</span>
                               <span>{notification.data.progress}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
@@ -286,7 +309,7 @@ export function NotificationDropdown({
                                 router.push(`/my-products?jobId=${notification.metadata?.resourceId}`);
                               }}
                             >
-                              View Results
+                              <span suppressHydrationWarning>{t('notificationList.viewResults')}</span>
                             </Button>
                           </div>
                         )}
@@ -306,7 +329,7 @@ export function NotificationDropdown({
               ) : (
                 <VolumeX className="w-3.5 h-3.5" />
               )}
-              <span>Sound {preferences.sound ? 'on' : 'off'}</span>
+              <span suppressHydrationWarning>{preferences.sound ? t('notificationList.soundOn') : t('notificationList.soundOff')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -316,7 +339,7 @@ export function NotificationDropdown({
                 onClick={handleMarkAllAsRead}
                 disabled={notifications.filter(n => !n.isRead).length === 0}
               >
-                Mark all as read
+                <span suppressHydrationWarning>{t('notificationList.markAllRead')}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -336,26 +359,4 @@ export function NotificationDropdown({
       )}
     </div>
   );
-}
-
-// Helper function to format time
-function formatTimeAgo(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-    });
-  } catch {
-    return 'Just now';
-  }
 }

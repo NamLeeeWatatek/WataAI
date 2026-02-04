@@ -158,7 +158,8 @@
       "conversationsLabel": "conversations",
       "executions": "executions",
       "avgMsgs": "avg msgs",
-      "avgTime": "avg"
+      "avgTime": "avg",
+      "monthOverMonth": "Month over month comparison"
     },
     "admin": {
       "stats": {
@@ -259,6 +260,55 @@
     "currentStep": "Current step",
     "allSteps": "All Steps",
     "cancelOperation": "Cancel operation"
+  },
+  "notificationList": {
+    "title": "Notifications",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "count": "{{count}} notifications",
+    "loading": "Loading notifications...",
+    "empty": {
+      "title": "No notifications",
+      "desc": "You're all caught up! Notifications will appear here."
+    },
+    "progress": "Progress",
+    "viewResults": "View Results",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "markAllRead": "Mark all as read",
+    "justNow": "Just now",
+    "secondsAgo": "{{count}}s ago",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "globalActivity": {
+    "title": "System Activity",
+    "active": "Active",
+    "description": "Monitor real-time processes and review your activity history.",
+    "tabs": {
+      "activeTasks": "Active Tasks",
+      "historyFeed": "History Feed"
+    },
+    "systemProcess": "System Process",
+    "currentProgress": "Current Progress",
+    "status": {
+      "completed": "Task completed successfully",
+      "failed": "Process encountered an error",
+      "stopped": "Process was stopped",
+      "canceled": "Canceled"
+    },
+    "viewResult": "View Result",
+    "empty": {
+      "title": "No active tasks found",
+      "desc": "Your running processes will appear here in real-time.",
+      "feedEmpty": "Feed is empty"
+    },
+    "actions": {
+      "updateAll": "Update All",
+      "refresh": "Refresh",
+      "refreshFeed": "Refresh Feed"
+    }
   },
   "validation": {
     "required": "This field is required",
@@ -662,7 +712,57 @@
       "configure": "Configure",
       "deleteTitle": "Delete Provider",
       "deleteConfirm": "Are you sure you want to remove this AI provider? This action cannot be undone and may affect active bots using this provider.",
-      "deleteText": "Delete Provider"
+      "deleteText": "Delete Provider",
+      "models": "Models",
+      "showing_providers": "Showing {{count}} of {{total}} providers"
+    },
+    "aiSettingsTab": {
+      "title": "Global AI Settings",
+      "description": "Configure default AI models and behavior for the system",
+      "defaultProvider": "Default AI Provider",
+      "selectProvider": "Select Provider",
+      "defaultModel": "Default Model",
+      "selectModel": "Select Model",
+      "noModels": "No models found",
+      "temperature": "Temperature Range",
+      "minTemp": "Minimum (Creative)",
+      "maxTemp": "Maximum (Precise)",
+      "safety": "Safety & Behavior",
+      "safetyDesc": "Controls for AI content generation",
+      "contentModeration": "Content Moderation",
+      "contentModerationDesc": "Scan and filter inappropriate content",
+      "safeFallbacks": "Safe Fallbacks",
+      "safeFallbacksDesc": "Use safe responses when generation fails",
+      "contextAware": "Context Awareness",
+      "contextAwareDesc": "Enable multi-turn conversation memory",
+      "rateLimiting": "Rate Limiting",
+      "requestsPerHourSystem": "Requests / Hour (System)",
+      "requestsPerHourUser": "Requests / Hour (User)",
+      "saveSettings": "Save Settings"
+    },
+    "aiProviderDialog": {
+      "editTitle": "Edit Provider",
+      "addTitle": "Add Provider",
+      "description": "Configure AI provider settings and credentials",
+      "providerLabel": "Provider",
+      "selectProviderPlaceholder": "Select provider",
+      "displayNameLabel": "Display Name",
+      "displayNamePlaceholder": "e.g. Production GPT-4",
+      "authentication": "Authentication",
+      "required": "Required",
+      "optional": "Optional",
+      "connecting": "Connecting...",
+      "refreshModels": "Refresh Models",
+      "availableModels": "Available Models",
+      "manualModelPlaceholder": "Add model ID manually (e.g. gpt-4-turbo)",
+      "add": "Add",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "modelAdded": "Model added",
+      "verificationFailed": "Verification failed",
+      "foundModels": "Found {{count}} models, merged with existing",
+      "providerRequired": "Provider is required",
+      "displayNameRequired": "Display name is required"
     },
     "notifications": "Notifications",
     "sharing": "Sharing",
@@ -748,7 +848,12 @@
       "pushUpdate": "Push Update",
       "initLimit": "Initialize Config",
       "copiedOAuth": "Copied OAuth URL",
-      "copiedWebhook": "Copied Webhook URL"
+      "copiedWebhook": "Copied Webhook URL",
+      "statusOffline": "Offline",
+      "integrationCategory": "Integration",
+      "namePlaceholder": "e.g. Primary Facebook Portal",
+      "clientIdPlaceholder": "Client / App ID",
+      "scopesPlaceholder": "e.g. read_messages, write_post"
     }
   },
   "channels_config": {

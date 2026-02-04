@@ -90,7 +90,7 @@ export function AIProvidersTab() {
     },
     {
       id: 'isActive',
-      header: t('status'),
+      header: t('profile.status'),
       accessorKey: 'isActive',
       cell: ({ getValue }) => {
         const isActive = getValue() as boolean;
@@ -107,7 +107,7 @@ export function AIProvidersTab() {
     },
     {
       id: 'modelList',
-      header: 'Models',
+      header: t('settingsPage.aiProvidersDetail.models'),
       accessorKey: 'modelList',
       cell: ({ getValue }) => {
         const list = getValue() as string[];
@@ -133,7 +133,7 @@ export function AIProvidersTab() {
         </div>
       )
     }
-  ], []);
+  ], [t]);
 
   if (isLoading) return <CardGridSkeleton />;
 
@@ -143,27 +143,27 @@ export function AIProvidersTab() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-muted/50 border-border/50">
           <CardHeader className="pb-3 border-b border-border/50">
-            <CardDescription className="uppercase text-xs font-semibold tracking-wider">{t('settingsPage.aiProvidersDetail.totalProviders')}</CardDescription>
+            <CardDescription className="uppercase text-xs font-semibold tracking-wider" suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.totalProviders')}</CardDescription>
             <CardTitle className="text-4xl font-bold mt-1">{userConfigs.length}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 text-xs font-medium text-primary">
               <div className="size-2 rounded-full bg-primary animate-pulse" />
-              <span>{userConfigs.filter(p => p.isActive).length} {t('settingsPage.aiProvidersDetail.active')}</span>
+              <span suppressHydrationWarning>{userConfigs.filter(p => p.isActive).length} {t('settingsPage.aiProvidersDetail.active')}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-primary/5 border-dashed border-primary/20 hover:bg-primary/10 transition-colors cursor-pointer" onClick={() => handleOpenDialog()}>
           <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-            <CardDescription className="text-primary font-bold uppercase text-xs tracking-wider">{t('settingsPage.aiProvidersDetail.addProvider')}</CardDescription>
+            <CardDescription className="text-primary font-bold uppercase text-xs tracking-wider" suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.addProvider')}</CardDescription>
             <Plus className="size-5 text-primary" />
           </CardHeader>
           <CardContent className="pt-4 flex flex-col items-center justify-center py-6">
             <div className="size-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg mb-4">
               <Plus className="size-6" />
             </div>
-            <p className="font-semibold text-sm text-primary">{t('settingsPage.aiProvidersDetail.connectNewProvider')}</p>
+            <p className="font-semibold text-sm text-primary" suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.connectNewProvider')}</p>
           </CardContent>
         </Card>
       </div>
@@ -187,7 +187,7 @@ export function AIProvidersTab() {
             )}
           >
             <Grid className="size-3.5" />
-            {t('settingsPage.aiProvidersDetail.grid')}
+            <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.grid')}</span>
           </button>
           <button
             onClick={() => setViewMode('list')}
@@ -197,7 +197,7 @@ export function AIProvidersTab() {
             )}
           >
             <List className="size-3.5" />
-            {t('settingsPage.aiProvidersDetail.list')}
+            <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.list')}</span>
           </button>
         </div>
       </div>
@@ -208,12 +208,12 @@ export function AIProvidersTab() {
           <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-6">
             <Cloud className="size-8 text-muted-foreground" />
           </div>
-          <h3 className="text-xl font-bold mb-2">{t('settingsPage.aiProvidersDetail.noProvidersTitle')}</h3>
-          <p className="text-muted-foreground text-center max-w-sm mb-8 text-sm">
+          <h3 className="text-xl font-bold mb-2" suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.noProvidersTitle')}</h3>
+          <p className="text-muted-foreground text-center max-w-sm mb-8 text-sm" suppressHydrationWarning>
             {t('settingsPage.aiProvidersDetail.noProvidersDesc')}
           </p>
           <Button onClick={() => handleOpenDialog()} size="lg" className="px-8">
-            {t('settingsPage.aiProvidersDetail.connectProvider')}
+            <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.connectProvider')}</span>
           </Button>
         </div>
       ) : (
@@ -234,7 +234,7 @@ export function AIProvidersTab() {
                             <CardTitle className="text-lg font-bold">{provider.displayName}</CardTitle>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-[10px] uppercase">{provider.providerMetadata?.label || provider.providerId}</Badge>
-                              {provider.config.isVerified && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]"><ShieldCheck className="size-3 mr-1" /> {t('settingsPage.aiProvidersDetail.verified')}</Badge>}
+                              {provider.config.isVerified && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200 text-[10px]"><ShieldCheck className="size-3 mr-1" /> <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.verified')}</span></Badge>}
                             </div>
                           </div>
                         </div>
@@ -252,7 +252,7 @@ export function AIProvidersTab() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 mb-1">
                           <Stars className="size-3.5 text-muted-foreground" />
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('settingsPage.aiProvidersDetail.availableModels')}</p>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.availableModels')}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {provider.modelList?.slice(0, 4).map((model: string) => (
@@ -273,7 +273,7 @@ export function AIProvidersTab() {
                           disabled={activeMutationId === 'update'}
                           className="w-full"
                         >
-                          {provider.isActive ? t('settingsPage.aiProvidersDetail.deactivate') : t('settingsPage.aiProvidersDetail.activate')}
+                          <span suppressHydrationWarning>{provider.isActive ? t('settingsPage.aiProvidersDetail.deactivate') : t('settingsPage.aiProvidersDetail.activate')}</span>
                         </Button>
                         <div className="flex gap-2">
                           <Button
@@ -282,7 +282,7 @@ export function AIProvidersTab() {
                             className="flex-1"
                           >
                             <Settings className="size-4 mr-2" />
-                            {t('settingsPage.aiProvidersDetail.configure')}
+                            <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.configure')}</span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -310,9 +310,9 @@ export function AIProvidersTab() {
 
           {filteredConfigs.length > pageSize && (
             <div className="pt-6 flex items-center justify-between border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing <span className="font-medium text-foreground">{Math.min(page * pageSize, filteredConfigs.length)}</span> of <span className="font-medium text-foreground">{filteredConfigs.length}</span> providers
-              </p>
+              <p className="text-sm text-muted-foreground" suppressHydrationWarning dangerouslySetInnerHTML={{
+                __html: t('settingsPage.aiProvidersDetail.showing_providers', { count: Math.min(page * pageSize, filteredConfigs.length), total: filteredConfigs.length })
+              }} />
               <Pagination
                 pagination={{
                   page: page,

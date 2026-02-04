@@ -35,6 +35,7 @@ import { CreationJob, CreationJobStatus } from '../../../lib/types/creation-job'
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ProductDetailsDialog } from '../products/ProductDetailsDialog';
+import { useTranslation } from 'react-i18next';
 
 export function GlobalActivityCenter() {
     const { workspace } = useAuth();
@@ -42,6 +43,7 @@ export function GlobalActivityCenter() {
     const [historyLogs, setHistoryLogs] = useState<AuditLog[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
+    const { t } = useTranslation();
 
     const pendingCount = useMemo(() =>
         activeJobs.filter(j => j.status === CreationJobStatus.PENDING || j.status === CreationJobStatus.PROCESSING).length,
@@ -102,26 +104,26 @@ export function GlobalActivityCenter() {
                 <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col border-l border-border/40 backdrop-blur-xl bg-background/95">
                     <SheetHeader className="p-6 pb-0">
                         <div className="flex items-center justify-between mb-2">
-                            <SheetTitle className="text-xl font-bold tracking-tight">System Activity</SheetTitle>
+                            <SheetTitle className="text-xl font-bold tracking-tight" suppressHydrationWarning>{t('globalActivity.title')}</SheetTitle>
                             {pendingCount > 0 && (
                                 <Badge className="animate-pulse border-none px-3 py-1">
-                                    {pendingCount} Active
+                                    {pendingCount} <span suppressHydrationWarning>{t('globalActivity.active')}</span>
                                 </Badge>
                             )}
                         </div>
-                        <SheetDescription>
-                            Monitor real-time processes and review your activity history.
+                        <SheetDescription suppressHydrationWarning>
+                            {t('globalActivity.description')}
                         </SheetDescription>
                     </SheetHeader>
 
                     <Tabs defaultValue="active" className="flex-1 flex flex-col mt-6 overflow-hidden">
                         <div className="px-6 mb-4">
                             <TabsList variant="pills" className="w-full justify-start">
-                                <TabsTrigger value="active" variant="pills" className="flex-1 text-xs font-bold">
-                                    Active Tasks
+                                <TabsTrigger value="active" variant="pills" className="flex-1 text-xs font-bold" suppressHydrationWarning>
+                                    {t('globalActivity.tabs.activeTasks')}
                                 </TabsTrigger>
-                                <TabsTrigger value="history" variant="pills" className="flex-1 text-xs font-bold">
-                                    History Feed
+                                <TabsTrigger value="history" variant="pills" className="flex-1 text-xs font-bold" suppressHydrationWarning>
+                                    {t('globalActivity.tabs.historyFeed')}
                                 </TabsTrigger>
                             </TabsList>
                         </div>
@@ -153,7 +155,7 @@ export function GlobalActivityCenter() {
                                                                     job.status === CreationJobStatus.FAILED ? <XCircle className="w-3.5 h-3.5" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />}
                                                             </div>
                                                             <h5 className="font-bold text-sm tracking-tight text-foreground/90 truncate mr-2">
-                                                                {job.creationTool?.name || 'System Process'}
+                                                                {job.creationTool?.name || <span suppressHydrationWarning>{t('globalActivity.systemProcess')}</span>}
                                                             </h5>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium ml-7 opacity-60">
@@ -204,7 +206,7 @@ export function GlobalActivityCenter() {
                                                 {job.status === CreationJobStatus.PROCESSING || job.status === CreationJobStatus.PENDING ? (
                                                     <div className="mt-2 space-y-2 ml-7">
                                                         <div className="flex justify-between items-end text-[10px]">
-                                                            <span className="text-muted-foreground uppercase font-black tracking-widest opacity-40 text-[8px]">Current Progress</span>
+                                                            <span className="text-muted-foreground uppercase font-black tracking-widest opacity-40 text-[8px]" suppressHydrationWarning>{t('globalActivity.currentProgress')}</span>
                                                             <span className="text-primary font-mono font-bold">{job.progress}%</span>
                                                         </div>
                                                         <div className="relative h-1 w-full bg-muted/30 rounded-full overflow-hidden">
@@ -220,22 +222,22 @@ export function GlobalActivityCenter() {
                                                     <div className="flex items-center justify-between text-xs mt-1 ml-7">
                                                         <div className="flex items-center gap-2">
                                                             {job.status === CreationJobStatus.COMPLETED ? (
-                                                                <span className="text-success/80 font-semibold flex items-center gap-1.5 text-[11px]">
-                                                                    Task completed successfully
+                                                                <span className="text-success/80 font-semibold flex items-center gap-1.5 text-[11px]" suppressHydrationWarning>
+                                                                    {t('globalActivity.status.completed')}
                                                                 </span>
                                                             ) : job.status === CreationJobStatus.FAILED ? (
-                                                                <span className="text-destructive/80 font-medium text-[11px]">
-                                                                    Process encountered an error
+                                                                <span className="text-destructive/80 font-medium text-[11px]" suppressHydrationWarning>
+                                                                    {t('globalActivity.status.failed')}
                                                                 </span>
                                                             ) : (
-                                                                <span className="text-muted-foreground/60 text-[11px]">
-                                                                    Process was stopped
+                                                                <span className="text-muted-foreground/60 text-[11px]" suppressHydrationWarning>
+                                                                    {t('globalActivity.status.stopped')}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         {job.status === CreationJobStatus.COMPLETED && (
                                                             <div className="flex items-center gap-1 text-primary font-bold text-[10px] uppercase tracking-wider group-hover:translate-x-1 transition-transform">
-                                                                View Result
+                                                                <span suppressHydrationWarning>{t('globalActivity.viewResult')}</span>
                                                                 <ExternalLink className="w-3 h-3" />
                                                             </div>
                                                         )}
@@ -248,9 +250,9 @@ export function GlobalActivityCenter() {
                                             <div className="w-20 h-20 rounded-[2.5rem] bg-gradient-to-br from-muted/20 to-muted/5 flex items-center justify-center mb-6 border border-border/10 shadow-inner">
                                                 <Zap className="w-10 h-10 text-muted-foreground/30" />
                                             </div>
-                                            <h3 className="text-base font-bold text-foreground/80 mb-2">No active tasks found</h3>
-                                            <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed">
-                                                Your running processes will appear here in real-time.
+                                            <h3 className="text-base font-bold text-foreground/80 mb-2" suppressHydrationWarning>{t('globalActivity.empty.title')}</h3>
+                                            <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed" suppressHydrationWarning>
+                                                {t('globalActivity.empty.desc')}
                                             </p>
                                         </div>
                                     )}
@@ -261,10 +263,10 @@ export function GlobalActivityCenter() {
                                 <div className="px-6 py-4 border-t border-border/10 bg-muted/5 flex gap-2">
                                     <Button variant="outline" size="sm" className="flex-1 text-[10px] h-9 font-bold gap-2 rounded-xl" onClick={() => refreshJobs()}>
                                         <RefreshCw className="w-3.5 h-3.5" />
-                                        Update All
+                                        <span suppressHydrationWarning>{t('globalActivity.actions.updateAll')}</span>
                                     </Button>
                                     <Button variant="ghost" size="sm" className="px-4 text-[10px] h-9 font-bold rounded-xl" onClick={() => refreshJobs()}>
-                                        Refresh
+                                        <span suppressHydrationWarning>{t('globalActivity.actions.refresh')}</span>
                                     </Button>
                                 </div>
                             )}
@@ -274,7 +276,7 @@ export function GlobalActivityCenter() {
                             <div className="px-6 mb-2 flex justify-end">
                                 <Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1.5 opacity-60 hover:opacity-100" onClick={fetchHistory} disabled={loadingHistory}>
                                     <RefreshCw className={cn("w-3 h-3", loadingHistory && "animate-spin")} />
-                                    Refresh Feed
+                                    <span suppressHydrationWarning>{t('globalActivity.actions.refreshFeed')}</span>
                                 </Button>
                             </div>
                             <ScrollArea className="flex-1 px-6">
@@ -308,7 +310,7 @@ export function GlobalActivityCenter() {
                                     ) : (
                                         <div className="flex flex-col items-center justify-center py-20 text-center px-4 opacity-40 grayscale">
                                             <History className="w-12 h-12 mb-4" />
-                                            <p className="text-xs font-bold uppercase tracking-widest">Feed is empty</p>
+                                            <p className="text-xs font-bold uppercase tracking-widest" suppressHydrationWarning>{t('globalActivity.empty.feedEmpty')}</p>
                                         </div>
                                     )}
                                 </div>

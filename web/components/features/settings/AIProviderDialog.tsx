@@ -32,6 +32,7 @@ import { useAiProviders } from '@/lib/hooks/features/useAiProviders';
 import { type AiProviderMetadata } from '@/lib/api/ai-providers';
 import type { AiProviderConfig, UserAiProviderConfig, AiModel } from '@/lib/types/ai-provider';
 import { ModelListManager } from './ModelListManager';
+import { useTranslation } from 'react-i18next';
 
 interface AIProviderDialogProps {
     open: boolean;
@@ -40,19 +41,20 @@ interface AIProviderDialogProps {
     config?: UserAiProviderConfig | null;
 }
 
-const configSchema = z.object({
-    providerId: z.string().min(1, 'Provider is required'),
-    displayName: z.string().min(1, 'Display name is required'),
-    config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.undefined()])),
-    modelList: z.array(z.string()),
-    isActive: z.boolean(),
-});
-
-type ConfigFormValues = z.infer<typeof configSchema>;
-
 export function AIProviderDialog({ open, onOpenChange, availableProviders, config }: AIProviderDialogProps) {
+    const { t } = useTranslation();
     const isEdit = !!config;
     const { createConfig, updateConfig, verifyModels, isVerifyingModels, isMutating } = useAiProviders();
+
+    const configSchema = z.object({
+        providerId: z.string().min(1, t('aiProviderDialog.providerRequired')),
+        displayName: z.string().min(1, t('aiProviderDialog.displayNameRequired')),
+        config: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.undefined()])),
+        modelList: z.array(z.string()),
+        isActive: z.boolean(),
+    });
+
+    type ConfigFormValues = z.infer<typeof configSchema>;
 
     const form = useForm<ConfigFormValues>({
         resolver: zodResolver(configSchema),
@@ -75,7 +77,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
         const current = form.getValues('modelList') || [];
         if (!current.includes(manualModel.trim())) {
             form.setValue('modelList', [...current, manualModel.trim()]);
-            toast.success('Model added');
+            toast.success(t('aiProviderDialog.modelAdded'));
         }
         setManualModel('');
     };
@@ -115,10 +117,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
         }
     }, [isEdit, config?.id, open]);
 
-    const getModelLabel = (name: string) => {
-        const pModel = persistedModels.find(m => m.name === name);
-        return pModel?.displayName || name;
-    }
+    const displayModels = persistedModels; // Renamed to avoid reserved word conflict if needed, or simply use persistedModels
 
     const selectedProviderId = form.watch('providerId');
     const selectedProvider = availableProviders.find(p => p.id === selectedProviderId);
@@ -174,11 +173,11 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                 const merged = Array.from(new Set([...currentModels, ...models]));
                 if (JSON.stringify(currentModels) !== JSON.stringify(merged)) {
                     form.setValue('modelList', merged);
-                    if (!silent) toast.success(`Found ${models.length} models, merged with existing`);
+                    if (!silent) toast.success(t('aiProviderDialog.foundModels', { count: models.length }));
                 }
             }
         } catch (error: any) {
-            if (!silent) toast.error(error.response?.data?.message || 'Verification failed');
+            if (!silent) toast.error(error.response?.data?.message || t('aiProviderDialog.verificationFailed'));
         }
     };
 
@@ -208,10 +207,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 </div>
                                 <div>
                                     <DialogTitle>
-                                        {isEdit ? 'Edit Provider' : 'Add Provider'}
+                                        {isEdit ? t('aiProviderDialog.editTitle') : t('aiProviderDialog.addTitle')}
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Configure AI provider settings and credentials
+                                        {t('aiProviderDialog.description')}
                                     </DialogDescription>
                                 </div>
                             </div>
@@ -224,7 +223,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="providerId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Provider</FormLabel>
+                                            <FormLabel suppressHydrationWarning>{t('aiProviderDialog.providerLabel')}</FormLabel>
                                             <Select
                                                 onValueChange={(val) => {
                                                     field.onChange(val);
@@ -242,7 +241,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             >
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select provider" />
+                                                        <SelectValue placeholder={t('aiProviderDialog.selectProviderPlaceholder')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -263,10 +262,10 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     name="displayName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Display Name</FormLabel>
+                                            <FormLabel suppressHydrationWarning>{t('aiProviderDialog.displayNameLabel')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="e.g. Production GPT-4"
+                                                    placeholder={t('aiProviderDialog.displayNamePlaceholder')}
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -281,7 +280,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 text-sm font-medium">
                                             <Shield className="size-4" />
-                                            Authentication
+                                            <span suppressHydrationWarning>{t('aiProviderDialog.authentication')}</span>
                                         </div>
 
                                         {selectedProvider.requiredFields.map((fieldName) => (
@@ -296,7 +295,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                                 {fieldName.includes('Key') ? <Key className="size-3" /> : <Globe className="size-3" />}
                                                                 {fieldName.replace(/([A-Z])/g, ' $1')}
                                                             </span>
-                                                            <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Required</span>
+                                                            <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded" suppressHydrationWarning>{t('aiProviderDialog.required')}</span>
                                                         </FormLabel>
                                                         <FormControl>
                                                             <Input
@@ -320,7 +319,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>
-                                                            {fieldName.replace(/([A-Z])/g, ' $1')} (Optional)
+                                                            {fieldName.replace(/([A-Z])/g, ' $1')} <span suppressHydrationWarning>({t('aiProviderDialog.optional')})</span>
                                                         </FormLabel>
                                                         <FormControl>
                                                             <Input
@@ -346,12 +345,12 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                             {isVerifyingModels ? (
                                                 <>
                                                     <Loader2 className="size-4 mr-2 animate-spin" />
-                                                    Connecting...
+                                                    <span suppressHydrationWarning>{t('aiProviderDialog.connecting')}</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <RefreshCw className="size-4 mr-2" />
-                                                    Refresh Models
+                                                    <span suppressHydrationWarning>{t('aiProviderDialog.refreshModels')}</span>
                                                 </>
                                             )}
                                         </Button>
@@ -361,16 +360,16 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-sm font-medium">
                                                 <Stars className="size-4" />
-                                                Available Models
+                                                <span suppressHydrationWarning>{t('aiProviderDialog.availableModels')}</span>
                                             </div>
                                             <Badge variant="outline">
-                                                {(form.getValues('modelList') || []).length} Models
+                                                {(form.getValues('modelList') || []).length} <span suppressHydrationWarning>{t('settingsPage.aiProvidersDetail.models')}</span>
                                             </Badge>
                                         </div>
 
                                         <div className="flex gap-2">
                                             <Input
-                                                placeholder="Add model ID manually (e.g. gpt-4-turbo)"
+                                                placeholder={t('aiProviderDialog.manualModelPlaceholder')}
                                                 value={manualModel}
                                                 onChange={(e) => setManualModel(e.target.value)}
                                                 className="h-8 text-xs"
@@ -382,7 +381,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                             const current = form.getValues('modelList') || [];
                                                             if (!current.includes(manualModel.trim())) {
                                                                 form.setValue('modelList', [...current, manualModel.trim()]);
-                                                                toast.success('Model added');
+                                                                toast.success(t('aiProviderDialog.modelAdded'));
                                                             }
                                                             setManualModel('');
                                                         }
@@ -396,7 +395,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                                 onClick={addManualModel}
                                                 type="button"
                                             >
-                                                <Plus className="size-3 mr-1" /> Add
+                                                <Plus className="size-3 mr-1" /> <span suppressHydrationWarning>{t('aiProviderDialog.add')}</span>
                                             </Button>
                                         </div>
 
@@ -425,7 +424,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 variant="ghost"
                                 onClick={() => onOpenChange(false)}
                             >
-                                Cancel
+                                <span suppressHydrationWarning>{t('aiProviderDialog.cancel')}</span>
                             </Button>
                             <Button
                                 type="submit"
@@ -436,7 +435,7 @@ export function AIProviderDialog({ open, onOpenChange, availableProviders, confi
                                 ) : (
                                     <Save className="size-4 mr-2" />
                                 )}
-                                {isEdit ? 'Save Changes' : 'Add Provider'}
+                                <span suppressHydrationWarning>{isEdit ? t('aiProviderDialog.saveChanges') : t('aiProviderDialog.addTitle')}</span>
                             </Button>
                         </DialogFooter>
                     </form>

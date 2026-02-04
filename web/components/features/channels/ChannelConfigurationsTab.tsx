@@ -171,10 +171,10 @@ export function ChannelConfigurationsTab({
                           )}
                         </CardTitle>
                         <CardDescription className="text-xs font-medium capitalize flex items-center gap-2">
-                          <span className="text-foreground/80">{channelInfo?.category || 'Integration'}</span>
+                          <span className="text-foreground/80">{channelInfo?.category || t('channels.config.integrationCategory')}</span>
                           <span className="text-muted-foreground/40">•</span>
                           <span className={cn("text-[10px] font-mono uppercase tracking-wider", config.is_active ? "text-green-500" : "text-muted-foreground")} suppressHydrationWarning>
-                            {config.is_active ? t('channels_config.active') : 'Offline'}
+                            {config.is_active ? t('channels_config.active') : t('channels.config.statusOffline')}
                           </span>
                         </CardDescription>
                       </div>
@@ -355,7 +355,7 @@ export function ChannelConfigurationsTab({
                       className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50"
                       value={configForm.name}
                       onChange={(e) => setConfigForm({ ...configForm, name: e.target.value })}
-                      placeholder="e.g. Primary Facebook Portal"
+                      placeholder={t('channels.config.namePlaceholder')}
                     />
                   </div>
 
@@ -368,7 +368,7 @@ export function ChannelConfigurationsTab({
                       className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50 font-mono"
                       value={configForm.client_id}
                       onChange={(e) => setConfigForm({ ...configForm, client_id: e.target.value })}
-                      placeholder="Client / App ID"
+                      placeholder={t('channels.config.clientIdPlaceholder')}
                     />
                   </div>
 
@@ -482,7 +482,7 @@ export function ChannelConfigurationsTab({
                       className="h-12 rounded-xl bg-secondary/10 border-border/40 focus:border-primary/50"
                       value={configForm.scopes}
                       onChange={(e) => setConfigForm({ ...configForm, scopes: e.target.value })}
-                      placeholder="e.g. read_messages, write_post"
+                      placeholder={t('channels.config.scopesPlaceholder')}
                     />
                   </div>
                 )}
