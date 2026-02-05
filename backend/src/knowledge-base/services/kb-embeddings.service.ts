@@ -32,7 +32,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) {}
+  ) { }
 
   async chunkText(
     text: string,
@@ -81,10 +81,13 @@ export class KBEmbeddingsService {
     await this.processChunksWithProgress(chunks, embeddingModel);
   }
 
+
+
   async processChunksWithProgress(
     chunks: KBChunkEntity[],
     embeddingModel?: string,
     onProgress?: (processed: number, total: number) => void,
+    options?: { aiConfigId?: string },
   ): Promise<{ successes: number; failures: number }> {
     if (chunks.length === 0) return { successes: 0, failures: 0 };
 
@@ -162,53 +165,22 @@ export class KBEmbeddingsService {
             chunk.embeddingStatus = KbProcessingStatus.PROCESSING;
             await this.chunkRepository.save(chunk);
 
+            // Step 1: Generate embedding with Contextual Header ($0 cost strategy)
+            const docName = chunk.metadata?.documentName || 'Unknown Source';
+            const category = chunk.metadata?.category ? ` (Mục đích: ${chunk.metadata.category})` : '';
+            const contextualContent = `Source: ${docName}${category}\n\n${chunk.content}`;
+
             let embedding: number[];
             try {
-              // For providers that require API key, get it
-              let apiKey: string | undefined;
+              const currentApiKey: string | undefined = apiKey;
+              // We include the contextual header to help distinguish similar content across documents
+              const contentToEmbed = contextualContent;
 
-              if (requiresApiKey) {
-                // Try to get API key for the configured provider
-                try {
-                  // Try to get API key from workspace scope first
-                  if (workspaceId) {
-                    const configs =
-                      await this.aiProvidersService.getWorkspaceConfigs(
-                        workspaceId,
-                      );
-                    const config = configs.find((c) => c.id === kbAiConfigId);
-                    if (config?.config?.apiKey) {
-                      apiKey = config.config.apiKey;
-                    }
-                  }
-                  // Fall back to user scope
-                  if (!apiKey && userId) {
-                    const configs =
-                      await this.aiProvidersService.getUserConfigs(userId);
-                    const config = configs.find((c) => c.id === kbAiConfigId);
-                    if (config?.config?.apiKey) {
-                      apiKey = config.config.apiKey;
-                    }
-                  }
-                } catch (error) {
-                  this.logger.warn(
-                    `Failed to get API key for embedding: ${error.message}`,
-                  );
-                }
-
-                if (!apiKey) {
-                  throw new BadRequestException(
-                    `No API key configured for provider ${provider}`,
-                  );
-                }
-              }
-
-              // Generate embedding with API key (or undefined for local providers)
               embedding = await this.aiProvidersService.generateEmbedding(
-                chunk.content,
+                contentToEmbed,
                 model,
                 provider,
-                apiKey, // Pass the API key (or undefined for local providers)
+                currentApiKey, // Pass the API key (or undefined for local providers)
                 { baseUrl: providerConfig.baseUrl }, // Pass baseUrl for Ollama
               );
             } catch (error) {
@@ -217,22 +189,21 @@ export class KBEmbeddingsService {
               this.logger.error(
                 `Embedding failed for chunk ${chunk.id} using provider ${provider}: ${errorMessage}`,
               );
-              // Fail the chunk directly so we don't end up with partial/bad states.
-              // Rely on robust resolveEmbeddingConfig to pick a good provider first.
               throw error;
             }
 
+            // Step 3: Save to Vector database (Qdrant)
             const vectorId = await this.vectorService.upsertVector(
               {
                 id: chunk.id,
                 vector: embedding,
                 payload: {
-                  content: chunk.content,
+                  content: contextualContent, // Store with header for better LLM retrieval context
                   documentId: chunk.documentId,
                   knowledgeBaseId: chunk.knowledgeBaseId,
-                  workspace_id: workspaceId,
+                  workspace_id: workspaceId || 'default',
                   chunkIndex: chunk.chunkIndex,
-                  metadata: chunk.metadata,
+                  metadata: chunk.metadata, // NEW: Include enriched metadata
                 },
               },
               workspaceId || 'default',
@@ -242,10 +213,6 @@ export class KBEmbeddingsService {
             chunk.embeddingStatus = KbProcessingStatus.COMPLETED;
             await this.chunkRepository.save(chunk);
 
-            processedCount++;
-            if (onProgress) {
-              onProgress(processedCount, chunks.length);
-            }
             return true; // Success
           } catch (error) {
             chunk.embeddingStatus = KbProcessingStatus.FAILED;
@@ -255,10 +222,6 @@ export class KBEmbeddingsService {
               `❌ Failed to embed chunk ${chunk.id}: ${error.message}`,
             );
 
-            processedCount++;
-            if (onProgress) {
-              onProgress(processedCount, chunks.length);
-            }
             return false; // Failure
           }
         }),
@@ -267,6 +230,11 @@ export class KBEmbeddingsService {
       const batchSuccesses = batchResults.filter((r) => r).length;
       successes += batchSuccesses;
       failures += batchResults.length - batchSuccesses;
+      processedCount += batch.length;
+
+      if (onProgress) {
+        onProgress(processedCount, chunks.length);
+      }
 
       if (i + batchSize < chunks.length) {
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -275,6 +243,7 @@ export class KBEmbeddingsService {
 
     return { successes, failures };
   }
+
 
   async generateQueryEmbedding(
     query: string,

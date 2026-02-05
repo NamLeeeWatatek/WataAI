@@ -67,6 +67,7 @@ export class KBProcessor extends WorkerHost {
 
       const document = await this.documentRepository.findOne({
         where: { id: documentId },
+        relations: ['folder'],
       });
 
       if (!document) {
@@ -185,6 +186,7 @@ export class KBProcessor extends WorkerHost {
             tokenCount: chunk.tokenCount,
             metadata: sanitizeMetadata({
               documentName: document.name,
+              category: document.folder?.name, // Attach folder name as category context
               fileType: document.fileType,
               sourceUrl: document.sourceUrl,
             }),
@@ -200,7 +202,7 @@ export class KBProcessor extends WorkerHost {
         ); // First 20% for chunking/saving
       }
 
-      // Process Embeddings
+      // Process Embeddings with Enrichment
       const processingResult =
         await this.embeddingsService.processChunksWithProgress(
           chunkEntities,
@@ -217,7 +219,11 @@ export class KBProcessor extends WorkerHost {
             const progress = 20 + Math.round((processed / total) * 80);
             await job.updateProgress(progress);
           },
+          {
+            aiConfigId: kb.aiConfigId || undefined,
+          },
         );
+
 
       if (processingResult.failures > 0) {
         if (processingResult.successes === 0) {
@@ -302,6 +308,7 @@ export class KBProcessor extends WorkerHost {
 
       const document = await this.documentRepository.findOne({
         where: { id: documentId },
+        relations: ['folder'],
       });
 
       if (!document) {
