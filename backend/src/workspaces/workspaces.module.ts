@@ -46,4 +46,4 @@ import { PermissionsModule } from '../permissions/permissions.module';
     WorkspaceInvitationsService,
   ],
 })
-export class WorkspacesModule {}
+export class WorkspacesModule { }

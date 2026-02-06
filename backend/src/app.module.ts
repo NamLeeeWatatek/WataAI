@@ -66,18 +66,19 @@ import { MongooseConfigService } from './database/mongoose-config.service';
 const infrastructureDatabaseModule =
   process.env.DATABASE_TYPE === 'mongodb'
     ? MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
-    })
+        useClass: MongooseConfigService,
+      })
     : TypeOrmModule.forRootAsync({
-      useClass: TypeOrmConfigService,
-      dataSourceFactory: async (options: DataSourceOptions) => {
-        return new DataSource(options).initialize();
-      },
-    });
+        useClass: TypeOrmConfigService,
+        dataSourceFactory: async (options: DataSourceOptions) => {
+          return new DataSource(options).initialize();
+        },
+      });
 
 import { CategoriesModule } from './categories/categories.module';
 import { CreationJobsModule } from './creation-jobs/creation-jobs.module';
 import { WorkflowsModule } from './workflows/workflows.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -198,6 +199,7 @@ import { WorkflowsModule } from './workflows/workflows.module';
     RolesModule,
     ExecutionModule,
     WorkflowsModule,
+    AssetsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

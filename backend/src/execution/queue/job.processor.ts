@@ -41,9 +41,7 @@ export class JobProcessor extends WorkerHost implements OnModuleInit {
     this.logger.log('Worker is ready to process jobs.');
   }
 
-  async process(
-    job: Job<{ creationJob?: CreationJob }>,
-  ): Promise<any> {
+  async process(job: Job<{ creationJob?: CreationJob }>): Promise<any> {
     const jobEntity = job.data.creationJob;
 
     if (!jobEntity) {

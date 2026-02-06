@@ -39,7 +39,7 @@ export class ChannelsController {
   constructor(
     private readonly channelsService: ChannelsService,
     private readonly facebookOAuthService: FacebookOAuthService,
-  ) { }
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all channel connections' })

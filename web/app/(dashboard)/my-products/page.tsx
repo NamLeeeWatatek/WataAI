@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ProductsGrid } from '@/components/features/products/ProductsGrid';
 import { ProductsTable } from '@/components/features/products/ProductsTable';
-import { Package, LayoutGrid, List, Library } from 'lucide-react';
+import { Package, LayoutGrid, List, Library, History as HistoryIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/shared/Pagination';
@@ -98,9 +98,9 @@ export default function MyProductsPage() {
     return (
         <div className="page-container space-y-6">
             <PageHeader
-                title={t('navigation.assetLibrary')}
-                description="Manage and view your generated content and products."
-                icon={Library}
+                title={t('navigation.creationHistory')}
+                description="Manage and view your creation activity and tool execution history."
+                icon={HistoryIcon}
                 onRefresh={handleRefresh}
                 refreshing={isLoading || isRefetching}
             />

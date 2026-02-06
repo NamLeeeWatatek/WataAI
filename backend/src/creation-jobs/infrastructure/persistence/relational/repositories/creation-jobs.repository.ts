@@ -14,14 +14,13 @@ import { CreationJobPublicationMapper } from '../mappers/creation-job-publicatio
 
 @Injectable()
 export class CreationJobsRelationalRepository
-  implements CreationJobsRepository
-{
+  implements CreationJobsRepository {
   constructor(
     @InjectRepository(CreationJobEntity)
     private readonly creationJobsRepository: Repository<CreationJobEntity>,
     @InjectRepository(CreationJobPublicationEntity)
     private readonly publicationRepository: Repository<CreationJobPublicationEntity>,
-  ) {}
+  ) { }
 
   async create(data: CreationJob): Promise<CreationJob> {
     const persistenceModel = CreationJobsMapper.toPersistence(data);
@@ -92,6 +91,7 @@ export class CreationJobsRelationalRepository
   async findByIds(ids: CreationJob['id'][]): Promise<CreationJob[]> {
     const entities = await this.creationJobsRepository.find({
       where: { id: In(ids) },
+      relations: ['creationTool'],
     });
 
     return entities.map((entity) => CreationJobsMapper.toDomain(entity));

@@ -77,7 +77,7 @@ export function extractCleanText(content: string, mimeType?: string): string {
     try {
       const parsed = JSON.parse(cleaned);
       cleaned = JSON.stringify(parsed, null, 2);
-    } catch { }
+    } catch {}
   }
 
   return cleaned;
@@ -88,19 +88,19 @@ export function extractCleanText(content: string, mimeType?: string): string {
  */
 export function normalizeEncoding(buffer: Buffer): string {
   // Remove null bytes first
-  const cleanBuffer = buffer.filter(b => b !== 0);
+  const cleanBuffer = buffer.filter((b) => b !== 0);
 
   try {
     const utf8Text = cleanBuffer.toString();
     if (isValidText(utf8Text)) {
       return sanitizeText(utf8Text);
     }
-  } catch { }
+  } catch {}
 
   try {
     const latin1Text = cleanBuffer.toString();
     return sanitizeText(latin1Text);
-  } catch { }
+  } catch {}
 
   return sanitizeText(cleanBuffer.toString());
 }

@@ -20,7 +20,7 @@ export class ChannelsService {
     private connectionRepository: Repository<ChannelConnectionEntity>,
     @InjectRepository(ConversationEntity)
     private conversationRepository: Repository<ConversationEntity>,
-  ) { }
+  ) {}
 
   async findAll(
     workspaceId: string,

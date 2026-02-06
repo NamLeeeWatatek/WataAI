@@ -23,10 +23,15 @@ import { AuditService } from '../audit/audit.service';
 
 import { ExecutionStrategyResolver } from '../execution/execution-strategy.resolver';
 import { ExecutionValidationService } from '../execution/validation/execution-validation.service';
-import { ExecutionFlow, FormConfig } from '../creation-tools/domain/creation-tool';
+import {
+  ExecutionFlow,
+  FormConfig,
+} from '../creation-tools/domain/creation-tool';
 import { ChannelsService } from '../channels/channels.service';
 import { OAuthService } from '../integrations/oauth.service';
 import { BotExecutionService } from '../bots/bot-execution.service';
+import { AssetsService } from '../assets/assets.service';
+import { AssetType } from '../assets/domain/asset';
 
 const SOCIAL_MEDIA_EXPERT_PROMPT = `Bạn là một AI chuyên viết nội dung Social Media bán hàng và truyền thông chiến dịch.
 Bạn KHÔNG viết theo cảm tính.
@@ -128,7 +133,8 @@ export class CreationJobsService {
     private readonly oauthService: OAuthService,
     @Inject(forwardRef(() => BotExecutionService))
     private readonly botExecutionService: BotExecutionService,
-  ) { }
+    private readonly assetsService: AssetsService,
+  ) {}
 
   async executePreview(
     toolId: string,
@@ -224,7 +230,10 @@ export class CreationJobsService {
     // We update the job's global input data with the new step data
 
     // Normalize new inputs first
-    const normalizedStepInput = this.normalizeInputData(inputData, tool.formConfig);
+    const normalizedStepInput = this.normalizeInputData(
+      inputData,
+      tool.formConfig,
+    );
 
     const updatedInputData = {
       ...(job.inputData || {}),
@@ -310,8 +319,7 @@ export class CreationJobsService {
                 val.description || val.desc || val.name;
             }
             if (!normalized[`${field.name}Id` || 'templateId']) {
-              normalized[`${field.name}Id` || 'templateId'] =
-                val.id || val._id;
+              normalized[`${field.name}Id` || 'templateId'] = val.id || val._id;
             }
 
             // REMOVE the original object to avoid "gộp vô" (duplicates) in webhooks
@@ -347,7 +355,6 @@ export class CreationJobsService {
     userId?: string,
     workspaceId?: string,
   ): Promise<CreationJob> {
-
     // Validate Input against Tool Config
     const tool = await this.creationToolsService.findById(
       createDto.creationToolId,
@@ -587,6 +594,50 @@ export class CreationJobsService {
     });
 
     if (status === CreationJobStatus.COMPLETED) {
+      // Create Asset record automatically when job is completed
+      try {
+        const output = (resultData || job.outputData || {}) as Record<
+          string,
+          any
+        >;
+        // Detect primary asset URL (image/video/audio)
+        const assetUrl =
+          output.imageUrl ||
+          output.image ||
+          (typeof output.url === 'string' && output.url.startsWith('http')
+            ? output.url
+            : '');
+
+        const resultContent =
+          output.result ||
+          output.content ||
+          output.text ||
+          (typeof output.latest === 'string' ? output.latest : '');
+
+        if (assetUrl || resultContent) {
+          await this.assetsService.create({
+            name: job.creationTool?.name || 'Untitled Asset',
+            type: assetUrl
+              ? this.assetsService.mapMimeTypeToAssetType(undefined, assetUrl)
+              : AssetType.TEXT,
+            url: assetUrl || '',
+            jobId: job.id,
+            workspaceId: job.workspaceId!,
+            createdBy: job.createdBy,
+            metadata: {
+              ...output,
+              content: resultContent,
+              toolName: job.creationTool?.name,
+              toolId: job.creationToolId,
+            },
+          });
+        }
+      } catch (assetErr) {
+        this.logger.error(
+          `Failed to auto-create asset for job ${job.id}: ${assetErr.message}`,
+        );
+      }
+
       this.eventEmitter.emit('creation-job.completed', {
         id: job.id,
         userId: job.createdBy,
@@ -824,7 +875,8 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
 
     const results: any[] = [];
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     for (const rawChannelId of channels) {
       let channelId = rawChannelId;
@@ -866,7 +918,8 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
 
           // Prefer userAccessToken from metadata if available (typical for User connections managing multiple pages)
           // otherwise fallback to the main accessToken column
-          const rawToken = channel.metadata?.userAccessToken || channel.accessToken;
+          const rawToken =
+            channel.metadata?.userAccessToken || channel.accessToken;
 
           if (!pageId || !rawToken) {
             results.push({
@@ -907,7 +960,9 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
             continue;
           }
 
-          this.logger.log(`Attempting to post to Facebook Page ${pageId} with token ending in ...${finalAccessToken?.slice(-10)}`);
+          this.logger.log(
+            `Attempting to post to Facebook Page ${pageId} with token ending in ...${finalAccessToken?.slice(-10)}`,
+          );
 
           const result = await this.oauthService.postToFacebookPage(
             finalAccessToken,
@@ -1009,7 +1064,7 @@ Vui lòng sử dụng toàn bộ thông tin trên để tạo bài viết tốt 
               content: message,
             });
           } catch (saveErr) {
-            console.error("Failed to save publication error record:", saveErr);
+            console.error('Failed to save publication error record:', saveErr);
           }
         }
 

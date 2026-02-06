@@ -36,7 +36,7 @@ export class KBRagService {
     @InjectRepository(BotKnowledgeBaseEntity)
     private readonly botKbRepository: Repository<BotKnowledgeBaseEntity>,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async query(
     query: string,
@@ -468,7 +468,7 @@ export class KBRagService {
       let systemPrompt = botSystemPrompt || 'You are a helpful assistant.';
       systemPrompt +=
         "\n\nIMPORTANT: Always respond in the same language as the user's latest message. If the user asks in Vietnamese, reply in Vietnamese. If the user asks in English, reply in English. Do not override this based on the retrieved context language." +
-        "\n\nIMAGE FORMATTING: If you need to include an image, you MUST use standard Markdown syntax: ![Image Description](Image URL). DO NOT use `!(URL)` or `(URL)` or just the URL alone. This is critical for the image to display correctly.";
+        '\n\nIMAGE FORMATTING: If you need to include an image, you MUST use standard Markdown syntax: ![Image Description](Image URL). DO NOT use `!(URL)` or `(URL)` or just the URL alone. This is critical for the image to display correctly.';
 
       if (relevantChunks.length > 0) {
         const context = relevantChunks
@@ -492,12 +492,12 @@ export class KBRagService {
 
       const answer = aiConfigId
         ? await this.aiProvidersService.chatWithHistoryUsingProvider(
-          messages,
-          modelName,
-          aiConfigId,
-          workspaceId ? 'workspace' : 'user',
-          workspaceId || bot.createdBy || 'system',
-        )
+            messages,
+            modelName,
+            aiConfigId,
+            workspaceId ? 'workspace' : 'user',
+            workspaceId || bot.createdBy || 'system',
+          )
         : await this.aiProvidersService.chatWithHistory(messages, modelName);
 
       return {
@@ -558,17 +558,17 @@ export class KBRagService {
     try {
       const bot = botId
         ? await this.botRepository.findOne({
-          where: { id: botId },
-          select: [
-            'id',
-            'name',
-            'workspaceId',
-            'aiConfigId',
-            'aiModelName',
-            'systemPrompt',
-            'createdBy',
-          ],
-        })
+            where: { id: botId },
+            select: [
+              'id',
+              'name',
+              'workspaceId',
+              'aiConfigId',
+              'aiModelName',
+              'systemPrompt',
+              'createdBy',
+            ],
+          })
         : null;
 
       if (botId && !bot) {

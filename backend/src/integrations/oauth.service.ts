@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class OAuthService {
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   getFacebookAuthUrl(clientId: string, state?: string): string {
     const redirectUri = this.getRedirectUri('facebook');
@@ -61,7 +61,8 @@ export class OAuthService {
 
   async getFacebookPages(accessToken: string): Promise<any[]> {
     let pages: any[] = [];
-    let url: string | undefined = `https://graph.facebook.com/v21.0/me/accounts`;
+    let url: string | undefined =
+      `https://graph.facebook.com/v21.0/me/accounts`;
     let params: any = {
       access_token: accessToken,
       fields: 'name,access_token,id,tasks,category', // Explicitly request token
@@ -78,15 +79,17 @@ export class OAuthService {
       params = undefined; // Subsequent URLs already contain params
     }
 
-
     return pages;
   }
 
   async getFacebookPage(accessToken: string, pageId: string): Promise<any> {
     try {
-      console.log(`[OAuth] Fetching Page ${pageId} via /me/accounts using User Token ending ...${accessToken.slice(-10)}`);
+      console.log(
+        `[OAuth] Fetching Page ${pageId} via /me/accounts using User Token ending ...${accessToken.slice(-10)}`,
+      );
 
-      let url: string | undefined = `https://graph.facebook.com/v21.0/me/accounts`;
+      let url: string | undefined =
+        `https://graph.facebook.com/v21.0/me/accounts`;
       let params: any = {
         access_token: accessToken,
         fields: 'name,access_token,id,tasks,category',
@@ -100,7 +103,9 @@ export class OAuthService {
         if (data.data && Array.isArray(data.data)) {
           const foundPage = data.data.find((p: any) => p.id === pageId);
           if (foundPage) {
-            console.log(`[OAuth] Successfully found Page ${pageId} and retrieved Page Access Token.`);
+            console.log(
+              `[OAuth] Successfully found Page ${pageId} and retrieved Page Access Token.`,
+            );
             return foundPage;
           }
         }
@@ -109,13 +114,23 @@ export class OAuthService {
         params = undefined; // Next URL already contains the necessary parameters
       }
 
-      console.warn(`[OAuth] Page ${pageId} not found in the user's accounts list. User might not have permission or role.`);
+      console.warn(
+        `[OAuth] Page ${pageId} not found in the user's accounts list. User might not have permission or role.`,
+      );
       return null;
-
     } catch (error) {
-      console.error(`[OAuth] getFacebookPage Failed: ${error.message}`, error.response?.data);
-      if (axios.isAxiosError(error) && error.response && (error.response.status === 400 || error.response.status === 401)) {
-        console.error(`[OAuth] Possible Token/Permission Issue. Scope 'pages_show_list' might be missing.`);
+      console.error(
+        `[OAuth] getFacebookPage Failed: ${error.message}`,
+        error.response?.data,
+      );
+      if (
+        axios.isAxiosError(error) &&
+        error.response &&
+        (error.response.status === 400 || error.response.status === 401)
+      ) {
+        console.error(
+          `[OAuth] Possible Token/Permission Issue. Scope 'pages_show_list' might be missing.`,
+        );
       }
       throw error;
     }
@@ -149,11 +164,17 @@ export class OAuthService {
       : `https://graph.facebook.com/v21.0/${pageId}/feed`;
 
     try {
-      console.log(`[OAuth] Posting to ${endpoint} with params:`, { ...params, access_token: '***' });
+      console.log(`[OAuth] Posting to ${endpoint} with params:`, {
+        ...params,
+        access_token: '***',
+      });
       const response = await axios.post(endpoint, null, { params });
       return response.data;
     } catch (error) {
-      console.error('[OAuth] Facebook Post Error Details:', error.response?.data || error.message);
+      console.error(
+        '[OAuth] Facebook Post Error Details:',
+        error.response?.data || error.message,
+      );
       if (axios.isAxiosError(error) && error.response) {
         throw new Error(
           `Facebook API Error: ${error.response.data.error.message} (Code: ${error.response.data.error.code})`,

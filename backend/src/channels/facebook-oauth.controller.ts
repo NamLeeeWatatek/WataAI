@@ -37,7 +37,7 @@ export class FacebookOAuthController {
     private readonly facebookSyncService: FacebookSyncService,
     private readonly facebookConversationSyncService: FacebookConversationSyncService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Get('oauth/url')
   @ApiBearerAuth()
@@ -222,11 +222,12 @@ export class FacebookOAuthController {
         );
 
         if (credential?.clientId && credential?.clientSecret) {
-          finalUserToken = await this.facebookOAuthService.exchangeForLongLivedToken(
-            body.userAccessToken,
-            credential.clientId,
-            credential.clientSecret,
-          );
+          finalUserToken =
+            await this.facebookOAuthService.exchangeForLongLivedToken(
+              body.userAccessToken,
+              credential.clientId,
+              credential.clientSecret,
+            );
           this.logger.log(
             `[FacebookOAuth] Exchanged User Token for Long-Lived Token`,
           );

@@ -224,7 +224,6 @@ export class KBProcessor extends WorkerHost {
           },
         );
 
-
       if (processingResult.failures > 0) {
         if (processingResult.successes === 0) {
           throw new Error(
@@ -328,10 +327,8 @@ export class KBProcessor extends WorkerHost {
       // Use the unified fetcher with Jina Reader fallback to bypass 403s
       const html = await this.crawlerService.fetchUrlContent(url);
 
-      const { title, content, excerpt, images } = MarkdownProcessorUtil.htmlToMarkdown(
-        html,
-        url,
-      );
+      const { title, content, excerpt, images } =
+        MarkdownProcessorUtil.htmlToMarkdown(html, url);
 
       this.logger.log(
         `✅ Crawled ${content.length} chars (Title: ${title}). Updating document...`,

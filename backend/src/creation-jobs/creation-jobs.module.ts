@@ -15,9 +15,11 @@ import { ExecutionModule } from '../execution/execution.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { BotsModule } from '../bots/bots.module';
+import { AssetsModule } from '../assets/assets.module';
 
 @Module({
   imports: [
+    AssetsModule,
     RelationalCreationJobsPersistenceModule,
     NotificationsModule,
     AuditModule,

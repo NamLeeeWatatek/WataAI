@@ -18,7 +18,7 @@ export class KBSearchService {
   constructor(
     private readonly embeddingsService: KBEmbeddingsService,
     private readonly vectorService: KBVectorService,
-  ) { }
+  ) {}
 
   async query(
     query: string,

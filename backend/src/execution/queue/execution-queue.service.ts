@@ -12,7 +12,7 @@ export class ExecutionQueueService {
   constructor(
     @InjectQueue(JOB_QUEUE)
     private readonly queue: Queue,
-  ) { }
+  ) {}
 
   /**
    * Add a creation job to the execution queue

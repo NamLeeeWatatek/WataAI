@@ -53,7 +53,7 @@ export class StatsService {
     private readonly templateRepository: Repository<TemplateEntity>,
     @InjectRepository(CreationJobEntity)
     private readonly creationJobRepository: Repository<CreationJobEntity>,
-  ) { }
+  ) {}
 
   async getSystemStats(query: StatsQueryDto): Promise<any> {
     const { startDate, endDate } = this.getDateRange(query);
@@ -607,11 +607,7 @@ export class StatsService {
   ): Promise<TopItemDto[]> {
     const qb = this.creationToolRepository
       .createQueryBuilder('tool')
-      .leftJoin(
-        CreationJobEntity,
-        'job',
-        'job.creationToolId = tool.id',
-      )
+      .leftJoin(CreationJobEntity, 'job', 'job.creationToolId = tool.id')
       .select('tool.id', 'id')
       .addSelect('tool.name', 'name')
       .addSelect('COUNT(job.id)', 'count')
