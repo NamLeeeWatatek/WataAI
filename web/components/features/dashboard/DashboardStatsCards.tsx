@@ -106,23 +106,19 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
                 const style = gradients[card.color] || gradients.primary;
                 return (
                     <div key={card.id}>
-                        <Card className="group relative overflow-hidden h-full border-border/50 hover:border-border/80 transition-all duration-500 hover:shadow-lg">
-                            {/* Background Gradient Mesh */}
-                            <div className={cn(
-                                "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-br",
-                                style.bg
-                            )} />
+                        <Card className="relative overflow-hidden h-full border-border/50">
+                            {/* Background Gradient Mesh - Removed for performance */}
 
                             {/* Accent Bar */}
                             <div className={cn(
-                                "absolute top-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-500",
+                                "absolute top-0 left-0 w-1 h-full opacity-20",
                                 style.bar
                             )} />
 
                             <CardContent className="p-6 relative z-10">
                                 <div className="flex justify-between items-start mb-6">
                                     <div className={cn(
-                                        "p-3 rounded-2xl border transition-all duration-300 shadow-sm group-hover:scale-110",
+                                        "p-3 rounded-2xl border shadow-sm",
                                         style.icon
                                     )}>
                                         <card.icon className="w-6 h-6" />
@@ -130,8 +126,8 @@ export function DashboardStatsCards({ stats }: DashboardStatsCardsProps) {
                                     {card.growth !== undefined && formatGrowthRate(card.growth)}
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-4xl font-bold tracking-tighter group-hover:translate-x-1 transition-transform">{card.total || 0}</h3>
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">
+                                    <h3 className="text-4xl font-bold tracking-tighter">{card.total || 0}</h3>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest opacity-70">
                                         {card.title}
                                     </p>
                                 </div>

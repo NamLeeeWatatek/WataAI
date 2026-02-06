@@ -211,7 +211,7 @@ export default function BotsPage() {
                             return (
                                 <Card
                                     key={bot.id}
-                                    className="group relative flex flex-col overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all"
+                                    className="relative flex flex-col overflow-hidden border-border/50"
                                 >
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-5">
@@ -273,7 +273,7 @@ export default function BotsPage() {
                                         <Button
                                             variant="secondary"
                                             size="sm"
-                                            className="w-full font-bold transition-all h-9 group/btn bg-primary/5 hover:bg-primary hover:text-white"
+                                            className="w-full font-bold h-9 bg-primary/5 hover:bg-primary hover:text-white"
                                             onClick={() => router.push(`/bots/${bot.id}`)}
                                         >
                                             <Settings className="w-4 h-4 mr-2" />

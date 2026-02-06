@@ -15,7 +15,7 @@ import { WorkspaceInitializer } from '@/components/providers/WorkspaceInitialize
 
 import { LoadingLogo } from '@/components/shared/LoadingLogo'
 import { ProgressOverlay } from '@/components/shared/ProgressOverlay'
-import { PageTransition } from '@/components/shared/PageTransition'
+
 
 export default function DashboardLayout({
     children,
@@ -106,7 +106,7 @@ export default function DashboardLayout({
             {/* Main content area */}
             <main
                 id="main-content"
-                className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 transition-all duration-300 outline-none"
+                className="flex-1 flex flex-col lg:pl-64 overflow-hidden min-w-0 outline-none"
                 tabIndex={-1}
             >
                 <CreationJobsProvider>
@@ -122,9 +122,7 @@ export default function DashboardLayout({
                             !isChatPage && !isEditMode && "page-container min-h-full"
                         )}>
                             <ErrorBoundary>
-                                <PageTransition>
-                                    {children}
-                                </PageTransition>
+                                {children}
                             </ErrorBoundary>
                         </div>
                     </div>

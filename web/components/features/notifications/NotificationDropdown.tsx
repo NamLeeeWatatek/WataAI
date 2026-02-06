@@ -144,7 +144,7 @@ export function NotificationDropdown({
         variant="ghost"
         size="icon"
         className={cn(
-          'relative rounded-full hover:bg-muted/50 transition-all duration-200',
+          'relative rounded-full hover:bg-muted/50',
           isOpen && 'bg-muted'
         )}
         onClick={() => setIsOpen(!isOpen)}
@@ -232,7 +232,7 @@ export function NotificationDropdown({
                   <div
                     key={notification.id}
                     className={cn(
-                      'p-4 hover:bg-muted/50 transition-colors duration-150 cursor-pointer',
+                      'p-4 hover:bg-muted/50 cursor-pointer',
                       !notification.isRead && 'bg-muted/30'
                     )}
                     onClick={async () => {
@@ -276,7 +276,7 @@ export function NotificationDropdown({
                             </div>
                             <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-primary transition-all duration-300 ease-out"
+                                className="h-full bg-primary"
                                 style={{ width: `${notification.data.progress}%` }}
                               />
                             </div>

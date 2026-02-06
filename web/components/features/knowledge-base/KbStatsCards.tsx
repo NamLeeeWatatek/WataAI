@@ -50,15 +50,15 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                 <Card
                     key={i}
                     className={cn(
-                        "p-4 group relative overflow-hidden transition-all duration-300",
+                        "p-4 group relative overflow-hidden",
                         "bg-card/40 backdrop-blur-md border border-border/50",
                         "hover:bg-card/60"
                     )}
                 >
                     <div className="flex items-center gap-4 relative z-10">
                         <div className={cn(
-                            "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
-                            "group-hover:scale-110 group-hover:rotate-3 shadow-sm",
+                            "w-12 h-12 rounded-2xl flex items-center justify-center",
+                            "shadow-sm",
                             card.bg, card.color
                         )}>
                             <card.icon className="w-6 h-6" />
@@ -66,7 +66,7 @@ export function KBStatsCards({ stats }: KBStatsCardsProps) {
                         <div className="flex-1 min-w-0">
                             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/70 mb-0.5">{card.label}</p>
                             <p className={cn(
-                                "font-black tracking-tight transition-colors group-hover:text-foreground",
+                                "font-black tracking-tight",
                                 card.isSmall ? "text-sm truncate" : "text-2xl"
                             )} title={typeof card.value === 'string' ? card.value : undefined}>
                                 {card.value}

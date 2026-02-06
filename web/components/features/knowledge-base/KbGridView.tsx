@@ -159,15 +159,15 @@ export function KbGridView({
               if (item.type === 'folder') onDrop(item.id);
             }}
             className={cn(
-              "group p-5 cursor-pointer transition-all duration-500 relative overflow-hidden flex flex-col items-center text-center",
-              "bg-card/40 backdrop-blur-md border border-border/50 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2",
+              "group p-5 cursor-pointer relative overflow-hidden flex flex-col items-center text-center",
+              "bg-card/40 backdrop-blur-md border border-border/50 hover:border-primary/50",
               selectedIds.includes(item.id) && "ring-2 ring-primary border-primary bg-primary/5",
-              dragOverFolder === item.id && "ring-2 ring-primary bg-primary/10 scale-105"
+              dragOverFolder === item.id && "ring-2 ring-primary bg-primary/10"
             )}
             onClick={() => onItemClick(item)}
           >
             <div className={cn(
-              "absolute top-4 right-4 z-20 transition-all duration-300",
+              "absolute top-4 right-4 z-20",
               selectedIds.includes(item.id) ? "opacity-100 scale-100" : "opacity-0 scale-50 group-hover:opacity-100 group-hover:scale-100"
             )}>
               <Checkbox
@@ -179,8 +179,7 @@ export function KbGridView({
             </div>
 
             <div className={cn(
-              "w-20 h-20 rounded-2xl flex items-center justify-center mb-5 transition-all duration-500 shadow-premium border border-white/5",
-              "group-hover:scale-110 group-hover:rotate-2",
+              "w-20 h-20 rounded-2xl flex items-center justify-center mb-5 shadow-premium border border-white/5",
               item.type === 'folder'
                 ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
                 : "bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
@@ -188,7 +187,7 @@ export function KbGridView({
               <KbFileIcon name={item.name} type={item.type} className="w-8 h-8" />
             </div>
 
-            <h3 className="font-bold text-sm truncate w-full px-2 group-hover:text-primary transition-colors leading-relaxed">
+            <h3 className="font-bold text-sm truncate w-full px-2 group-hover:text-primary leading-relaxed">
               {item.name}
             </h3>
 
@@ -208,7 +207,7 @@ export function KbGridView({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all rounded-full hover:bg-primary/10 hover:text-primary"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 rounded-full hover:bg-primary/10 hover:text-primary"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -265,7 +264,7 @@ export function KbGridView({
             </div>
 
             {/* Premium accent */}
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:blur-sm" />
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 group-hover:opacity-100 group-hover:blur-sm" />
           </Card>
         ))}
       </div>

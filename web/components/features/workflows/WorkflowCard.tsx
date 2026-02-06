@@ -29,19 +29,19 @@ interface WorkflowCardProps {
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
     return (
         <Link href={`/workflows/${workflow.id}`} className="group block h-full">
-            <Card className="h-full overflow-hidden border-0 bg-transparent shadow-none hover:shadow-none transition-all duration-300">
+            <Card className="h-full overflow-hidden border-0 bg-transparent shadow-none hover:shadow-none">
                 {/* Image Container with Odyssey-style overflow/hover effects */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-border/50 bg-muted/30">
                     <Media
                         src={workflow.thumbnailUrl}
                         alt={workflow.title}
                         fill
-                        className="transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover w-full h-full"
                         objectFit="cover"
                     />
 
                     {/* Overlay Gradient (Subtle) */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100" />
 
                     {/* Floating Category Badge */}
                     <div className="absolute top-4 left-4">
@@ -56,7 +56,7 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
 
                 {/* Content */}
                 <div className="pt-5 space-y-3">
-                    <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2">
+                    <h3 className="text-xl font-bold tracking-tight text-foreground line-clamp-2">
                         {workflow.title}
                     </h3>
 

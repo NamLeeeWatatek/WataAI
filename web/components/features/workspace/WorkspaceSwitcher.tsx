@@ -67,10 +67,10 @@ export function WorkspaceSwitcher() {
   if (isLoading || !mounted) {
     return (
       <div className="flex w-full items-center gap-2 rounded-xl border border-border/50 bg-muted/50 p-2">
-        <div className="h-8 w-8 animate-pulse rounded-lg bg-muted-foreground/20" />
+        <div className="h-8 w-8 rounded-lg bg-muted-foreground/20" />
         <div className="space-y-1">
-          <div className="h-3 w-20 animate-pulse rounded bg-muted-foreground/20" />
-          <div className="h-2 w-12 animate-pulse rounded bg-muted-foreground/20" />
+          <div className="h-3 w-20 rounded bg-muted-foreground/20" />
+          <div className="h-2 w-12 rounded bg-muted-foreground/20" />
         </div>
       </div>
     )
@@ -101,7 +101,7 @@ export function WorkspaceSwitcher() {
   // Show current workspace name if user only has one workspace
   if (workspaces.length === 1) {
     return (
-      <div className="w-full rounded-xl border border-border/40 bg-card/50 p-2 shadow-sm backdrop-blur-sm transition-all hover:bg-card/80 hover:shadow-md">
+      <div className="w-full rounded-xl border border-border/40 bg-card/50 p-2 shadow-sm backdrop-blur-sm">
         {renderWorkspaceDisplay(workspaces[0], true)}
       </div>
     )
@@ -111,7 +111,7 @@ export function WorkspaceSwitcher() {
     <Select value={currentWorkspace?.id || undefined} onValueChange={handleWorkspaceChange}>
       <SelectTrigger
         className={cn(
-          "h-14 w-full rounded-xl border-border/40 bg-card/50 p-2 shadow-sm backdrop-blur-sm hover:bg-card/80 hover:shadow-md focus:ring-0 data-[state=open]:bg-card"
+          "h-14 w-full rounded-xl border-border/40 bg-card/50 p-2 shadow-sm backdrop-blur-sm focus:ring-0 data-[state=open]:bg-card"
         )}
       >
         {renderWorkspaceDisplay(currentWorkspace || {}, true)}

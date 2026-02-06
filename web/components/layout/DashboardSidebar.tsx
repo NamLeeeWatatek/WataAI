@@ -148,7 +148,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
             )}>
                 {/* Brand Header */}
                 <div className="flex h-16 shrink-0 items-center px-6 mb-2">
-                    <div className="relative w-48 h-12 transition-transform duration-500 hover:scale-105">
+                    <div className="relative w-48 h-12">
                         <Image
                             src="/images/logo.svg"
                             alt="WataAI Logo"
@@ -183,7 +183,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                     variant="ghost"
                                                     onClick={() => onToggleSection(item.name.toLowerCase())}
                                                     className={cn(
-                                                        "w-full justify-between h-10 px-4 text-sm font-semibold transition-all",
+                                                        "w-full justify-between h-10 px-4 text-sm font-semibold",
                                                         "hover:bg-accent/50 text-muted-foreground hover:text-foreground rounded-xl"
                                                     )}
                                                 >
@@ -192,7 +192,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                         <span suppressHydrationWarning>{item.name}</span>
                                                     </div>
                                                     <ChevronDown
-                                                        className={`w-3.5 h-3.5 transition-transform duration-200 opacity-40 ${isExpanded ? 'rotate-180' : ''}`}
+                                                        className={`w-3.5 h-3.5 opacity-40 ${isExpanded ? 'rotate-180' : ''}`}
                                                     />
                                                 </Button>
                                             ) : (
@@ -200,7 +200,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                     href={item.href as any}
                                                     onClick={onCloseSidebar}
                                                     className={cn(
-                                                        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative group",
+                                                        "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold relative group",
                                                         active
                                                             ? "text-primary bg-primary/10 shadow-sm"
                                                             : "text-muted-foreground hover:bg-accent/40 hover:text-foreground"
@@ -209,7 +209,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                     {active && (
                                                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-full" />
                                                     )}
-                                                    <item.icon className={cn("w-4 h-4 transition-colors", active ? "text-primary" : "opacity-60 group-hover:opacity-100")} />
+                                                    <item.icon className={cn(active ? "text-primary" : "opacity-60 group-hover:opacity-100")} />
                                                     <span suppressHydrationWarning>{item.name}</span>
                                                 </Link>
                                             )}
@@ -224,7 +224,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                                                                 href={child.href as any}
                                                                 onClick={onCloseSidebar}
                                                                 className={cn(
-                                                                    "block pl-8 pr-4 py-2 rounded-lg text-sm transition-all relative",
+                                                                    "block pl-8 pr-4 py-2 rounded-lg text-sm relative",
                                                                     isChildActive
                                                                         ? "text-primary font-bold bg-primary/5"
                                                                         : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
@@ -247,7 +247,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
 
                 {/* User Profile Footer */}
                 <div className="p-3 border-t border-border/20">
-                    <Card className="p-3 transition-all duration-300 overflow-visible border-none shadow-none bg-white/5 hover:bg-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+                    <Card className="p-3 overflow-visible border-none shadow-none bg-white/5 hover:bg-white/10 dark:bg-white/5 dark:hover:bg-white/10">
                         <div className="flex items-center gap-3 mb-3">
                             <Avatar className="w-9 h-9 ring-2 ring-primary/10 shadow-md">
                                 <AvatarImage src={user?.avatarUrl || user?.image || ''} />
@@ -277,7 +277,7 @@ export const DashboardSidebar = React.memo<DashboardSidebarProps>(({
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full h-8 justify-start text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                            className="w-full h-8 justify-start text-[10px] font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             onClick={onSignOutConfirm}
                             disabled={isLoggingOut}
                         >

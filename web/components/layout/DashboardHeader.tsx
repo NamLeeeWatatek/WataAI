@@ -62,7 +62,7 @@ export const DashboardHeader = React.memo<DashboardHeaderProps>(({
 
 
     return (
-        <header className="glass-floating border-x-0 border-t-0 rounded-none h-16 flex-shrink-0 sticky top-0 z-40 transition-all duration-200">
+        <header className="glass-floating border-x-0 border-t-0 rounded-none h-16 flex-shrink-0 sticky top-0 z-40">
             <div className="mx-auto w-full max-w-[1700px] px-6 md:px-10 lg:px-12 h-full flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button
