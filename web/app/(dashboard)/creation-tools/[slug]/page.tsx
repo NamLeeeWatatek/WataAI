@@ -106,6 +106,37 @@ function CreationToolForm({ tool }: { tool: CreationTool }) {
         }
     }, [searchParams, templateList, form]);
 
+    // Handle Re-create from Job
+    useEffect(() => {
+        const recreateJobId = searchParams.get('recreateFrom');
+        if (recreateJobId) {
+            creationJobsApi.findOne(recreateJobId).then((job) => {
+                if (job && job.inputData) {
+                    const { templateId, ...formData } = job.inputData;
+
+                    // If templateId exists in job data, we might want to prioritize it or just set it
+                    // But typically we just want to fill the form values
+
+                    Object.entries(formData).forEach(([key, val]) => {
+                        form.setValue(key, val, { shouldValidate: true, shouldDirty: true });
+                    });
+
+                    // Also set templateId if it exists, as it might control some UI logic
+                    if (templateId) {
+                        // We might need to handle template selection logic here if needed
+                        // But usually setting the form field is enough if the form has a template selector
+                        // However, some forms treat templateId specially. 
+                        // Check onFormSubmit logic: it looks for templateId in data.template or data.templateId
+                    }
+
+                    toast({ title: t('common.loaded'), description: t('creation_tool.job_data_loaded', 'Job data loaded for recreation') });
+                }
+            }).catch(() => {
+                toast({ title: t('common.error'), description: t('creation_tool.error_loading_job', 'Failed to load job data'), variant: 'destructive' });
+            });
+        }
+    }, [searchParams, form, t]);
+
     const onFormSubmit = async (data: any, existingJobId?: string | null) => {
         const isPromptEmpty = data.prompt === '' || (typeof data.prompt === 'string' && data.prompt.trim() === '');
         if (isPromptEmpty && tool.formConfig.fields.find(f => f.name === 'prompt')?.validation?.required) {

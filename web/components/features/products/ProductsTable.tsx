@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import type { Route } from "next";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ import { ProductDetailsDialog } from "./ProductDetailsDialog";
 import { format } from "date-fns";
 import { useDateLocale } from "@/lib/hooks/use-date-locale";
 import { toast } from "sonner";
-import { Package, Zap } from "lucide-react";
+import { Package, Zap, RotateCcw } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PaginationInfo } from "@/components/shared/Pagination";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -78,6 +79,7 @@ export function ProductsTable({
     actions,
 }: ProductsTableProps) {
     const router = useRouter();
+    const { t } = useTranslation();
     const [selectedJob, setSelectedJob] = useState<CreationJob | null>(null);
 
     // New State for Dynamic Actions
@@ -119,7 +121,7 @@ export function ProductsTable({
         },
         {
             id: 'name',
-            header: 'Product',
+            header: t('products_table.header.product'),
             cell: ({ row }) => {
                 const job = row.original;
                 if (job.status === CreationJobStatus.FAILED) {
@@ -169,7 +171,7 @@ export function ProductsTable({
         },
         {
             id: 'creationToolId',
-            header: 'Tool Name',
+            header: t('products_table.header.tool_name'),
             cell: ({ row, getValue }) => {
                 const toolName = row.original.creationTool?.name || (getValue() as string) || '';
                 return (
@@ -194,7 +196,7 @@ export function ProductsTable({
         },
         {
             id: 'status',
-            header: 'Status',
+            header: t('products_table.header.status'),
             accessorKey: 'status',
             cell: ({ getValue }) => (
                 <StatusBadge status={getValue() as CreationJobStatus} />
@@ -203,7 +205,7 @@ export function ProductsTable({
         },
         {
             id: 'progress',
-            header: 'Progress',
+            header: t('products_table.header.progress'),
             accessorKey: 'progress',
             cell: ({ getValue }) => {
                 const value = getValue() as number;
@@ -229,7 +231,7 @@ export function ProductsTable({
         },
         {
             id: 'createdAt',
-            header: 'Created At',
+            header: t('products_table.header.created_at'),
             accessorKey: 'createdAt',
             cell: ({ getValue }) => (
                 <span className="text-muted-foreground text-sm">
@@ -240,7 +242,7 @@ export function ProductsTable({
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('products_table.header.actions'),
             cell: ({ row }) => {
                 const job = row.original;
                 return (
@@ -253,7 +255,7 @@ export function ProductsTable({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuLabel>{t('products_table.actions.label')}</DropdownMenuLabel>
                                 <DropdownMenuItem
                                     onClick={() => {
                                         navigator.clipboard.writeText(job.id);
@@ -261,15 +263,24 @@ export function ProductsTable({
                                     }}
                                 >
                                     <Copy className="mr-2 h-4 w-4" />
-                                    Copy Job ID
+                                    {t('products_table.actions.copy_job_id')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {job.status === CreationJobStatus.COMPLETED && (
                                     <>
                                         <DropdownMenuItem onClick={() => setSelectedJob(job)}>
                                             <ExternalLink className="mr-2 h-4 w-4" />
-                                            View Details
+                                            {t('products_table.actions.view_details')}
                                         </DropdownMenuItem>
+
+                                        {job.creationTool?.slug && (
+                                            <DropdownMenuItem onClick={() => {
+                                                router.push(`/creation-tools/${job.creationTool!.slug}?recreateFrom=${job.id}` as Route);
+                                            }}>
+                                                <RotateCcw className="mr-2 h-4 w-4" />
+                                                {t('products_table.actions.recreate')}
+                                            </DropdownMenuItem>
+                                        )}
 
                                         {/* Dynamic Manual Actions from Tool Config */}
                                         {job.creationTool?.actions?.map((action: TriggerAction) => (
@@ -292,7 +303,7 @@ export function ProductsTable({
                                                 router.push(`/publishing/${job.id}` as Route);
                                             }}>
                                                 <Share2 className="mr-2 h-4 w-4" />
-                                                Post to Channels
+                                                {t('products_table.actions.post_to_channels')}
                                             </DropdownMenuItem>
                                         )}
                                     </>
@@ -302,7 +313,7 @@ export function ProductsTable({
                                     className="text-destructive focus:text-destructive"
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                    {t('common.delete')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -323,13 +334,13 @@ export function ProductsTable({
                 searchable={true}
                 searchValue={searchFilter}
                 onSearch={onSearchChange}
-                searchPlaceholder="Filter products..."
+                searchPlaceholder={t('products_table.search_placeholder')}
                 headerActions={headerActions}
                 filterActions={filterActions || (
                     <div className="flex items-center gap-2">
                         {onStatusFilterChange && (
                             <DataTableFacetedFilter
-                                title="Status"
+                                title={t('products_table.filters.status')}
                                 options={[
                                     { label: "Completed", value: CreationJobStatus.COMPLETED },
                                     { label: "Pending", value: CreationJobStatus.PENDING },
@@ -349,7 +360,7 @@ export function ProductsTable({
                                 }}
                                 className="h-8 px-2 lg:px-3"
                             >
-                                Reset
+                                {t('common.reset')}
                                 <X className="ml-2 h-4 w-4" />
                             </Button>
                         )}

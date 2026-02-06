@@ -23,6 +23,7 @@ import { useKnowledgeBases } from '@/lib/hooks/use-kb';
 import { DataTable } from '@/components/shared/DataTable';
 import { AlertDialogConfirm } from '@/components/ui/AlertDialogConfirm';
 import { ColumnDef } from '@tanstack/react-table';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     botId: string;
@@ -41,6 +42,7 @@ interface BotKnowledgeBase {
 }
 
 export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props) {
+    const { t } = useTranslation();
     const {
         linkedKnowledgeBases,
         isLoading: isBotKBLoading,
@@ -107,7 +109,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     const linkedColumns = React.useMemo<ColumnDef<BotKnowledgeBase>[]>(() => [
         {
             id: 'name',
-            header: 'Knowledge Source',
+            header: t('bots.kb.header.knowledge_source'),
             accessorKey: 'knowledgeBase.name',
             cell: ({ row }) => (
                 <div className="flex items-center gap-4 py-1">
@@ -123,16 +125,16 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
         },
         {
             id: 'stats',
-            header: 'Volume',
+            header: t('bots.kb.header.volume'),
             cell: ({ row }) => (
                 <Badge variant="secondary" className="font-mono font-bold text-[10px] px-2.5 py-0.5">
-                    {row.original.knowledgeBase?.totalDocuments || 0} items
+                    {row.original.knowledgeBase?.totalDocuments || 0} {t('common.items', 'items')}
                 </Badge>
             )
         },
         {
             id: 'status',
-            header: 'Status',
+            header: t('bots.kb.header.status'),
             accessorKey: 'isActive',
             cell: ({ row, getValue }) => {
                 const isActive = getValue() as boolean;
@@ -147,7 +149,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             "text-[10px] font-black uppercase tracking-widest transition-colors",
                             isActive ? "text-blue-500" : "text-muted-foreground"
                         )}>
-                            {isActive ? 'Active' : 'Offline'}
+                            {isActive ? t('status.active', 'Active') : t('status.offline', 'Offline')}
                         </span>
                     </div>
                 );
@@ -175,7 +177,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
     const availableColumns = React.useMemo<ColumnDef<KnowledgeBase>[]>(() => [
         {
             id: 'name',
-            header: 'Name',
+            header: t('bots.kb.header.name'),
             accessorKey: 'name',
             cell: ({ row, getValue }) => (
                 <div className="flex items-center gap-3">
@@ -196,7 +198,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                 <div className="flex justify-end">
                     <Button size="sm" onClick={() => handleLink(row.original)} className="h-8 px-4 font-bold text-xs shadow-md shadow-primary/5">
                         <LinkIcon className="w-3.5 h-3.5 mr-2" />
-                        Link
+                        {t('bots.kb.link_btn')}
                     </Button>
                 </div>
             )
@@ -212,28 +214,28 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                             <Database className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl font-bold tracking-tight">Knowledge Base</CardTitle>
-                            <CardDescription className="text-xs font-medium text-muted-foreground/60">Manage the knowledge sources your bot uses</CardDescription>
+                            <CardTitle className="text-xl font-bold tracking-tight">{t('bots.kb.title')}</CardTitle>
+                            <CardDescription className="text-xs font-medium text-muted-foreground/60">{t('bots.kb.description')}</CardDescription>
                         </div>
                     </div>
                     <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="font-bold h-10 transition-all active:scale-95 shadow-lg shadow-primary/5">
                                 <Plus className="w-4 h-4 mr-2" />
-                                Link Knowledge Base
+                                {t('bots.kb.link_kb')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl rounded-3xl border-none shadow-3xl">
                             <DialogHeader>
-                                <DialogTitle className="text-2xl font-black tracking-tight">Link Knowledge Base</DialogTitle>
+                                <DialogTitle className="text-2xl font-black tracking-tight">{t('bots.kb.link_kb')}</DialogTitle>
                                 <DialogDescription className="text-sm font-medium">
-                                    Select from your existing knowledge bases to connect to this bot.
+                                    {t('bots.kb.link_desc')}
                                 </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-6 pt-4">
                                 <Search
-                                    placeholder="Search available knowledge bases..."
+                                    placeholder={t('bots.kb.search_placeholder')}
                                     value={availableSearch}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvailableSearch(e.target.value)}
                                     onClear={() => setAvailableSearch("")}
@@ -248,7 +250,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                         searchable={false}
                                         className="border-none"
                                         tableClassName="bg-transparent"
-                                        emptyMessage="No available knowledge bases found."
+                                        emptyMessage={t('bots.kb.no_available_kb')}
                                     />
                                 </div>
                             </div>
@@ -262,15 +264,15 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                     columns={linkedColumns}
                     tableClassName="border-none shadow-none bg-transparent"
                     loading={loading}
-                    emptyMessage="Link sources to enhance your bot's intelligence."
+                    emptyMessage={t('bots.kb.link_sources_empty')}
                     emptyComponent={
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                             <div className="p-6 bg-primary/5 rounded-3xl mb-6 ring-8 ring-primary/5">
                                 <Database className="w-10 h-10 text-primary opacity-40" />
                             </div>
-                            <h3 className="text-xl font-black tracking-tight text-foreground">Knowledge Source Required</h3>
+                            <h3 className="text-xl font-black tracking-tight text-foreground">{t('bots.kb.source_required')}</h3>
                             <p className="max-w-xs text-sm font-medium text-muted-foreground mt-2 mb-8">
-                                Connect knowledge sources to enable accurate AI responses.
+                                {t('bots.kb.connect_source_desc')}
                             </p>
                             <Button
                                 variant="outline"
@@ -278,7 +280,7 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
                                 className="px-8 font-bold border-primary/20 transition-all active:scale-95"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
-                                Initialize First Source
+                                {t('bots.kb.init_first_source')}
                             </Button>
                         </div>
                     }
@@ -288,11 +290,11 @@ export function BotKnowledgeBaseSection({ botId, workspaceId, onRefresh }: Props
             <AlertDialogConfirm
                 open={!!unlinkTarget}
                 onOpenChange={(open) => !open && setUnlinkTarget(null)}
-                title="Unlink Knowledge Base"
-                description={`Are you sure you want to unlink "${unlinkTarget?.knowledgeBase?.name}"? This will stop the bot from using this source for answers.`}
+                title={t('bots.kb.unlink_title')}
+                description={t('bots.kb.unlink_desc', { name: unlinkTarget?.knowledgeBase?.name })}
                 onConfirm={confirmUnlink}
                 variant="destructive"
-                confirmText="Unlink"
+                confirmText={t('bots.kb.unlink_btn')}
             />
         </Card>
     );
