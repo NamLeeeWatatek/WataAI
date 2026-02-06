@@ -68,7 +68,7 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
                 <Card
                     key={template.id}
                     className={cn(
-                        "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
+                        "relative overflow-hidden hover:shadow-lg",
                         selectionMode ? "cursor-pointer ring-2 ring-transparent hover:ring-primary" : ""
                     )}
                     onClick={() => selectionMode && onTemplateSelect ? onTemplateSelect(template) : undefined}
@@ -88,7 +88,7 @@ const TemplatesGrid = React.memo<TemplatesGridProps>(({
                                         </Badge>
                                     )}
                                 </div>
-                                <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                                <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary">
                                     {template.name}
                                 </h3>
                             </div>

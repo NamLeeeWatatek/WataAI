@@ -46,8 +46,8 @@ export function DashboardWorkspaceOverview({ stats }: DashboardWorkspaceOverview
                         { label: t('dashboard.stats.totalBots'), value: stats?.bots?.total, icon: Zap, color: 'success' },
                         { label: t('dashboard.stats.totalConversations'), value: stats?.conversations?.total, icon: MessageSquare, color: 'info' }
                     ].map((item, idx) => (
-                        <div key={idx} className="p-6 rounded-3xl bg-muted/10 flex flex-col items-center text-center group hover:bg-muted/20 transition-all duration-500 hover:-translate-y-1">
-                            <div className={cn("p-4 rounded-2xl mb-4 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500", `bg-${item.color}/10 text-${item.color}`)}>
+                        <div key={idx} className="p-6 rounded-3xl bg-muted/10 flex flex-col items-center text-center">
+                            <div className={cn("p-4 rounded-2xl mb-4", `bg-${item.color}/10 text-${item.color}`)}>
                                 <item.icon className="w-6 h-6" />
                             </div>
                             <span className="text-3xl font-black mb-1">{item.value || 0}</span>

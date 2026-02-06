@@ -29,7 +29,7 @@ export function AgentCard({
     return (
         <Card
             className={cn(
-                "group relative overflow-hidden glass-card bg-card/40 border border-white/5 hover:bg-white/[0.03] dark:hover:bg-black/40 transition-all duration-300",
+                "group relative overflow-hidden glass-card bg-card/40 border border-white/5",
                 className
             )}
             {...props}
@@ -53,11 +53,11 @@ export function AgentCard({
                         )}
                     </div>
                     <div className="flex flex-col">
-                        <h3 className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">{name}</h3>
+                        <h3 className="font-bold text-lg tracking-tight group-hover:text-primary">{name}</h3>
                         <p className="text-xs text-muted-foreground line-clamp-1">{description}</p>
                     </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
             </CardHeader>
@@ -76,8 +76,7 @@ export function AgentCard({
                 {children}
             </CardContent>
 
-            {/* Hover Glow Effect */}
-            <div className="absolute -inset-px bg-gradient-to-r from-primary/10 via-teal-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+            {/* Hover Glow Effect removed for performance */}
         </Card >
     )
 }

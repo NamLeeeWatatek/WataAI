@@ -40,7 +40,7 @@ export function PageLoading({
                     <div className="flex flex-col items-center gap-3">
                         <Loader2 className={cn("text-primary animate-spin", size === 'lg' ? 'w-10 h-10' : 'w-6 h-6')} />
                         {message && (
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 animate-pulse">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
                                 {message}
                             </p>
                         )}

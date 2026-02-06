@@ -84,7 +84,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
                         width={400}
                         height={225}
                         unoptimized
-                        className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                        className="object-cover w-full h-full"
                     />
                 </button>
             );
@@ -119,11 +119,11 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
     return (
         <>
             <Card className={cn(
-                "flex flex-col h-full relative group transition-all",
+                "flex flex-col h-full relative group",
                 isSelected && "border-primary ring-1 ring-primary/20 bg-primary/5 shadow-primary/10"
             )}>
                 <div className={cn(
-                    "absolute top-3 left-3 z-10 transition-opacity",
+                    "absolute top-3 left-3 z-10",
                     isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
                 )}>
                     <Checkbox
@@ -140,7 +140,7 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
 
                 <CardHeader className="pb-2 pt-4">
                     <div className="flex justify-between items-start gap-2">
-                        <CardTitle className={cn("text-base font-bold truncate transition-all", isSelected && "ml-7")} title={getDisplayName()}>
+                        <CardTitle className={cn("text-base font-bold truncate", isSelected && "ml-7")} title={getDisplayName()}>
                             {getDisplayName()}
                         </CardTitle>
                         <StatusBadge status={job.status} showIcon className="font-bold border-none h-6" />
