@@ -12,6 +12,7 @@ import { KbFileIcon } from './KbFileIcon';
 import type { SortDirection } from '@/components/shared/DataTable';
 import type { PaginationInfo } from '@/components/shared/Pagination';
 import { ColumnDef } from '@tanstack/react-table';
+import { useTranslation } from 'react-i18next';
 
 interface KbItem {
   id: string;
@@ -89,6 +90,7 @@ export function KbTableView({
   viewMode,
   onViewModeChange,
 }: KbTableViewProps) {
+  const { t } = useTranslation();
   const formatSize = (bytes: string | number) => {
     const size = typeof bytes === 'string' ? parseInt(bytes) : bytes;
     if (isNaN(size) || size === 0) return '0 B';
@@ -142,7 +144,7 @@ export function KbTableView({
     },
     {
       id: 'name',
-      header: 'Name',
+      header: t('kb_explorer.header.name'),
       accessorKey: 'name',
       cell: ({ row, getValue }) => {
         const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
@@ -190,7 +192,7 @@ export function KbTableView({
     },
     {
       id: 'type',
-      header: 'Type',
+      header: t('kb_explorer.header.type'),
       accessorKey: 'type',
       size: 100,
       cell: ({ row }) => (
@@ -198,13 +200,13 @@ export function KbTableView({
           variant={row.original.type === 'folder' ? 'outline' : 'secondary'}
           className="font-bold text-[9px] px-2 py-0 border-primary/20 bg-primary/5 text-primary tracking-wider"
         >
-          {row.original.type === 'folder' ? 'FOLDER' : 'DOC'}
+          {row.original.type === 'folder' ? t('kb_explorer.folder') : t('kb_explorer.doc')}
         </Badge>
       )
     },
     {
       id: 'processingStatus',
-      header: 'Status',
+      header: t('kb_explorer.header.status'),
       accessorKey: 'processingStatus',
       size: 150,
       cell: ({ row, getValue }) => row.original.type === 'document' ? (
@@ -216,7 +218,7 @@ export function KbTableView({
     },
     {
       id: 'fileSize',
-      header: 'Size',
+      header: t('kb_explorer.header.size'),
       accessorKey: 'fileSize',
       size: 100,
       cell: ({ row, getValue }) => row.original.type === 'document' ? (
@@ -225,7 +227,7 @@ export function KbTableView({
     },
     {
       id: 'updatedAt',
-      header: 'Updated',
+      header: t('kb_explorer.header.updated'),
       accessorKey: 'updatedAt',
       size: 120,
       cell: ({ getValue }) => <span className="text-xs font-medium text-muted-foreground/60">{new Date(String(getValue())).toLocaleDateString()}</span>
@@ -245,7 +247,7 @@ export function KbTableView({
                 e.stopPropagation();
                 onPreviewDocument(row.original.id);
               }}
-              title="Preview & Edit"
+              title={t('kb_explorer.actions.preview_edit')}
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -259,7 +261,7 @@ export function KbTableView({
                 e.stopPropagation();
                 onReloadItem(row.original);
               }}
-              title="Reload/Re-train"
+              title={t('kb_explorer.actions.reload_retrain')}
             >
               <RotateCcw className="w-4 h-4" />
             </Button>
@@ -277,7 +279,7 @@ export function KbTableView({
                     className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
                     onClick={() => onDownloadDocument(row.original.id, row.original.name)}
                   >
-                    <Download className="w-4 h-4 text-primary" /> Download
+                    <Download className="w-4 h-4 text-primary" /> {t('kb_explorer.actions.download')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-border/50 my-1" />
                 </>
@@ -286,13 +288,13 @@ export function KbTableView({
                 className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3"
                 onClick={() => onEditItem(row.original)}
               >
-                <Edit2 className="w-4 h-4 text-primary" /> Edit Properties
+                <Edit2 className="w-4 h-4 text-primary" /> {t('kb_explorer.actions.edit_properties')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="rounded-lg flex items-center gap-2 font-bold cursor-pointer p-3 text-destructive focus:text-destructive focus:bg-destructive/10"
                 onClick={() => onDeleteItem(row.original)}
               >
-                <Trash2 className="w-4 h-4" /> Delete Item
+                <Trash2 className="w-4 h-4" /> {t('kb_explorer.actions.delete_item')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -319,7 +321,7 @@ export function KbTableView({
         pagination={pagination}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
-        emptyMessage="This collection is currently empty"
+        emptyMessage={t('kb_explorer.empty_collection')}
         onRowClick={onItemClick}
         gridClassName="grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 p-6"
         renderGridItem={renderGridItem}

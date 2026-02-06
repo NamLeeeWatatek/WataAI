@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { useTranslation } from 'react-i18next';
 
 interface KbToolbarProps {
   searchQuery: string;
@@ -42,6 +43,7 @@ export function KbToolbar({
   onUploadFile,
   onCrawlWebsite,
 }: KbToolbarProps) {
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col md:flex-row gap-4 items-center justify-between w-full">
@@ -49,7 +51,7 @@ export function KbToolbar({
       {/* Search & Refresh */}
       <div className="flex items-center gap-2 flex-1 w-full md:w-auto">
         <Search
-          placeholder="Search items..."
+          placeholder={t('kb_explorer.toolbar.search_items')}
           value={searchQuery}
           onChange={(e: any) => onSearchChange(e.target.value)}
           onClear={() => onSearchChange('')}
@@ -74,29 +76,29 @@ export function KbToolbar({
           <DropdownMenuTrigger asChild>
             <Button className="h-9 gap-2 shadow-sm font-semibold pl-3 pr-4">
               <Plus className="w-4 h-4" />
-              <span>Create New</span>
+              <span>{t('kb_explorer.toolbar.create_new')}</span>
               <ChevronDown className="w-3 h-3 opacity-50 ml-1" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 p-2">
-            <DropdownMenuLabel>Add Content</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('kb_explorer.toolbar.add_content')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onCreateFolder} className="cursor-pointer font-medium p-2.5">
               <FolderPlus className="w-4 h-4 mr-2 text-blue-500" />
-              New Folder
+              {t('kb_explorer.toolbar.new_folder')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCreateDocument} className="cursor-pointer font-medium p-2.5">
               <FileText className="w-4 h-4 mr-2 text-green-500" />
-              New Document
+              {t('kb_explorer.toolbar.new_document')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onUploadFile} className="cursor-pointer font-medium p-2.5">
               <Upload className="w-4 h-4 mr-2 text-orange-500" />
-              Upload Files
+              {t('kb_explorer.toolbar.upload_files')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onCrawlWebsite} className="cursor-pointer font-medium p-2.5">
               <Globe className="w-4 h-4 mr-2 text-teal-500" />
-              Crawl Website
+              {t('kb_explorer.toolbar.crawl_website')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -113,7 +115,7 @@ export function KbToolbar({
               "h-8 w-8 rounded-md transition-all",
               viewMode === 'grid' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
-            title="Grid View"
+            title={t('common.grid_view', 'Grid View')}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
@@ -125,7 +127,7 @@ export function KbToolbar({
               "h-8 w-8 rounded-md transition-all",
               viewMode === 'table' ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
             )}
-            title="Table View"
+            title={t('common.list_view', 'Table View')}
           >
             <List className="w-4 h-4" />
           </Button>

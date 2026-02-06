@@ -255,7 +255,12 @@
     "selectAll": "Chọn tất cả",
     "retry": "Thử lại",
     "callback": "Xử lý kết nối",
-    "facebook": "Facebook"
+    "facebook": "Facebook",
+    "items": "mục",
+    "grid_view": "Dạng lưới",
+    "list_view": "Dạng danh sách",
+    "download": "Tải xuống",
+    "loaded": "Đã tải dữ liệu"
   },
   "notificationList": {
     "title": "Thông báo",
@@ -612,7 +617,29 @@
     "language": "Ngôn ngữ",
     "timezone": "Múi giờ",
     "editBot": "Chỉnh sửa Bot",
-    "update": "Cập nhật"
+    "update": "Cập nhật",
+    "kb": {
+      "title": "Cơ sở tri thức",
+      "description": "Quản lý các nguồn tri thức mà bot của bạn sử dụng",
+      "header": {
+        "knowledge_source": "Nguồn tri thức",
+        "volume": "Dung lượng",
+        "status": "Trạng thái",
+        "name": "Tên"
+      },
+      "search_placeholder": "Tìm kiếm cơ sở tri thức...",
+      "link_kb": "Liên kết CSDL Tri thức",
+      "link_desc": "Chọn từ các cơ sở tri thức hiện có để kết nối với bot này.",
+      "no_available_kb": "Không tìm thấy cơ sở tri thức nào.",
+      "link_sources_empty": "Liên kết nguồn để nâng cao trí tuệ cho bot của bạn.",
+      "source_required": "Yêu cầu nguồn tri thức",
+      "connect_source_desc": "Kết nối nguồn tri thức để cho phép AI phản hồi chính xác.",
+      "init_first_source": "Khởi tạo nguồn đầu tiên",
+      "unlink_title": "Hủy liên kết Cơ sở tri thức",
+      "unlink_desc": "Bạn có chắc chắn muốn hủy liên kết \"{{name}}\"? Bot sẽ không còn sử dụng nguồn này để trả lời.",
+      "unlink_btn": "Hủy liên kết",
+      "link_btn": "Liên kết"
+    }
   },
   "bot_config": {
     "identity": "Định danh",
@@ -1047,6 +1074,8 @@
     "all_categories": "Tất cả danh mục",
     "empty_title": "Không tìm thấy công cụ",
     "empty_desc": "Không có công cụ sáng tạo nào phù hợp với tìm kiếm của bạn.",
+    "job_data_loaded": "Dữ liệu công việc đã được tải lại",
+    "error_loading_job": "Không thể tải dữ liệu công việc",
     "assets": "Tài sản",
     "template": "Mẫu",
     "input": "Đầu vào",
@@ -1078,5 +1107,54 @@
       "failed": "Thất bại",
       "pending": "Đang chờ"
     }
+  },
+  "products_table": {
+    "header": {
+      "product": "Sản phẩm",
+      "tool_name": "Tên công cụ",
+      "status": "Trạng thái",
+      "progress": "Tiến độ",
+      "created_at": "Ngày tạo",
+      "actions": "Hành động"
+    },
+    "actions": {
+      "label": "Hành động",
+      "copy_job_id": "Sao chép ID công việc",
+      "view_details": "Xem chi tiết",
+      "recreate": "Tạo lại",
+      "post_to_channels": "Đăng lên kênh"
+    },
+    "search_placeholder": "Lọc sản phẩm...",
+    "filters": {
+      "status": "Trạng thái"
+    }
+  },
+  "kb_explorer": {
+    "header": {
+      "name": "Tên",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "size": "Kích thước",
+      "updated": "Cập nhật"
+    },
+    "actions": {
+      "preview_edit": "Xem trước & Chỉnh sửa",
+      "reload_retrain": "Tải lại/Huấn luyện lại",
+      "download": "Tải xuống",
+      "edit_properties": "Chỉnh sửa thuộc tính",
+      "delete_item": "Xóa mục"
+    },
+    "toolbar": {
+      "search_items": "Tìm kiếm mục...",
+      "create_new": "Tạo mới",
+      "add_content": "Thêm nội dung",
+      "new_folder": "Thư mục mới",
+      "new_document": "Tài liệu mới",
+      "upload_files": "Tải lên tệp",
+      "crawl_website": "Thu thập từ web"
+    },
+    "empty_collection": "Bộ sưu tập này hiện đang trống",
+    "folder": "THƯ MỤC",
+    "doc": "TÀI LIỆU"
   }
 }
