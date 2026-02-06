@@ -15,10 +15,23 @@ export function I18nProvider({ children }: I18nProviderProps) {
   const [isReady, setIsReady] = useState(false);
   const pathname = usePathname();
 
-  const isMarketing = !pathname?.startsWith('/dashboard') &&
+  const isMarketing =
+    !pathname?.startsWith('/dashboard') &&
     !pathname?.startsWith('/admin') &&
-    !pathname?.includes('publishing') &&
-    !pathname?.includes('conversations');
+    !pathname?.startsWith('/bots') &&
+    !pathname?.startsWith('/conversations') &&
+    !pathname?.startsWith('/knowledge-base') &&
+    !pathname?.startsWith('/channels') &&
+    !pathname?.startsWith('/settings') &&
+    !pathname?.startsWith('/creation-tools') &&
+    !pathname?.startsWith('/my-products') &&
+    !pathname?.startsWith('/templates') &&
+    !pathname?.startsWith('/workflows') &&
+    !pathname?.startsWith('/activity') &&
+    !pathname?.startsWith('/publishing') &&
+    !pathname?.startsWith('/chat') &&
+    !pathname?.startsWith('/login') &&
+    !pathname?.startsWith('/register');
 
   useEffect(() => {
     setMounted(true);
