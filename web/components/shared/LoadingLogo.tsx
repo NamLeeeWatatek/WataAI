@@ -31,7 +31,7 @@ export function LoadingLogo({
         "rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(var(--primary),0.1)]",
         iconSizes[size]
       )}>
-        <div className="w-1/2 h-1/2 rounded-full bg-primary animate-pulse" />
+        <div className="w-1/2 h-1/2 rounded-full bg-primary" />
       </div>
       {!noSpinner && (
         <Loader2 className={cn("text-primary animate-spin absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] opacity-50")} />
@@ -43,7 +43,7 @@ export function LoadingLogo({
     <div className={cn("flex flex-col items-center justify-center gap-6", className)}>
       {logoIcon}
       {text && (
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 animate-pulse">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">
           {text}
         </p>
       )}

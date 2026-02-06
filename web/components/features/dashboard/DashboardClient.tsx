@@ -36,7 +36,7 @@ export function DashboardClient() {
     if (isLoading) {
         return (
             <div className="w-full min-h-full pb-12">
-                <div className="mb-10 px-2 animate-pulse">
+                <div className="mb-10 px-2">
                     <div className="h-10 w-64 bg-primary/5 rounded-2xl mb-3"></div>
                     <div className="h-5 w-80 bg-muted/20 rounded-xl"></div>
                 </div>
