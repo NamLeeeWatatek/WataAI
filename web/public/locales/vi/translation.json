@@ -17,8 +17,10 @@
     "documentation": "Tài liệu",
     "login": "Đăng nhập",
     "start": "Bắt đầu",
-    "creationTools": "Xưởng sáng tạo",
+    "creationTools": "Công cụ sáng tạo",
     "assetLibrary": "Thư viện thành phẩm",
+    "assets": "ASSETS",
+    "creationHistory": "Lịch sử chạy tool",
     "users": "Người dùng",
     "rolesPermissions": "Vai trò & Quyền",
     "categories": "Danh mục",
@@ -1156,5 +1158,19 @@
     "empty_collection": "Bộ sưu tập này hiện đang trống",
     "folder": "THƯ MỤC",
     "doc": "TÀI LIỆU"
+  },
+  "products": {
+    "deleteSuccess": "Đã xóa sản phẩm thành công",
+    "deleteFailed": "Xóa sản phẩm thất bại",
+    "selectProduct": "Chọn sản phẩm {{name}}"
+  },
+  "assets": {
+    "title": "ASSETS",
+    "description": "Duyệt qua tất cả các thành phẩm thành công được tạo bởi các công cụ AI của bạn.",
+    "noAssets": "Không tìm thấy thành phẩm nào",
+    "noAssetsDesc": "Bạn chưa có thành phẩm nào. Hãy bắt đầu bằng cách sử dụng một trong các công cụ sáng tạo của chúng tôi.",
+    "searchPlaceholder": "Tìm kiếm thành phẩm...",
+    "deleteSuccess": "Đã xóa thành phẩm thành công",
+    "deleteFailed": "Xóa thành phẩm thất bại"
   }
 }

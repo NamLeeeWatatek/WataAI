@@ -34,4 +34,4 @@ import { CreationJobEntity } from '../creation-jobs/infrastructure/persistence/r
   providers: [StatsService],
   exports: [StatsService],
 })
-export class StatsModule { }
+export class StatsModule {}

@@ -42,7 +42,7 @@ export class BotsService {
     private workspaceHelper: WorkspaceHelperService,
     private widgetVersionService: WidgetVersionService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   async getUserDefaultWorkspace(userId: string) {
     return this.workspaceHelper.getUserDefaultWorkspace(userId);

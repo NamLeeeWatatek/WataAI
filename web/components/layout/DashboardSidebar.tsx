@@ -74,7 +74,8 @@ const getNavigationGroups = (t: any): NavigationGroup[] => [
         title: t('sidebar.groups.studio'),
         items: [
             { name: t('navigation.creationTools'), href: '/creation-tools', icon: Sparkles },
-            { name: t('navigation.assetLibrary'), href: '/my-products', icon: Library },
+            { name: t('navigation.assets'), href: '/assets', icon: Library },
+            { name: t('navigation.creationHistory'), href: '/my-products', icon: History },
         ]
     },
     {

@@ -11,7 +11,7 @@ export class UserSeedService {
   constructor(
     @InjectModel(UserSchemaClass.name)
     private readonly model: Model<UserSchemaClass>,
-  ) { }
+  ) {}
 
   async run() {
     const admin = await this.model.findOne({

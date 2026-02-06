@@ -117,7 +117,9 @@ export class KBVectorService implements OnModuleInit {
           });
           // Optimization: create payload index immediately for efficient hybrid search
           this.createPayloadIndex(dimension).catch((err) =>
-            this.logger.warn(`Background index creation failed: ${err.message}`),
+            this.logger.warn(
+              `Background index creation failed: ${err.message}`,
+            ),
           );
           return collectionName;
         }

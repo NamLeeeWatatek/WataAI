@@ -47,7 +47,7 @@ export class BotExecutionService {
     private kbRagService: KBRagService,
     private aiProvidersService: AiProvidersService,
     private readonly i18n: I18nService,
-  ) { }
+  ) {}
 
   /**
    * Core execution method: Orchestrates the Bot's "thinking" process.
@@ -134,9 +134,9 @@ export class BotExecutionService {
     // Add Multilingual instruction
     systemPrompt +=
       "\n\nIMPORTANT: You must ALWAYS respond in the same language as the user's latest message.\n" +
-      "- If the user asks in Vietnamese, your answer MUST be in Vietnamese.\n" +
-      "- If the user asks in English, answer in English.\n" +
-      "- Do NOT default to English unless the user speaks English.\n" +
+      '- If the user asks in Vietnamese, your answer MUST be in Vietnamese.\n' +
+      '- If the user asks in English, answer in English.\n' +
+      '- Do NOT default to English unless the user speaks English.\n' +
       "If the provided context is in a different language, TRANSLATE the information into the user's language.";
 
     // Add RAG Context
@@ -174,9 +174,9 @@ Context:\n\n${ragContextString}`;
           bot.aiConfigId,
           'workspace',
           bot.workspaceId ||
-          contextOverride?.workspaceId ||
-          bot.createdBy ||
-          'system',
+            contextOverride?.workspaceId ||
+            bot.createdBy ||
+            'system',
         );
       } else {
         // Fallback to generic chat

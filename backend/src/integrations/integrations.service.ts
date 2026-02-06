@@ -19,7 +19,7 @@ export class IntegrationsService {
     private credentialRepository: Repository<ChannelCredentialEntity>,
     @InjectRepository(WorkspaceEntity)
     private workspaceRepository: Repository<WorkspaceEntity>,
-  ) { }
+  ) {}
 
   async findAll(workspaceId?: string): Promise<ChannelCredentialEntity[]> {
     const where: FindOptionsWhere<ChannelCredentialEntity> = {};

@@ -87,7 +87,7 @@ export class ChannelsModule implements OnModuleInit {
     private readonly facebookProvider: FacebookProvider,
     private readonly googleProvider: GoogleProvider,
     private readonly omiProvider: OmiProvider,
-  ) { }
+  ) {}
 
   onModuleInit() {
     this.strategy.register('facebook', this.facebookProvider);

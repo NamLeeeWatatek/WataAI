@@ -32,7 +32,7 @@ export class KBEmbeddingsService {
     private readonly aiProvidersService: AiProvidersService,
     private readonly vectorService: KBVectorService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-  ) { }
+  ) {}
 
   async chunkText(
     text: string,
@@ -80,8 +80,6 @@ export class KBEmbeddingsService {
   async processChunks(chunks: KBChunkEntity[], embeddingModel?: string) {
     await this.processChunksWithProgress(chunks, embeddingModel);
   }
-
-
 
   async processChunksWithProgress(
     chunks: KBChunkEntity[],
@@ -167,7 +165,9 @@ export class KBEmbeddingsService {
 
             // Step 1: Generate embedding with Contextual Header ($0 cost strategy)
             const docName = chunk.metadata?.documentName || 'Unknown Source';
-            const category = chunk.metadata?.category ? ` (Mục đích: ${chunk.metadata.category})` : '';
+            const category = chunk.metadata?.category
+              ? ` (Mục đích: ${chunk.metadata.category})`
+              : '';
             const contextualContent = `Source: ${docName}${category}\n\n${chunk.content}`;
 
             let embedding: number[];
@@ -243,7 +243,6 @@ export class KBEmbeddingsService {
 
     return { successes, failures };
   }
-
 
   async generateQueryEmbedding(
     query: string,

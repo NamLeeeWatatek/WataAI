@@ -21,7 +21,7 @@ export abstract class BaseOAuthService implements OAuthProviderInterface {
     protected readonly connectionRepository: Repository<ChannelConnectionEntity>,
     protected readonly credentialRepository: Repository<ChannelCredentialEntity>,
     protected readonly conversationRepository: Repository<ConversationEntity>,
-  ) { }
+  ) {}
 
   abstract getOAuthUrl(redirectUri: string, state?: string): string;
   abstract exchangeCodeForToken(

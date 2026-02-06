@@ -47,11 +47,16 @@ export function ProductCard({ job, onDelete, isSelected, onSelect }: ProductCard
     const handleDelete = async () => {
         setIsDeleting(true);
         try {
-            await creationJobsApi.remove(job.id);
-            toast.success(t('products.deleteSuccess'));
-            if (onDelete) onDelete(job.id);
+            if (onDelete && typeof onDelete === 'function') {
+                await onDelete(job.id);
+            } else {
+                await creationJobsApi.remove(job.id);
+                toast.success(t('products.deleteSuccess'));
+            }
         } catch (error) {
-            toast.error(t('products.deleteFailed'));
+            if (!onDelete) {
+                toast.error(t('products.deleteFailed'));
+            }
             console.error(error);
         } finally {
             setIsDeleting(false);
